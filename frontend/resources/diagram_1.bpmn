@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1gpowic" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.3.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="Process_1y5dqlo" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Rück-versicherung benötigt">
+      <bpmn:outgoing>Flow_1kva2ey</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1kva2ey" sourceRef="StartEvent_1" targetRef="Activity_0qd4fjk" />
+    <bpmn:endEvent id="Event_074i6fm" name="Angebot übermittelt">
+      <bpmn:incoming>Flow_09l1ghi</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_08xhumh" sourceRef="Activity_1jejj19" targetRef="Activity_0ont3to" />
+    <bpmn:serviceTask id="Activity_1jejj19" name="Risikosimulation durchführen">
+      <bpmn:incoming>Flow_1yluz7c</bpmn:incoming>
+      <bpmn:outgoing>Flow_08xhumh</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1yluz7c" sourceRef="Activity_0qd4fjk" targetRef="Activity_1jejj19" />
+    <bpmn:userTask id="Activity_0qd4fjk" name="Rahmen-bedingungen besprechen">
+      <bpmn:incoming>Flow_1kva2ey</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yluz7c</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_09l1ghi" sourceRef="Activity_0ont3to" targetRef="Event_074i6fm" />
+    <bpmn:userTask id="Activity_0ont3to" name="Angebot übermitteln">
+      <bpmn:incoming>Flow_08xhumh</bpmn:incoming>
+      <bpmn:outgoing>Flow_09l1ghi</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1y5dqlo">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="168" y="142" width="62" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_074i6fm_di" bpmnElement="Event_074i6fm">
+        <dc:Bounds x="872" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="865" y="142" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_186syyl_di" bpmnElement="Activity_1jejj19" bioc:stroke="#e53935" bioc:fill="#ffcdd2" color:background-color="#ffcdd2" color:border-color="#e53935">
+        <dc:Bounds x="570" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1tcb99l_di" bpmnElement="Activity_0qd4fjk">
+        <dc:Bounds x="250" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1lv7apg_di" bpmnElement="Activity_0ont3to">
+        <dc:Bounds x="720" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1kva2ey_di" bpmnElement="Flow_1kva2ey">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="250" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08xhumh_di" bpmnElement="Flow_08xhumh">
+        <di:waypoint x="670" y="117" />
+        <di:waypoint x="720" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yluz7c_di" bpmnElement="Flow_1yluz7c">
+        <di:waypoint x="350" y="117" />
+        <di:waypoint x="570" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09l1ghi_di" bpmnElement="Flow_09l1ghi">
+        <di:waypoint x="820" y="117" />
+        <di:waypoint x="872" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
