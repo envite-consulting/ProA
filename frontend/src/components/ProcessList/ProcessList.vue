@@ -1,16 +1,14 @@
 <template>
-  <v-list lines="one">
-  <v-list-item
-    v-for="model in processModels"
-    :key="'process-'+model.id"
-    :title="model.processName"
-    :to="'/ProcessView/'+model.id"
-  ></v-list-item>
-</v-list>
+  <v-list lines="one" class="pa-6">
+    <template v-for="(model, index) in processModels" :key="'process-'+model.id">
+      <v-list-item :title="model.processName" :to="'/ProcessView/' + model.id"></v-list-item>
+      <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
+    </template>
+  </v-list>
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
-        @click="dialog = true" size="large" />
+      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus" @click="dialog = true"
+        size="large" />
     </v-fab-transition>
   </div>
 
@@ -50,8 +48,8 @@ import { defineComponent } from 'vue';
 import axios from 'axios';
 
 declare interface ProcessModel {
-    id: number,
-    processName: string
+  id: number,
+  processName: string
 }
 
 export default defineComponent({
@@ -65,14 +63,14 @@ export default defineComponent({
   },
   methods: {
 
-    fetchProcessModels(){
-      axios.get("/api/process-model").then(result=>{
+    fetchProcessModels() {
+      axios.get("/api/process-model").then(result => {
         this.processModels = result.data;
       })
     },
 
     uploadProcessModel() {
-      if (this.processModel !== null && this.processModel.length>0) {
+      if (this.processModel !== null && this.processModel.length > 0) {
 
         let formData = new FormData();
         formData.append("processModel", this.processModel[0]);
@@ -84,7 +82,7 @@ export default defineComponent({
           .then(response => {
             console.log(response);
             this.fetchProcessModels();
-            this.processModel=[];
+            this.processModel = [];
             this.dialog = false;
           }).catch(error => {
             console.log(error)

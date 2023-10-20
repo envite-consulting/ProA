@@ -3,6 +3,7 @@ package de.envite.process.map.repository.tables;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,7 +14,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class ProcessModel {
+public class ProcessModelTable {
 	
     @Id
     @GeneratedValue
@@ -25,12 +26,12 @@ public class ProcessModel {
     @Column
     private String bpmnXml;
     
-    @OneToMany
-    private List<ProceessEvent> startEvents = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, mappedBy="processModel")
+    private List<ProcessEventTable> startEvents = new ArrayList<>();
     
-    @OneToMany
-    private List<ProceessEvent> intermediateEvents = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, mappedBy="processModel")
+    private List<ProcessEventTable> intermediateEvents = new ArrayList<>();
     
-    @OneToMany
-    private List<ProceessEvent> endEvents = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, mappedBy="processModel")
+    private List<ProcessEventTable> endEvents = new ArrayList<>();
 }
