@@ -1,19 +1,26 @@
-package de.envite.process.map.repository.tables;
+package de.envite.process.map.repository;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.envite.process.map.entities.ProcessConnection;
 import de.envite.process.map.entities.ProcessEvent;
 import de.envite.process.map.entities.ProcessInformation;
+import de.envite.process.map.entities.ProcessMap;
 import de.envite.process.map.entities.ProcessModel;
-import de.envite.process.map.usecases.ProcesModelRepository;
+import de.envite.process.map.repository.tables.EventType;
+import de.envite.process.map.repository.tables.ProcessConnectionTable;
+import de.envite.process.map.repository.tables.ProcessEventTable;
+import de.envite.process.map.repository.tables.ProcessModelTable;
+import de.envite.process.map.usecases.ProcessModelRepository;
+import de.envite.process.map.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
-public class JpaProcessmodelRepository implements ProcesModelRepository {
+public class JpaProcessmodelRepository implements ProcessModelRepository, ProcessMapRespository {
 
 	@Inject
 	private EntityManager em;
@@ -21,7 +28,7 @@ public class JpaProcessmodelRepository implements ProcesModelRepository {
 	@Override
 	@Transactional
 	public Long saveProcessModel(ProcessModel processModel) {
-		ProcessModelTable table = map(processModel);
+		ProcessModelTable table = ProcessmodelMapper.map(processModel);
 		em.persist(table);
 
 		processModel//
@@ -74,31 +81,29 @@ public class JpaProcessmodelRepository implements ProcesModelRepository {
 				.map(model -> new ProcessInformation(model.getId(), model.getName()))//
 				.collect(Collectors.toList());
 	}
-
-	private ProcessModelTable map(ProcessModel processModel) {
-		ProcessModelTable table = new ProcessModelTable();
-		table.setName(processModel.getName());
-		table.setBpmnXml(processModel.getBpmnXml());
-		table.setStartEvents(map(processModel.getStartEvents(), EventType.START, table));
-		table.setIntermediateEvents(map(processModel.getIntermediateEvents(), EventType.INTERMEDIATE,table));
-		table.setEndEvents(map(processModel.getEndEvents(), EventType.END,table));
-
-		return table;
-	}
-
-	private List<ProcessEventTable> map(List<ProcessEvent> events, EventType eventType, ProcessModelTable processModelTable) {
-		return events//
+	
+	@Transactional
+	public List<ProcessConnection> getProcessConnections(){
+		return em//
+				.createQuery("SELECT pc FROM ProcessConnectionTable pc", ProcessConnectionTable.class)//
+				.getResultList()//
 				.stream()//
-				.map(event -> map(event, eventType, processModelTable))//
+				.map(connection -> new ProcessConnection(
+						connection.getCallingProcess().getId(),
+						connection.getCalledProcess().getId()))//
 				.collect(Collectors.toList());
 	}
 
-	private ProcessEventTable map(ProcessEvent event, EventType eventType, ProcessModelTable processModelTable) {
-		ProcessEventTable table = new ProcessEventTable();
-		table.setElementId(event.getElementId());
-		table.setLabel(event.getLabel());
-		table.setEventType(eventType);
-		table.setProcessModel(processModelTable);
-		return table;
+	@Override
+	public ProcessMap getProcessMap() {
+		
+		List<ProcessInformation> processModelInformation = getProcessModels();
+		List<ProcessConnection> processConnections = getProcessConnections();
+		
+		ProcessMap map = new ProcessMap();
+		map.setConnections(processConnections);
+		map.setProcesses(processModelInformation);
+		
+		return map;
 	}
 }

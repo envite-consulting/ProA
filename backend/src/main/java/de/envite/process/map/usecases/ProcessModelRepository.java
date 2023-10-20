@@ -5,7 +5,7 @@ import java.util.List;
 import de.envite.process.map.entities.ProcessInformation;
 import de.envite.process.map.entities.ProcessModel;
 
-public interface ProcesModelRepository {
+public interface ProcessModelRepository {
 
 	Long saveProcessModel(ProcessModel processModel);
 

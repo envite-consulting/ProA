@@ -13,7 +13,7 @@ import jakarta.inject.Inject;
 public class ProcessModelUsecase {
 
 	@Inject
-	private ProcesModelRepository repository;
+	private ProcessModelRepository repository;
 
 	@Inject
 	private ProcessOperations processOperations;

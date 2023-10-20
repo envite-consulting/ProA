@@ -1,13 +1,13 @@
 <template>
   <v-card height="100%">
 
-    <div id="cyto-graph" class="example"></div>
+    <div id="cyto-graph" class="cyto-diagram"></div>
 
   </v-card>
   <v-dialog v-model="dialog" width="auto">
     <v-card>
       <v-card-title class="text-h5">
-        Prozess: Bewerbungs-Wf
+        Prozess: {{ selectedProcess.processName }}
       </v-card-title>
       <v-card-text>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
@@ -15,7 +15,8 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="green-darken-1" variant="text" @click="$router.push('ProcessView')">Prozess öffnen
+        <v-btn color="green-darken-1" variant="text" @click="$router.push('/ProcessView/' + selectedProcess.id)">
+          Prozess öffnen
         </v-btn>
         <v-btn color="primary" variant="text" @click="dialog = false">Schließen</v-btn>
       </v-card-actions>
@@ -23,81 +24,106 @@
   </v-dialog>
 </template>
 <style scoped>
-.example {
-  /*background-color: red;*/
+.cyto-diagram {
   height: 100%;
   width: 100%;
 }
 </style>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import cytoscape from 'cytoscape';
+import cytoscape, { ElementDefinition } from 'cytoscape';
+import axios from 'axios';
+
+interface Process {
+  id: string
+  processName: string
+}
+
+interface Connection {
+  callingProcessid: number
+  calledProcessid: number
+}
 
 export default defineComponent({
   data: () => ({
     cy: null,
     dialog: false,
+    processMapElements: [] as ElementDefinition[],
+    selectedProcess: {} as Process,
   }),
 
   watch: {
   },
   mounted: function () {
-    console.log("mounted");
-    var cy = cytoscape({
+    this.fetchProcessModels();
 
-      container: document.getElementById('cyto-graph'), // container to render in
+  },
+  methods: {
 
-      elements: [ // list of graph elements to start with
-        { // node a
-          data: { id: 'a', name: "hello1" }
-        },
-        { // node b
-          data: { id: 'b', name: "hello2" }
-        },
-        { // edge ab
-          data: { id: 'ab', source: 'a', target: 'b' }
-        },
-        { // edge ab
-          data: { id: 'ab2', source: 'a', target: 'b' }
-        },
-        { // edge ab
-          data: { id: 'ba', source: 'b', target: 'a' }
-        }
-      ],
-
-      style: [ // the stylesheet for the graph
-        {
-          selector: 'node',
-          style: {
-            'background-color': '#666',
-            'label': 'data(name)'
+    fetchProcessModels() {
+      axios.get("/api/process-map").then(result => {
+        let processes = result.data.processes.map((process: Process) => { return { data: { id: process.id, name: process.processName } } });
+        console.log(processes)
+        this.processMapElements.push(...processes);
+        let connections = result.data.connections.map((connection: Connection) => {
+          return {
+            data: {
+              id: "edge-" + connection.callingProcessid + "-" + connection.calledProcessid,
+              source: connection.callingProcessid,
+              target: connection.calledProcessid,
+            }
           }
-        },
+        });
+        this.processMapElements.push(...connections);
+        this.createProcessMapGraph();
+      })
+    },
 
-        {
-          selector: 'edge',
-          style: {
-            'width': 3,
-            'line-color': '#ccc',
-            'target-arrow-color': '#ccc',
-            'target-arrow-shape': 'triangle',
-            'curve-style': 'bezier'
+    createProcessMapGraph() {
+
+      const component = this;
+
+      var cy = cytoscape({
+
+        container: document.getElementById('cyto-graph'), // container to render in
+        elements: component.processMapElements,
+
+        style: [ // the stylesheet for the graph
+          {
+            selector: 'node',
+            style: {
+              'background-color': '#666',
+              'label': 'data(name)'
+            }
+          },
+
+          {
+            selector: 'edge',
+            style: {
+              'width': 3,
+              'line-color': '#ccc',
+              'target-arrow-color': '#ccc',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier'
+            }
           }
+        ],
+
+        layout: {
+          name: 'grid',
+          rows: 1
         }
-      ],
 
-      layout: {
-        name: 'grid',
-        rows: 1
-      }
+      });
 
-    });
-
-    const component = this;
-    cy.on('click', 'node', function (evt: any) {
-      console.log('clicked ' + this.id());
-      component.dialog = true;
-    });
+      cy.on('click', 'node', function (evt: any) {
+        var evtTarget = evt.target;
+        const selectedProcess = component.processMapElements.find(element => element.data.id === evtTarget.id());
+        component.selectedProcess = {} as Process;
+        component.selectedProcess = { id: selectedProcess!.data!.id!, processName: selectedProcess?.data.name };
+        component.dialog = true;
+      });
+    }
   }
 })
 </script>

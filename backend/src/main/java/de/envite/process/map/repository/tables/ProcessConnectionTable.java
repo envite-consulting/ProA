@@ -1,11 +1,11 @@
 package de.envite.process.map.repository.tables;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import lombok.Data;
-import lombok.ToString;
 
 @Entity
 @Data
@@ -15,10 +15,10 @@ public class ProcessConnectionTable {
 	@GeneratedValue
 	private Long id;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	private ProcessModelTable callingProcess;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	private ProcessModelTable calledProcess;
 
 	private String callingElementType;
@@ -35,6 +35,4 @@ public class ProcessConnectionTable {
 				+ calledProcess.getName() + ", callingElementType=" + callingElementType + ", calledElementType="
 				+ calledElementType + ", callingElement=" + callingElement + ", calledElement=" + calledElement + "]";
 	}
-	
-	
 }
