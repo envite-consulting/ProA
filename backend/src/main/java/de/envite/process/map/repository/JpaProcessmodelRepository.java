@@ -36,6 +36,11 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.forEach(event -> {
 					connectWithStartEvents(table, event);
 				});
+		processModel//
+				.getStartEvents()//
+				.forEach(event -> {
+					connectWithEndEvents(table, event);
+				});
 
 		em.flush();
 		return table.getId();
@@ -48,17 +53,38 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.setParameter("label", newEvent.getLabel())//
 				.setParameter("eventType", EventType.START)//
 				.getResultList();
-		
-		
-		startEventsWithSameLabel.forEach(event->{
+
+		startEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(newTable);
 			connection.setCalledProcess(event.getProcessModel());
-			connection.setCallingElementType(EventType.START.toString());
+			connection.setCallingElementType(EventType.END.toString());
 			connection.setCallingElement(newEvent.getElementId());
-			connection.setCalledElementType(EventType.END.toString());
+			connection.setCalledElementType(EventType.START.toString());
 			connection.setCalledElement(event.getElementId());
-			
+
+			System.out.println(connection.toString());
+			em.persist(connection);
+		});
+	}
+
+	private void connectWithEndEvents(ProcessModelTable newTable, ProcessEvent newEvent) {
+		List<ProcessEventTable> endEventsWithSameLabel = em
+				.createQuery("SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType",
+						ProcessEventTable.class)
+				.setParameter("label", newEvent.getLabel())//
+				.setParameter("eventType", EventType.END)//
+				.getResultList();
+
+		endEventsWithSameLabel.forEach(event -> {
+			ProcessConnectionTable connection = new ProcessConnectionTable();
+			connection.setCallingProcess(event.getProcessModel());
+			connection.setCalledProcess(newTable);
+			connection.setCallingElementType(EventType.START.toString());
+			connection.setCallingElement(event.getElementId());
+			connection.setCalledElementType(EventType.END.toString());
+			connection.setCalledElement(newEvent.getElementId());
+
 			System.out.println(connection.toString());
 			em.persist(connection);
 		});
@@ -81,29 +107,28 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.map(model -> new ProcessInformation(model.getId(), model.getName()))//
 				.collect(Collectors.toList());
 	}
-	
+
 	@Transactional
-	public List<ProcessConnection> getProcessConnections(){
+	public List<ProcessConnection> getProcessConnections() {
 		return em//
 				.createQuery("SELECT pc FROM ProcessConnectionTable pc", ProcessConnectionTable.class)//
 				.getResultList()//
 				.stream()//
-				.map(connection -> new ProcessConnection(
-						connection.getCallingProcess().getId(),
+				.map(connection -> new ProcessConnection(connection.getCallingProcess().getId(),
 						connection.getCalledProcess().getId()))//
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public ProcessMap getProcessMap() {
-		
+
 		List<ProcessInformation> processModelInformation = getProcessModels();
 		List<ProcessConnection> processConnections = getProcessConnections();
-		
+
 		ProcessMap map = new ProcessMap();
 		map.setConnections(processConnections);
 		map.setProcesses(processModelInformation);
-		
+
 		return map;
 	}
 }

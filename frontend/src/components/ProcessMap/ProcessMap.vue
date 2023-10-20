@@ -10,8 +10,6 @@
         Prozess: {{ selectedProcess.processName }}
       </v-card-title>
       <v-card-text>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-        magna aliqua.
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -63,7 +61,7 @@ export default defineComponent({
     fetchProcessModels() {
       axios.get("/api/process-map").then(result => {
         let processes = result.data.processes.map((process: Process) => { return { data: { id: process.id, name: process.processName } } });
-        console.log(processes)
+
         this.processMapElements.push(...processes);
         let connections = result.data.connections.map((connection: Connection) => {
           return {
