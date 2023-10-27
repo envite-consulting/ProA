@@ -23,32 +23,23 @@ export default defineComponent({
 
 
   mounted: function () {
-    console.log("mounted2");
 
     var viewer = new BpmnViewer({
       container: '#process-modelling'
     });
 
-    let url = '/resources/diagram_1.bpmn';
-    if(!!this.$route.params.id){
-        url = '/api/process-model/'+this.$route.params.id;
-    }
+    let url = '/api/process-model/'+this.$route.params.id;
 
-    console.log(url);
     axios.get(url)
       .then(response => {
         var xmltext = response.data;
         viewer.importXML(xmltext).then(function (result: any) {
 
           const { warnings } = result;
-
-          console.log('success !', warnings);
-
           viewer.get('process-modelling').zoom('fit-viewport');
         }).catch(function (err: any) {
 
           const { warnings, message } = err;
-
           console.log('something went wrong:', warnings, message);
         });
       });

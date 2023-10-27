@@ -70,7 +70,6 @@ export default defineComponent({
       axios.get("/api/process-model/" + processId + "/details").then(result => {
         this.details = result.data;
         this.infoDialog=true;
-        console.log(result)
       })
     },
   },

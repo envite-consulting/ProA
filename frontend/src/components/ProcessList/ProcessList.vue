@@ -112,11 +112,8 @@ export default defineComponent({
         formData.append("fileName", this.processModel[0].name);
         formData.append("description", this.description);
 
-        console.log(this.processModel[0].name);
-
         axios.post("/api/process-model", formData)
           .then(response => {
-            console.log(response);
             this.fetchProcessModels();
             this.processModel = [];
             this.uploadDialog = false;
