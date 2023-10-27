@@ -17,16 +17,13 @@ public class ProcessModel {
 	
     private String name;
     
-    @Lob
-    @Column
     private String bpmnXml;
     
-    @OneToMany
     private List<ProcessEvent> startEvents = new ArrayList<>();
     
-    @OneToMany
     private List<ProcessEvent> intermediateEvents = new ArrayList<>();
     
-    @OneToMany
     private List<ProcessEvent> endEvents = new ArrayList<>();
+    
+    private String description;
 }

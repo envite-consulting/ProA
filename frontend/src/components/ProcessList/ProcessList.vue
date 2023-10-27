@@ -1,7 +1,26 @@
 <template>
-  <v-list lines="one" class="pa-6">
-    <template v-for="(model, index) in processModels" :key="'process-'+model.id">
-      <v-list-item :title="model.processName" :to="'/ProcessView/' + model.id"></v-list-item>
+  <v-list lines="two" class="pa-6">
+    <template v-for="(model, index) in processModels" :key="'process-'+model.id" >
+    <v-list-item >
+        <v-list-item-title>{{model.processName}}</v-list-item-title>
+
+        <v-list-item-subtitle>
+          {{new Date(model.createdAt).toLocaleString("de-DE")}} {{!!model.description ? '-' : ''}} {{model.description}}
+        </v-list-item-subtitle>
+        <template v-slot:append>
+          <v-btn
+            color="grey-lighten-1"
+            icon="mdi-more"
+            variant="text"
+            :to="'/ProcessView/' + model.id"
+          ></v-btn>
+          <v-btn
+            color="grey-lighten-1"
+            icon="mdi-information"
+            variant="text"
+          ></v-btn>
+        </template>
+      </v-list-item>
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
   </v-list>
@@ -12,7 +31,7 @@
     </v-fab-transition>
   </div>
 
-  <v-dialog v-model="dialog" persistent width="1024">
+  <v-dialog v-model="dialog" persistent width="600">
     <v-card>
       <v-card-title>
         <span class="text-h5">Prozesmodell hochladen</span>
@@ -20,15 +39,14 @@
       <v-card-text>
         <v-container>
           <v-row>
-            <v-col cols="12" sm="6" md="4">
+            <v-col cols="12" sm="12" md="12">
               <v-file-input label="Prozessmodell" v-model="processModel"></v-file-input>
             </v-col>
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field label="Beschreibung" hint="example of helper text only on focus"></v-text-field>
+            <v-col cols="12" sm="12" md="12">
+              <v-textarea label="Beschreibung" v-model="description"></v-textarea>
             </v-col>
           </v-row>
         </v-container>
-        <small>*indicates required field</small>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -50,11 +68,14 @@ import axios from 'axios';
 declare interface ProcessModel {
   id: number,
   processName: string
+  descrption: string
+  createdAt: string
 }
 
 export default defineComponent({
   data: () => ({
     dialog: false,
+    description: '',
     processModel: [] as File[],
     processModels: [] as ProcessModel[],
   }),
@@ -75,6 +96,7 @@ export default defineComponent({
         let formData = new FormData();
         formData.append("processModel", this.processModel[0]);
         formData.append("fileName", this.processModel[0].name);
+        formData.append("description", this.description);
 
         console.log(this.processModel[0].name);
 

@@ -18,12 +18,18 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessOperations processOperations;
 
-	public Long saveProcessModel(String name, String xml) {
+	public Long saveProcessModel(String name, String xml, String description) {
 
 		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
 		List<ProcessEvent> endEvents = processOperations.getEndEvents(xml);
 
-		ProcessModel processModel = new ProcessModel(name, xml, startEvents, new ArrayList<>(), endEvents);
+		ProcessModel processModel = new ProcessModel(name, //
+				xml, //
+				startEvents, //
+				new ArrayList<>(), //
+				endEvents, //
+				description//
+		);
 
 		return repository.saveProcessModel(processModel);
 	}

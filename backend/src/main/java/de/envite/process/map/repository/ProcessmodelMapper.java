@@ -18,7 +18,7 @@ public class ProcessmodelMapper {
 		table.setStartEvents(map(processModel.getStartEvents(), EventType.START, table));
 		table.setIntermediateEvents(map(processModel.getIntermediateEvents(), EventType.INTERMEDIATE,table));
 		table.setEndEvents(map(processModel.getEndEvents(), EventType.END,table));
-
+		table.setDescription(processModel.getDescription());
 		return table;
 	}
 

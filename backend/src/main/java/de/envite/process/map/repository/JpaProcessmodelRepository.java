@@ -1,5 +1,6 @@
 package de.envite.process.map.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 	@Transactional
 	public Long saveProcessModel(ProcessModel processModel) {
 		ProcessModelTable table = ProcessmodelMapper.map(processModel);
+		table.setCreatedAt(LocalDateTime.now());
 		em.persist(table);
 
 		processModel//
@@ -104,7 +106,11 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.createQuery("SELECT pm FROM ProcessModelTable pm", ProcessModelTable.class)//
 				.getResultList()//
 				.stream()//
-				.map(model -> new ProcessInformation(model.getId(), model.getName()))//
+				.map(model -> new ProcessInformation(//
+						model.getId(), //
+						model.getName(), //
+						model.getDescription(), //
+						model.getCreatedAt()))//
 				.collect(Collectors.toList());
 	}
 

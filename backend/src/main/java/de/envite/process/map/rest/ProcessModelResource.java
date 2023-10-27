@@ -10,9 +10,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
 import de.envite.process.map.entities.ProcessInformation;
-import de.envite.process.map.entities.ProcessMap;
 import de.envite.process.map.usecases.ProcessModelUsecase;
-import de.envite.process.map.usecases.processmap.ProcessMapUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -33,7 +31,7 @@ public class ProcessModelResource {
 	 * @param processModel the bpmn file
 	 * @param fileName the file name of the bpmn file
 	 * @param description 
-	 * @return
+	 * @return id of saved process model
 	 */
 	@POST
 	public Long uploadProcessModel(@RestForm File processModel, @RestForm String fileName,
@@ -41,7 +39,7 @@ public class ProcessModelResource {
 
 		String content = readFileToString(processModel);
 
-		return usecase.saveProcessModel(fileName, content);
+		return usecase.saveProcessModel(fileName, content, description);
 	}
 
 	/**
