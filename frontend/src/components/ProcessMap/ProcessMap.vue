@@ -1,11 +1,10 @@
 <template>
-  <ProcessDetailDialog ref="processDetailDialog"/>
+  <ProcessDetailDialog ref="processDetailDialog" />
   <v-card height="100%">
 
     <div id="cyto-graph" class="cyto-diagram"></div>
 
   </v-card>
-
 </template>
 <style scoped>
 .cyto-diagram {
@@ -30,7 +29,7 @@ interface Connection {
 }
 
 export default defineComponent({
-  components:{
+  components: {
     ProcessDetailDialog
   },
   data: () => ({
@@ -102,6 +101,8 @@ export default defineComponent({
         }
 
       });
+
+      cy.layout({ name: 'breadthfirst' }).run();
 
       cy.on('click', 'node', function (evt: any) {
         var evtTarget = evt.target;
