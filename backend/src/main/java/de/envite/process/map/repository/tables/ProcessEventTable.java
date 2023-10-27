@@ -25,5 +25,11 @@ public class ProcessEventTable {
     private EventType eventType;
     
     @ManyToOne(fetch = FetchType.EAGER)
-    private ProcessModelTable processModel;
+    private ProcessModelTable processModelForStartEvent;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    private ProcessModelTable processModelForIntermediateEvent;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    private ProcessModelTable processModelForEndEvent;
 }

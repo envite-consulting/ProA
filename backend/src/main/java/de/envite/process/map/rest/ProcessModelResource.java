@@ -9,6 +9,7 @@ import java.util.List;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
+import de.envite.process.map.entities.ProcessDetails;
 import de.envite.process.map.entities.ProcessInformation;
 import de.envite.process.map.usecases.ProcessModelUsecase;
 import jakarta.inject.Inject;
@@ -61,8 +62,15 @@ public class ProcessModelResource {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<ProcessInformation> getProcessModels() {
-		return usecase.getProcessModels();
+	public List<ProcessInformation> getProcessInformation() {
+		return usecase.getProcessInformation();
+	}
+	
+	@GET
+	@Path("/{id}/details")
+	@Produces(MediaType.APPLICATION_JSON)
+	public ProcessDetails getProcessDetails(@RestPath Long id) {
+		return usecase.getProcessDetails(id);
 	}
 
 	

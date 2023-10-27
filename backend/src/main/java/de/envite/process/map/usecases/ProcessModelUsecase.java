@@ -3,6 +3,7 @@ package de.envite.process.map.usecases;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.envite.process.map.entities.ProcessDetails;
 import de.envite.process.map.entities.ProcessEvent;
 import de.envite.process.map.entities.ProcessInformation;
 import de.envite.process.map.entities.ProcessModel;
@@ -38,7 +39,11 @@ public class ProcessModelUsecase {
 		return repository.getProcessModel(id);
 	}
 
-	public List<ProcessInformation> getProcessModels() {
-		return repository.getProcessModels();
+	public List<ProcessInformation> getProcessInformation() {
+		return repository.getProcessInformation();
+	}
+
+	public ProcessDetails getProcessDetails(Long id) {
+		return repository.getProcessDetails(id);
 	}
 }

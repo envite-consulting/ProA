@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.envite.process.map.entities.ProcessConnection;
+import de.envite.process.map.entities.ProcessDetails;
 import de.envite.process.map.entities.ProcessEvent;
 import de.envite.process.map.entities.ProcessInformation;
 import de.envite.process.map.entities.ProcessMap;
@@ -59,7 +60,7 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 		startEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(newTable);
-			connection.setCalledProcess(event.getProcessModel());
+			connection.setCalledProcess(event.getProcessModelForStartEvent());
 			connection.setCallingElementType(EventType.END.toString());
 			connection.setCallingElement(newEvent.getElementId());
 			connection.setCalledElementType(EventType.START.toString());
@@ -80,7 +81,7 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 
 		endEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
-			connection.setCallingProcess(event.getProcessModel());
+			connection.setCallingProcess(event.getProcessModelForEndEvent());
 			connection.setCalledProcess(newTable);
 			connection.setCallingElementType(EventType.START.toString());
 			connection.setCallingElement(event.getElementId());
@@ -101,7 +102,7 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 
 	@Override
 	@Transactional
-	public List<ProcessInformation> getProcessModels() {
+	public List<ProcessInformation> getProcessInformation() {
 		return em//
 				.createQuery("SELECT pm FROM ProcessModelTable pm", ProcessModelTable.class)//
 				.getResultList()//
@@ -128,7 +129,7 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 	@Override
 	public ProcessMap getProcessMap() {
 
-		List<ProcessInformation> processModelInformation = getProcessModels();
+		List<ProcessInformation> processModelInformation = getProcessInformation();
 		List<ProcessConnection> processConnections = getProcessConnections();
 
 		ProcessMap map = new ProcessMap();
@@ -136,5 +137,34 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 		map.setProcesses(processModelInformation);
 
 		return map;
+	}
+
+	@Override
+	public ProcessDetails getProcessDetails(Long id) {
+		ProcessModelTable table = em.find(ProcessModelTable.class, id);
+
+		ProcessDetails details = new ProcessDetails();
+		details.setId(table.getId());
+		details.setName(table.getName());
+		details.setDescription(table.getDescription());
+		details.setStartEvents(map(table.getStartEvents()));
+		details.setIntermediateEvents(map(table.getIntermediateEvents()));
+		details.setEndEvents(map(table.getEndEvents()));
+
+		return details;
+	}
+
+	private List<ProcessEvent> map(List<ProcessEventTable> events) {
+		return events//
+				.stream()//
+				.map(event -> map(event))//
+				.collect(Collectors.toList());
+	}
+
+	private ProcessEvent map(ProcessEventTable table) {
+		ProcessEvent event = new ProcessEvent();
+		event.setElementId(table.getElementId());
+		event.setLabel(table.getLabel());
+		return event;
 	}
 }

@@ -1,4 +1,6 @@
 <template>
+  
+  <ProcessDetailDialog ref="processDetailDialog"/>
   <v-list lines="two" class="pa-6">
     <template v-for="(model, index) in processModels" :key="'process-'+model.id" >
     <v-list-item >
@@ -18,6 +20,7 @@
             color="grey-lighten-1"
             icon="mdi-information"
             variant="text"
+            @click="()=>showProcessInfoDialog(model.id)"
           ></v-btn>
         </template>
       </v-list-item>
@@ -26,12 +29,12 @@
   </v-list>
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus" @click="dialog = true"
+      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus" @click="uploadDialog = true"
         size="large" />
     </v-fab-transition>
   </div>
 
-  <v-dialog v-model="dialog" persistent width="600">
+  <v-dialog v-model="uploadDialog" persistent width="600">
     <v-card>
       <v-card-title>
         <span class="text-h5">Prozesmodell hochladen</span>
@@ -50,20 +53,22 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" variant="text" @click="dialog = false">
-          Close
+        <v-btn color="blue-darken-1" variant="text" @click="uploadDialog = false">
+          Schließen
         </v-btn>
         <v-btn color="blue-darken-1" variant="text" @click="uploadProcessModel">
-          Save
+          Speichern
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
+
 </template>
 <style></style>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import {defineComponent } from 'vue';
 import axios from 'axios';
+import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 
 declare interface ProcessModel {
   id: number,
@@ -73,8 +78,13 @@ declare interface ProcessModel {
 }
 
 export default defineComponent({
+  
+  components:{
+    ProcessDetailDialog
+  },
   data: () => ({
-    dialog: false,
+    uploadDialog: false,
+    infoDialog: false,
     description: '',
     processModel: [] as File[],
     processModels: [] as ProcessModel[],
@@ -83,6 +93,10 @@ export default defineComponent({
     this.fetchProcessModels();
   },
   methods: {
+
+    showProcessInfoDialog(processId: number){
+      (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
+    },
 
     fetchProcessModels() {
       axios.get("/api/process-model").then(result => {
@@ -105,7 +119,7 @@ export default defineComponent({
             console.log(response);
             this.fetchProcessModels();
             this.processModel = [];
-            this.dialog = false;
+            this.uploadDialog = false;
           }).catch(error => {
             console.log(error)
           });

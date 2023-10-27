@@ -34,7 +34,13 @@ public class ProcessmodelMapper {
 		table.setElementId(event.getElementId());
 		table.setLabel(event.getLabel());
 		table.setEventType(eventType);
-		table.setProcessModel(processModelTable);
+		if(eventType.equals(EventType.START)) {
+			table.setProcessModelForStartEvent(processModelTable);
+		}else if(eventType.equals(EventType.INTERMEDIATE)) {
+			table.setProcessModelForIntermediateEvent(processModelTable);
+		}else if(eventType.equals(EventType.END)) {
+			table.setProcessModelForEndEvent(processModelTable);
+		}
 		return table;
 	}
 }

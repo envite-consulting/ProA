@@ -1,25 +1,11 @@
 <template>
+  <ProcessDetailDialog ref="processDetailDialog"/>
   <v-card height="100%">
 
     <div id="cyto-graph" class="cyto-diagram"></div>
 
   </v-card>
-  <v-dialog v-model="dialog" width="auto">
-    <v-card>
-      <v-card-title class="text-h5">
-        Prozess: {{ selectedProcess.processName }}
-      </v-card-title>
-      <v-card-text>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="green-darken-1" variant="text" @click="$router.push('/ProcessView/' + selectedProcess.id)">
-          Prozess öffnen
-        </v-btn>
-        <v-btn color="primary" variant="text" @click="dialog = false">Schließen</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+
 </template>
 <style scoped>
 .cyto-diagram {
@@ -31,6 +17,7 @@
 import { defineComponent } from 'vue'
 import cytoscape, { ElementDefinition } from 'cytoscape';
 import axios from 'axios';
+import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 
 interface Process {
   id: string
@@ -43,9 +30,11 @@ interface Connection {
 }
 
 export default defineComponent({
+  components:{
+    ProcessDetailDialog
+  },
   data: () => ({
     cy: null,
-    dialog: false,
     processMapElements: [] as ElementDefinition[],
     selectedProcess: {} as Process,
   }),
@@ -116,10 +105,7 @@ export default defineComponent({
 
       cy.on('click', 'node', function (evt: any) {
         var evtTarget = evt.target;
-        const selectedProcess = component.processMapElements.find(element => element.data.id === evtTarget.id());
-        component.selectedProcess = {} as Process;
-        component.selectedProcess = { id: selectedProcess!.data!.id!, processName: selectedProcess?.data.name };
-        component.dialog = true;
+        (component.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(evtTarget.id());
       });
     }
   }

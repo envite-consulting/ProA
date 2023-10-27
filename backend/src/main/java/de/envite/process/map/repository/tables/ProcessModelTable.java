@@ -27,13 +27,13 @@ public class ProcessModelTable {
 	@Column
 	private String bpmnXml;
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModelForStartEvent")
 	private List<ProcessEventTable> startEvents = new ArrayList<>();
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModelForIntermediateEvent")
 	private List<ProcessEventTable> intermediateEvents = new ArrayList<>();
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModelForEndEvent")
 	private List<ProcessEventTable> endEvents = new ArrayList<>();
 
 	@Column
