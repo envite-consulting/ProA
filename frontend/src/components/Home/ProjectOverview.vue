@@ -6,7 +6,6 @@
 <style scoped></style>
 <script lang="ts">
 import { defineComponent } from 'vue'
-import cytoscape from 'cytoscape';
 
 export default defineComponent({
   data: () => ({
