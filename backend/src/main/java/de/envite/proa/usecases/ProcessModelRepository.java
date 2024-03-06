@@ -1,10 +1,10 @@
-package de.envite.process.map.usecases;
+package de.envite.proa.usecases;
 
 import java.util.List;
 
-import de.envite.process.map.entities.ProcessDetails;
-import de.envite.process.map.entities.ProcessInformation;
-import de.envite.process.map.entities.ProcessModel;
+import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.ProcessInformation;
+import de.envite.proa.entities.ProcessModel;
 
 public interface ProcessModelRepository {
 

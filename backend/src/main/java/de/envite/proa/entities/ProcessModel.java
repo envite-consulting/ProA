@@ -1,4 +1,4 @@
-package de.envite.process.map.entities;
+package de.envite.proa.entities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProcessDetails {
-	
-	private Long id;
+public class ProcessModel {
 	
     private String name;
+    
+    private String bpmnXml;
     
     private List<ProcessEvent> startEvents = new ArrayList<>();
     
@@ -22,6 +22,7 @@ public class ProcessDetails {
     
     private List<ProcessEvent> endEvents = new ArrayList<>();
     
+    private List<ProcessActivity> callActivities = new ArrayList<>();
+    
     private String description;
-
 }

@@ -1,11 +1,8 @@
-package de.envite.process.map.entities;
+package de.envite.proa.entities;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,11 +10,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProcessModel {
+public class ProcessDetails {
+	
+	private Long id;
 	
     private String name;
-    
-    private String bpmnXml;
     
     private List<ProcessEvent> startEvents = new ArrayList<>();
     
@@ -26,4 +23,5 @@ public class ProcessModel {
     private List<ProcessEvent> endEvents = new ArrayList<>();
     
     private String description;
+
 }

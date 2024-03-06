@@ -1,6 +1,6 @@
-package de.envite.process.map.usecases.processmap;
+package de.envite.proa.usecases.processmap;
 
-import de.envite.process.map.entities.ProcessMap;
+import de.envite.proa.entities.ProcessMap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

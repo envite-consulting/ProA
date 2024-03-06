@@ -1,21 +1,24 @@
-package de.envite.process.map.repository;
+package de.envite.proa.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.envite.process.map.entities.ProcessConnection;
-import de.envite.process.map.entities.ProcessDetails;
-import de.envite.process.map.entities.ProcessEvent;
-import de.envite.process.map.entities.ProcessInformation;
-import de.envite.process.map.entities.ProcessMap;
-import de.envite.process.map.entities.ProcessModel;
-import de.envite.process.map.repository.tables.EventType;
-import de.envite.process.map.repository.tables.ProcessConnectionTable;
-import de.envite.process.map.repository.tables.ProcessEventTable;
-import de.envite.process.map.repository.tables.ProcessModelTable;
-import de.envite.process.map.usecases.ProcessModelRepository;
-import de.envite.process.map.usecases.processmap.ProcessMapRespository;
+import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessConnection;
+import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.ProcessElementType;
+import de.envite.proa.entities.ProcessEvent;
+import de.envite.proa.entities.ProcessInformation;
+import de.envite.proa.entities.ProcessMap;
+import de.envite.proa.entities.ProcessModel;
+import de.envite.proa.repository.tables.CallActivityTable;
+import de.envite.proa.repository.tables.EventType;
+import de.envite.proa.repository.tables.ProcessConnectionTable;
+import de.envite.proa.repository.tables.ProcessEventTable;
+import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.usecases.ProcessModelRepository;
+import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -30,10 +33,70 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 	@Override
 	@Transactional
 	public Long saveProcessModel(ProcessModel processModel) {
+
 		ProcessModelTable table = ProcessmodelMapper.map(processModel);
 		table.setCreatedAt(LocalDateTime.now());
 		em.persist(table);
 
+		connectEvents(processModel, table);
+
+		connectCallActivities(processModel, table);
+
+		em.flush();
+		return table.getId();
+	}
+
+	private void connectCallActivities(ProcessModel processModel, ProcessModelTable table) {
+		processModel//
+				.getCallActivities()//
+				.forEach(activity -> {
+					connectCallActivityWithProcess(table, activity);
+				});
+
+		connectProcessWithCallActivity(table);
+	}
+
+	private void connectProcessWithCallActivity(ProcessModelTable table) {
+		List<CallActivityTable> callActivityTables = em
+				.createQuery("SELECT c FROM CallActivityTable c WHERE c.label = :label", CallActivityTable.class)
+				.setParameter("label", table.getName())//
+				.getResultList();
+
+		callActivityTables.forEach(callActivityTable -> {
+			ProcessConnectionTable connection = new ProcessConnectionTable();
+			connection.setCallingProcess(callActivityTable.getProcessModel());
+			connection.setCallingElementType(ProcessElementType.CALL_ACTIVITY);
+			connection.setCallingElement(callActivityTable.getElementId());
+
+			connection.setCalledProcess(table);
+			connection.setCalledElementType(ProcessElementType.START_EVENT);
+			// called element remains empty
+			em.persist(connection);
+		});
+	}
+
+	private void connectCallActivityWithProcess(ProcessModelTable table, ProcessActivity activity) {
+		List<ProcessModelTable> processModelTable = em
+				.createQuery("SELECT p FROM ProcessModelTable p WHERE p.name = :name", ProcessModelTable.class)
+				.setParameter("name", activity.getLabel())//
+				.getResultList();
+
+		processModelTable.forEach(process -> {
+			ProcessConnectionTable connection = new ProcessConnectionTable();
+			connection.setCallingProcess(table);
+			connection.setCallingElement(activity.getElementId());
+			connection.setCallingElementType(ProcessElementType.CALL_ACTIVITY);
+			connection.setCalledProcess(process);
+			// When the entire process is called, the called process is started using the
+			// start event
+			connection.setCalledElementType(ProcessElementType.START_EVENT);
+			// called element remains empty
+			em.persist(connection);
+		});
+
+	}
+
+	private void connectEvents(ProcessModel processModel, ProcessModelTable table) {
 		processModel//
 				.getEndEvents()//
 				.forEach(event -> {
@@ -44,9 +107,6 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.forEach(event -> {
 					connectWithEndEvents(table, event);
 				});
-
-		em.flush();
-		return table.getId();
 	}
 
 	private void connectWithStartEvents(ProcessModelTable newTable, ProcessEvent newEvent) {
@@ -61,9 +121,9 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(newTable);
 			connection.setCalledProcess(event.getProcessModelForStartEvent());
-			connection.setCallingElementType(EventType.END.toString());
+			connection.setCallingElementType(ProcessElementType.END_EVENT);
 			connection.setCallingElement(newEvent.getElementId());
-			connection.setCalledElementType(EventType.START.toString());
+			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			connection.setCalledElement(event.getElementId());
 
 			System.out.println(connection.toString());
@@ -83,9 +143,9 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(event.getProcessModelForEndEvent());
 			connection.setCalledProcess(newTable);
-			connection.setCallingElementType(EventType.START.toString());
+			connection.setCallingElementType(ProcessElementType.START_EVENT);
 			connection.setCallingElement(event.getElementId());
-			connection.setCalledElementType(EventType.END.toString());
+			connection.setCalledElementType(ProcessElementType.END_EVENT);
 			connection.setCalledElement(newEvent.getElementId());
 
 			System.out.println(connection.toString());
@@ -121,9 +181,18 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.createQuery("SELECT pc FROM ProcessConnectionTable pc", ProcessConnectionTable.class)//
 				.getResultList()//
 				.stream()//
-				.map(connection -> new ProcessConnection(connection.getCallingProcess().getId(),
-						connection.getCalledProcess().getId()))//
+				.map(this::map)//
 				.collect(Collectors.toList());
+	}
+
+	private ProcessConnection map(ProcessConnectionTable table) {
+		ProcessConnection connection = new ProcessConnection();
+		connection.setCallingProcessid(table.getCallingProcess().getId());
+		connection.setCallingElementType(table.getCallingElementType());
+
+		connection.setCalledProcessid(table.getCalledProcess().getId());
+		connection.setCalledElementType(table.getCalledElementType());
+		return connection;
 	}
 
 	@Override

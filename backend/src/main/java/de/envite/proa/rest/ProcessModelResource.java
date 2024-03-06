@@ -1,4 +1,4 @@
-package de.envite.process.map.rest;
+package de.envite.proa.rest;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,9 +9,9 @@ import java.util.List;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
-import de.envite.process.map.entities.ProcessDetails;
-import de.envite.process.map.entities.ProcessInformation;
-import de.envite.process.map.usecases.ProcessModelUsecase;
+import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.ProcessInformation;
+import de.envite.proa.usecases.ProcessModelUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -39,7 +39,7 @@ public class ProcessModelResource {
 			@RestForm String description) {
 
 		String content = readFileToString(processModel);
-
+		fileName = fileName.replace(".bpmn", "");
 		return usecase.saveProcessModel(fileName, content, description);
 	}
 

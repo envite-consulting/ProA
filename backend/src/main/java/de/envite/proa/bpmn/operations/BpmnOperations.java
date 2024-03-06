@@ -1,4 +1,4 @@
-package de.envite.process.map.bpmn.operations;
+package de.envite.proa.bpmn.operations;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -9,11 +9,13 @@ import java.util.stream.Collectors;
 
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.instance.CallActivity;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 
-import de.envite.process.map.entities.ProcessEvent;
-import de.envite.process.map.usecases.ProcessOperations;
+import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessEvent;
+import de.envite.proa.usecases.ProcessOperations;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -39,6 +41,18 @@ public class BpmnOperations implements ProcessOperations {
 		return startEvents//
 				.stream()//
 				.map(event -> new ProcessEvent(event.getId(), event.getName()))//
+				.collect(Collectors.toList());
+	}
+	
+	@Override
+	public List<ProcessActivity> getCallActivities(String processModel) {
+		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
+		
+		Collection<CallActivity> callActivities = processModelInstance.getModelElementsByType(CallActivity.class);
+		
+		return callActivities//
+				.stream()//
+				.map(activity -> new ProcessActivity(activity.getId(), activity.getName()))//
 				.collect(Collectors.toList());
 	}
 

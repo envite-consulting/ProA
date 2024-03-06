@@ -1,12 +1,13 @@
-package de.envite.process.map.usecases;
+package de.envite.proa.usecases;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import de.envite.process.map.entities.ProcessDetails;
-import de.envite.process.map.entities.ProcessEvent;
-import de.envite.process.map.entities.ProcessInformation;
-import de.envite.process.map.entities.ProcessModel;
+import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.ProcessEvent;
+import de.envite.proa.entities.ProcessInformation;
+import de.envite.proa.entities.ProcessModel;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -23,12 +24,14 @@ public class ProcessModelUsecase {
 
 		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
 		List<ProcessEvent> endEvents = processOperations.getEndEvents(xml);
+		List<ProcessActivity> callActivities =  processOperations.getCallActivities(xml);
 
 		ProcessModel processModel = new ProcessModel(name, //
 				xml, //
 				startEvents, //
 				new ArrayList<>(), //
 				endEvents, //
+				callActivities,//
 				description//
 		);
 

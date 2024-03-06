@@ -1,4 +1,4 @@
-package de.envite.process.map.entities;
+package de.envite.proa.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,9 @@
-package de.envite.process.map.repository.tables;
+package de.envite.proa.repository.tables;
 
+import de.envite.proa.entities.ProcessElementType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -21,9 +24,11 @@ public class ProcessConnectionTable {
 	@ManyToOne(fetch = FetchType.EAGER)
 	private ProcessModelTable calledProcess;
 
-	private String callingElementType;
+	@Enumerated(EnumType.STRING)
+	private ProcessElementType callingElementType;
 
-	private String calledElementType;
+	@Enumerated(EnumType.STRING)
+	private ProcessElementType calledElementType;
 
 	private String callingElement;
 

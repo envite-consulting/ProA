@@ -1,4 +1,4 @@
-package de.envite.process.map.entities;
+package de.envite.proa.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,5 +10,8 @@ import lombok.NoArgsConstructor;
 public class ProcessConnection {
 
 	private Long callingProcessid;
+	private ProcessElementType callingElementType;
+	
 	private Long calledProcessid;
+	private ProcessElementType calledElementType;
 }

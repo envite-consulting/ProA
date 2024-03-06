@@ -1,4 +1,4 @@
-package de.envite.process.map.entities;
+package de.envite.proa.entities;
 
 import java.util.ArrayList;
 import java.util.List;

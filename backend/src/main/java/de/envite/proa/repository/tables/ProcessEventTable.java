@@ -1,4 +1,4 @@
-package de.envite.process.map.repository.tables;
+package de.envite.proa.repository.tables;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
