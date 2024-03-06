@@ -23,6 +23,8 @@ public class ProcessModelUsecase {
 
 		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
 		List<ProcessEvent> endEvents = processOperations.getEndEvents(xml);
+		List<String> lanes = processOperations.getLanes(xml);
+		lanes.forEach(System.out::println);
 
 		ProcessModel processModel = new ProcessModel(name, //
 				xml, //

@@ -9,4 +9,6 @@ public interface ProcessOperations {
 	public List<ProcessEvent> getStartEvents(String processModel);
 	
 	public List<ProcessEvent> getEndEvents(String processModel);
+
+	public List<String> getLanes(String processModel);
 }
