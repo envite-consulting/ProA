@@ -15,12 +15,31 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { shapes, dia, connectors, anchors, linkTools, util, layout } from '@joint/core';
+import { shapes, dia, linkTools } from '@joint/core';
+import { paper, graph } from './JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
 
 import createAbstractProcessElement from "./AbstractProcessElement";
-import { AbstractProcessShape } from "./AbstractProcessElement";
+
+import axios from 'axios';
+
+interface Process {
+  id: number
+  processName: string
+}
+
+type ProcessElementType = "START_EVENT" | "INTERMEDIATE_EVENT" | "END_EVENT" | "CALL_ACTIVITY";
+
+interface Connection {
+  callingProcessid: number
+  callingElementType: ProcessElementType
+
+  calledProcessid: number
+  calledElementType: ProcessElementType
+}
+
+
 
 export default defineComponent({
   data: () => ({
@@ -31,92 +50,6 @@ export default defineComponent({
   mounted: function () {
 
     const paperContainer = document.getElementById("graph-container");
-
-
-
-
-    let linkIdCounter = 0;
-
-    const shapeNamespace = { ...shapes, AbstractProcessShape };
-    const graph = new dia.Graph({}, { cellNamespace: shapeNamespace });
-    const paper = new dia.Paper({
-      model: graph,
-      cellViewNamespace: shapeNamespace,
-      width: "100%",
-      height: "100%",
-      gridSize: 1,
-      async: true,
-      sorting: dia.Paper.sorting.APPROX,
-      background: { color: "#F3F7F6" },
-      interactive: {
-        // label move is disabled by default
-        labelMove: true
-      },
-      defaultLink: () => {
-        const linkIdNumber = ++linkIdCounter;
-        return new shapes.standard.Link({
-          id: `link${linkIdNumber}`,
-
-        });
-      },
-      defaultConnectionPoint: { name: "anchor" },
-      defaultConnector: {
-        name: "curve",
-        args: {
-          sourceDirection: connectors.curve.TangentDirections.RIGHT,
-          targetDirection: connectors.curve.TangentDirections.LEFT
-        }
-      },
-      validateMagnet: (sourceView, sourceMagnet) => {
-        const sourceGroup = sourceView.findAttribute("port-group", sourceMagnet);
-
-        if (sourceGroup !== "end" && sourceGroup !== "ievent" && sourceGroup !== "callActivity") {
-
-          return false;
-        }
-
-        return true;
-      },
-      validateConnection: (sourceView, sourceMagnet, targetView, targetMagnet) => {
-        if (sourceView === targetView) {
-          // Do not allow a loop link (starting and ending at the same element)/
-          return false;
-        }
-
-        const targetGroup = targetView.findAttribute("port-group", targetMagnet);
-        const targetPort = targetView.findAttribute("port", targetMagnet);
-        const target = targetView.model;
-
-        if (target.isLink()) {
-          // We allow connecting only links with elements (not links with links).
-          return false;
-        }
-
-        if (targetGroup !== "start") {
-          // It's not possible to add inbound links to output ports (only outbound links are allowed).
-          return false;
-        }
-        return true;
-      },
-      clickThreshold: 10,
-      magnetThreshold: "onleave",
-      linkPinning: false,
-      snapLinks: { radius: 20 },
-      snapLabels: true,
-      markAvailable: true,
-      highlighting: {
-        connecting: {
-          name: "mask",
-          options: {
-            layer: dia.Paper.Layers.BACK,
-            attrs: {
-              stroke: "#0057FF",
-              "stroke-width": 3
-            }
-          }
-        }
-      }
-    });
 
     paperContainer!.appendChild(paper.el);
 
@@ -252,7 +185,6 @@ export default defineComponent({
       const source = cell.source();
       const target = cell.target();
       if (!target.id) {
-        linkIdCounter--;
         return;
       }
 
@@ -266,6 +198,62 @@ export default defineComponent({
       marginY: 10,
     });
 
+    this.fetchProcessModels();
+
+  },
+  methods: {
+
+    fetchProcessModels() {
+      const component = this;
+      axios.get("/api/process-map").then(result => {
+        let abstracProcessShapes = result.data.processes.map((process: Process) => {
+          console.log(process.id+" : "+process.processName)
+          return createAbstractProcessElement(process.processName, process.id);
+        });
+
+        graph.addCell(abstracProcessShapes);
+
+
+        let connectionsShapes = result.data.connections.map((connection: Connection) => {
+
+          const link = new shapes.standard.Link();
+
+          const callingPortPrefix = component.getPortPrefix(connection.callingElementType);
+          const calledPortPrefix = component.getPortPrefix(connection.calledElementType);
+
+          link.set({
+            source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
+            target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
+          })
+          return link;
+        });
+
+        graph.addCell(connectionsShapes);
+
+        var graphBBox = DirectedGraph.layout(graph, {
+          nodeSep: 150,
+          edgeSep: 80,
+          rankDir: "TB",
+          marginX: 10,
+          marginY: 10,
+        });
+
+      })
+    },
+    getPortPrefix(elementType: ProcessElementType) {
+      switch (elementType) {
+        case 'START_EVENT':
+          return 'start-';
+        case 'INTERMEDIATE_EVENT':
+          return 'ievent-';
+        case 'END_EVENT':
+          return 'end-'
+        case 'CALL_ACTIVITY':
+          return 'call-'
+        default:
+          return '';
+      }
+    }
   }
 })
 </script>

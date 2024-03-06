@@ -109,22 +109,22 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				});
 	}
 
-	private void connectWithStartEvents(ProcessModelTable newTable, ProcessEvent newEvent) {
+	private void connectWithStartEvents(ProcessModelTable newTable, ProcessEvent newEndEvent) {
 		List<ProcessEventTable> startEventsWithSameLabel = em
 				.createQuery("SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType",
 						ProcessEventTable.class)
-				.setParameter("label", newEvent.getLabel())//
+				.setParameter("label", newEndEvent.getLabel())//
 				.setParameter("eventType", EventType.START)//
 				.getResultList();
 
 		startEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(newTable);
-			connection.setCalledProcess(event.getProcessModelForStartEvent());
+			connection.setCallingElement(newEndEvent.getElementId());
 			connection.setCallingElementType(ProcessElementType.END_EVENT);
-			connection.setCallingElement(newEvent.getElementId());
-			connection.setCalledElementType(ProcessElementType.START_EVENT);
+			connection.setCalledProcess(event.getProcessModelForStartEvent());
 			connection.setCalledElement(event.getElementId());
+			connection.setCalledElementType(ProcessElementType.START_EVENT);
 
 			System.out.println(connection.toString());
 			em.persist(connection);
@@ -142,11 +142,11 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 		endEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(event.getProcessModelForEndEvent());
-			connection.setCalledProcess(newTable);
-			connection.setCallingElementType(ProcessElementType.START_EVENT);
 			connection.setCallingElement(event.getElementId());
-			connection.setCalledElementType(ProcessElementType.END_EVENT);
+			connection.setCallingElementType(ProcessElementType.END_EVENT);
+			connection.setCalledProcess(newTable);
 			connection.setCalledElement(newEvent.getElementId());
+			connection.setCalledElementType(ProcessElementType.START_EVENT);
 
 			System.out.println(connection.toString());
 			em.persist(connection);
