@@ -109,7 +109,7 @@ export class AbstractProcessShape extends dia.Element {
     }
 }
 
-const createAbstractProcessElement = (label: string, id: string) => {
+const createAbstractProcessElement = (label: string, id: number) => {
 
     var wrapLabel = util.breakText(label, {
         width: 120

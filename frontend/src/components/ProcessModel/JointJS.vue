@@ -50,41 +50,8 @@ export default defineComponent({
   mounted: function () {
 
     const paperContainer = document.getElementById("graph-container");
-
     paperContainer!.appendChild(paper.el);
 
-    const s1 = createAbstractProcessElement("s1", "s1");
-
-    const s2 = createAbstractProcessElement('Element 2 asdfasdf asdfasdf', "s2");
-
-    const s3 = createAbstractProcessElement("s3", "s3");
-
-    const s4 = createAbstractProcessElement("s4", "s4");
-
-    const link = new shapes.standard.Link();
-    link.set({
-      source: { id: s1.id, port: "end-" + s1.id },
-      target: { id: s4.id, port: "start-" + s4.id }
-    })
-
-    const link2 = new shapes.standard.Link();
-    link2.set({
-      source: { id: s1.id, port: "call-" + s1.id },
-      target: { id: s3.id, port: "start-" + s3.id }
-    })
-
-    const link3 = new shapes.standard.Link();
-    link3.set({
-      source: { id: s4.id, port: "end-" + s4.id },
-      target: { id: s2.id, port: "start-" + s2.id }
-    })
-
-
-    graph.addCells([s1, s2, s3, s4, link, link2, link3]);
-
-
-
-    // Link Tools
 
     class PortTargetArrowhead extends linkTools.TargetArrowhead {
       preinitialize() {
@@ -188,14 +155,6 @@ export default defineComponent({
         return;
       }
 
-    });
-
-    var graphBBox = DirectedGraph.layout(graph, {
-      nodeSep: 150,
-      edgeSep: 80,
-      rankDir: "TB",
-      marginX: 10,
-      marginY: 10,
     });
 
     this.fetchProcessModels();
