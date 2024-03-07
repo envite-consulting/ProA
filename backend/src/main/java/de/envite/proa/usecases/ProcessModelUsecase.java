@@ -1,7 +1,10 @@
 package de.envite.proa.usecases;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import de.envite.proa.entities.ProcessActivity;
 import de.envite.proa.entities.ProcessDetails;
@@ -23,15 +26,20 @@ public class ProcessModelUsecase {
 	public Long saveProcessModel(String name, String xml, String description) {
 
 		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
+		List<ProcessEvent> intermediateThrowEvents = processOperations.getIntermediateThrowEvents(xml);
+		List<ProcessEvent> intermediateCatchEvents = processOperations.getIntermediateCatchEvents(xml);
 		List<ProcessEvent> endEvents = processOperations.getEndEvents(xml);
-		List<ProcessActivity> callActivities =  processOperations.getCallActivities(xml);
+		List<ProcessEvent> events = Stream.of(startEvents, //
+				intermediateThrowEvents, //
+				intermediateCatchEvents, //
+				endEvents//
+		).flatMap(Collection::stream).collect(Collectors.toList());
+		List<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
 
 		ProcessModel processModel = new ProcessModel(name, //
 				xml, //
-				startEvents, //
-				new ArrayList<>(), //
-				endEvents, //
-				callActivities,//
+				events, //
+				callActivities, //
 				description//
 		);
 

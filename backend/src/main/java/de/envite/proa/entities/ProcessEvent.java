@@ -11,4 +11,5 @@ public class ProcessEvent {
 
 	private String elementId;
 	private String label;
+	private EventType eventType;
 }

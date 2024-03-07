@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.envite.proa.entities.EventType;
 import de.envite.proa.entities.ProcessActivity;
 import de.envite.proa.entities.ProcessConnection;
 import de.envite.proa.entities.ProcessDetails;
@@ -13,7 +14,6 @@ import de.envite.proa.entities.ProcessInformation;
 import de.envite.proa.entities.ProcessMap;
 import de.envite.proa.entities.ProcessModel;
 import de.envite.proa.repository.tables.CallActivityTable;
-import de.envite.proa.repository.tables.EventType;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
@@ -98,57 +98,84 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 
 	private void connectEvents(ProcessModel processModel, ProcessModelTable table) {
 		processModel//
-				.getEndEvents()//
+				.getEvents()//
 				.forEach(event -> {
-					connectWithStartEvents(table, event);
-				});
-		processModel//
-				.getStartEvents()//
-				.forEach(event -> {
-					connectWithEndEvents(table, event);
+					connectEvents(table, event);
 				});
 	}
 
-	private void connectWithStartEvents(ProcessModelTable newTable, ProcessEvent newEndEvent) {
+	private void connectEvents(ProcessModelTable table, ProcessEvent event) {
+		switch (event.getEventType()) {
+		case START:
+		case INTERMEDIATE_CATCH:
+			connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW);
+			connectWithThrowEvents(table, event, EventType.END);
+			break;
+		case INTERMEDIATE_THROW:
+		case END:
+			connectWithCatchEvents(table, event, EventType.START);
+			connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH);
+			break;
+		}
+	}
+
+	private void connectWithCatchEvents(ProcessModelTable newTable, ProcessEvent newThrowEvent,
+			EventType eventTypeToConnectTo) {
 		List<ProcessEventTable> startEventsWithSameLabel = em
 				.createQuery("SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType",
 						ProcessEventTable.class)
-				.setParameter("label", newEndEvent.getLabel())//
-				.setParameter("eventType", EventType.START)//
+				.setParameter("label", newThrowEvent.getLabel())//
+				.setParameter("eventType", eventTypeToConnectTo)//
 				.getResultList();
 
 		startEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(newTable);
-			connection.setCallingElement(newEndEvent.getElementId());
-			connection.setCallingElementType(ProcessElementType.END_EVENT);
-			connection.setCalledProcess(event.getProcessModelForStartEvent());
-			connection.setCalledElement(event.getElementId());
-			connection.setCalledElementType(ProcessElementType.START_EVENT);
+			connection.setCallingElement(newThrowEvent.getElementId());
+			if (newThrowEvent.getEventType().equals(EventType.INTERMEDIATE_THROW)) {
+				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
+			} else if (newThrowEvent.getEventType().equals(EventType.END)) {
+				connection.setCallingElementType(ProcessElementType.END_EVENT);
+			}
 
-			System.out.println(connection.toString());
+			connection.setCalledProcess(event.getProcessModel());
+			connection.setCalledElement(event.getElementId());
+			if (eventTypeToConnectTo.equals(EventType.START)) {
+				connection.setCalledElementType(ProcessElementType.START_EVENT);
+			} else if (eventTypeToConnectTo.equals(EventType.INTERMEDIATE_CATCH)) {
+				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
+			}
+
 			em.persist(connection);
 		});
 	}
 
-	private void connectWithEndEvents(ProcessModelTable newTable, ProcessEvent newEvent) {
+	private void connectWithThrowEvents(ProcessModelTable newTable, ProcessEvent newEvent, EventType eventTypeForConnectionFrom) {
 		List<ProcessEventTable> endEventsWithSameLabel = em
 				.createQuery("SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType",
 						ProcessEventTable.class)
 				.setParameter("label", newEvent.getLabel())//
-				.setParameter("eventType", EventType.END)//
+				.setParameter("eventType", eventTypeForConnectionFrom)//
 				.getResultList();
 
 		endEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
-			connection.setCallingProcess(event.getProcessModelForEndEvent());
+			connection.setCallingProcess(event.getProcessModel());
 			connection.setCallingElement(event.getElementId());
-			connection.setCallingElementType(ProcessElementType.END_EVENT);
+			if(eventTypeForConnectionFrom.equals(EventType.END)) {
+				connection.setCallingElementType(ProcessElementType.END_EVENT);
+			}else if(eventTypeForConnectionFrom.equals(EventType.INTERMEDIATE_THROW)) {
+				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
+			}
+			
 			connection.setCalledProcess(newTable);
 			connection.setCalledElement(newEvent.getElementId());
-			connection.setCalledElementType(ProcessElementType.START_EVENT);
+			if(newEvent.getEventType().equals(EventType.START)) {
+				connection.setCalledElementType(ProcessElementType.START_EVENT);
+			}else if(newEvent.getEventType().equals(EventType.INTERMEDIATE_CATCH)) {
+				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
+			}
 
-			System.out.println(connection.toString());
 			em.persist(connection);
 		});
 	}
@@ -216,17 +243,18 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 		details.setId(table.getId());
 		details.setName(table.getName());
 		details.setDescription(table.getDescription());
-		details.setStartEvents(map(table.getStartEvents()));
-		details.setIntermediateEvents(map(table.getIntermediateEvents()));
-		details.setEndEvents(map(table.getEndEvents()));
+		details.setStartEvents(map(table.getEvents(), EventType.START));
+		details.setIntermediateCatchEvents(map(table.getEvents(), EventType.INTERMEDIATE_CATCH));
+		details.setIntermediateThrowEvents(map(table.getEvents(), EventType.INTERMEDIATE_THROW));
+		details.setEndEvents(map(table.getEvents(), EventType.END));
 
 		return details;
 	}
 
-	private List<ProcessEvent> map(List<ProcessEventTable> events) {
+	private List<ProcessEvent> map(List<ProcessEventTable> events, EventType eventType) {
 		return events//
 				.stream()//
-				.map(event -> map(event))//
+				.filter(event -> event.getEventType().equals(eventType)).map(event -> map(event))//
 				.collect(Collectors.toList());
 	}
 

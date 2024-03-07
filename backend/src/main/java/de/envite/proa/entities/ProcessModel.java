@@ -16,11 +16,7 @@ public class ProcessModel {
     
     private String bpmnXml;
     
-    private List<ProcessEvent> startEvents = new ArrayList<>();
-    
-    private List<ProcessEvent> intermediateEvents = new ArrayList<>();
-    
-    private List<ProcessEvent> endEvents = new ArrayList<>();
+    private List<ProcessEvent> events = new ArrayList<>();
     
     private List<ProcessActivity> callActivities = new ArrayList<>();
     

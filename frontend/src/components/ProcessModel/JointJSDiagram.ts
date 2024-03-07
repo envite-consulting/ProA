@@ -35,7 +35,7 @@ export const paper = new dia.Paper({
     validateMagnet: (sourceView, sourceMagnet) => {
         const sourceGroup = sourceView.findAttribute("port-group", sourceMagnet);
 
-        if (sourceGroup !== "end" && sourceGroup !== "ievent" && sourceGroup !== "callActivity") {
+        if (sourceGroup !== "end" && sourceGroup !== "i-throw-event" && sourceGroup !== "callActivity") {
 
             return false;
         }

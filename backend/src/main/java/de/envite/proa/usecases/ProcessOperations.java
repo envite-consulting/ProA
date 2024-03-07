@@ -12,4 +12,8 @@ public interface ProcessOperations {
 	public List<ProcessEvent> getEndEvents(String processModel);
 
 	public List<ProcessActivity> getCallActivities(String xml);
+
+	public List<ProcessEvent> getIntermediateThrowEvents(String xml);
+
+	public List<ProcessEvent> getIntermediateCatchEvents(String xml);
 }

@@ -29,7 +29,7 @@ interface Process {
   processName: string
 }
 
-type ProcessElementType = "START_EVENT" | "INTERMEDIATE_EVENT" | "END_EVENT" | "CALL_ACTIVITY";
+type ProcessElementType = "START_EVENT" | "INTERMEDIATE_CATCH_EVENT" | "INTERMEDIATE_THROW_EVENT" | "END_EVENT" | "CALL_ACTIVITY";
 
 interface Connection {
   callingProcessid: number
@@ -203,8 +203,10 @@ export default defineComponent({
       switch (elementType) {
         case 'START_EVENT':
           return 'start-';
-        case 'INTERMEDIATE_EVENT':
-          return 'ievent-';
+        case 'INTERMEDIATE_CATCH_EVENT':
+          return 'i-catch-event-';
+        case 'INTERMEDIATE_THROW_EVENT':
+          return 'i-throw-event-';
         case 'END_EVENT':
           return 'end-'
         case 'CALL_ACTIVITY':

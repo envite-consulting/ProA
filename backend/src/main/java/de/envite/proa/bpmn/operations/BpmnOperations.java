@@ -11,8 +11,12 @@ import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.CallActivity;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
+import org.camunda.bpm.model.bpmn.instance.Event;
+import org.camunda.bpm.model.bpmn.instance.IntermediateCatchEvent;
+import org.camunda.bpm.model.bpmn.instance.IntermediateThrowEvent;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
 
+import de.envite.proa.entities.EventType;
 import de.envite.proa.entities.ProcessActivity;
 import de.envite.proa.entities.ProcessEvent;
 import de.envite.proa.usecases.ProcessOperations;
@@ -23,25 +27,22 @@ public class BpmnOperations implements ProcessOperations {
 
 	@Override
 	public List<ProcessEvent> getStartEvents(String processModel) {
+		return getEvents(processModel, EventType.START, StartEvent.class);
+	}
+	
+	@Override
+	public List<ProcessEvent> getIntermediateThrowEvents(String processModel) {
+		return getEvents(processModel, EventType.INTERMEDIATE_THROW, IntermediateThrowEvent.class);
+	}
 
-		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
-
-		Collection<StartEvent> startEvents = processModelInstance.getModelElementsByType(StartEvent.class);
-		return startEvents//
-				.stream()//
-				.map(event -> new ProcessEvent(event.getId(), event.getName()))//
-				.collect(Collectors.toList());
+	@Override
+	public List<ProcessEvent> getIntermediateCatchEvents(String processModel) {
+		return getEvents(processModel, EventType.INTERMEDIATE_CATCH, IntermediateCatchEvent.class);
 	}
 
 	@Override
 	public List<ProcessEvent> getEndEvents(String processModel) {
-		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
-
-		Collection<EndEvent> startEvents = processModelInstance.getModelElementsByType(EndEvent.class);
-		return startEvents//
-				.stream()//
-				.map(event -> new ProcessEvent(event.getId(), event.getName()))//
-				.collect(Collectors.toList());
+		return getEvents(processModel, EventType.END, EndEvent.class);
 	}
 	
 	@Override
@@ -53,6 +54,16 @@ public class BpmnOperations implements ProcessOperations {
 		return callActivities//
 				.stream()//
 				.map(activity -> new ProcessActivity(activity.getId(), activity.getName()))//
+				.collect(Collectors.toList());
+	}
+	
+	private <T extends Event> List<ProcessEvent> getEvents(String processModel, EventType eventType, Class<T> eventClass){
+		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
+
+		Collection<T> startEvents = processModelInstance.getModelElementsByType(eventClass);
+		return startEvents//
+				.stream()//
+				.map(event -> new ProcessEvent(event.getId(), event.getName(), eventType))//
 				.collect(Collectors.toList());
 	}
 

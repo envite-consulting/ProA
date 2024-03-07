@@ -18,7 +18,9 @@ public class ProcessDetails {
     
     private List<ProcessEvent> startEvents = new ArrayList<>();
     
-    private List<ProcessEvent> intermediateEvents = new ArrayList<>();
+    private List<ProcessEvent> intermediateCatchEvents = new ArrayList<>();
+    
+    private List<ProcessEvent> intermediateThrowEvents = new ArrayList<>();
     
     private List<ProcessEvent> endEvents = new ArrayList<>();
     

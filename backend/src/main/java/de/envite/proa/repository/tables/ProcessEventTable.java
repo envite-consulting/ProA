@@ -1,5 +1,6 @@
 package de.envite.proa.repository.tables;
 
+import de.envite.proa.entities.EventType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,11 +26,5 @@ public class ProcessEventTable {
     private EventType eventType;
     
     @ManyToOne(fetch = FetchType.EAGER)
-    private ProcessModelTable processModelForStartEvent;
-    
-    @ManyToOne(fetch = FetchType.EAGER)
-    private ProcessModelTable processModelForIntermediateEvent;
-    
-    @ManyToOne(fetch = FetchType.EAGER)
-    private ProcessModelTable processModelForEndEvent;
+    private ProcessModelTable processModel;
 }

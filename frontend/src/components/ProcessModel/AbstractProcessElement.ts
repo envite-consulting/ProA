@@ -63,7 +63,7 @@ export class AbstractProcessShape extends dia.Element {
                             }
                         }
                     },
-                    ievent: {
+                    "i-throw-event": {
                         position: "bottom",
                         size: { width: 20, height: 20 },
                         attrs: {
@@ -133,8 +133,8 @@ const createAbstractProcessElement = (label: string, id: number) => {
                     group: "end",
                 },
                 {
-                    id: "ievent-" + id,
-                    group: "ievent",
+                    id: "i-throw-event-" + id,
+                    group: "i-throw-event",
                 },
                 {
                     id: "call-" + id,
