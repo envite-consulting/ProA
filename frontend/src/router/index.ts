@@ -32,7 +32,7 @@ const routes = [
       {
         path: 'JointJS',
         name: 'JointJS',
-        component: () => import('@/components/ProcessModel/JointJS.vue'),
+        component: () => import('@/components/ProcessMap/JointJS.vue'),
       },
     ],
   },

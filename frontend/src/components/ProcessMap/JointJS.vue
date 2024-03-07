@@ -1,6 +1,6 @@
 <template>
   <v-card height="100%">
-
+    <ProcessDetailDialog ref="processDetailDialog" />
     <div id="graph-container" class="full-screen"></div>
 
   </v-card>
@@ -16,13 +16,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { shapes, dia, linkTools } from '@joint/core';
-import { paper, graph } from './JointJSDiagram';
+import { paper, graph } from './jointjs/JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
 
-import createAbstractProcessElement from "./AbstractProcessElement";
+import createAbstractProcessElement from "./jointjs/AbstractProcessElement";
 
 import axios from 'axios';
+import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 
 interface Process {
   id: number
@@ -42,6 +43,9 @@ interface Connection {
 
 
 export default defineComponent({
+  components: {
+    ProcessDetailDialog
+  },
   data: () => ({
 
   }),
@@ -117,9 +121,11 @@ export default defineComponent({
       );
     });
 
+    const component = this;
     paper.on('cell:pointerdown',
       function (cellView, evt, x, y) {
         console.log('cell view ' + cellView.model.id + ' was clicked');
+        (component.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(cellView.model.id);
       }
     );
 
@@ -217,4 +223,4 @@ export default defineComponent({
     }
   }
 })
-</script>
+</script>../ProcessMap/jointjs/JointJSDiagram
