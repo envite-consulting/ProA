@@ -122,10 +122,9 @@ export default defineComponent({
     });
 
     const component = this;
-    paper.on('cell:pointerdown',
+    paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
-        console.log('cell view ' + cellView.model.id + ' was clicked');
-        (component.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(cellView.model.id);
+        (component.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(+cellView.model.id);
       }
     );
 
@@ -137,8 +136,6 @@ export default defineComponent({
       if (!lastView) return;
       lastView.removeTools();
     }
-
-    // Events
 
     paper.on("link:connect", (linkView) => {
       const link = linkView.model;
@@ -172,7 +169,6 @@ export default defineComponent({
       const component = this;
       axios.get("/api/process-map").then(result => {
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
-          console.log(process.id+" : "+process.processName)
           return createAbstractProcessElement(process.processName, process.id);
         });
 
