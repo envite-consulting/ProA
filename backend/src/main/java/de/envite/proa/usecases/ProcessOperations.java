@@ -3,6 +3,7 @@ package de.envite.proa.usecases;
 import java.util.List;
 
 import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessDataStore;
 import de.envite.proa.entities.ProcessEvent;
 
 public interface ProcessOperations {
@@ -16,4 +17,6 @@ public interface ProcessOperations {
 	public List<ProcessEvent> getIntermediateThrowEvents(String xml);
 
 	public List<ProcessEvent> getIntermediateCatchEvents(String xml);
+
+	public List<ProcessDataStore> getDataStores(String xml);
 }

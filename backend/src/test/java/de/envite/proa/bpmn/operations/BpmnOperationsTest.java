@@ -8,8 +8,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import de.envite.proa.entities.DataAccess;
 import de.envite.proa.entities.EventType;
 import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessDataStore;
 import de.envite.proa.entities.ProcessEvent;
 
 public class BpmnOperationsTest {
@@ -49,7 +51,7 @@ public class BpmnOperationsTest {
 				.extracting("elementId", "label", "eventType")//
 				.contains(tuple("Event_Catch", "catch", EventType.INTERMEDIATE_CATCH));
 	}
-	
+
 	@Test
 	public void testIntermediateThrowEvents() throws IOException {
 		// Arrange
@@ -65,7 +67,7 @@ public class BpmnOperationsTest {
 				.extracting("elementId", "label", "eventType")//
 				.contains(tuple("Event_Throw", "throw", EventType.INTERMEDIATE_THROW));
 	}
-	
+
 	@Test
 	public void testEndEvents() throws IOException {
 		// Arrange
@@ -80,10 +82,10 @@ public class BpmnOperationsTest {
 				.hasSize(2)//
 				.extracting("elementId", "label", "eventType")//
 				.contains(//
-						tuple("EndEvent_1", "end 1", EventType.END),
+						tuple("EndEvent_1", "end 1", EventType.END), //
 						tuple("EndEvent_2", "end 2", EventType.END));
 	}
-	
+
 	@Test
 	public void testCallActivites() throws IOException {
 		// Arrange
@@ -98,5 +100,24 @@ public class BpmnOperationsTest {
 				.hasSize(1)//
 				.extracting("elementId", "label")//
 				.contains(tuple("Activity_Call", "Call Activity"));
+	}
+
+	@Test
+	public void testDataStores() throws IOException {
+		// Arrange
+		String bpmnXml = new String(
+				getClass().getClassLoader().getResourceAsStream("test-diagram-datastores.bpmn").readAllBytes());
+
+		// Act
+		List<ProcessDataStore> intermediateThrowEvents = bpmnOperations.getDataStores(bpmnXml);
+
+		// Assert
+		assertThat(intermediateThrowEvents)//
+				.hasSize(3)//
+				.extracting("elementId", "label", "access")//
+				.contains(//
+						tuple("DataStoreReference_WriteStore", "WriteStore", DataAccess.WRITE), //
+						tuple("DataStoreReference_ReadWriteStore", "ReadWriteStore", DataAccess.READ_WRITE), //
+						tuple("DataStoreReference_ReadStore", "ReadStore", DataAccess.READ));
 	}
 }

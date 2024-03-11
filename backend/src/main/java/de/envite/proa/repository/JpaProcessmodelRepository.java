@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.envite.proa.entities.DataStore;
+import de.envite.proa.entities.DataStoreConnection;
 import de.envite.proa.entities.EventType;
 import de.envite.proa.entities.ProcessActivity;
 import de.envite.proa.entities.ProcessConnection;
+import de.envite.proa.entities.ProcessDataStore;
 import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessElementType;
 import de.envite.proa.entities.ProcessEvent;
@@ -14,7 +17,10 @@ import de.envite.proa.entities.ProcessInformation;
 import de.envite.proa.entities.ProcessMap;
 import de.envite.proa.entities.ProcessModel;
 import de.envite.proa.repository.tables.CallActivityTable;
+import de.envite.proa.repository.tables.DataStoreConnectionTable;
+import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
+import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.usecases.ProcessModelRepository;
@@ -22,13 +28,18 @@ import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class JpaProcessmodelRepository implements ProcessModelRepository, ProcessMapRespository {
 
-	@Inject
 	private EntityManager em;
+
+	@Inject
+	public JpaProcessmodelRepository(EntityManager em) {
+		this.em = em;
+	}
 
 	@Override
 	@Transactional
@@ -42,8 +53,43 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 
 		connectCallActivities(processModel, table);
 
+		connectDataStores(table);
+
 		em.flush();
 		return table.getId();
+	}
+
+	private void connectDataStores(ProcessModelTable table) {
+
+		table//
+				.getDataStores()//
+				.stream()//
+				.forEach(store -> {
+					connectProcessDataStore(store, table);
+				});
+
+	}
+
+	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table) {
+		DataStoreTable dataStoreTable;
+		try {
+
+			dataStoreTable = em
+					.createQuery("SELECT d FROM DataStoreTable d WHERE d.label = :label", DataStoreTable.class)
+					.setParameter("label", store.getLabel())//
+					.getSingleResult();
+		} catch (NoResultException e) {
+			dataStoreTable = new DataStoreTable();
+			dataStoreTable.setLabel(store.getLabel());
+			em.persist(dataStoreTable);
+		}
+
+		DataStoreConnectionTable connectionTable = new DataStoreConnectionTable();
+		connectionTable.setAccess(store.getAccess());
+		connectionTable.setProcess(table);
+		connectionTable.setDataStore(dataStoreTable);
+
+		em.persist(connectionTable);
 	}
 
 	private void connectCallActivities(ProcessModel processModel, ProcessModelTable table) {
@@ -150,7 +196,8 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 		});
 	}
 
-	private void connectWithThrowEvents(ProcessModelTable newTable, ProcessEvent newEvent, EventType eventTypeForConnectionFrom) {
+	private void connectWithThrowEvents(ProcessModelTable newTable, ProcessEvent newEvent,
+			EventType eventTypeForConnectionFrom) {
 		List<ProcessEventTable> endEventsWithSameLabel = em
 				.createQuery("SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType",
 						ProcessEventTable.class)
@@ -162,17 +209,17 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 			ProcessConnectionTable connection = new ProcessConnectionTable();
 			connection.setCallingProcess(event.getProcessModel());
 			connection.setCallingElement(event.getElementId());
-			if(eventTypeForConnectionFrom.equals(EventType.END)) {
+			if (eventTypeForConnectionFrom.equals(EventType.END)) {
 				connection.setCallingElementType(ProcessElementType.END_EVENT);
-			}else if(eventTypeForConnectionFrom.equals(EventType.INTERMEDIATE_THROW)) {
+			} else if (eventTypeForConnectionFrom.equals(EventType.INTERMEDIATE_THROW)) {
 				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
 			}
-			
+
 			connection.setCalledProcess(newTable);
 			connection.setCalledElement(newEvent.getElementId());
-			if(newEvent.getEventType().equals(EventType.START)) {
+			if (newEvent.getEventType().equals(EventType.START)) {
 				connection.setCalledElementType(ProcessElementType.START_EVENT);
-			}else if(newEvent.getEventType().equals(EventType.INTERMEDIATE_CATCH)) {
+			} else if (newEvent.getEventType().equals(EventType.INTERMEDIATE_CATCH)) {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 
@@ -212,6 +259,26 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 				.collect(Collectors.toList());
 	}
 
+	@Transactional
+	public List<DataStore> getDataStores() {
+		return em//
+				.createQuery("SELECT d FROM DataStoreTable d", DataStoreTable.class)//
+				.getResultList()//
+				.stream()//
+				.map(this::map)//
+				.collect(Collectors.toList());
+	}
+
+	@Transactional
+	public List<DataStoreConnection> getDataStoreConnections() {
+		return em//
+				.createQuery("SELECT dc FROM DataStoreConnectionTable dc", DataStoreConnectionTable.class)//
+				.getResultList()//
+				.stream()//
+				.map(this::map)//
+				.collect(Collectors.toList());
+	}
+
 	private ProcessConnection map(ProcessConnectionTable table) {
 		ProcessConnection connection = new ProcessConnection();
 		connection.setCallingProcessid(table.getCallingProcess().getId());
@@ -227,10 +294,14 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 
 		List<ProcessInformation> processModelInformation = getProcessInformation();
 		List<ProcessConnection> processConnections = getProcessConnections();
+		List<DataStore> dataStores = getDataStores();
+		List<DataStoreConnection> dataStoreConnections = getDataStoreConnections();
 
 		ProcessMap map = new ProcessMap();
 		map.setConnections(processConnections);
 		map.setProcesses(processModelInformation);
+		map.setDataStores(dataStores);
+		map.setDataStoreConnections(dataStoreConnections);
 
 		return map;
 	}
@@ -254,7 +325,8 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 	private List<ProcessEvent> map(List<ProcessEventTable> events, EventType eventType) {
 		return events//
 				.stream()//
-				.filter(event -> event.getEventType().equals(eventType)).map(event -> map(event))//
+				.filter(event -> event.getEventType().equals(eventType))//
+				.map(event -> map(event))//
 				.collect(Collectors.toList());
 	}
 
@@ -263,5 +335,20 @@ public class JpaProcessmodelRepository implements ProcessModelRepository, Proces
 		event.setElementId(table.getElementId());
 		event.setLabel(table.getLabel());
 		return event;
+	}
+
+	private DataStore map(DataStoreTable table) {
+		DataStore store = new DataStore();
+		store.setId(table.getId());
+		store.setName(table.getLabel());
+		return store;
+	}
+
+	private DataStoreConnection map(DataStoreConnectionTable table) {
+		DataStoreConnection connection = new DataStoreConnection();
+		connection.setProcessid(table.getProcess().getId());
+		connection.setDataStoreId(table.getDataStore().getId());
+		connection.setAccess(table.getAccess());
+		return connection;
 	}
 }

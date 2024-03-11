@@ -20,5 +20,7 @@ public class ProcessModel {
     
     private List<ProcessActivity> callActivities = new ArrayList<>();
     
+    private List<ProcessDataStore> dataStores = new ArrayList<>();
+
     private String description;
 }

@@ -10,4 +10,7 @@ public class ProcessMap {
 
 	private List<ProcessInformation> processes = new ArrayList<>();
 	private List<ProcessConnection> connections = new ArrayList<>();
+	
+	private List<DataStore> dataStores = new ArrayList<>();
+	private List<DataStoreConnection> dataStoreConnections = new ArrayList<>();
 }

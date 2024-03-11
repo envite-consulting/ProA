@@ -32,6 +32,9 @@ public class ProcessModelTable {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<CallActivityTable> callActivites = new ArrayList<>();
+	
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
+	private List<ProcessDataStoreTable> dataStores = new ArrayList<>();
 
 	@Column
 	private String description;

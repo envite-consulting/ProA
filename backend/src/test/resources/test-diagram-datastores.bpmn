@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_15ubhlv" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.9.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.18.0">
+  <bpmn:process id="Process_174ocln" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="start 1">
+      <bpmn:outgoing>Flow_02xpjfh</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_02xpjfh" sourceRef="StartEvent_1" targetRef="Activity_0defd74" />
+    <bpmn:sequenceFlow id="Flow_1d2nj1w" sourceRef="Activity_Call" targetRef="EndEvent_1" />
+    <bpmn:endEvent id="EndEvent_1" name="end 1">
+      <bpmn:incoming>Flow_1d2nj1w</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Activity_Call" name="Call Activity">
+      <bpmn:incoming>Flow_13j8f7l</bpmn:incoming>
+      <bpmn:outgoing>Flow_1d2nj1w</bpmn:outgoing>
+      <bpmn:property id="Property_1q7nvui" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DataInputAssociation_09q24q0">
+        <bpmn:sourceRef>DataStoreReference_ReadWriteStore</bpmn:sourceRef>
+        <bpmn:targetRef>Property_1q7nvui</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataInputAssociation id="DataInputAssociation_1i56mrl">
+        <bpmn:sourceRef>DataStoreReference_ReadStore</bpmn:sourceRef>
+        <bpmn:targetRef>Property_1q7nvui</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:callActivity>
+    <bpmn:dataStoreReference id="DataStoreReference_ReadWriteStore" name="ReadWriteStore" />
+    <bpmn:sequenceFlow id="Flow_13j8f7l" sourceRef="Activity_0defd74" targetRef="Activity_Call" />
+    <bpmn:dataStoreReference id="DataStoreReference_WriteStore" name="WriteStore" />
+    <bpmn:dataStoreReference id="DataStoreReference_ReadStore" name="ReadStore" />
+    <bpmn:userTask id="Activity_0defd74" name="Activity 1">
+      <bpmn:incoming>Flow_02xpjfh</bpmn:incoming>
+      <bpmn:outgoing>Flow_13j8f7l</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_1kvlyrd">
+        <bpmn:targetRef>DataStoreReference_ReadWriteStore</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_0a5wwua">
+        <bpmn:targetRef>DataStoreReference_WriteStore</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_174ocln">
+      <bpmndi:BPMNShape id="Activity_08hjkhb_di" bpmnElement="Activity_Call">
+        <dc:Bounds x="390" y="230" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ud62qm_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="642" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="647" y="295" width="28" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="155" y="295" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStoreReference_0ssw8on_di" bpmnElement="DataStoreReference_WriteStore">
+        <dc:Bounds x="245" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="245" y="85" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0lyinb7_di" bpmnElement="Activity_0defd74">
+        <dc:Bounds x="220" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStoreReference_0img101_di" bpmnElement="DataStoreReference_ReadWriteStore">
+        <dc:Bounds x="325" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="311" y="452" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStoreReference_1peo9kd_di" bpmnElement="DataStoreReference_ReadStore">
+        <dc:Bounds x="415" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="414" y="85" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_13j8f7l_di" bpmnElement="Flow_13j8f7l">
+        <di:waypoint x="320" y="270" />
+        <di:waypoint x="390" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_09q24q0_di" bpmnElement="DataInputAssociation_09q24q0">
+        <di:waypoint x="367" y="395" />
+        <di:waypoint x="426" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_1i56mrl_di" bpmnElement="DataInputAssociation_1i56mrl">
+        <di:waypoint x="440" y="165" />
+        <di:waypoint x="440" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1d2nj1w_di" bpmnElement="Flow_1d2nj1w">
+        <di:waypoint x="490" y="270" />
+        <di:waypoint x="642" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1kvlyrd_di" bpmnElement="DataOutputAssociation_1kvlyrd">
+        <di:waypoint x="291" y="310" />
+        <di:waypoint x="335" y="395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02xpjfh_di" bpmnElement="Flow_02xpjfh">
+        <di:waypoint x="188" y="270" />
+        <di:waypoint x="220" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_0a5wwua_di" bpmnElement="DataOutputAssociation_0a5wwua">
+        <di:waypoint x="270" y="230" />
+        <di:waypoint x="270" y="165" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

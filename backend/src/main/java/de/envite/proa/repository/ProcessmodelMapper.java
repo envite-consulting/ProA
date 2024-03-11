@@ -5,9 +5,11 @@ import java.util.stream.Collectors;
 
 import de.envite.proa.entities.EventType;
 import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessDataStore;
 import de.envite.proa.entities.ProcessEvent;
 import de.envite.proa.entities.ProcessModel;
 import de.envite.proa.repository.tables.CallActivityTable;
+import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 
@@ -19,8 +21,24 @@ public class ProcessmodelMapper {
 		table.setBpmnXml(processModel.getBpmnXml());
 		table.setEvents(mapEvents(processModel.getEvents(), table));
 		table.setCallActivites(map(processModel.getCallActivities(), table));
+		table.setDataStores(mapDataStore(processModel.getDataStores(), table));
 		table.setDescription(processModel.getDescription());
 		return table;
+	}
+
+	private static List<ProcessDataStoreTable> mapDataStore(List<ProcessDataStore> dataStores,
+			ProcessModelTable table) {
+		return dataStores//
+				.stream()//
+				.map(store -> {
+					ProcessDataStoreTable dataStoreTable = new ProcessDataStoreTable();
+					dataStoreTable.setElementId(store.getElementId());
+					dataStoreTable.setLabel(store.getLabel());
+					dataStoreTable.setAccess(store.getAccess());
+					dataStoreTable.setProcessModel(table);
+					return dataStoreTable;
+				})//
+				.collect(Collectors.toList());
 	}
 
 	private static List<CallActivityTable> map(List<ProcessActivity> callActivities,
@@ -37,8 +55,7 @@ public class ProcessmodelMapper {
 				.collect(Collectors.toList());
 	}
 
-	private static List<ProcessEventTable> mapEvents(List<ProcessEvent> events,
-			ProcessModelTable processModelTable) {
+	private static List<ProcessEventTable> mapEvents(List<ProcessEvent> events, ProcessModelTable processModelTable) {
 		return events//
 				.stream()//
 				.map(event -> map(event, event.getEventType(), processModelTable))//
