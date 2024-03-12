@@ -26,11 +26,8 @@ export const paper = new dia.Paper({
     },
     defaultConnectionPoint: { name: "anchor" },
     defaultConnector: {
-        name: "curve",
-        args: {
-            sourceDirection: connectors.curve.TangentDirections.RIGHT,
-            targetDirection: connectors.curve.TangentDirections.LEFT
-        }
+        name: "smooth",
+
     },
     validateMagnet: (sourceView, sourceMagnet) => {
         const sourceGroup = sourceView.findAttribute("port-group", sourceMagnet);

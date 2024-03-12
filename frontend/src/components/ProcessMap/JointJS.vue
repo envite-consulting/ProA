@@ -21,6 +21,7 @@ import { paper, graph } from './jointjs/JointJSDiagram';
 import { DirectedGraph } from '@joint/layout-directed-graph';
 
 import createAbstractProcessElement from "./jointjs/AbstractProcessElement";
+import createAbstractDataStoreElement from "./jointjs/AbstractDataStoreElement";
 
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
@@ -40,6 +41,19 @@ interface Connection {
   calledElementType: ProcessElementType
 }
 
+interface DataStore {
+  id: number
+  name: string
+}
+
+type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
+
+interface DataStoreConnection {
+
+  processid: number
+  dataStoreId: number
+  access: DataAccess
+}
 
 
 export default defineComponent({
@@ -124,6 +138,7 @@ export default defineComponent({
     const component = this;
     paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
+        console.log(cellView.model.id);
         (component.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(+cellView.model.id);
       }
     );
@@ -190,6 +205,85 @@ export default defineComponent({
         });
 
         graph.addCell(connectionsShapes);
+
+        let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
+          return createAbstractDataStoreElement(dataStore.name, dataStore.id);
+        })
+
+        graph.addCell(abstractDataStores);
+
+
+        let dataStoreConnectionShapes = result.data.dataStoreConnections.map((connection: DataStoreConnection) => {
+
+          const link = new shapes.standard.Link();
+
+          if (connection.access === "READ_WRITE") {
+            link.attr({
+              line: {
+                sourceMarker: {
+                  'type': 'path',
+                  'stroke': 'black',
+                  'fill': 'black',
+                  'd': 'M 10 -5 0 0 10 5 Z'
+                },
+                targetMarker: {
+                  'type': 'path',
+                  'stroke': 'black',
+
+                }
+              }
+            });
+
+            link.set({
+              source: { id: connection.processid, port: "call-" + connection.processid },
+              target: {
+                id: "ds-" + connection.dataStoreId,
+                anchor: {
+                  name: 'midSide',
+                  args: {
+                    rotate: true,
+                  }
+
+                }
+              }
+            })
+          } else if (connection.access === "WRITE") {
+
+            link.set({
+              source: { id: connection.processid, port: "call-" + connection.processid },
+              target: {
+                id: "ds-" + connection.dataStoreId,
+                anchor: {
+                  name: 'midSide',
+                  args: {
+                    rotate: true,
+                  }
+
+                }
+              }
+            })
+          } else if (connection.access === "READ") {
+            link.set({
+              target: { id: connection.processid, port: "call-" + connection.processid },
+              source: {
+                id: "ds-" + connection.dataStoreId,
+                anchor: {
+                  name: 'midSide',
+                  args: {
+                    rotate: true,
+                  }
+
+                }
+              }
+            })
+          }
+
+
+          return link;
+        });
+
+        graph.addCell(dataStoreConnectionShapes);
+
 
         var graphBBox = DirectedGraph.layout(graph, {
           nodeSep: 150,
