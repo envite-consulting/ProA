@@ -80,7 +80,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	@Override
 	public ProcessDetails getProcessDetails(Long id) {
 
-		ProcessModelTable table = processModelDao.find(id);
+		ProcessModelTable table = processModelDao.findWithChildren(id);
 		ProcessDetails details = ProcessDetailsMapper.map(table);
 
 		return details;
