@@ -50,7 +50,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return map;
 	}
 
-	public List<ProcessInformation> getProcessInformation() {
+	private List<ProcessInformation> getProcessInformation() {
 		return processModelDao//
 				.getProcessModels()//
 				.stream()//
@@ -62,7 +62,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				.collect(Collectors.toList());
 	}
 
-	public List<ProcessConnection> getProcessConnections() {
+	private List<ProcessConnection> getProcessConnections() {
 		return processConnectionDao//
 				.getProcessConnections()//
 				.stream()//
@@ -70,7 +70,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				.collect(Collectors.toList());
 	}
 
-	public List<DataStore> getDataStores() {
+	private List<DataStore> getDataStores() {
 		return dataStoreDao//
 				.getDataStores()//
 				.stream()//
@@ -78,8 +78,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				.collect(Collectors.toList());
 	}
 
-	@Transactional
-	public List<DataStoreConnection> getDataStoreConnections() {
+	private List<DataStoreConnection> getDataStoreConnections() {
 		return dataStoreConnectionDao//
 				.getDataStoreConnections()//
 				.stream()//
