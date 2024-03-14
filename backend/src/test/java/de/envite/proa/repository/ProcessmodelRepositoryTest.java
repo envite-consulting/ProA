@@ -13,12 +13,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import de.envite.proa.entities.DataAccess;
 import de.envite.proa.entities.EventType;
 import de.envite.proa.entities.ProcessActivity;
+import de.envite.proa.entities.ProcessDataStore;
 import de.envite.proa.entities.ProcessElementType;
 import de.envite.proa.entities.ProcessEvent;
 import de.envite.proa.entities.ProcessModel;
 import de.envite.proa.repository.tables.CallActivityTable;
+import de.envite.proa.repository.tables.DataStoreConnectionTable;
+import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
@@ -32,6 +36,7 @@ public class ProcessmodelRepositoryTest {
 	private static final String NEW_EVENT_ID = "newEventID";
 	private static final String NEW_ACTIVITY_ID = "newActivityId";
 	private static final String EXISTING_ACTIVITY_ID = "existingActivityId";
+	private static final String DATA_STORE_LABEL = "DataStoreLabel";
 
 	@Mock
 	private ProcessModelDao processModelDao;
@@ -230,5 +235,42 @@ public class ProcessmodelRepositoryTest {
 		assertThat(connection.getCalledElement()).isNull();
 		assertThat(connection.getCalledElementType()).isEqualTo(ProcessElementType.START_EVENT);
 	}
+	
+	@Test
+	public void testDataStore() {
+		
+		DataStoreTable dataStoreTable = new DataStoreTable();
+		dataStoreTable.setLabel(DATA_STORE_LABEL);
 
+		when(dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL)).thenReturn(dataStoreTable);
+
+		// Arrange
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+				dataStoreDao, //
+				dataStoreConnectionDao, //
+				callActivityDao, //
+				processConnectionDao, //
+				processEventDao);
+
+		ProcessModel model = new ProcessModel();
+		model.setName(NEW_PROCESS_MODEL_NAME);
+		
+		ProcessDataStore dataStore = new ProcessDataStore();
+		dataStore.setLabel(DATA_STORE_LABEL);
+		dataStore.setAccess(DataAccess.READ_WRITE);
+		
+		model.setDataStores(Arrays.asList(dataStore));
+
+		// Act
+		repository.saveProcessModel(model);
+
+		// Assert
+		ArgumentCaptor<DataStoreConnectionTable> connectionCaptor = ArgumentCaptor.forClass(DataStoreConnectionTable.class);
+		verify(dataStoreConnectionDao).persist(connectionCaptor.capture());
+		DataStoreConnectionTable connection = connectionCaptor.getValue();
+
+		assertThat(connection.getProcess().getName()).isEqualTo(NEW_PROCESS_MODEL_NAME);
+		assertThat(connection.getDataStore().getLabel()).isEqualTo(DATA_STORE_LABEL);
+		assertThat(connection.getAccess()).isEqualTo(DataAccess.READ_WRITE);
+	}
 }
