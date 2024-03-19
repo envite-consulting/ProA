@@ -14,7 +14,7 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { shapes, dia, linkTools } from '@joint/core';
 import { paper, graph } from './jointjs/JointJSDiagram';
 //MIT License
@@ -64,6 +64,12 @@ export default defineComponent({
 
   }),
 
+  setup() {
+    const processDetailDialog = ref(null);
+    return {
+      processDetailDialog,
+    };
+  },
 
   mounted: function () {
 
@@ -135,11 +141,12 @@ export default defineComponent({
       );
     });
 
-    const component = this;
+    const showProcessInfoDialog = (this.processDetailDialog! as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog;
     paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
-        console.log(cellView.model.id);
-        (component.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(+cellView.model.id);
+        if(!cellView.model.id.toString().startsWith('ds')){
+          showProcessInfoDialog (+cellView.model.id);
+        }
       }
     );
 
