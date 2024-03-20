@@ -16,7 +16,6 @@
     "bpmn-js": "^14.0.0",
     "core-js": "^3.29.0",
     "cytoscape": "^3.26.0",
-    "pinia": "^2.0.0",
     "roboto-fontface": "*",
     "vue": "^3.2.0",
     "vue-router": "^4.0.0",
