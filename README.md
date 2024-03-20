@@ -2,6 +2,15 @@
 
 ProA is a tool that lets you manage your processes and their connections smoothly. It detects relations among the processes and shows them in a diagram.
 
+## The Entire Application
+
+In order to build an uber jar, which also contains the frontend, run the following in the root:
+
+```mvn clean package```
+
+This will build the frontend and will copy the built frontend sources to the quarkus app.
+
+
 ## Backend
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
@@ -24,16 +33,11 @@ The application can be packaged using:
 ./mvnw package
 ```
 It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+
+The produced jar is an uber jar due to the configuration in the application.properties.
 
 The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
 
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
 
 ### Creating a native executable
 

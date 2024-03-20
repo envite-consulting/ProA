@@ -2,7 +2,7 @@
   <v-dialog v-model="infoDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">Prozesmodell: {{details.name}}</span>
+        <span class="text-h5">Prozesmodell: {{details.processName}}</span>
       </v-card-title>
       <v-card-text>
         <v-container>

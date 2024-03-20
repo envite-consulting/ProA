@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>de.envite</groupId>
+	<artifactId>pro-a</artifactId>
+	<version>${revision}</version>
+	<packaging>pom</packaging>
+
+	<name>ProA</name>
+
+	<modules>
+		<module>frontend</module>
+		<module>backend</module>
+	</modules>
+
+	<properties>
+		<revision>1.0-snapshot</revision>
+		<compiler-plugin.version>3.11.0</compiler-plugin.version>
+		<maven.compiler.release>20</maven.compiler.release>
+		<version.camunda>7.20.0</version.camunda>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+</project>

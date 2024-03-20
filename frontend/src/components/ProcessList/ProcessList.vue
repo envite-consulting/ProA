@@ -73,7 +73,7 @@ import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 declare interface ProcessModel {
   id: number,
   processName: string
-  descrption: string
+  description: string
   createdAt: string
 }
 
