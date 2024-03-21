@@ -41,15 +41,28 @@ The application is now runnable using `java -jar target/quarkus-app/quarkus-run.
 
 ### Creating a native executable
 
+Important: H2 Database is not supported in native mode. When native mode is used, an external DB needs to be configured: https://github.com/quarkusio/quarkus/issues/27021
+
+### Using GraalVM
+Install GraalVM version 21 from https://github.com/graalvm/graalvm-ce-builds/releases
+
+For Windows Users:
+Install Visual Studio Code: https://www.graalvm.org/latest/docs/getting-started/windows/
+
 You can create a native executable using: 
 ```shell script
 ./mvnw package -Dnative
 ```
+For Windows Users: Execute the above statement using the x64 Native Tools Command Prompt .
+
+#### Using Docker
 
 Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
 ```shell script
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
+
+This will produce a Linux executable.
 
 You can then execute your native executable with: `./target/pro-a-1.0.0-SNAPSHOT-runner`
 
