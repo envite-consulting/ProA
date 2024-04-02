@@ -35,6 +35,7 @@ public class ProcessDetailsMapper {
 		ProcessEvent event = new ProcessEvent();
 		event.setElementId(table.getElementId());
 		event.setLabel(table.getLabel());
+		event.setEventType(table.getEventType());
 		return event;
 	}
 }
