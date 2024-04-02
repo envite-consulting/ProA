@@ -75,6 +75,18 @@ export class AbstractProcessShape extends dia.Element {
                             }
                         }
                     },
+                    "i-catch-event": {
+                        position: "top",
+                        size: { width: 20, height: 20 },
+                        attrs: {
+
+                            portBody: {
+                                d:
+                                    "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
+                                magnet: "active"
+                            }
+                        }
+                    },
                     callActivity: {
                         position: "bottom",
                         size: { width: 20, height: 20 },
@@ -135,6 +147,10 @@ const createAbstractProcessElement = (label: string, id: number) => {
                 {
                     id: "i-throw-event-" + id,
                     group: "i-throw-event",
+                },
+                {
+                    id: "i-catch-event-" + id,
+                    group: "i-catch-event",
                 },
                 {
                     id: "call-" + id,
