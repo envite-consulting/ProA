@@ -1,27 +1,19 @@
 <template>
-  
-  <ProcessDetailDialog ref="processDetailDialog"/>
+
+  <ProcessDetailDialog ref="processDetailDialog" />
   <v-list lines="two" class="pa-6">
-    <template v-for="(model, index) in processModels" :key="'process-'+model.id" >
-    <v-list-item >
-        <v-list-item-title>{{model.processName}}</v-list-item-title>
+    <template v-for="(model, index) in processModels" :key="'process-'+model.id">
+      <v-list-item>
+        <v-list-item-title>{{ model.processName }}</v-list-item-title>
 
         <v-list-item-subtitle>
-          {{new Date(model.createdAt).toLocaleString("de-DE")}} {{!!model.description ? '-' : ''}} {{model.description}}
+          {{ new Date(model.createdAt).toLocaleString("de-DE") }} {{ !!model.description ? '-' : '' }} {{
+      model.description }}
         </v-list-item-subtitle>
         <template v-slot:append>
-          <v-btn
-            color="grey-lighten-1"
-            icon="mdi-more"
-            variant="text"
-            :to="'/ProcessView/' + model.id"
-          ></v-btn>
-          <v-btn
-            color="grey-lighten-1"
-            icon="mdi-information"
-            variant="text"
-            @click="()=>showProcessInfoDialog(model.id)"
-          ></v-btn>
+          <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
+          <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
+            @click="() => showProcessInfoDialog(model.id)"></v-btn>
         </template>
       </v-list-item>
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
@@ -29,8 +21,8 @@
   </v-list>
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus" @click="uploadDialog = true"
-        size="large" />
+      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
+        @click="uploadDialog = true" size="large" />
     </v-fab-transition>
   </div>
 
@@ -43,7 +35,7 @@
         <v-container>
           <v-row>
             <v-col cols="12" sm="12" md="12">
-              <v-file-input label="Prozessmodell" v-model="processModel"></v-file-input>
+              <v-file-input label="Prozessmodell" v-model="processModel" chips multiple></v-file-input>
             </v-col>
             <v-col cols="12" sm="12" md="12">
               <v-textarea label="Beschreibung" v-model="description"></v-textarea>
@@ -62,11 +54,25 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <v-dialog v-model="progressDialog" max-width="600">
+    <v-card title="Upload">
+      <template v-slot:text>
+        Lade Prozessmodelle hoch...
+        <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
+      </template>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+
+        <v-btn text="Close" variant="text" @click="progressDialog = false"></v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
 </template>
 <style></style>
 <script lang="ts">
-import {defineComponent } from 'vue';
+import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 
@@ -78,13 +84,14 @@ declare interface ProcessModel {
 }
 
 export default defineComponent({
-  
-  components:{
+
+  components: {
     ProcessDetailDialog
   },
   data: () => ({
     uploadDialog: false,
-    infoDialog: false,
+    progressDialog: false,
+    progress: 0,
     description: '',
     processModel: [] as File[],
     processModels: [] as ProcessModel[],
@@ -92,9 +99,14 @@ export default defineComponent({
   mounted: function () {
     this.fetchProcessModels();
   },
+  watch: {
+    progress(val) {
+      console.log("progress changed: " + val);
+    }
+  },
   methods: {
 
-    showProcessInfoDialog(processId: number){
+    showProcessInfoDialog(processId: number) {
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
 
@@ -104,26 +116,34 @@ export default defineComponent({
       })
     },
 
-    uploadProcessModel() {
+    async uploadProcessModel() {
       if (this.processModel !== null && this.processModel.length > 0) {
 
-        let formData = new FormData();
-        formData.append("processModel", this.processModel[0]);
-        formData.append("fileName", this.processModel[0].name);
-        formData.append("description", this.description);
+        this.progressDialog = true;
+        const progressSteps = 100 / (this.processModel.length * 2);
+        console.log("progressSteps" + progressSteps)
 
-        axios.post("/api/process-model", formData)
-          .then(response => {
-            this.fetchProcessModels();
-            this.processModel = [];
-            this.uploadDialog = false;
-          }).catch(error => {
-            console.log(error)
-          });
+        for (const processModel of this.processModel) {
+          this.progress += progressSteps;
+
+          let formData = new FormData();
+          formData.append("processModel", processModel);
+          formData.append("fileName", processModel.name);
+          formData.append("description", this.description);
+
+          await axios.post("/api/process-model", formData);
+
+          this.progress += progressSteps;
+        }
+        this.fetchProcessModels();
+        this.processModel = [];
+        this.description = '';
+        this.progressDialog = false;
+        this.progress = 0;
+        this.uploadDialog = false;
       }
-    }
+    },
+
   }
-
-
 })
 </script>
