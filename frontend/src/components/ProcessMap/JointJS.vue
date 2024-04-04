@@ -2,7 +2,36 @@
   <v-card height="100%">
     <ProcessDetailDialog ref="processDetailDialog" />
     <div id="graph-container" class="full-screen"></div>
-
+    <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left" @click="goLeft"
+          size="large" />
+      </v-fab-transition>
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right" @click="goRight"
+          size="large" />
+      </v-fab-transition>
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
+          size="large" />
+      </v-fab-transition>
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down" @click="goDown"
+          size="large" />
+      </v-fab-transition>
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus" @click="zoomIn"
+          size="large" />
+      </v-fab-transition>
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus" @click="zoomOut"
+          size="large" />
+      </v-fab-transition>
+      <v-fab-transition style="margin-right: 5px">
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen" @click="fitToScreen"
+          size="large" />
+      </v-fab-transition>
+    </div>
   </v-card>
 </template>
 
@@ -25,6 +54,8 @@ import createAbstractDataStoreElement from "./jointjs/AbstractDataStoreElement";
 
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+
+const scrollStep = 20;
 
 interface Process {
   id: number
@@ -144,8 +175,8 @@ export default defineComponent({
     const showProcessInfoDialog = (this.processDetailDialog! as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog;
     paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
-        if(!cellView.model.id.toString().startsWith('ds')){
-          showProcessInfoDialog (+cellView.model.id);
+        if (!cellView.model.id.toString().startsWith('ds')) {
+          showProcessInfoDialog(+cellView.model.id);
         }
       }
     );
@@ -172,6 +203,19 @@ export default defineComponent({
 
     });
 
+    paper.on('paper:pinch', function (evt, x, y, sx) {
+      evt.preventDefault();
+      const { sx: sx0 } = paper.scale();
+      paper.scaleUniformAtPoint(sx0 * sx, { x, y });
+    });
+
+    paper.on('paper:pan', function (evt, tx, ty) {
+      evt.preventDefault();
+      evt.stopPropagation();
+      const { tx: tx0, ty: ty0 } = paper.translate();
+      paper.translate(tx0 - tx, ty0 - ty);
+    });
+
     graph.on("remove", (cell) => {
       if (!cell.isLink()) return;
       const source = cell.source();
@@ -186,7 +230,33 @@ export default defineComponent({
 
   },
   methods: {
-
+    zoomIn(){
+      const { sx: sx0 } = paper.scale();
+      paper.scale(sx0 * 1.3);
+    },
+    zoomOut(){
+      const { sx: sx0 } = paper.scale();
+      paper.scale(sx0 * 0.7);
+    },
+    fitToScreen() {
+      paper.transformToFitContent();
+    },
+    goRight(){
+      const { tx: tx0, ty: ty0 } = paper.translate();
+      paper.translate(tx0 - scrollStep, ty0);
+    },
+    goLeft(){
+      const { tx: tx0, ty: ty0 } = paper.translate();
+      paper.translate(tx0 + scrollStep, ty0);
+    },
+    goUp(){
+      const { tx: tx0, ty: ty0 } = paper.translate();
+      paper.translate(tx0, ty0 + scrollStep);
+    },
+    goDown(){
+      const { tx: tx0, ty: ty0 } = paper.translate();
+      paper.translate(tx0, ty0 - scrollStep);
+    },
     fetchProcessModels() {
       const component = this;
       axios.get("/api/process-map").then(result => {
@@ -290,8 +360,7 @@ export default defineComponent({
         });
 
         graph.addCell(dataStoreConnectionShapes);
-
-
+        paper.freeze();
         var graphBBox = DirectedGraph.layout(graph, {
           nodeSep: 150,
           edgeSep: 80,
@@ -299,6 +368,9 @@ export default defineComponent({
           marginX: 10,
           marginY: 10,
         });
+        
+        paper.transformToFitContent();
+        paper.unfreeze();
 
       })
     },
