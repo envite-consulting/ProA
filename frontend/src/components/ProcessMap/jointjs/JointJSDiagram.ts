@@ -30,35 +30,11 @@ export const paper = new dia.Paper({
 
     },
     validateMagnet: (sourceView, sourceMagnet) => {
-        const sourceGroup = sourceView.findAttribute("port-group", sourceMagnet);
 
-        if (sourceGroup !== "end" && sourceGroup !== "i-throw-event" && sourceGroup !== "callActivity") {
-
-            return false;
-        }
-
-        return true;
+        return false;
     },
     validateConnection: (sourceView, sourceMagnet, targetView, targetMagnet) => {
-        if (sourceView === targetView) {
-            // Do not allow a loop link (starting and ending at the same element)/
-            return false;
-        }
-
-        const targetGroup = targetView.findAttribute("port-group", targetMagnet);
-        const targetPort = targetView.findAttribute("port", targetMagnet);
-        const target = targetView.model;
-
-        if (target.isLink()) {
-            // We allow connecting only links with elements (not links with links).
-            return false;
-        }
-
-        if (targetGroup !== "start") {
-            // It's not possible to add inbound links to output ports (only outbound links are allowed).
-            return false;
-        }
-        return true;
+        return false;
     },
     clickThreshold: 10,
     magnetThreshold: "onleave",

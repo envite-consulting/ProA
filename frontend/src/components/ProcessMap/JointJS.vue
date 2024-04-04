@@ -44,7 +44,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { shapes, dia, linkTools } from '@joint/core';
+import { shapes } from '@joint/core';
 import { paper, graph } from './jointjs/JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
@@ -107,71 +107,6 @@ export default defineComponent({
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
-
-    class PortTargetArrowhead extends linkTools.TargetArrowhead {
-      preinitialize() {
-        this.tagName = "rect";
-        this.attributes = {
-          width: 20,
-          height: 14,
-          x: 6, //move element
-          y: -7, // move element
-          rx: 7,
-          ry: 70,
-          fill: "#FD0B88",
-          "fill-opacity": 0.2,
-          stroke: "#FD0B88",
-          "stroke-width": 2,
-          cursor: "move",
-          class: "target-arrowhead"
-        };
-      }
-    }
-
-    let timer: NodeJS.Timeout;
-    let lastView: dia.LinkView;
-
-    paper.on("link:mouseenter", (linkView) => {
-      clearTimeout(timer);
-      clearTools();
-      lastView = linkView;
-      linkView.addTools(
-        new dia.ToolsView({
-          name: "onhover",
-          tools: [
-            new PortTargetArrowhead(),
-            new linkTools.Remove({
-              distance: -60,
-              markup: [
-                {
-                  tagName: "circle",
-                  selector: "button",
-                  attributes: {
-                    r: 10,
-                    fill: "#FFD5E8",
-                    stroke: "#FD0B88",
-                    "stroke-width": 2,
-                    cursor: "pointer"
-                  }
-                },
-                {
-                  tagName: "path",
-                  selector: "icon",
-                  attributes: {
-                    d: "M -4 -4 4 4 M -4 4 4 -4",
-                    fill: "none",
-                    stroke: "#333",
-                    "stroke-width": 3,
-                    "pointer-events": "none"
-                  }
-                }
-              ]
-            })
-          ]
-        })
-      );
-    });
-
     const showProcessInfoDialog = (this.processDetailDialog! as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog;
     paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
@@ -180,28 +115,6 @@ export default defineComponent({
         }
       }
     );
-
-    paper.on("link:mouseleave", (linkView) => {
-      timer = setTimeout(() => clearTools(), 500);
-    });
-
-    function clearTools() {
-      if (!lastView) return;
-      lastView.removeTools();
-    }
-
-    paper.on("link:connect", (linkView) => {
-      const link = linkView.model;
-      const source = link.source();
-      const target = link.target();
-
-    });
-
-    paper.on("link:disconnect", (linkView, evt, prevElementView, prevMagnet) => {
-      const link = linkView.model;
-      const prevPort = prevElementView.findAttribute("port", prevMagnet);
-
-    });
 
     paper.on('paper:pinch', function (evt, x, y, sx) {
       evt.preventDefault();
@@ -214,16 +127,6 @@ export default defineComponent({
       evt.stopPropagation();
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - tx, ty0 - ty);
-    });
-
-    graph.on("remove", (cell) => {
-      if (!cell.isLink()) return;
-      const source = cell.source();
-      const target = cell.target();
-      if (!target.id) {
-        return;
-      }
-
     });
 
     this.fetchProcessModels();

@@ -47,7 +47,7 @@ export class AbstractProcessShape extends dia.Element {
                             portBody: {
                                 d:
                                     "M 10 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z",
-                                magnet: "active"
+                                magnet: "passive"
                             }
                         }
                     },
@@ -58,7 +58,7 @@ export class AbstractProcessShape extends dia.Element {
                             portBody: {
                                 d:
                                     "M 10 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z",
-                                magnet: "active",
+                                magnet: "passive",
                                 "stroke-width": 4
                             }
                         }
@@ -71,7 +71,7 @@ export class AbstractProcessShape extends dia.Element {
                             portBody: {
                                 d:
                                     "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
-                                magnet: "active"
+                                magnet: "passive"
                             }
                         }
                     },
@@ -83,7 +83,7 @@ export class AbstractProcessShape extends dia.Element {
                             portBody: {
                                 d:
                                     "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
-                                magnet: "active"
+                                magnet: "passive"
                             }
                         }
                     },
@@ -94,7 +94,7 @@ export class AbstractProcessShape extends dia.Element {
                             portBody: {
                                 d:
                                     "M 35 -calc(0.5 * h) a3,3 0 0 1 3,3 v15 a3,3 0 0 1 -3,3 h-25 a3,3 0 0 1 -3,-3 v-15 a3,3 0 0 1 3,-3 z",
-                                magnet: "active"
+                                magnet: "passive"
                             }
                         }
                     },
