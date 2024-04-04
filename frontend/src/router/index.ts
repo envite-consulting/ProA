@@ -29,11 +29,6 @@ const routes = [
         name: 'ProcessMap',
         component: () => import('@/views/ProcessMapView.vue'),
       },
-      {
-        path: 'JointJS',
-        name: 'JointJS',
-        component: () => import('@/components/ProcessMap/JointJS.vue'),
-      },
     ],
   },
 ]
