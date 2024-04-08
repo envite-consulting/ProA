@@ -241,4 +241,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	public String getProcessModel(Long id) {
 		return processModelDao.find(id).getBpmnXml();
 	}
+
+	@Override
+	public void deleteProcessModel(Long id) {
+		dataStoreConnectionDao.deleteForProcessModel(id);
+		processConnectionDao.deleteForProcessModel(id);
+		processModelDao.delete(id);
+	}
 }

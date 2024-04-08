@@ -15,4 +15,6 @@ public interface ProcessModelRepository {
 	List<ProcessInformation> getProcessInformation();
 
 	ProcessDetails getProcessDetails(Long id);
+
+	void deleteProcessModel(Long id);
 }

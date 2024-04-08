@@ -59,4 +59,8 @@ public class ProcessModelUsecase {
 	public ProcessDetails getProcessDetails(Long id) {
 		return repository.getProcessDetails(id);
 	}
+
+	public void deleteProcessModel(Long id) {
+		repository.deleteProcessModel(id);
+	}
 }

@@ -8,11 +8,14 @@ import java.util.List;
 
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
+import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
 
 import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessInformation;
 import de.envite.proa.usecases.ProcessModelUsecase;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -27,11 +30,11 @@ public class ProcessModelResource {
 
 	/**
 	 * 
-	 * Creates a new process model 
+	 * Creates a new process model
 	 * 
 	 * @param processModel the bpmn file
-	 * @param fileName the file name of the bpmn file
-	 * @param description 
+	 * @param fileName     the file name of the bpmn file
+	 * @param description
 	 * @return id of saved process model
 	 */
 	@POST
@@ -44,8 +47,8 @@ public class ProcessModelResource {
 	}
 
 	/**
-	 * Gets the xml representations of the bpmn file the id corresponds to.
-	 * This method is called from the process model view that shows the bpmn via bpmn.io
+	 * Gets the xml representations of the bpmn file the id corresponds to. This
+	 * method is called from the process model view that shows the bpmn via bpmn.io
 	 * 
 	 * @param id of the bpmn file
 	 * @return bpmn file as string
@@ -54,6 +57,13 @@ public class ProcessModelResource {
 	@GET
 	public String getProcessModel(@RestPath Long id) {
 		return usecase.getProcessModel(id);
+	}
+
+	@Path("/{id}")
+	@DELETE
+	public RestResponse<?> deleteProcessModel(@RestPath Long id) {
+		usecase.deleteProcessModel(id);
+		return ResponseBuilder.ok().build();
 	}
 
 	/**
@@ -65,7 +75,7 @@ public class ProcessModelResource {
 	public List<ProcessInformation> getProcessInformation() {
 		return usecase.getProcessInformation();
 	}
-	
+
 	@GET
 	@Path("/{id}/details")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -73,7 +83,6 @@ public class ProcessModelResource {
 		return usecase.getProcessDetails(id);
 	}
 
-	
 	private String readFileToString(File file) {
 		StringBuilder contentBuilder = new StringBuilder();
 

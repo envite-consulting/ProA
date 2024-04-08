@@ -162,7 +162,9 @@ export default defineComponent({
     },
     fetchProcessModels() {
       const component = this;
+      graph.clear();
       axios.get("/api/process-map").then(result => {
+
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
           return createAbstractProcessElement(process.processName, process.id);
         });

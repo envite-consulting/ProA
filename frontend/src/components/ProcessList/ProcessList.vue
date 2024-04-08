@@ -11,6 +11,7 @@
       model.description }}
         </v-list-item-subtitle>
         <template v-slot:append>
+          <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="() => deleteProcessModel(model.id)"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
             @click="() => showProcessInfoDialog(model.id)"></v-btn>
@@ -109,7 +110,11 @@ export default defineComponent({
     showProcessInfoDialog(processId: number) {
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
-
+    deleteProcessModel(processId: number){
+      axios.delete("/api/process-model/"+processId).then(()=>{
+        this.fetchProcessModels();
+      })
+    },
     fetchProcessModels() {
       axios.get("/api/process-model").then(result => {
         this.processModels = result.data;

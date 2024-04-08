@@ -58,4 +58,10 @@ public class ProcessModelDao {
 		
 		return em.find(ProcessModelTable.class, id);
 	}
+	
+	@Transactional
+	public void delete(Long id) {
+		ProcessModelTable table = em.find(ProcessModelTable.class, id);
+		em.remove(table);
+	}
 }

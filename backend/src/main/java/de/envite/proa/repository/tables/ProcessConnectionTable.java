@@ -33,11 +33,4 @@ public class ProcessConnectionTable {
 	private String callingElement;
 
 	private String calledElement;
-
-	@Override
-	public String toString() {
-		return "ProcessConnectionTable [id=" + id + ", callingProcess=" + callingProcess.getName() + ", calledProcess="
-				+ calledProcess.getName() + ", callingElementType=" + callingElementType + ", calledElementType="
-				+ calledElementType + ", callingElement=" + callingElement + ", calledElement=" + calledElement + "]";
-	}
 }

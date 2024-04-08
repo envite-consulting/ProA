@@ -3,6 +3,7 @@ package de.envite.proa.repository;
 import java.util.List;
 
 import de.envite.proa.repository.tables.ProcessConnectionTable;
+import de.envite.proa.repository.tables.ProcessModelTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -17,7 +18,7 @@ public class ProcessConnectionDao {
 	public ProcessConnectionDao(EntityManager em) {
 		this.em = em;
 	}
-	
+
 	@Transactional
 	public void persist(ProcessConnectionTable table) {
 		em.persist(table);
@@ -28,5 +29,15 @@ public class ProcessConnectionDao {
 		return em//
 				.createQuery("SELECT pc FROM ProcessConnectionTable pc", ProcessConnectionTable.class)//
 				.getResultList();
+	}
+
+	@Transactional
+	public void deleteForProcessModel(Long id) {
+
+		ProcessModelTable processModel = em.find(ProcessModelTable.class, id);
+		em.createQuery(
+				"DELETE FROM ProcessConnectionTable pc WHERE pc.callingProcess = :processModel OR pc.calledProcess = :processModel")
+				.setParameter("processModel", processModel)//
+				.executeUpdate();
 	}
 }
