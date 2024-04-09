@@ -68,6 +68,16 @@ You can then execute your native executable with: `./target/pro-a-1.0.0-SNAPSHOT
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
 
+### Jacoco
+
+To create a jacoco report run:
+```shell script
+mvn verify
+```
+
+The report can be found under target/jacoco-report
+
+
 ## Frontend
 
 ### Project setup

@@ -22,6 +22,7 @@
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
 		<quarkus.platform.version>3.8.3</quarkus.platform.version>
 		<surefire-plugin.version>3.1.2</surefire-plugin.version>
+		<jacoco.version>0.8.10</jacoco.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -84,7 +85,11 @@
 			<artifactId>rest-assured</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-jacoco</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -144,13 +149,18 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.10</version>
+				<version>${jacoco.version}</version>
 				<executions>
 					<execution>
 						<id>default-prepare-agent</id>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
+						<configuration>
+							<exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
+							<destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
+							<append>true</append>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
