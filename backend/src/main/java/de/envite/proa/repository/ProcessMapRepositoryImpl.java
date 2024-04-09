@@ -14,7 +14,6 @@ import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class ProcessMapRepositoryImpl implements ProcessMapRespository {
