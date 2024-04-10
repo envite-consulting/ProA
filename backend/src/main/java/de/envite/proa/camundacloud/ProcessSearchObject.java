@@ -11,6 +11,7 @@ public class ProcessSearchObject {
 	static class Filter {
 
 		private UpdatedBy updatedBy = new UpdatedBy();
+		private String type = "BPMN";
 		
 		@Data
 		static class UpdatedBy{

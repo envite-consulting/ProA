@@ -2,7 +2,9 @@ package de.envite.proa.camundacloud;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import de.envite.proa.usecases.ProcessModelUsecase;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class CamundaCloudImportUsecase {
@@ -13,16 +15,32 @@ public class CamundaCloudImportUsecase {
 	@RestClient
 	private CamundaModelerService camundaModelerService;
 
-	public Object getProcessModels(CamundaCloudImportConfiguration configuration) {
-		
-		CloudCredentials credentials = new CloudCredentials();
-		credentials.setClientId(configuration.getClientId());
-		credentials.setClientSecret(configuration.getClientSecret());
-		
-		String token = camundaCloudService.getToken(credentials).getToken();
+	@Inject
+	private ProcessModelUsecase usecase;
+
+	public Object getProcessModels(CamundaCloudFetchConfiguration configuration) {
 
 		ProcessSearchObject search = new ProcessSearchObject();
 		search.getFilter().getUpdatedBy().setEmail(configuration.getEmail());
-		return camundaModelerService.getProcessModels("Bearer " + token, search);
+		return camundaModelerService.getProcessModels("Bearer " + configuration.getToken(), search);
+	}
+
+	public void importProcessModels(CamundaCloudImportConfiguration config) {
+
+		for (String id : config.getSelectedProcessModelIds()) {
+			CamundaProcessModelResponse processModel = camundaModelerService
+					.getProcessModel("Bearer " + config.getToken(), id);
+			usecase.saveProcessModel(processModel.getMetadata().getName(), getProcessXml(processModel), "");
+		}
+	}
+
+	private String getProcessXml(CamundaProcessModelResponse processModel) {
+		String content = processModel.getContent();
+		System.out.println(content);
+		return content;
+	}
+
+	public String getToken(CloudCredentials credentials) {
+		return camundaCloudService.getToken(credentials).getToken();
 	}
 }
