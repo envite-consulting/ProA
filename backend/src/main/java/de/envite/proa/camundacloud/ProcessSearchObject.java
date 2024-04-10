@@ -1,0 +1,20 @@
+package de.envite.proa.camundacloud;
+
+import lombok.Data;
+
+@Data
+public class ProcessSearchObject {
+
+	private Filter filter = new Filter();
+	
+	@Data
+	static class Filter {
+
+		private UpdatedBy updatedBy = new UpdatedBy();
+		
+		@Data
+		static class UpdatedBy{
+			private String email;
+		}
+	}
+}
