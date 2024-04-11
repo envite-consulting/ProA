@@ -28,6 +28,7 @@
         <v-container>
           <v-row>
             <v-col v-if="!!token">
+              <v-icon icon="mdi-check-circle" color="green"></v-icon>
               Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
@@ -66,6 +67,31 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <v-dialog
+      v-model="loadingDialog"
+      max-width="320"
+      persistent
+    >
+      <v-list
+        class="py-2"
+        color="primary"
+        elevation="12"
+        rounded="lg"
+      >
+        <v-list-item
+          title="Laden ..."
+        >
+          <template v-slot:append>
+            <v-progress-circular
+              color="primary"
+              indeterminate="disable-shrink"
+              size="16"
+              width="2"
+            ></v-progress-circular>
+          </template>
+        </v-list-item>
+      </v-list>
+    </v-dialog>
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
@@ -91,6 +117,7 @@ declare interface ProcessModel {
 export default defineComponent({
   data: () => ({
     camundaCloudDialog: false as boolean,
+    loadingDialog: false as boolean,
     clientId: "" as string,
     clientSecret: "" as string,
     creatorEMail: "" as string,
@@ -106,6 +133,7 @@ export default defineComponent({
   },
   methods: {
     fetchToken() {
+      this.loadingDialog = true;
       axios.post("/api/camunda-cloud/token", {
         "client_id": this.clientId,
         "client_secret": this.clientSecret,
@@ -113,26 +141,32 @@ export default defineComponent({
         console.log(result);
         this.token = result.data;
         this.tokenError = false;
+        this.loadingDialog = false;
       }).catch(error => {
         console.log(error);
         this.tokenError = true;
+        this.loadingDialog = false;
       })
     },
     fetchProcessModels() {
+      this.loadingDialog = true;
       axios.post("/api/camunda-cloud", {
         "token": this.token,
         "email": this.creatorEMail,
       }).then(result => {
         this.processModels = result.data.items;
         this.camundaCloudDialog=false;
+        this.loadingDialog = false;
       }).catch(error => {
         console.log(error);
         this.tokenError = true;
         this.token = null;
+        this.loadingDialog = false;
       })
     },
     importProcessModels() {
 
+      this.loadingDialog = true;
       const selectedProcessModelIds: string[] = this.selectedProcessModels.map(model => {
         return model.id;
       });
@@ -143,6 +177,10 @@ export default defineComponent({
       }).then(() => {
         this.processModels = this.processModels.filter(model => !selectedProcessModelIds.includes(model.id));
         this.selectedProcessModels = [];
+        this.loadingDialog = false;
+      }).catch(error => {
+        console.log(error);
+        this.loadingDialog = false;
       });
     }
   }
