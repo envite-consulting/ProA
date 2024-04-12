@@ -6,6 +6,7 @@ import lombok.Data;
 public class ProcessSearchObject {
 
 	private Filter filter = new Filter();
+	private int size = 50;
 	
 	@Data
 	static class Filter {
