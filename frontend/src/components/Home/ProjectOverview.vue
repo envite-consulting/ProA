@@ -120,7 +120,7 @@ export default defineComponent({
     loadingDialog: false as boolean,
     clientId: "" as string,
     clientSecret: "" as string,
-    creatorEMail: "" as string,
+    creatorEMail: null,
     processModels: [] as ProcessModel[],
     selectedProcessModels: [] as ProcessModel[],
     tokenError: false,
