@@ -50,10 +50,6 @@ export default defineComponent({
           title: 'Prozesskarte',
           route: '/ProcessMap'
         },
-        {
-          title: 'JointJS',
-          route: '/JointJS'
-        },
       ],
     }),
 
