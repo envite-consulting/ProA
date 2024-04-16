@@ -50,6 +50,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	private Project map(ProjectTable table) {
 
 		Project project = new Project();
+		project.setId(table.getId());
 		project.setName(table.getName());
 		project.setCreatedAt(table.getCreatedAt());
 		project.setModifiedAt(table.getModifiedAt());

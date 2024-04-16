@@ -11,7 +11,7 @@
         <div>Zuletzt geändert am: {{ new Date(project.modifiedAt).toLocaleString("de-DE") }}</div>
       </v-card-text>
       <v-divider></v-divider>
-      <v-list-item append-icon="mdi-chevron-right" lines="two" subtitle="Öffnen" link></v-list-item>
+      <v-list-item append-icon="mdi-chevron-right" lines="two" subtitle="Öffnen" link @click="() => openProject(project.id)"></v-list-item>
     </v-card>
 
     <v-card width="300px" height="170px" style="float: left; margin: 16px" class="d-flex flex-column">
@@ -61,6 +61,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
+import {useAppStore} from "../../store/app";
+import { mapState } from 'pinia'
 
 interface Project {
   id: number
@@ -96,6 +98,11 @@ export default defineComponent({
         this.newProjectName = "";
         this.projects.push(result.data);
       });
+    },
+    openProject(id: number){
+      console.log("id"+id)
+      useAppStore().selectedProjectId = id;
+      this.$router.push("/ProcessList")
     }
   }
 })

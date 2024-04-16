@@ -76,6 +76,7 @@
 import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+import {useAppStore} from "../../store/app";
 
 declare interface ProcessModel {
   id: number,
@@ -113,6 +114,9 @@ export default defineComponent({
       })
     },
     fetchProcessModels() {
+      console.log("selectedProjectId")
+      console.log(useAppStore().selectedProjectId);
+
       axios.get("/api/process-model").then(result => {
         this.processModels = result.data;
       })
