@@ -43,6 +43,10 @@ export default defineComponent({
           route: '/'
         },
         {
+          title: 'C8 Import',
+          route: '/CamundaCloudImport'
+        },
+        {
           title: 'Prozessliste',
           route: '/ProcessList'
         },

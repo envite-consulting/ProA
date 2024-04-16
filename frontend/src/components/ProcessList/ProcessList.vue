@@ -30,7 +30,7 @@
   <v-dialog v-model="uploadDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">Prozesmodell hochladen</span>
+        <span class="text-h5">Prozessmodell hochladen</span>
       </v-card-title>
       <v-card-text>
         <v-container>
