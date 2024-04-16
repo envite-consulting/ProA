@@ -101,9 +101,6 @@ export default defineComponent({
     this.fetchProcessModels();
   },
   watch: {
-    progress(val) {
-      console.log("progress changed: " + val);
-    }
   },
   methods: {
 
@@ -126,7 +123,6 @@ export default defineComponent({
 
         this.progressDialog = true;
         const progressSteps = 100 / (this.processModel.length * 2);
-        console.log("progressSteps" + progressSteps)
 
         for (const processModel of this.processModel) {
           this.progress += progressSteps;
