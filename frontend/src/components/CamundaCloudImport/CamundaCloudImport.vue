@@ -1,4 +1,7 @@
 <template>
+  <v-toolbar>
+    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+  </v-toolbar>
   <v-list lines="two" class="pa-6">
     <template v-for="(model, index) in processModels" :key="'process-'+model.id">
       <v-list-item>
@@ -88,6 +91,7 @@
 import { defineComponent } from 'vue'
 import axios from 'axios';
 import { useAppStore } from "../../store/app";
+import getProject from "../projectService";
 
 declare interface ProcessModel {
   id: string,
@@ -110,6 +114,7 @@ export default defineComponent({
     tokenError: false,
     token: null,
     selectedProjectId: null as number | null,
+    selectedProjectName: '' as string,
   }),
 
   watch: {
@@ -118,7 +123,11 @@ export default defineComponent({
     this.selectedProjectId = useAppStore().selectedProjectId;
     if(!this.selectedProjectId){
       this.$router.push("/");
+      return;
     }
+    getProject(this.selectedProjectId).then(result => {
+      this.selectedProjectName = result.data.name;
+    })
   },
   methods: {
     fetchToken() {

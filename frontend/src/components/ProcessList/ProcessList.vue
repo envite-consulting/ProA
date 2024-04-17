@@ -1,5 +1,7 @@
 <template>
-
+  <v-toolbar>
+    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+  </v-toolbar>
   <ProcessDetailDialog ref="processDetailDialog" />
   <v-list lines="two" class="pa-6">
     <template v-for="(model, index) in processModels" :key="'process-'+model.id">
@@ -8,7 +10,7 @@
 
         <v-list-item-subtitle>
           {{ new Date(model.createdAt).toLocaleString("de-DE") }} {{ !!model.description ? '-' : '' }} {{
-      model.description }}
+    model.description }}
         </v-list-item-subtitle>
         <template v-slot:append>
           <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
@@ -78,6 +80,7 @@ import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "../../store/app";
+import getProject from "../projectService";
 
 declare interface ProcessModel {
   id: number,
@@ -99,13 +102,17 @@ export default defineComponent({
     processModel: [] as File[],
     processModels: [] as ProcessModel[],
     selectedProjectId: null as number | null,
+    selectedProjectName: '' as string,
   }),
   mounted: function () {
     this.selectedProjectId = useAppStore().selectedProjectId;
-    if(!this.selectedProjectId){
+    if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
     }
+    getProject(this.selectedProjectId).then(result => {
+      this.selectedProjectName = result.data.name;
+    })
     this.fetchProcessModels();
   },
   watch: {

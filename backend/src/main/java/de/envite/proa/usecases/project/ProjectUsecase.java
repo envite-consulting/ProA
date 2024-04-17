@@ -19,4 +19,8 @@ public class ProjectUsecase {
 	public List<Project> getProjects(){
 		return repository.getProjects();
 	}
+
+	public Project getProject(Long projectId) {
+		return repository.getProject(projectId);
+	}
 }

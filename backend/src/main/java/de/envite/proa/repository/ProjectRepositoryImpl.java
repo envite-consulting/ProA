@@ -15,11 +15,11 @@ import jakarta.transaction.Transactional;
 @ApplicationScoped
 public class ProjectRepositoryImpl implements ProjectRepository {
 
-	private EntityManager em;
+	private ProjectDao dao;
 
 	@Inject
-	public ProjectRepositoryImpl(EntityManager em) {
-		this.em = em;
+	public ProjectRepositoryImpl(ProjectDao dao) {
+		this.dao = dao;
 	}
 
 	@Transactional
@@ -31,7 +31,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		table.setCreatedAt(LocalDateTime.now());
 		table.setModifiedAt(LocalDateTime.now());
 
-		em.persist(table);
+		dao.persist(table);
 
 		return map(table);
 	}
@@ -39,12 +39,16 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	@Transactional
 	@Override
 	public List<Project> getProjects() {
-		return em//
-				.createQuery("SELECT p FROM ProjectTable p", ProjectTable.class)//
-				.getResultList()//
+		return dao//
+				.getProjects()//
 				.stream()//
 				.map(this::map)//
 				.collect(Collectors.toList());
+	}
+	
+	@Override
+	public Project getProject(Long projectId) {
+		return map(dao.findById(projectId));
 	}
 
 	private Project map(ProjectTable table) {

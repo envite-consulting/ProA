@@ -1,5 +1,8 @@
 <template>
-  <v-card height="100%">
+  <v-toolbar>
+    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+  </v-toolbar>
+  <v-card class="full-screen-below-toolbar">
     <ProcessDetailDialog ref="processDetailDialog" />
     <div id="graph-container" class="full-screen"></div>
     <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
@@ -36,6 +39,10 @@
 </template>
 
 <style>
+.full-screen-below-toolbar {
+  width: 100%;
+  height: calc(100% - 64px) !important;
+}
 .full-screen {
   width: 100%;
   height: 100%;
@@ -56,6 +63,7 @@ import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 
 import { useAppStore } from "../../store/app";
+import getProject from "../projectService";
 
 const scrollStep = 20;
 
@@ -95,6 +103,7 @@ export default defineComponent({
   },
   data: () => ({
     selectedProjectId: null as number | null,
+    selectedProjectName: '' as string,
   }),
 
   setup() {
@@ -110,6 +119,9 @@ export default defineComponent({
       this.$router.push("/");
       return;
     }
+    getProject(this.selectedProjectId).then(result => {
+      this.selectedProjectName = result.data.name;
+    })
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 

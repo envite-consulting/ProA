@@ -9,4 +9,6 @@ public interface ProjectRepository {
 	Project createProject(String name);
 
 	List<Project> getProjects();
+
+	Project getProject(Long projectId);
 }

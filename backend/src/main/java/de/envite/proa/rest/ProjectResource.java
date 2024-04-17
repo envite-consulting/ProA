@@ -3,6 +3,7 @@ package de.envite.proa.rest;
 import java.util.List;
 
 import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestPath;
 
 import de.envite.proa.entities.Project;
 import de.envite.proa.usecases.project.ProjectUsecase;
@@ -42,5 +43,12 @@ public class ProjectResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Project> getProcessInformation() {
 		return usecase.getProjects();
+	}
+	
+	@GET
+	@Path("/project/{projectId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Project getProcessInformation(@RestPath Long projectId) {
+		return usecase.getProject(projectId);
 	}
 }

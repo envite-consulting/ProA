@@ -1,7 +1,6 @@
 package de.envite.proa.repository.tables;
 
 import de.envite.proa.entities.DataAccess;
-import de.envite.proa.entities.EventType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
