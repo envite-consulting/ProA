@@ -3,6 +3,7 @@ package de.envite.proa.repository;
 import java.util.List;
 
 import de.envite.proa.repository.tables.CallActivityTable;
+import de.envite.proa.repository.tables.ProjectTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -24,10 +25,12 @@ public class CallActivityDao {
 	}
 
 	@Transactional
-	public List<CallActivityTable> getCallActivitiesForName(String name) {
+	public List<CallActivityTable> getCallActivitiesForName(String name, ProjectTable projectTable) {
 		return em //
-				.createQuery("SELECT c FROM CallActivityTable c WHERE c.label = :label", CallActivityTable.class)
+				.createQuery("SELECT c FROM CallActivityTable c WHERE c.label = :label AND c.project = :project",
+						CallActivityTable.class)
 				.setParameter("label", name)//
+				.setParameter("project", projectTable)//
 				.getResultList();
 	}
 }

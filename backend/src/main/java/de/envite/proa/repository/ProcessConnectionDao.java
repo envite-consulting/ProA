@@ -4,6 +4,7 @@ import java.util.List;
 
 import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.repository.tables.ProjectTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -25,9 +26,10 @@ public class ProcessConnectionDao {
 	}
 
 	@Transactional
-	public List<ProcessConnectionTable> getProcessConnections() {
+	public List<ProcessConnectionTable> getProcessConnections(ProjectTable projectTable) {
 		return em//
-				.createQuery("SELECT pc FROM ProcessConnectionTable pc", ProcessConnectionTable.class)//
+				.createQuery("SELECT pc FROM ProcessConnectionTable pc WHERE pc.project = :project", ProcessConnectionTable.class)//
+				.setParameter("project", projectTable)
 				.getResultList();
 	}
 

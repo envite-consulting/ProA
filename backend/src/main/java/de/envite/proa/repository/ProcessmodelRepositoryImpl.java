@@ -18,6 +18,7 @@ import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.usecases.ProcessModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -26,6 +27,7 @@ import jakarta.persistence.NoResultException;
 @ApplicationScoped
 public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
+	private ProjectDao projectDao;
 	private ProcessModelDao processModelDao;
 	private DataStoreDao dataStoreDao;
 	private DataStoreConnectionDao dataStoreConnectionDao;
@@ -34,12 +36,14 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	private ProcessEventDao processEventDao;
 
 	@Inject
-	public ProcessmodelRepositoryImpl(ProcessModelDao processModelDao, //
+	public ProcessmodelRepositoryImpl(ProjectDao projectDao, //
+			ProcessModelDao processModelDao, //
 			DataStoreDao dataStoreDao, //
 			DataStoreConnectionDao dataStoreConnectionDao, //
 			CallActivityDao callActivityDao, //
 			ProcessConnectionDao processConnectionDao, //
 			ProcessEventDao processEventDao) {
+		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.dataStoreDao = dataStoreDao;
 		this.dataStoreConnectionDao = dataStoreConnectionDao;
@@ -49,25 +53,30 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	@Override
-	public Long saveProcessModel(ProcessModel processModel) {
+	public Long saveProcessModel(Long projectId, ProcessModel processModel) {
+		
+		ProjectTable projectTable = projectDao.findById(projectId);
 
-		ProcessModelTable table = ProcessmodelMapper.map(processModel);
+		ProcessModelTable table = ProcessmodelMapper.map(processModel, projectTable);
 		table.setCreatedAt(LocalDateTime.now());
+		table.setProject(projectTable);
 		processModelDao.persist(table);
 
-		connectEvents(processModel, table);
+		connectEvents(processModel, table, projectTable);
 
-		connectCallActivities(processModel, table);
+		connectCallActivities(processModel, table, projectTable);
 
-		connectDataStores(table);
+		connectDataStores(table, projectTable);
 
 		return table.getId();
 	}
 
 	@Override
-	public List<ProcessInformation> getProcessInformation() {
+	public List<ProcessInformation> getProcessInformation(Long projectId) {
+		
+		ProjectTable projectTable = projectDao.findById(projectId);
 		return processModelDao//
-				.getProcessModels()//
+				.getProcessModels(projectTable)//
 				.stream()//
 				.map(model -> new ProcessInformation(//
 						model.getId(), //
@@ -86,25 +95,26 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		return details;
 	}
 
-	private void connectDataStores(ProcessModelTable table) {
+	private void connectDataStores(ProcessModelTable table, ProjectTable projectTable) {
 
 		table//
 				.getDataStores()//
 				.stream()//
 				.forEach(store -> {
-					connectProcessDataStore(store, table);
+					connectProcessDataStore(store, table, projectTable);
 				});
 
 	}
 
-	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table) {
+	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table, ProjectTable projectTable) {
 		DataStoreTable dataStoreTable;
 		try {
 
-			dataStoreTable = dataStoreDao.getDataStoreForLabel(store.getLabel());
+			dataStoreTable = dataStoreDao.getDataStoreForLabel(store.getLabel(), projectTable);
 		} catch (NoResultException e) {
 			dataStoreTable = new DataStoreTable();
 			dataStoreTable.setLabel(store.getLabel());
+			dataStoreTable.setProject(projectTable);
 			dataStoreDao.persist(dataStoreTable);
 		}
 
@@ -112,22 +122,23 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		connectionTable.setAccess(store.getAccess());
 		connectionTable.setProcess(table);
 		connectionTable.setDataStore(dataStoreTable);
+		connectionTable.setProject(projectTable);
 
 		dataStoreConnectionDao.persist(connectionTable);
 	}
 
-	private void connectCallActivities(ProcessModel processModel, ProcessModelTable table) {
+	private void connectCallActivities(ProcessModel processModel, ProcessModelTable table, ProjectTable projectTable) {
 		processModel//
 				.getCallActivities()//
 				.forEach(activity -> {
-					connectCallActivityWithProcess(table, activity);
+					connectCallActivityWithProcess(table, activity, projectTable);
 				});
 
-		connectProcessWithCallActivity(table);
+		connectProcessWithCallActivity(table, projectTable);
 	}
 
-	private void connectProcessWithCallActivity(ProcessModelTable table) {
-		List<CallActivityTable> callActivityTables = callActivityDao.getCallActivitiesForName(table.getName());
+	private void connectProcessWithCallActivity(ProcessModelTable table, ProjectTable projectTable) {
+		List<CallActivityTable> callActivityTables = callActivityDao.getCallActivitiesForName(table.getName(), projectTable);
 
 		callActivityTables.forEach(callActivityTable -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -138,12 +149,13 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCalledProcess(table);
 			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			// called element remains empty
+			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
 	}
 
-	private void connectCallActivityWithProcess(ProcessModelTable table, ProcessActivity activity) {
-		List<ProcessModelTable> processModelTable = processModelDao.getProcessModelsForName(activity.getLabel());
+	private void connectCallActivityWithProcess(ProcessModelTable table, ProcessActivity activity, ProjectTable projectTable) {
+		List<ProcessModelTable> processModelTable = processModelDao.getProcessModelsForName(activity.getLabel(), projectTable);
 
 		processModelTable.forEach(process -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -155,37 +167,38 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			// start event
 			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			// called element remains empty
+			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
 	}
 
-	private void connectEvents(ProcessModel processModel, ProcessModelTable table) {
+	private void connectEvents(ProcessModel processModel, ProcessModelTable table, ProjectTable projecTable) {
 		processModel//
 				.getEvents()//
 				.forEach(event -> {
-					connectEvents(table, event);
+					connectEvents(table, event, projecTable);
 				});
 	}
 
-	private void connectEvents(ProcessModelTable table, ProcessEvent event) {
+	private void connectEvents(ProcessModelTable table, ProcessEvent event, ProjectTable projectTable) {
 		switch (event.getEventType()) {
 		case START:
 		case INTERMEDIATE_CATCH:
-			connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW);
-			connectWithThrowEvents(table, event, EventType.END);
+			connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectTable);
+			connectWithThrowEvents(table, event, EventType.END, projectTable);
 			break;
 		case INTERMEDIATE_THROW:
 		case END:
-			connectWithCatchEvents(table, event, EventType.START);
-			connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH);
+			connectWithCatchEvents(table, event, EventType.START, projectTable);
+			connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
 			break;
 		}
 	}
 
 	private void connectWithCatchEvents(ProcessModelTable newTable, ProcessEvent newThrowEvent,
-			EventType eventTypeToConnectTo) {
+			EventType eventTypeToConnectTo, ProjectTable projectTable) {
 		List<ProcessEventTable> startEventsWithSameLabel = processEventDao
-				.getEventsForLabelAndType(newThrowEvent.getLabel(), eventTypeToConnectTo);
+				.getEventsForLabelAndType(newThrowEvent.getLabel(), eventTypeToConnectTo, projectTable);
 
 		startEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -205,15 +218,16 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 
+			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
 	}
 
 	private void connectWithThrowEvents(ProcessModelTable newTable, ProcessEvent newEvent,
-			EventType eventTypeForConnectionFrom) {
+			EventType eventTypeForConnectionFrom, ProjectTable projectTable) {
 
 		List<ProcessEventTable> endEventsWithSameLabel = processEventDao.getEventsForLabelAndType(newEvent.getLabel(),
-				eventTypeForConnectionFrom);
+				eventTypeForConnectionFrom, projectTable);
 
 		endEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -233,6 +247,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 
+			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
 	}

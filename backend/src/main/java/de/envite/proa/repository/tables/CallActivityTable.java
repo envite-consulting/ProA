@@ -21,4 +21,7 @@ public class CallActivityTable {
     
     @ManyToOne(fetch = FetchType.EAGER)
     private ProcessModelTable processModel;
+    
+    @ManyToOne
+    private ProjectTable project;
 }

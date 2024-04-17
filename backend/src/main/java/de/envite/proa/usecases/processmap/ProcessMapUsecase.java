@@ -10,7 +10,7 @@ public class ProcessMapUsecase {
 	@Inject
 	private ProcessMapRespository repository;
 	
-	public ProcessMap getProcessMap() {
-		return repository.getProcessMap();
+	public ProcessMap getProcessMap(Long projectId) {
+		return repository.getProcessMap(projectId);
 	}
 }

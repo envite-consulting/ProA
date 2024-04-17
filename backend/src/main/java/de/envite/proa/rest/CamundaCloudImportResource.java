@@ -1,5 +1,7 @@
 package de.envite.proa.rest;
 
+import org.jboss.resteasy.reactive.RestPath;
+
 import de.envite.proa.camundacloud.CamundaCloudFetchConfiguration;
 import de.envite.proa.camundacloud.CamundaCloudImportConfiguration;
 import de.envite.proa.camundacloud.CamundaCloudImportUsecase;
@@ -10,7 +12,7 @@ import jakarta.ws.rs.Path;
 
 @Path("/camunda-cloud")
 public class CamundaCloudImportResource {
-	
+
 	@Inject
 	private CamundaCloudImportUsecase usecase;
 
@@ -20,17 +22,17 @@ public class CamundaCloudImportResource {
 
 		return usecase.getToken(credentials);
 	}
-	
+
 	@POST
 	public Object uploadProcessModel(CamundaCloudFetchConfiguration configuration) {
 
 		return usecase.getProcessModels(configuration);
 	}
-	
-	@POST
-	@Path("/import")
-	public void importProcessModels(CamundaCloudImportConfiguration config) {
 
-		usecase.importProcessModels(config);
+	@POST
+	@Path("/project/{projectId}/import")
+	public void importProcessModels(@RestPath Long projectId, CamundaCloudImportConfiguration config) {
+
+		usecase.importProcessModels(projectId, config);
 	}
 }

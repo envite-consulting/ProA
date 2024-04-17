@@ -26,4 +26,7 @@ public class DataStoreConnectionTable {
 
 	@Enumerated(EnumType.STRING)
 	private DataAccess access;
+	
+	@ManyToOne
+	private ProjectTable project;
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
 
@@ -41,4 +42,7 @@ public class ProcessModelTable {
 	
 	@Column
 	private LocalDateTime createdAt;
+	
+	@ManyToOne
+	private ProjectTable project;
 }

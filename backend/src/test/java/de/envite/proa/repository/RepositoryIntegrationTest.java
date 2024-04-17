@@ -17,6 +17,7 @@ import de.envite.proa.entities.ProcessElementType;
 import de.envite.proa.entities.ProcessEvent;
 import de.envite.proa.entities.ProcessMap;
 import de.envite.proa.entities.ProcessModel;
+import de.envite.proa.entities.Project;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -25,6 +26,7 @@ import jakarta.transaction.Transactional;
 @QuarkusTest
 public class RepositoryIntegrationTest {
 
+	private static final String PROJECT_NAME = "Project Name";
 	private static final String DATA_STORE_LABEL = "DataStore Label";
 	private static final String DATA_STORE_ID = "dataStoreId";
 	private static final String EVENT_LABEL = "common event label";
@@ -42,6 +44,9 @@ public class RepositoryIntegrationTest {
 
 	@Inject
 	private ProcessMapRepositoryImpl processMapRepository;
+	
+	@Inject
+	private ProjectRepositoryImpl projectRepository;
 
 	@Test
 	public void testSaveAndGetProcessModel() {
@@ -64,7 +69,8 @@ public class RepositoryIntegrationTest {
 		model.setCallActivities(Arrays.asList(activity));
 
 		// Act
-		Long processId = processModelrepository.saveProcessModel(model);
+		Project project = projectRepository.createProject(PROJECT_NAME);
+		Long processId = processModelrepository.saveProcessModel(project.getId(), model);
 		ProcessDetails processDetails = processModelrepository.getProcessDetails(processId);
 
 		// Assert
@@ -107,10 +113,11 @@ public class RepositoryIntegrationTest {
 		model2.setDataStores(Arrays.asList(dataStore));
 
 		// Act
-		Long processId1 = processModelrepository.saveProcessModel(model1);
-		Long processId2 = processModelrepository.saveProcessModel(model2);
+		Project project = projectRepository.createProject(PROJECT_NAME);
+		Long processId1 = processModelrepository.saveProcessModel(project.getId(), model1);
+		Long processId2 = processModelrepository.saveProcessModel(project.getId(), model2);
 
-		ProcessMap processMap = processMapRepository.getProcessMap();
+		ProcessMap processMap = processMapRepository.getProcessMap(project.getId());
 
 		// Assert
 		assertThat(processMap.getProcesses())//
@@ -167,12 +174,13 @@ public class RepositoryIntegrationTest {
 		model2.setDataStores(Arrays.asList(dataStore));
 
 		// Act
-		Long processId1 = processModelrepository.saveProcessModel(model1);
-		Long processId2 = processModelrepository.saveProcessModel(model2);
+		Project project = projectRepository.createProject(PROJECT_NAME);
+		Long processId1 = processModelrepository.saveProcessModel(project.getId(), model1);
+		Long processId2 = processModelrepository.saveProcessModel(project.getId(), model2);
 
 		processModelrepository.deleteProcessModel(processId2);
 
-		ProcessMap processMap = processMapRepository.getProcessMap();
+		ProcessMap processMap = processMapRepository.getProcessMap(project.getId());
 
 		// Assert
 		assertThat(processMap.getProcesses())//

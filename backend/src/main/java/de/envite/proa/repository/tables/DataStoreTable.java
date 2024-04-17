@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 @Entity
@@ -16,4 +17,7 @@ public class DataStoreTable {
     
 	@Column(unique=true)
     private String label;
+	
+    @ManyToOne
+    private ProjectTable project;
 }

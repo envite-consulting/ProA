@@ -11,7 +11,8 @@
       model.description }}
         </v-list-item-subtitle>
         <template v-slot:append>
-          <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="() => deleteProcessModel(model.id)"></v-btn>
+          <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
+            @click="() => deleteProcessModel(model.id)"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
             @click="() => showProcessInfoDialog(model.id)"></v-btn>
@@ -76,7 +77,7 @@
 import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
-import {useAppStore} from "../../store/app";
+import { useAppStore } from "../../store/app";
 
 declare interface ProcessModel {
   id: number,
@@ -97,8 +98,10 @@ export default defineComponent({
     description: '',
     processModel: [] as File[],
     processModels: [] as ProcessModel[],
+    selectedProjectId: null as number | null,
   }),
   mounted: function () {
+    this.selectedProjectId = useAppStore().selectedProjectId;
     this.fetchProcessModels();
   },
   watch: {
@@ -108,16 +111,14 @@ export default defineComponent({
     showProcessInfoDialog(processId: number) {
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
-    deleteProcessModel(processId: number){
-      axios.delete("/api/process-model/"+processId).then(()=>{
+    deleteProcessModel(processId: number) {
+      axios.delete("/api/process-model/" + processId).then(() => {
         this.fetchProcessModels();
       })
     },
     fetchProcessModels() {
-      console.log("selectedProjectId")
-      console.log(useAppStore().selectedProjectId);
 
-      axios.get("/api/process-model").then(result => {
+      axios.get("/api/project/" + this.selectedProjectId + "/process-model").then(result => {
         this.processModels = result.data;
       })
     },
@@ -136,7 +137,7 @@ export default defineComponent({
           formData.append("fileName", processModel.name);
           formData.append("description", this.description);
 
-          await axios.post("/api/process-model", formData);
+          await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
 
           this.progress += progressSteps;
         }

@@ -13,7 +13,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-@Path("/project")
+@Path("")
 public class ProjectResource {
 
 	@Inject
@@ -27,6 +27,7 @@ public class ProjectResource {
 	 * @return the created project
 	 */
 	@POST
+	@Path("/project")
 	public Project uploadProcessModel(@RestForm String name) {
 
 		return usecase.createProject(name);
@@ -37,6 +38,7 @@ public class ProjectResource {
 	 * in order to show them as tiles in the frontend
 	 */
 	@GET
+	@Path("/project")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Project> getProcessInformation() {
 		return usecase.getProjects();

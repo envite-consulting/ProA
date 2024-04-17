@@ -25,12 +25,12 @@ public class CamundaCloudImportUsecase {
 		return camundaModelerService.getProcessModels("Bearer " + configuration.getToken(), search);
 	}
 
-	public void importProcessModels(CamundaCloudImportConfiguration config) {
+	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config) {
 
 		for (String id : config.getSelectedProcessModelIds()) {
 			CamundaProcessModelResponse processModel = camundaModelerService
 					.getProcessModel("Bearer " + config.getToken(), id);
-			usecase.saveProcessModel(processModel.getMetadata().getName(), getProcessXml(processModel), "");
+			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), getProcessXml(processModel), "");
 		}
 	}
 

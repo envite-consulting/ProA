@@ -67,31 +67,15 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-dialog
-      v-model="loadingDialog"
-      max-width="320"
-      persistent
-    >
-      <v-list
-        class="py-2"
-        color="primary"
-        elevation="12"
-        rounded="lg"
-      >
-        <v-list-item
-          title="Laden ..."
-        >
-          <template v-slot:append>
-            <v-progress-circular
-              color="primary"
-              indeterminate="disable-shrink"
-              size="16"
-              width="2"
-            ></v-progress-circular>
-          </template>
-        </v-list-item>
-      </v-list>
-    </v-dialog>
+  <v-dialog v-model="loadingDialog" max-width="320" persistent>
+    <v-list class="py-2" color="primary" elevation="12" rounded="lg">
+      <v-list-item title="Laden ...">
+        <template v-slot:append>
+          <v-progress-circular color="primary" indeterminate="disable-shrink" size="16" width="2"></v-progress-circular>
+        </template>
+      </v-list-item>
+    </v-list>
+  </v-dialog>
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
@@ -103,7 +87,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { moduleExpression } from '@babel/types';
+import { useAppStore } from "../../store/app";
 
 declare interface ProcessModel {
   id: string,
@@ -125,11 +109,13 @@ export default defineComponent({
     selectedProcessModels: [] as ProcessModel[],
     tokenError: false,
     token: null,
+    selectedProjectId: null as number | null,
   }),
 
   watch: {
   },
   mounted: function () {
+    this.selectedProjectId = useAppStore().selectedProjectId;
   },
   methods: {
     fetchToken() {
@@ -155,7 +141,7 @@ export default defineComponent({
         "email": this.creatorEMail,
       }).then(result => {
         this.processModels = result.data.items;
-        this.camundaCloudDialog=false;
+        this.camundaCloudDialog = false;
         this.loadingDialog = false;
       }).catch(error => {
         console.log(error);
@@ -171,7 +157,7 @@ export default defineComponent({
         return model.id;
       });
 
-      axios.post("/api/camunda-cloud/import", {
+      axios.post("/api/camunda-cloud/project/" + this.selectedProjectId + "/import", {
         token: this.token,
         selectedProcessModelIds: selectedProcessModelIds,
       }).then(() => {
