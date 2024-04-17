@@ -100,7 +100,6 @@ export default defineComponent({
       });
     },
     openProject(id: number){
-      console.log("id"+id)
       useAppStore().selectedProjectId = id;
       this.$router.push("/ProcessList")
     }

@@ -116,6 +116,9 @@ export default defineComponent({
   },
   mounted: function () {
     this.selectedProjectId = useAppStore().selectedProjectId;
+    if(!this.selectedProjectId){
+      this.$router.push("/");
+    }
   },
   methods: {
     fetchToken() {

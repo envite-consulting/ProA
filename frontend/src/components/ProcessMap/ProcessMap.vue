@@ -106,6 +106,10 @@ export default defineComponent({
 
   mounted: function () {
     this.selectedProjectId = useAppStore().selectedProjectId;
+    if(!this.selectedProjectId){
+      this.$router.push("/");
+      return;
+    }
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
