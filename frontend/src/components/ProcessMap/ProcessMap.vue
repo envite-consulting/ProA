@@ -1,35 +1,63 @@
 <template>
   <v-card height="100%">
-    <ProcessDetailDialog ref="processDetailDialog" />
+    <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
+    <div class="ma-4" style="position: absolute; top: 8px; right: 8px;">
+      <div class="d-flex flex-row-reverse mb-2">
+        <v-btn v-if="filtersCount > 0" @click="toggleFilterMenu" color="primary" size="large" icon>
+          <v-badge color="white" floating :bordered="true" :content="filtersCount">
+            <v-icon>mdi-filter-outline</v-icon>
+          </v-badge>
+        </v-btn>
+        <v-btn v-else @click="toggleFilterMenu" color="primary" size="large" icon>
+          <v-icon>mdi-filter-outline</v-icon>
+        </v-btn>
+      </div>
+      <v-list v-if="showFilterMenu">
+        <v-list-item>
+          <v-list-item-title class="font-weight-bold">Ausblenden:</v-list-item-title>
+        </v-list-item>
+        <v-divider></v-divider>
+        <v-list-item class="filter-item" v-for="(label, filterOption) in filterOptions" :key="filterOption">
+          <v-checkbox v-model="filterGraphOptions[filterOption]" :label="label" color="primary"
+                      @change="filterGraph" hide-details></v-checkbox>
+        </v-list-item>
+      </v-list>
+    </div>
     <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left" @click="goLeft"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left"
+               @click="goLeft"
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right" @click="goRight"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right"
+               @click="goRight"
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
-          size="large" />
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down" @click="goDown"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down"
+               @click="goDown"
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus" @click="zoomIn"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus"
+               @click="zoomIn"
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus" @click="zoomOut"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus"
+               @click="zoomOut"
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen" @click="fitToScreen"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen"
+               @click="fitToScreen"
+               size="large"/>
       </v-fab-transition>
     </div>
   </v-card>
@@ -40,20 +68,25 @@
   width: 100%;
   height: 100%;
 }
+
+.filter-item {
+  height: 1rem;
+}
 </style>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { shapes } from '@joint/core';
-import { paper, graph } from './jointjs/JointJSDiagram';
+import { computed, defineComponent, reactive, ref } from 'vue';
+import { dia, shapes } from '@joint/core';
+import { graph, paper } from './jointjs/JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
 
-import createAbstractProcessElement from "./jointjs/AbstractProcessElement";
-import createAbstractDataStoreElement from "./jointjs/AbstractDataStoreElement";
+import createAbstractProcessElement, { AbstractProcessShape } from "./jointjs/AbstractProcessElement";
+import createAbstractDataStoreElement, { AbstractDataStoreShape } from "./jointjs/AbstractDataStoreElement";
 
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+import Cell = dia.Cell;
 
 const scrollStep = 20;
 
@@ -62,7 +95,12 @@ interface Process {
   processName: string
 }
 
-type ProcessElementType = "START_EVENT" | "INTERMEDIATE_CATCH_EVENT" | "INTERMEDIATE_THROW_EVENT" | "END_EVENT" | "CALL_ACTIVITY";
+type ProcessElementType =
+  "START_EVENT"
+  | "INTERMEDIATE_CATCH_EVENT"
+  | "INTERMEDIATE_THROW_EVENT"
+  | "END_EVENT"
+  | "CALL_ACTIVITY";
 
 interface Connection {
   callingProcessid: number
@@ -80,25 +118,52 @@ interface DataStore {
 type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
 
 interface DataStoreConnection {
-
   processid: number
   dataStoreId: number
   access: DataAccess
 }
 
+interface FilterGraphInput {
+  hideAbstractDataStores: boolean;
+  hideCallActivities: boolean;
+  hideIntermediateEvents: boolean;
+  hideStartEndEvents: boolean;
+  hideProcessesWithoutConnections: boolean;
+}
 
 export default defineComponent({
   components: {
     ProcessDetailDialog
   },
-  data: () => ({
-
-  }),
 
   setup() {
     const processDetailDialog = ref(null);
+    const showFilterMenu = ref(false);
+    const hiddenCells: Cell[] = [];
+    const filterGraphInput: FilterGraphInput = reactive({
+      hideAbstractDataStores: false,
+      hideCallActivities: false,
+      hideIntermediateEvents: false,
+      hideStartEndEvents: false,
+      hideProcessesWithoutConnections: false
+    });
+    const filterOptions = {
+      hideAbstractDataStores: 'Ressourcen',
+      hideCallActivities: 'Aufrufaktivitäten',
+      hideIntermediateEvents: 'Zwischenereignisse',
+      hideStartEndEvents: 'End- zu Start-Verbindungen',
+      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen'
+    };
+    const filtersCount = computed(() => {
+      return Object.values(filterGraphInput).filter(value => value === true).length;
+    });
     return {
       processDetailDialog,
+      showFilterMenu,
+      hiddenCells,
+      filterGraphOptions: filterGraphInput,
+      filterOptions,
+      filtersCount
     };
   },
 
@@ -133,30 +198,30 @@ export default defineComponent({
 
   },
   methods: {
-    zoomIn(){
+    zoomIn() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 1.3);
     },
-    zoomOut(){
+    zoomOut() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 0.7);
     },
     fitToScreen() {
       paper.transformToFitContent();
     },
-    goRight(){
+    goRight() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - scrollStep, ty0);
     },
-    goLeft(){
+    goLeft() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 + scrollStep, ty0);
     },
-    goUp(){
+    goUp() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 + scrollStep);
     },
-    goDown(){
+    goDown() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 - scrollStep);
     },
@@ -170,7 +235,6 @@ export default defineComponent({
         });
 
         graph.addCell(abstracProcessShapes);
-
 
         let connectionsShapes = result.data.connections.map((connection: Connection) => {
 
@@ -260,7 +324,6 @@ export default defineComponent({
             })
           }
 
-
           return link;
         });
 
@@ -273,10 +336,9 @@ export default defineComponent({
           marginX: 10,
           marginY: 10,
         });
-        
+
         paper.transformToFitContent();
         paper.unfreeze();
-
       })
     },
     getPortPrefix(elementType: ProcessElementType) {
@@ -293,6 +355,72 @@ export default defineComponent({
           return 'call-'
         default:
           return '';
+      }
+    },
+    toggleFilterMenu() {
+      this.showFilterMenu = !this.showFilterMenu;
+    },
+    filterGraph() {
+      // TODO: hide intermediate ports when hiding intermediate connections
+      // TODO: write tests
+      const {
+        hideAbstractDataStores,
+        hideCallActivities,
+        hideIntermediateEvents,
+        hideStartEndEvents,
+        hideProcessesWithoutConnections
+      } = this.filterGraphOptions;
+
+      graph.addCells(this.hiddenCells);
+      this.hiddenCells = [];
+
+      const cellsToHide: Cell[] = [];
+
+      for (const link of graph.getLinks()) {
+        const sourceCell = link.getSourceCell();
+        const targetCell = link.getTargetCell();
+        const sourcePort = link?.attributes?.source?.port;
+        const targetPort = link?.attributes?.target?.port;
+
+        if (
+          hideAbstractDataStores &&
+          (sourceCell instanceof AbstractDataStoreShape || targetCell instanceof AbstractDataStoreShape)
+        ) {
+          cellsToHide.push(link);
+
+          if (sourceCell instanceof AbstractDataStoreShape && !cellsToHide.includes(sourceCell)) {
+            cellsToHide.push(sourceCell);
+          }
+          if (targetCell instanceof AbstractDataStoreShape && !cellsToHide.includes(targetCell)) {
+            cellsToHide.push(targetCell);
+          }
+
+        } else if (hideCallActivities && (sourcePort?.startsWith('call') || targetPort?.startsWith('call'))) {
+          cellsToHide.push(link);
+
+        } else if (hideIntermediateEvents && (sourcePort?.startsWith('i-') || targetPort?.startsWith('i-'))) {
+          cellsToHide.push(link);
+
+        } else if (hideStartEndEvents && sourcePort?.startsWith('end') && targetPort?.startsWith('start')) {
+          cellsToHide.push(link);
+        }
+      }
+
+      this.hiddenCells = cellsToHide;
+      graph.removeCells(cellsToHide);
+
+      if (hideProcessesWithoutConnections) {
+        const processesWithoutConnections: Cell[] = [];
+        for (const cell of graph.getCells()) {
+          if (
+            (cell instanceof AbstractProcessShape || cell instanceof AbstractDataStoreShape) &&
+            graph.getConnectedLinks(cell).length === 0
+          ) {
+            processesWithoutConnections.push(cell);
+          }
+        }
+        this.hiddenCells.push(...processesWithoutConnections);
+        graph.removeCells(processesWithoutConnections);
       }
     }
   }
