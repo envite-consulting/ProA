@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,6 @@ import jakarta.transaction.Transactional;
 @QuarkusTest
 public class RepositoryIntegrationTest {
 
-	private static final String PROJECT_NAME = "Project Name";
 	private static final String DATA_STORE_LABEL = "DataStore Label";
 	private static final String DATA_STORE_ID = "dataStoreId";
 	private static final String EVENT_LABEL = "common event label";
@@ -35,6 +35,8 @@ public class RepositoryIntegrationTest {
 	private static final String EVENT_ID = "EventID";
 	private static final String ACTIVITY_ID = "ActivityId";
 	private static final String PROCESS_MODEL_NAME_2 = "TestProcessModel2";
+	private static final String PROJECT_NAME = "Project Name";
+	private static final String PROJECT_NAME_2 = "Project Name 2";
 
 	@Inject
 	private EntityManager entityManager;
@@ -44,7 +46,7 @@ public class RepositoryIntegrationTest {
 
 	@Inject
 	private ProcessMapRepositoryImpl processMapRepository;
-	
+
 	@Inject
 	private ProjectRepositoryImpl projectRepository;
 
@@ -196,6 +198,41 @@ public class RepositoryIntegrationTest {
 		assertThat(processMap.getDataStoreConnections()).hasSize(0);
 	}
 
+	@Test
+	@Transactional
+	public void testGetProjects() {
+
+		// Arange
+		Long projectId1 = projectRepository.createProject(PROJECT_NAME).getId();
+		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2).getId();
+
+		// Act
+		List<Project> projects = projectRepository.getProjects();
+
+		// Assert
+		assertThat(projects)//
+				.hasSize(2)//
+				.extracting("id", "name")//
+				.contains(tuple(projectId1, PROJECT_NAME), tuple(projectId2, PROJECT_NAME_2));
+
+	}
+	
+	@Test
+	@Transactional
+	public void testGetProject() {
+
+		// Arange
+		Long projectId = projectRepository.createProject(PROJECT_NAME).getId();
+
+		// Act
+		Project project = projectRepository.getProject(projectId);
+
+		// Assert
+		assertThat(project.getId()).isEqualTo(projectId);
+		assertThat(project.getName()).isEqualTo(PROJECT_NAME);
+
+	}
+
 	/**
 	 * There is no quarkus feature to clean up the database
 	 * https://stackoverflow.com/questions/71857904/quarkus-clean-h2-db-after-every-test
@@ -208,5 +245,6 @@ public class RepositoryIntegrationTest {
 		entityManager.createNativeQuery("DELETE FROM CallActivityTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessConnectionTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessModelTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM ProjectTable").executeUpdate();
 	}
 }
