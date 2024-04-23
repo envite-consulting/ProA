@@ -23,7 +23,7 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessOperations processOperations;
 
-	public Long saveProcessModel(String name, String xml, String description) {
+	public Long saveProcessModel(Long projectId, String name, String xml, String description) {
 
 		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
 		List<ProcessEvent> intermediateThrowEvents = processOperations.getIntermediateThrowEvents(xml);
@@ -45,15 +45,15 @@ public class ProcessModelUsecase {
 				description//
 		);
 
-		return repository.saveProcessModel(processModel);
+		return repository.saveProcessModel(projectId, processModel);
 	}
 
 	public String getProcessModel(Long id) {
 		return repository.getProcessModel(id);
 	}
 
-	public List<ProcessInformation> getProcessInformation() {
-		return repository.getProcessInformation();
+	public List<ProcessInformation> getProcessInformation(Long projectId) {
+		return repository.getProcessInformation(projectId);
 	}
 
 	public ProcessDetails getProcessDetails(Long id) {

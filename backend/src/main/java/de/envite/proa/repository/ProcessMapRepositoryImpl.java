@@ -11,6 +11,7 @@ import de.envite.proa.entities.ProcessMap;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
+import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,14 +19,19 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
+	private ProjectDao projectDao;
 	private ProcessModelDao processModelDao;
 	private ProcessConnectionDao processConnectionDao;
 	private DataStoreDao dataStoreDao;
 	private DataStoreConnectionDao dataStoreConnectionDao;
 
 	@Inject
-	public ProcessMapRepositoryImpl(ProcessModelDao processModelDao, ProcessConnectionDao processConnectionDao,
-			DataStoreDao dataStoreDao, DataStoreConnectionDao dataStoreConnectionDao) {
+	public ProcessMapRepositoryImpl(ProjectDao projectDao, //
+			ProcessModelDao processModelDao, //
+			ProcessConnectionDao processConnectionDao, //
+			DataStoreDao dataStoreDao, //
+			DataStoreConnectionDao dataStoreConnectionDao) {
+		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.processConnectionDao = processConnectionDao;
 		this.dataStoreDao = dataStoreDao;
@@ -33,12 +39,13 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	}
 
 	@Override
-	public ProcessMap getProcessMap() {
-
-		List<ProcessInformation> processModelInformation = getProcessInformation();
-		List<ProcessConnection> processConnections = getProcessConnections();
-		List<DataStore> dataStores = getDataStores();
-		List<DataStoreConnection> dataStoreConnections = getDataStoreConnections();
+	public ProcessMap getProcessMap(Long projectId) {
+		
+		ProjectTable projectTable = projectDao.findById(projectId);
+		List<ProcessInformation> processModelInformation = getProcessInformation(projectTable);
+		List<ProcessConnection> processConnections = getProcessConnections(projectTable);
+		List<DataStore> dataStores = getDataStores(projectTable);
+		List<DataStoreConnection> dataStoreConnections = getDataStoreConnections(projectTable);
 
 		ProcessMap map = new ProcessMap();
 		map.setConnections(processConnections);
@@ -49,9 +56,10 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return map;
 	}
 
-	private List<ProcessInformation> getProcessInformation() {
+	private List<ProcessInformation> getProcessInformation(ProjectTable projectTable) {
+
 		return processModelDao//
-				.getProcessModels()//
+				.getProcessModels(projectTable)//
 				.stream()//
 				.map(model -> new ProcessInformation(//
 						model.getId(), //
@@ -61,25 +69,25 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				.collect(Collectors.toList());
 	}
 
-	private List<ProcessConnection> getProcessConnections() {
+	private List<ProcessConnection> getProcessConnections(ProjectTable projectTable) {
 		return processConnectionDao//
-				.getProcessConnections()//
+				.getProcessConnections(projectTable)//
 				.stream()//
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}
 
-	private List<DataStore> getDataStores() {
+	private List<DataStore> getDataStores(ProjectTable projectTable) {
 		return dataStoreDao//
-				.getDataStores()//
+				.getDataStores(projectTable)//
 				.stream()//
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}
 
-	private List<DataStoreConnection> getDataStoreConnections() {
+	private List<DataStoreConnection> getDataStoreConnections(ProjectTable projectTable) {
 		return dataStoreConnectionDao//
-				.getDataStoreConnections()//
+				.getDataStoreConnections(projectTable)//
 				.stream()//
 				.map(this::map)//
 				.collect(Collectors.toList());

@@ -4,6 +4,7 @@ import java.util.List;
 
 import de.envite.proa.entities.EventType;
 import de.envite.proa.repository.tables.ProcessEventTable;
+import de.envite.proa.repository.tables.ProjectTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -20,13 +21,16 @@ public class ProcessEventDao {
 	}
 
 	@Transactional
-	public List<ProcessEventTable> getEventsForLabelAndType(String label, EventType eventType) {
+	public List<ProcessEventTable> getEventsForLabelAndType(String label, EventType eventType,
+			ProjectTable projectTable) {
 
 		return em //
-				.createQuery("SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType",
+				.createQuery(
+						"SELECT e FROM ProcessEventTable e WHERE e.label = :label AND e.eventType=:eventType AND e.project=:project",
 						ProcessEventTable.class)
 				.setParameter("label", label)//
 				.setParameter("eventType", eventType)//
+				.setParameter("project", projectTable)//
 				.getResultList();
 	}
 }

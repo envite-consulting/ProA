@@ -8,11 +8,11 @@ import de.envite.proa.entities.ProcessModel;
 
 public interface ProcessModelRepository {
 
-	Long saveProcessModel(ProcessModel processModel);
+	Long saveProcessModel(Long projectId, ProcessModel processModel);
 
 	String getProcessModel(Long id);
 
-	List<ProcessInformation> getProcessInformation();
+	List<ProcessInformation> getProcessInformation(Long projectId);
 
 	ProcessDetails getProcessDetails(Long id);
 

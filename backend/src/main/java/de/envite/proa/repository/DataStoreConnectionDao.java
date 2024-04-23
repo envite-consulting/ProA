@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.repository.tables.ProjectTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -27,9 +28,10 @@ public class DataStoreConnectionDao {
 	}
 
 	@Transactional
-	public List<DataStoreConnectionTable> getDataStoreConnections() {
+	public List<DataStoreConnectionTable> getDataStoreConnections(ProjectTable projectTable) {
 		return em//
-				.createQuery("SELECT dc FROM DataStoreConnectionTable dc", DataStoreConnectionTable.class)//
+				.createQuery("SELECT dc FROM DataStoreConnectionTable dc WHERE dc.project = :project", DataStoreConnectionTable.class)//
+				.setParameter("project", projectTable)
 				.getResultList();
 	}
 

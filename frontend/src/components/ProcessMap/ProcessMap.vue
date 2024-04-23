@@ -1,41 +1,48 @@
 <template>
-  <v-card height="100%">
+  <v-toolbar>
+    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+  </v-toolbar>
+  <v-card class="full-screen-below-toolbar">
     <ProcessDetailDialog ref="processDetailDialog" />
     <div id="graph-container" class="full-screen"></div>
     <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left" @click="goLeft"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left"
+          @click="goLeft" size="large" />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right" @click="goRight"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right"
+          @click="goRight" size="large" />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
           size="large" />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down" @click="goDown"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down"
+          @click="goDown" size="large" />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus" @click="zoomIn"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus"
+          @click="zoomIn" size="large" />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus" @click="zoomOut"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus"
+          @click="zoomOut" size="large" />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen" @click="fitToScreen"
-          size="large" />
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen"
+          @click="fitToScreen" size="large" />
       </v-fab-transition>
     </div>
   </v-card>
 </template>
 
 <style>
+.full-screen-below-toolbar {
+  width: 100%;
+  height: calc(100% - 64px) !important;
+}
 .full-screen {
   width: 100%;
   height: 100%;
@@ -54,6 +61,9 @@ import createAbstractDataStoreElement from "./jointjs/AbstractDataStoreElement";
 
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+
+import { useAppStore } from "../../store/app";
+import getProject from "../projectService";
 
 const scrollStep = 20;
 
@@ -92,7 +102,8 @@ export default defineComponent({
     ProcessDetailDialog
   },
   data: () => ({
-
+    selectedProjectId: null as number | null,
+    selectedProjectName: '' as string,
   }),
 
   setup() {
@@ -103,7 +114,14 @@ export default defineComponent({
   },
 
   mounted: function () {
-
+    this.selectedProjectId = useAppStore().selectedProjectId;
+    if(!this.selectedProjectId){
+      this.$router.push("/");
+      return;
+    }
+    getProject(this.selectedProjectId).then(result => {
+      this.selectedProjectName = result.data.name;
+    })
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
@@ -133,37 +151,37 @@ export default defineComponent({
 
   },
   methods: {
-    zoomIn(){
+    zoomIn() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 1.3);
     },
-    zoomOut(){
+    zoomOut() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 0.7);
     },
     fitToScreen() {
       paper.transformToFitContent();
     },
-    goRight(){
+    goRight() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - scrollStep, ty0);
     },
-    goLeft(){
+    goLeft() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 + scrollStep, ty0);
     },
-    goUp(){
+    goUp() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 + scrollStep);
     },
-    goDown(){
+    goDown() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 - scrollStep);
     },
     fetchProcessModels() {
       const component = this;
       graph.clear();
-      axios.get("/api/process-map").then(result => {
+      axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
           return createAbstractProcessElement(process.processName, process.id);
@@ -273,7 +291,7 @@ export default defineComponent({
           marginX: 10,
           marginY: 10,
         });
-        
+
         paper.transformToFitContent();
         paper.unfreeze();
 
