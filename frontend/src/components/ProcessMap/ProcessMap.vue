@@ -361,8 +361,6 @@ export default defineComponent({
       this.showFilterMenu = !this.showFilterMenu;
     },
     filterGraph() {
-      // TODO: hide intermediate ports when hiding intermediate connections
-      // TODO: write tests
       const {
         hideAbstractDataStores,
         hideCallActivities,
@@ -373,6 +371,11 @@ export default defineComponent({
 
       graph.addCells(this.hiddenCells);
       this.hiddenCells = [];
+      for (const cell of graph.getCells()) {
+        if (cell instanceof AbstractProcessShape) {
+          cell.showAllPorts();
+        }
+      }
 
       const cellsToHide: Cell[] = [];
 
@@ -409,19 +412,27 @@ export default defineComponent({
       this.hiddenCells = cellsToHide;
       graph.removeCells(cellsToHide);
 
-      if (hideProcessesWithoutConnections) {
-        const processesWithoutConnections: Cell[] = [];
-        for (const cell of graph.getCells()) {
-          if (
-            (cell instanceof AbstractProcessShape || cell instanceof AbstractDataStoreShape) &&
-            graph.getConnectedLinks(cell).length === 0
-          ) {
-            processesWithoutConnections.push(cell);
+      const processesWithoutConnections: Cell[] = [];
+      for (const cell of graph.getCells()) {
+        if (
+          hideProcessesWithoutConnections &&
+          (cell instanceof AbstractProcessShape || cell instanceof AbstractDataStoreShape) &&
+          graph.getConnectedLinks(cell).length === 0
+        ) {
+          processesWithoutConnections.push(cell);
+        } else if (cell instanceof AbstractProcessShape) {
+          if (hideCallActivities) {
+            cell.hidePort('call-' + cell.id);
+          }
+          if (hideIntermediateEvents) {
+            cell.hidePort('i-catch-event-' + cell.id);
+            cell.hidePort('i-throw-event-' + cell.id);
           }
         }
-        this.hiddenCells.push(...processesWithoutConnections);
-        graph.removeCells(processesWithoutConnections);
+
       }
+      this.hiddenCells.push(...processesWithoutConnections);
+      graph.removeCells(processesWithoutConnections);
     }
   }
 })
