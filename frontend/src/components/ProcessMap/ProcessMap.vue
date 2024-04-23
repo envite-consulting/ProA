@@ -1,6 +1,10 @@
 <template>
   <v-toolbar>
     <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-btn icon @click="fetchProcessModels">
+      <v-icon>mdi-refresh</v-icon>
+    </v-btn>
   </v-toolbar>
   <v-card class="full-screen-below-toolbar">
     <ProcessDetailDialog ref="processDetailDialog" />
@@ -104,6 +108,7 @@ export default defineComponent({
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    store: useAppStore(),
   }),
 
   setup() {
@@ -114,7 +119,7 @@ export default defineComponent({
   },
 
   mounted: function () {
-    this.selectedProjectId = useAppStore().selectedProjectId;
+    this.selectedProjectId = this.store.selectedProjectId;
     if(!this.selectedProjectId){
       this.$router.push("/");
       return;
@@ -146,8 +151,16 @@ export default defineComponent({
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - tx, ty0 - ty);
     });
+    graph.on('change:position', (cell) => {
+        this.saveGraphState();
+      });
 
-    this.fetchProcessModels();
+    const persistedGraph = this.store.graphByProject.get(this.store.selectedProjectId!);
+    if (!!persistedGraph) {
+      graph.fromJSON(JSON.parse(persistedGraph));
+    } else {
+      this.fetchProcessModels();
+    }
 
   },
   methods: {
@@ -177,6 +190,9 @@ export default defineComponent({
     goDown() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 - scrollStep);
+    },
+    saveGraphState() {
+      this.store.graphByProject.set(this.store.selectedProjectId!, JSON.stringify(graph));
     },
     fetchProcessModels() {
       const component = this;
