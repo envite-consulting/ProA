@@ -12,17 +12,19 @@ import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.repository.tables.ProjectTable;
 
 public class ProcessmodelMapper {
 
-	public static ProcessModelTable map(ProcessModel processModel) {
+	public static ProcessModelTable map(ProcessModel processModel, ProjectTable projectTable) {
 		ProcessModelTable table = new ProcessModelTable();
 		table.setName(processModel.getName());
 		table.setBpmnXml(processModel.getBpmnXml());
-		table.setEvents(mapEvents(processModel.getEvents(), table));
-		table.setCallActivites(map(processModel.getCallActivities(), table));
+		table.setEvents(mapEvents(processModel.getEvents(), table, projectTable));
+		table.setCallActivites(map(processModel.getCallActivities(), table, projectTable));
 		table.setDataStores(mapDataStore(processModel.getDataStores(), table));
 		table.setDescription(processModel.getDescription());
+		table.setProject(projectTable);
 		return table;
 	}
 
@@ -42,7 +44,7 @@ public class ProcessmodelMapper {
 	}
 
 	private static List<CallActivityTable> map(List<ProcessActivity> callActivities,
-			ProcessModelTable processModelTable) {
+			ProcessModelTable processModelTable, ProjectTable projectTable) {
 		return callActivities//
 				.stream()//
 				.map(activity -> {
@@ -50,24 +52,26 @@ public class ProcessmodelMapper {
 					callActivityTable.setElementId(activity.getElementId());
 					callActivityTable.setLabel(activity.getLabel());
 					callActivityTable.setProcessModel(processModelTable);
+					callActivityTable.setProject(projectTable);
 					return callActivityTable;
 				})//
 				.collect(Collectors.toList());
 	}
 
-	private static List<ProcessEventTable> mapEvents(List<ProcessEvent> events, ProcessModelTable processModelTable) {
+	private static List<ProcessEventTable> mapEvents(List<ProcessEvent> events, ProcessModelTable processModelTable, ProjectTable projectTable) {
 		return events//
 				.stream()//
-				.map(event -> map(event, event.getEventType(), processModelTable))//
+				.map(event -> map(event, event.getEventType(), processModelTable, projectTable))//
 				.collect(Collectors.toList());
 	}
 
-	private static ProcessEventTable map(ProcessEvent event, EventType eventType, ProcessModelTable processModelTable) {
+	private static ProcessEventTable map(ProcessEvent event, EventType eventType, ProcessModelTable processModelTable, ProjectTable projectTable) {
 		ProcessEventTable processEventtable = new ProcessEventTable();
 		processEventtable.setElementId(event.getElementId());
 		processEventtable.setLabel(event.getLabel());
 		processEventtable.setEventType(eventType);
 		processEventtable.setProcessModel(processModelTable);
+		processEventtable.setProject(projectTable);
 		return processEventtable;
 	}
 }

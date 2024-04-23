@@ -15,6 +15,11 @@ const routes = [
         component: () => import(/* webpackChunkName: "home" */ '@/views/Home.vue'),
       },
       {
+        path: 'CamundaCloudImport',
+        name: 'CamundaCloudImport',
+        component: () => import('@/views/CamundaCloudImportView.vue'),
+      },
+      {
         path: '/ProcessView/:id',
         name: 'ProcessView',
         component: () => import('@/views/ProcessView.vue'),

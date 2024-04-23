@@ -33,4 +33,7 @@ public class ProcessConnectionTable {
 	private String callingElement;
 
 	private String calledElement;
+	
+    @ManyToOne
+    private ProjectTable project;
 }

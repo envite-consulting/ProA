@@ -1,6 +1,9 @@
 <template>
-  <v-card height="100%">
-    <ProcessDetailDialog ref="processDetailDialog"/>
+  <v-toolbar>
+    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+  </v-toolbar>
+  <v-card class="full-screen-below-toolbar">
+    <ProcessDetailDialog ref="processDetailDialog" />
     <div id="graph-container" class="full-screen"></div>
     <div class="ma-4" style="position: absolute; top: 8px; right: 8px;">
       <div class="d-flex flex-row-reverse mb-2">
@@ -64,6 +67,10 @@
 </template>
 
 <style>
+.full-screen-below-toolbar {
+  width: 100%;
+  height: calc(100% - 64px) !important;
+}
 .full-screen {
   width: 100%;
   height: 100%;
@@ -87,6 +94,9 @@ import createAbstractDataStoreElement, { AbstractDataStoreShape } from "./jointj
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import Cell = dia.Cell;
+
+import { useAppStore } from "../../store/app";
+import getProject from "../projectService";
 
 const scrollStep = 20;
 
@@ -135,6 +145,11 @@ export default defineComponent({
   components: {
     ProcessDetailDialog
   },
+  
+  data: () => ({
+    selectedProjectId: null as number | null,
+    selectedProjectName: '' as string,
+  }),
 
   setup() {
     const processDetailDialog = ref(null);
@@ -168,7 +183,14 @@ export default defineComponent({
   },
 
   mounted: function () {
-
+    this.selectedProjectId = useAppStore().selectedProjectId;
+    if(!this.selectedProjectId){
+      this.$router.push("/");
+      return;
+    }
+    getProject(this.selectedProjectId).then(result => {
+      this.selectedProjectName = result.data.name;
+    })
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
@@ -228,7 +250,7 @@ export default defineComponent({
     fetchProcessModels() {
       const component = this;
       graph.clear();
-      axios.get("/api/process-map").then(result => {
+      axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
           return createAbstractProcessElement(process.processName, process.id);

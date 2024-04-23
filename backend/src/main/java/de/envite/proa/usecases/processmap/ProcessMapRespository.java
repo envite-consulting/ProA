@@ -4,6 +4,6 @@ import de.envite.proa.entities.ProcessMap;
 
 public interface ProcessMapRespository {
 
-	public ProcessMap getProcessMap();
+	public ProcessMap getProcessMap(Long projectId);
 
 }

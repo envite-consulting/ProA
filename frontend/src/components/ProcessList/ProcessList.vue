@@ -1,5 +1,7 @@
 <template>
-
+  <v-toolbar>
+    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+  </v-toolbar>
   <ProcessDetailDialog ref="processDetailDialog" />
   <v-list lines="two" class="pa-6">
     <template v-for="(model, index) in processModels" :key="'process-'+model.id">
@@ -8,10 +10,11 @@
 
         <v-list-item-subtitle>
           {{ new Date(model.createdAt).toLocaleString("de-DE") }} {{ !!model.description ? '-' : '' }} {{
-      model.description }}
+    model.description }}
         </v-list-item-subtitle>
         <template v-slot:append>
-          <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="() => deleteProcessModel(model.id)"></v-btn>
+          <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
+            @click="() => deleteProcessModel(model.id)"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
             @click="() => showProcessInfoDialog(model.id)"></v-btn>
@@ -30,7 +33,7 @@
   <v-dialog v-model="uploadDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">Prozesmodell hochladen</span>
+        <span class="text-h5">Prozessmodell hochladen</span>
       </v-card-title>
       <v-card-text>
         <v-container>
@@ -76,6 +79,8 @@
 import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+import { useAppStore } from "../../store/app";
+import getProject from "../projectService";
 
 declare interface ProcessModel {
   id: number,
@@ -96,27 +101,35 @@ export default defineComponent({
     description: '',
     processModel: [] as File[],
     processModels: [] as ProcessModel[],
+    selectedProjectId: null as number | null,
+    selectedProjectName: '' as string,
   }),
   mounted: function () {
+    this.selectedProjectId = useAppStore().selectedProjectId;
+    if (!this.selectedProjectId) {
+      this.$router.push("/");
+      return;
+    }
+    getProject(this.selectedProjectId).then(result => {
+      this.selectedProjectName = result.data.name;
+    })
     this.fetchProcessModels();
   },
   watch: {
-    progress(val) {
-      console.log("progress changed: " + val);
-    }
   },
   methods: {
 
     showProcessInfoDialog(processId: number) {
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
-    deleteProcessModel(processId: number){
-      axios.delete("/api/process-model/"+processId).then(()=>{
+    deleteProcessModel(processId: number) {
+      axios.delete("/api/process-model/" + processId).then(() => {
         this.fetchProcessModels();
       })
     },
     fetchProcessModels() {
-      axios.get("/api/process-model").then(result => {
+
+      axios.get("/api/project/" + this.selectedProjectId + "/process-model").then(result => {
         this.processModels = result.data;
       })
     },
@@ -126,7 +139,6 @@ export default defineComponent({
 
         this.progressDialog = true;
         const progressSteps = 100 / (this.processModel.length * 2);
-        console.log("progressSteps" + progressSteps)
 
         for (const processModel of this.processModel) {
           this.progress += progressSteps;
@@ -136,7 +148,7 @@ export default defineComponent({
           formData.append("fileName", processModel.name);
           formData.append("description", this.description);
 
-          await axios.post("/api/process-model", formData);
+          await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
 
           this.progress += progressSteps;
         }

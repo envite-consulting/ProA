@@ -29,6 +29,7 @@ import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.repository.tables.ProjectTable;
 
 public class ProcessmodelRepositoryTest {
 
@@ -42,7 +43,10 @@ public class ProcessmodelRepositoryTest {
 	private static final String EXISTING_ACTIVITY_ID = "existingActivityId";
 	private static final String DATA_STORE_LABEL = "DataStoreLabel";
 	private static final Long PROCESSM_MODEL_ID = 1L;
+	private static final Long PROJECT_ID = 2341234L;
 
+	@Mock
+	private ProjectDao projectDao;
 	@Mock
 	private ProcessModelDao processModelDao;
 	@Mock
@@ -65,6 +69,11 @@ public class ProcessmodelRepositoryTest {
 	public void testEndEvent() {
 
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findById(PROJECT_ID)).thenReturn(projectTable);
+
 		ProcessEventTable processEventTable = new ProcessEventTable();
 		processEventTable.setEventType(EventType.START);
 		processEventTable.setLabel(COMMON_EVENT_LABEL);
@@ -73,10 +82,12 @@ public class ProcessmodelRepositoryTest {
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
 		processEventTable.setProcessModel(processModelTable);
 		List<ProcessEventTable> startEventTables = Arrays.asList(processEventTable);
-		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.START))
+		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.START, projectTable))
 				.thenReturn(startEventTables);
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+				projectDao, //
+				processModelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
@@ -94,7 +105,7 @@ public class ProcessmodelRepositoryTest {
 		model.setEvents(Arrays.asList(endEvent));
 
 		// Act
-		repository.saveProcessModel(model);
+		repository.saveProcessModel(PROJECT_ID, model);
 
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
@@ -114,6 +125,11 @@ public class ProcessmodelRepositoryTest {
 	public void testStartEvent() {
 
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findById(PROJECT_ID)).thenReturn(projectTable);
+
 		ProcessEventTable processEventTable = new ProcessEventTable();
 		processEventTable.setEventType(EventType.END);
 		processEventTable.setLabel(COMMON_EVENT_LABEL);
@@ -122,9 +138,12 @@ public class ProcessmodelRepositoryTest {
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
 		processEventTable.setProcessModel(processModelTable);
 		List<ProcessEventTable> endEventTables = Arrays.asList(processEventTable);
-		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.END)).thenReturn(endEventTables);
+		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.END, projectTable))
+				.thenReturn(endEventTables);
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+				projectDao, //
+				processModelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
@@ -141,7 +160,7 @@ public class ProcessmodelRepositoryTest {
 		model.setEvents(Arrays.asList(startEvent));
 
 		// Act
-		repository.saveProcessModel(model);
+		repository.saveProcessModel(PROJECT_ID, model);
 
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
@@ -161,12 +180,19 @@ public class ProcessmodelRepositoryTest {
 	public void testCallActivity() {
 
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findById(PROJECT_ID)).thenReturn(projectTable);
+
 		ProcessModelTable processModelTable = new ProcessModelTable();
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
-		when(processModelDao.getProcessModelsForName(EXISTING_PROCESS_MODEL_NAME))
+		when(processModelDao.getProcessModelsForName(EXISTING_PROCESS_MODEL_NAME, projectTable))
 				.thenReturn(Arrays.asList(processModelTable));
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+				projectDao, //
+				processModelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
@@ -183,7 +209,7 @@ public class ProcessmodelRepositoryTest {
 		model.setCallActivities(Arrays.asList(activity));
 
 		// Act
-		repository.saveProcessModel(model);
+		repository.saveProcessModel(PROJECT_ID, model);
 
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
@@ -203,6 +229,11 @@ public class ProcessmodelRepositoryTest {
 	public void testProcessCalledByActivity() {
 
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findById(PROJECT_ID)).thenReturn(projectTable);
+
 		ProcessModelTable processModelTable = new ProcessModelTable();
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
 
@@ -211,10 +242,12 @@ public class ProcessmodelRepositoryTest {
 		callActivityTable.setLabel(NEW_PROCESS_MODEL_NAME);
 		callActivityTable.setProcessModel(processModelTable);
 
-		when(callActivityDao.getCallActivitiesForName(NEW_PROCESS_MODEL_NAME))
+		when(callActivityDao.getCallActivitiesForName(NEW_PROCESS_MODEL_NAME, projectTable))
 				.thenReturn(Arrays.asList(callActivityTable));
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+				projectDao, //
+				processModelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
@@ -225,7 +258,7 @@ public class ProcessmodelRepositoryTest {
 		model.setName(NEW_PROCESS_MODEL_NAME);
 
 		// Act
-		repository.saveProcessModel(model);
+		repository.saveProcessModel(PROJECT_ID, model);
 
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
@@ -244,12 +277,19 @@ public class ProcessmodelRepositoryTest {
 	@Test
 	public void testDataStore() {
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findById(PROJECT_ID)).thenReturn(projectTable);
+
 		DataStoreTable dataStoreTable = new DataStoreTable();
 		dataStoreTable.setLabel(DATA_STORE_LABEL);
 
-		when(dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL)).thenReturn(dataStoreTable);
+		when(dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL, projectTable)).thenReturn(dataStoreTable);
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+				projectDao, //
+				processModelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
@@ -266,7 +306,7 @@ public class ProcessmodelRepositoryTest {
 		model.setDataStores(Arrays.asList(dataStore));
 
 		// Act
-		repository.saveProcessModel(model);
+		repository.saveProcessModel(PROJECT_ID, model);
 
 		// Assert
 		ArgumentCaptor<DataStoreConnectionTable> connectionCaptor = ArgumentCaptor
@@ -283,6 +323,11 @@ public class ProcessmodelRepositoryTest {
 	public void testGetProcessInformation() {
 
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findById(PROJECT_ID)).thenReturn(projectTable);
+		
 		LocalDateTime dateTime = LocalDateTime.now();
 
 		ProcessModelTable processModel = new ProcessModelTable();
@@ -291,9 +336,11 @@ public class ProcessmodelRepositoryTest {
 		processModel.setDescription(PROCESS_DESCRIPTION);
 		processModel.setCreatedAt(dateTime);
 
-		when(processModelDao.getProcessModels()).thenReturn(Arrays.asList(processModel));
+		when(processModelDao.getProcessModels(projectTable)).thenReturn(Arrays.asList(processModel));
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(processModelDao, //
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+				projectDao, //
+				processModelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
@@ -301,7 +348,7 @@ public class ProcessmodelRepositoryTest {
 				processEventDao);
 
 		// Act
-		List<ProcessInformation> processInformation = repository.getProcessInformation();
+		List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID);
 
 		// Assert
 		assertThat(processInformation)//

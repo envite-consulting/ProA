@@ -1,21 +1,21 @@
 package de.envite.proa.repository.tables;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
-@Entity
 @Data
-public class DataStoreTable {
+@Entity
+public class ProjectTable {
 
 	@Id
 	@GeneratedValue
-	private Long id;
+	public Long id;
 
-	private String label;
-
-	@ManyToOne
-	private ProjectTable project;
+	private String name;
+	private LocalDateTime createdAt;
+    private LocalDateTime modifiedAt;
 }

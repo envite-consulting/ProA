@@ -22,7 +22,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-@Path("/process-model")
+@Path("")
 public class ProcessModelResource {
 
 	@Inject
@@ -32,18 +32,20 @@ public class ProcessModelResource {
 	 * 
 	 * Creates a new process model
 	 * 
+	 * @param projectId    the id of the project the process model belongs to
 	 * @param processModel the bpmn file
 	 * @param fileName     the file name of the bpmn file
 	 * @param description
 	 * @return id of saved process model
 	 */
 	@POST
-	public Long uploadProcessModel(@RestForm File processModel, @RestForm String fileName,
+	@Path("/project/{projectId}/process-model")
+	public Long uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
 			@RestForm String description) {
 
 		String content = readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
-		return usecase.saveProcessModel(fileName, content, description);
+		return usecase.saveProcessModel(projectId, fileName, content, description);
 	}
 
 	/**
@@ -53,13 +55,13 @@ public class ProcessModelResource {
 	 * @param id of the bpmn file
 	 * @return bpmn file as string
 	 */
-	@Path("/{id}")
+	@Path("/process-model/{id}")
 	@GET
 	public String getProcessModel(@RestPath Long id) {
 		return usecase.getProcessModel(id);
 	}
 
-	@Path("/{id}")
+	@Path("/process-model/{id}")
 	@DELETE
 	public RestResponse<?> deleteProcessModel(@RestPath Long id) {
 		usecase.deleteProcessModel(id);
@@ -71,13 +73,14 @@ public class ProcessModelResource {
 	 * in order to show them as a list in the process list in the frontend
 	 */
 	@GET
+	@Path("/project/{projectId}/process-model")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<ProcessInformation> getProcessInformation() {
-		return usecase.getProcessInformation();
+	public List<ProcessInformation> getProcessInformation(@RestPath Long projectId) {
+		return usecase.getProcessInformation(projectId);
 	}
 
 	@GET
-	@Path("/{id}/details")
+	@Path("/process-model/{id}/details")
 	@Produces(MediaType.APPLICATION_JSON)
 	public ProcessDetails getProcessDetails(@RestPath Long id) {
 		return usecase.getProcessDetails(id);

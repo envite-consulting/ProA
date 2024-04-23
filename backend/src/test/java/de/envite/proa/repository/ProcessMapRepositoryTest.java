@@ -1,6 +1,8 @@
 package de.envite.proa.repository;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -37,6 +39,8 @@ public class ProcessMapRepositoryTest {
 	private static final Long DATA_STORE_ID = 3L;
 
 	@Mock
+	private ProjectDao projectDao;
+	@Mock
 	private ProcessModelDao processModelDao;
 	@Mock
 	private ProcessConnectionDao processConnectionDao;
@@ -57,6 +61,7 @@ public class ProcessMapRepositoryTest {
 		LocalDateTime dateTime2 = LocalDateTime.now();
 
 		ProcessMapRepositoryImpl repository = new ProcessMapRepositoryImpl(//
+				projectDao,
 				processModelDao, //
 				processConnectionDao, //
 				dataStoreDao, //
@@ -74,7 +79,7 @@ public class ProcessMapRepositoryTest {
 		processModel2.setDescription(PROCESS_DESCRIPTION_2);
 		processModel2.setCreatedAt(dateTime2);
 
-		when(processModelDao.getProcessModels()).thenReturn(Arrays.asList(processModel1, processModel2));
+		when(processModelDao.getProcessModels(any())).thenReturn(Arrays.asList(processModel1, processModel2));
 
 		ProcessConnectionTable processConnectionTable = new ProcessConnectionTable();
 		processConnectionTable.setCallingProcess(processModel1);
@@ -84,21 +89,21 @@ public class ProcessMapRepositoryTest {
 		processConnectionTable.setCalledElement(CALLED_ELEMENT_ID);
 		processConnectionTable.setCalledElementType(ProcessElementType.START_EVENT);
 
-		when(processConnectionDao.getProcessConnections()).thenReturn(Arrays.asList(processConnectionTable));
+		when(processConnectionDao.getProcessConnections(any())).thenReturn(Arrays.asList(processConnectionTable));
 
 		DataStoreTable dataStoreTable = new DataStoreTable();
 		dataStoreTable.setLabel(DATA_STORE_LABEL);
 		dataStoreTable.setId(DATA_STORE_ID);
-		when(dataStoreDao.getDataStores()).thenReturn(Arrays.asList(dataStoreTable));
+		when(dataStoreDao.getDataStores(any())).thenReturn(Arrays.asList(dataStoreTable));
 
 		DataStoreConnectionTable dataStoreConnectionTable = new DataStoreConnectionTable();
 		dataStoreConnectionTable.setProcess(processModel1);
 		dataStoreConnectionTable.setDataStore(dataStoreTable);
 		dataStoreConnectionTable.setAccess(DataAccess.READ_WRITE);
-		when(dataStoreConnectionDao.getDataStoreConnections()).thenReturn(Arrays.asList(dataStoreConnectionTable));
+		when(dataStoreConnectionDao.getDataStoreConnections(any())).thenReturn(Arrays.asList(dataStoreConnectionTable));
 
 		// Act
-		ProcessMap processMap = repository.getProcessMap();
+		ProcessMap processMap = repository.getProcessMap(anyLong());
 
 		// Assert
 		assertThat(processMap.getProcesses())//
