@@ -155,7 +155,7 @@ export default defineComponent({
         this.saveGraphState();
       });
 
-    const persistedGraph = this.store.graphByProject.get(this.store.selectedProjectId!);
+    const persistedGraph = this.store.graphByProject[this.store.selectedProjectId!];
     if (!!persistedGraph) {
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
@@ -192,7 +192,7 @@ export default defineComponent({
       paper.translate(tx0, ty0 - scrollStep);
     },
     saveGraphState() {
-      this.store.graphByProject.set(this.store.selectedProjectId!, JSON.stringify(graph));
+      this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
     },
     fetchProcessModels() {
       const component = this;
