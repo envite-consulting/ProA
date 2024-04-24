@@ -155,7 +155,7 @@ export default defineComponent({
         this.saveGraphState();
       });
 
-    const persistedGraph = this.store.graphByProject[this.store.selectedProjectId!];
+    const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {

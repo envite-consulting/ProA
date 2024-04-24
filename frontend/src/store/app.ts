@@ -12,6 +12,9 @@ export const useAppStore = defineStore('app', {
     setGraphForProject(id: number, graph: string) {
       this.graphByProject[id] = graph;
     },
+    getGraphForProject(id: number): string {
+      return this.graphByProject[id];
+    }
   },
   persist: {
     storage: sessionStorage,
