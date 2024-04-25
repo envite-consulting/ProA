@@ -157,9 +157,6 @@ export default defineComponent({
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - tx, ty0 - ty);
     });
-    // graph.on('change:position', (cell) => {
-    //   this.saveGraphState();
-    // });
 
     const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
