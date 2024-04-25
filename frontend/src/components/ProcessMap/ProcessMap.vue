@@ -1,38 +1,42 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+    <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-btn icon @click="fetchProcessModels">
+      <v-icon>mdi-refresh</v-icon>
+    </v-btn>
   </v-toolbar>
-  <v-card class="full-screen-below-toolbar">
-    <ProcessDetailDialog ref="processDetailDialog" />
+  <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
+    <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
     <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left"
-          @click="goLeft" size="large" />
+               @click="goLeft" size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right"
-          @click="goRight" size="large" />
+               @click="goRight" size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
-          size="large" />
+               size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down"
-          @click="goDown" size="large" />
+               @click="goDown" size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus"
-          @click="zoomIn" size="large" />
+               @click="zoomIn" size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus"
-          @click="zoomOut" size="large" />
+               @click="zoomOut" size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
         <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen"
-          @click="fitToScreen" size="large" />
+               @click="fitToScreen" size="large"/>
       </v-fab-transition>
     </div>
   </v-card>
@@ -43,6 +47,7 @@
   width: 100%;
   height: calc(100% - 64px) !important;
 }
+
 .full-screen {
   width: 100%;
   height: 100%;
@@ -52,7 +57,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { shapes } from '@joint/core';
-import { paper, graph } from './jointjs/JointJSDiagram';
+import { graph, paper } from './jointjs/JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
 
@@ -72,7 +77,12 @@ interface Process {
   processName: string
 }
 
-type ProcessElementType = "START_EVENT" | "INTERMEDIATE_CATCH_EVENT" | "INTERMEDIATE_THROW_EVENT" | "END_EVENT" | "CALL_ACTIVITY";
+type ProcessElementType =
+  "START_EVENT"
+  | "INTERMEDIATE_CATCH_EVENT"
+  | "INTERMEDIATE_THROW_EVENT"
+  | "END_EVENT"
+  | "CALL_ACTIVITY";
 
 interface Connection {
   callingProcessid: number
@@ -104,6 +114,7 @@ export default defineComponent({
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    store: useAppStore(),
   }),
 
   setup() {
@@ -114,8 +125,8 @@ export default defineComponent({
   },
 
   mounted: function () {
-    this.selectedProjectId = useAppStore().selectedProjectId;
-    if(!this.selectedProjectId){
+    this.selectedProjectId = this.store.selectedProjectId;
+    if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
     }
@@ -147,36 +158,63 @@ export default defineComponent({
       paper.translate(tx0 - tx, ty0 - ty);
     });
 
-    this.fetchProcessModels();
-
+    const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
+    if (!!persistedGraph) {
+      graph.fromJSON(JSON.parse(persistedGraph));
+    } else {
+      this.fetchProcessModels();
+    }
+    const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
+    if (!!persistedLayout) {
+      const { sx, tx, ty } = persistedLayout;
+      paper.scale(sx);
+      paper.translate(tx, ty);
+    }
   },
   methods: {
     zoomIn() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 1.3);
+      this.savePaperLayout();
     },
     zoomOut() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 0.7);
+      this.savePaperLayout();
     },
     fitToScreen() {
       paper.transformToFitContent();
+      this.savePaperLayout();
     },
     goRight() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - scrollStep, ty0);
+      this.savePaperLayout();
     },
     goLeft() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 + scrollStep, ty0);
+      this.savePaperLayout();
     },
     goUp() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 + scrollStep);
+      this.savePaperLayout();
     },
     goDown() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 - scrollStep);
+      this.savePaperLayout();
+    },
+    saveGraphState() {
+      this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+    },
+    savePaperLayout() {
+      this.store.setPaperLayoutForProject(this.store.selectedProjectId!, {
+        sx: paper.scale().sx,
+        tx: paper.translate().tx,
+        ty: paper.translate().ty
+      });
     },
     fetchProcessModels() {
       const component = this;
@@ -272,12 +310,10 @@ export default defineComponent({
                   args: {
                     rotate: true,
                   }
-
                 }
               }
             })
           }
-
 
           return link;
         });
@@ -294,7 +330,6 @@ export default defineComponent({
 
         paper.transformToFitContent();
         paper.unfreeze();
-
       })
     },
     getPortPrefix(elementType: ProcessElementType) {
