@@ -2,6 +2,14 @@
   <v-toolbar>
     <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
     <v-spacer></v-spacer>
+    <v-btn v-if="filtersCount > 0" @click="toggleFilterMenu" icon style="margin-right: 5px">
+      <v-badge color="white" :bordered="true" :content="filtersCount">
+        <v-icon>mdi-filter-outline</v-icon>
+      </v-badge>
+    </v-btn>
+    <v-btn v-else @click="toggleFilterMenu" icon style="margin-right: 5px">
+      <v-icon>mdi-filter-outline</v-icon>
+    </v-btn>
     <v-btn icon @click="fetchProcessModels">
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
@@ -9,24 +17,14 @@
   <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
     <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
-    <div class="ma-4" style="position: absolute; top: 8px; right: 8px;">
-      <div class="d-flex flex-row-reverse mb-2">
-        <v-btn v-if="filtersCount > 0" @click="toggleFilterMenu" color="primary" size="large" icon>
-          <v-badge color="white" floating :bordered="true" :content="filtersCount">
-            <v-icon>mdi-filter-outline</v-icon>
-          </v-badge>
-        </v-btn>
-        <v-btn v-else @click="toggleFilterMenu" color="primary" size="large" icon>
-          <v-icon>mdi-filter-outline</v-icon>
-        </v-btn>
-      </div>
+    <div style="position: absolute; top: 0; right: 0;">
       <v-list v-if="showFilterMenu">
         <v-list-item>
           <v-list-item-title class="font-weight-bold">Ausblenden:</v-list-item-title>
         </v-list-item>
         <v-divider></v-divider>
         <v-list-item class="filter-item" v-for="(label, filterOption) in filterOptions" :key="filterOption">
-          <v-checkbox v-model="filterGraphOptions[filterOption]" :label="label" color="primary"
+          <v-checkbox v-model="filterGraphInput[filterOption]" :label="label" color="primary"
                       @change="filterGraph" hide-details></v-checkbox>
         </v-list-item>
       </v-list>
@@ -98,9 +96,8 @@ import createAbstractDataStoreElement, { AbstractDataStoreShape } from "./jointj
 
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
-import Cell = dia.Cell;
 
-import { useAppStore } from "../../store/app";
+import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 
 const scrollStep = 20;
@@ -159,16 +156,27 @@ export default defineComponent({
   }),
 
   setup() {
+    const appStore = useAppStore();
+    const projectId = appStore.selectedProjectId;
     const processDetailDialog = ref(null);
     const showFilterMenu = ref(false);
-    const hiddenCells: Cell[] = [];
-    const filterGraphInput: FilterGraphInput = reactive({
-      hideAbstractDataStores: false,
-      hideCallActivities: false,
-      hideIntermediateEvents: false,
-      hideStartEndEvents: false,
-      hideProcessesWithoutConnections: false
-    });
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId);
+    const hiddenPorts: {
+      [key: string]: dia.Element.Port[]
+    } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId);
+    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId);
+    const filterGraphInput: FilterGraphInput = reactive(
+      !!persistedFilterGraphInput ?
+        JSON.parse(persistedFilterGraphInput) :
+        {
+          hideAbstractDataStores: false,
+          hideCallActivities: false,
+          hideIntermediateEvents: false,
+          hideStartEndEvents: false,
+          hideProcessesWithoutConnections: false
+        });
     const filterOptions = {
       hideAbstractDataStores: 'Ressourcen',
       hideCallActivities: 'Aufrufaktivitäten',
@@ -182,8 +190,9 @@ export default defineComponent({
     return {
       processDetailDialog,
       showFilterMenu,
+      hiddenPorts,
       hiddenCells,
-      filterGraphOptions: filterGraphInput,
+      filterGraphInput,
       filterOptions,
       filtersCount
     };
@@ -231,7 +240,7 @@ export default defineComponent({
     }
     const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
     if (!!persistedLayout) {
-      const { sx, tx, ty } = persistedLayout;
+      const { sx, tx, ty } = JSON.parse(persistedLayout);
       paper.scale(sx);
       paper.translate(tx, ty);
     }
@@ -275,13 +284,35 @@ export default defineComponent({
       this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
     },
     savePaperLayout() {
-      this.store.setPaperLayoutForProject(this.store.selectedProjectId!, {
+      this.store.setPaperLayoutForProject(this.store.selectedProjectId!, JSON.stringify({
         sx: paper.scale().sx,
         tx: paper.translate().tx,
         ty: paper.translate().ty
-      });
+      }));
+    },
+    saveFilters() {
+      this.store.setFiltersForProject(this.store.selectedProjectId!, JSON.stringify(this.filterGraphInput));
+    },
+    saveHiddenCells() {
+      this.store.setHiddenCellsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenCells));
+    },
+    saveHiddenPorts() {
+      this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
+    },
+    resetFilters() {
+      this.filterGraphInput['hideIntermediateEvents'] = false;
+      this.filterGraphInput['hideStartEndEvents'] = false;
+      this.filterGraphInput['hideCallActivities'] = false;
+      this.filterGraphInput['hideProcessesWithoutConnections'] = false;
+      this.filterGraphInput['hideAbstractDataStores'] = false;
+      this.hiddenCells = [];
+      this.hiddenPorts = {};
+      this.saveFilters();
+      this.saveHiddenCells();
+      this.saveHiddenPorts();
     },
     fetchProcessModels() {
+      this.resetFilters();
       const component = this;
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
@@ -395,6 +426,7 @@ export default defineComponent({
 
         paper.transformToFitContent();
         paper.unfreeze();
+        this.saveGraphState();
       })
     },
     getPortPrefix(elementType: ProcessElementType) {
@@ -423,17 +455,19 @@ export default defineComponent({
         hideIntermediateEvents,
         hideStartEndEvents,
         hideProcessesWithoutConnections
-      } = this.filterGraphOptions;
+      } = this.filterGraphInput;
 
       graph.addCells(this.hiddenCells);
       this.hiddenCells = [];
-      for (const cell of graph.getCells()) {
+      for (const [cellId, ports] of Object.entries(this.hiddenPorts)) {
+        const cell = graph.getCell(cellId);
         if (cell instanceof AbstractProcessShape) {
-          cell.showAllPorts();
+          cell.addPorts(ports);
         }
       }
+      this.hiddenPorts = {};
 
-      const cellsToHide: Cell[] = [];
+      const cellsToHide: dia.Cell[] = [];
 
       for (const link of graph.getLinks()) {
         const sourceCell = link.getSourceCell();
@@ -468,7 +502,7 @@ export default defineComponent({
       this.hiddenCells = cellsToHide;
       graph.removeCells(cellsToHide);
 
-      const processesWithoutConnections: Cell[] = [];
+      const processesWithoutConnections: dia.Cell[] = [];
       for (const cell of graph.getCells()) {
         if (
           hideProcessesWithoutConnections &&
@@ -478,17 +512,28 @@ export default defineComponent({
           processesWithoutConnections.push(cell);
         } else if (cell instanceof AbstractProcessShape) {
           if (hideCallActivities) {
-            cell.hidePort('call-' + cell.id);
+            const portId = 'call-' + cell.id;
+            this.hiddenPorts[cell.id] = this.hiddenPorts[cell.id] || [];
+            this.hiddenPorts[cell.id].push(cell.getPort(portId));
+            cell.removePort(portId);
           }
           if (hideIntermediateEvents) {
-            cell.hidePort('i-catch-event-' + cell.id);
-            cell.hidePort('i-throw-event-' + cell.id);
+            const portIds = ['i-catch-event-' + cell.id, 'i-throw-event-' + cell.id];
+            this.hiddenPorts[cell.id] = this.hiddenPorts[cell.id] || [];
+            this.hiddenPorts[cell.id].push(cell.getPort(portIds[0]));
+            this.hiddenPorts[cell.id].push(cell.getPort(portIds[1]));
+            cell.removePorts(portIds);
           }
         }
 
       }
       this.hiddenCells.push(...processesWithoutConnections);
       graph.removeCells(processesWithoutConnections);
+
+      this.saveGraphState();
+      this.saveFilters();
+      this.saveHiddenCells();
+      this.saveHiddenPorts();
     }
   }
 })
