@@ -1,9 +1,13 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+    <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-btn icon @click="fetchProcessModels">
+      <v-icon>mdi-refresh</v-icon>
+    </v-btn>
   </v-toolbar>
-  <v-card class="full-screen-below-toolbar">
-    <ProcessDetailDialog ref="processDetailDialog" />
+  <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
+    <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
     <div class="ma-4" style="position: absolute; top: 8px; right: 8px;">
       <div class="d-flex flex-row-reverse mb-2">
@@ -71,6 +75,7 @@
   width: 100%;
   height: calc(100% - 64px) !important;
 }
+
 .full-screen {
   width: 100%;
   height: 100%;
@@ -128,6 +133,7 @@ interface DataStore {
 type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
 
 interface DataStoreConnection {
+
   processid: number
   dataStoreId: number
   access: DataAccess
@@ -145,10 +151,11 @@ export default defineComponent({
   components: {
     ProcessDetailDialog
   },
-  
+
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    store: useAppStore(),
   }),
 
   setup() {
@@ -183,8 +190,8 @@ export default defineComponent({
   },
 
   mounted: function () {
-    this.selectedProjectId = useAppStore().selectedProjectId;
-    if(!this.selectedProjectId){
+    this.selectedProjectId = this.store.selectedProjectId;
+    if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
     }
@@ -216,36 +223,63 @@ export default defineComponent({
       paper.translate(tx0 - tx, ty0 - ty);
     });
 
-    this.fetchProcessModels();
-
+    const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
+    if (!!persistedGraph) {
+      graph.fromJSON(JSON.parse(persistedGraph));
+    } else {
+      this.fetchProcessModels();
+    }
+    const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
+    if (!!persistedLayout) {
+      const { sx, tx, ty } = persistedLayout;
+      paper.scale(sx);
+      paper.translate(tx, ty);
+    }
   },
   methods: {
     zoomIn() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 1.3);
+      this.savePaperLayout();
     },
     zoomOut() {
       const { sx: sx0 } = paper.scale();
       paper.scale(sx0 * 0.7);
+      this.savePaperLayout();
     },
     fitToScreen() {
       paper.transformToFitContent();
+      this.savePaperLayout();
     },
     goRight() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - scrollStep, ty0);
+      this.savePaperLayout();
     },
     goLeft() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 + scrollStep, ty0);
+      this.savePaperLayout();
     },
     goUp() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 + scrollStep);
+      this.savePaperLayout();
     },
     goDown() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0, ty0 - scrollStep);
+      this.savePaperLayout();
+    },
+    saveGraphState() {
+      this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+    },
+    savePaperLayout() {
+      this.store.setPaperLayoutForProject(this.store.selectedProjectId!, {
+        sx: paper.scale().sx,
+        tx: paper.translate().tx,
+        ty: paper.translate().ty
+      });
     },
     fetchProcessModels() {
       const component = this;

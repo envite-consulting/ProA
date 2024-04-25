@@ -20,7 +20,7 @@ export class AbstractProcessShape extends dia.Element {
   defaults() {
     return {
       ...super.defaults,
-      type: "Shape",
+      type: "AbstractProcessShape",
       size: { width: 140, height: 70 },
       attrs: {
         root: {

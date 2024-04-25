@@ -1,8 +1,9 @@
 import { AbstractProcessShape } from "./AbstractProcessElement";
+import { AbstractDataStoreShape } from "./AbstractDataStoreElement";
 import { shapes, dia, connectors } from '@joint/core';
 
 let linkIdCounter = 0;
-const shapeNamespace = { ...shapes, AbstractProcessShape };
+const shapeNamespace = { ...shapes, AbstractProcessShape, AbstractDataStoreShape };
 export const graph = new dia.Graph({}, { cellNamespace: shapeNamespace });
 export const paper = new dia.Paper({
     model: graph,
