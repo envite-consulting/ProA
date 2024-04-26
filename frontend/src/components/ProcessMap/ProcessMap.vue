@@ -310,6 +310,7 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenCells();
       this.saveHiddenPorts();
+      this.showFilterMenu = false;
     },
     fetchProcessModels() {
       this.resetFilters();
