@@ -5,7 +5,7 @@ export class AbstractDataStoreShape extends dia.Element {
     defaults() {
         return {
             ...super.defaults,
-            type: "Shape",
+            type: "AbstractDataStoreShape",
             size: { width: 90, height: 90 },
             attrs: {
                 root: {

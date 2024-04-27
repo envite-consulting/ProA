@@ -15,7 +15,7 @@
 	</modules>
 
 	<properties>
-		<revision>1.0</revision>
+		<revision>1.1-snapshot</revision>
 		<compiler-plugin.version>3.11.0</compiler-plugin.version>
 		<maven.compiler.release>20</maven.compiler.release>
 		<version.camunda>7.20.0</version.camunda>
