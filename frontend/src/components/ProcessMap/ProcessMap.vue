@@ -1,6 +1,6 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+    <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
   </v-toolbar>
   <v-card class="full-screen-below-toolbar">
     <ProcessDetailDialog ref="processDetailDialog" />
@@ -36,6 +36,12 @@
       </v-fab-transition>
     </div>
   </v-card>
+  <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
+    <ul v-if="tooltipList.length > 0">
+      <li v-for="item in tooltipList">{{ item }}</li>
+    </ul>
+    <span v-if="tooltipList.length === 0">Keine Informationen vorhanden</span>
+  </v-tooltip>
 </template>
 
 <style>
@@ -43,6 +49,7 @@
   width: 100%;
   height: calc(100% - 64px) !important;
 }
+
 .full-screen {
   width: 100%;
   height: 100%;
@@ -67,9 +74,24 @@ import getProject from "../projectService";
 
 const scrollStep = 20;
 
+interface Event {
+  elementId: string
+  label: string
+}
+
+interface Activity {
+  elementId: string
+  label: string
+}
+
 interface Process {
   id: number
-  processName: string
+  name: string
+  startEvents: Event[]
+  intermediateCatchEvents: Event[]
+  intermediateThrowEvents: Event[]
+  endEvents: Event[]
+  activities: Activity[]
 }
 
 type ProcessElementType = "START_EVENT" | "INTERMEDIATE_CATCH_EVENT" | "INTERMEDIATE_THROW_EVENT" | "END_EVENT" | "CALL_ACTIVITY";
@@ -104,6 +126,11 @@ export default defineComponent({
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    tooltipVisible: false,
+    mouseX: '',
+    mouseY: '',
+    portsInformation: {} as { [key: string]: string[] },
+    tooltipList: [] as string[]
   }),
 
   setup() {
@@ -115,7 +142,7 @@ export default defineComponent({
 
   mounted: function () {
     this.selectedProjectId = useAppStore().selectedProjectId;
-    if(!this.selectedProjectId){
+    if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
     }
@@ -145,6 +172,28 @@ export default defineComponent({
       evt.stopPropagation();
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - tx, ty0 - ty);
+    });
+
+
+    paper.on('element:mouseover', (view, evt) => {
+      var port = view.findAttribute('port', evt.target);
+      if (port) {
+
+        this.tooltipList = this.portsInformation[port];
+
+
+        this.tooltipVisible = true;
+
+        this.mouseX = evt.clientX! + "px !important";
+        this.mouseY = evt.clientY! + "px !important";
+      }
+    });
+
+    paper.on('element:mouseout', (view, evt) => {
+      var port = view.findAttribute('port', evt.target);
+      if (port) {
+        this.tooltipVisible = false;
+      }
     });
 
     this.fetchProcessModels();
@@ -184,7 +233,16 @@ export default defineComponent({
       axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
-          return createAbstractProcessElement(process.processName, process.id);
+
+          const filterEmpty = (label: string) => label != undefined && label != null && label != '';
+
+          this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+
+          return createAbstractProcessElement(process.name, process.id);
         });
 
         graph.addCell(abstracProcessShapes);

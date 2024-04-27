@@ -24,6 +24,7 @@ public class ProcessDetails {
     
     private List<ProcessEvent> endEvents = new ArrayList<>();
     
+    private List<ProcessActivity> activities = new ArrayList<>();
+    
     private String description;
-
 }

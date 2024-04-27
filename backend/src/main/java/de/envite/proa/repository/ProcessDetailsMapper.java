@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.envite.proa.entities.EventType;
+import de.envite.proa.entities.ProcessActivity;
 import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessEvent;
+import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 
@@ -20,9 +22,17 @@ public class ProcessDetailsMapper {
 		details.setIntermediateCatchEvents(map(table.getEvents(), EventType.INTERMEDIATE_CATCH));
 		details.setIntermediateThrowEvents(map(table.getEvents(), EventType.INTERMEDIATE_THROW));
 		details.setEndEvents(map(table.getEvents(), EventType.END));
+		details.setActivities(map(table.getCallActivites()));
 		return details;
 	}
 	
+	private static List<ProcessActivity> map(List<CallActivityTable> callActivites) {
+		return callActivites//
+				.stream()//
+				.map(activity -> new ProcessActivity(activity.getElementId(), activity.getLabel()))//
+				.collect(Collectors.toList());
+	}
+
 	private static List<ProcessEvent> map(List<ProcessEventTable> events, EventType eventType) {
 		return events//
 				.stream()//

@@ -24,20 +24,50 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable) {
-		return em//
-				.createQuery("SELECT pm FROM ProcessModelTable pm WHERE pm.project=:project", ProcessModelTable.class)//
+
+		List<ProcessModelTable> processModels = em//
+				.createQuery("""
+						SELECT pm FROM ProcessModelTable pm
+						LEFT JOIN FETCH pm.events
+						WHERE pm.project=:project
+						""", ProcessModelTable.class)//
 				.setParameter("project", projectTable)//
 				.getResultList();
+
+		processModels = em//
+				.createQuery("""
+						SELECT DISTINCT pm FROM ProcessModelTable pm
+						LEFT JOIN FETCH pm.callActivites
+						WHERE pm in :processModels
+						""", ProcessModelTable.class)//
+				.setParameter("processModels", processModels)//
+				.getResultList();
+
+		return processModels;
 	}
 
 	@Transactional
 	public List<ProcessModelTable> getProcessModelsForName(String name, ProjectTable projectTable) {
-		return em //
-				.createQuery("SELECT p FROM ProcessModelTable p WHERE p.name = :name AND p.project =:project",
-						ProcessModelTable.class)
+		List<ProcessModelTable> processModels = em//
+				.createQuery("""
+						SELECT pm FROM ProcessModelTable pm
+						LEFT JOIN FETCH pm.events
+						WHERE pm.name = :name AND pm.project =:project
+						""", ProcessModelTable.class)//
 				.setParameter("name", name)//
 				.setParameter("project", projectTable)//
 				.getResultList();
+
+		processModels = em//
+				.createQuery("""
+						SELECT DISTINCT pm FROM ProcessModelTable pm 
+						LEFT JOIN FETCH pm.callActivites 
+						WHERE pm in :processModels
+						""", ProcessModelTable.class)//
+				.setParameter("processModels", processModels)//
+				.getResultList();
+
+		return processModels;
 	}
 
 	@Transactional
@@ -50,6 +80,7 @@ public class ProcessModelDao {
 
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
 		graph.addSubgraph("events");
+		graph.addSubgraph("callActivites");
 
 		Map<String, Object> hints = new HashMap<String, Object>();
 		hints.put("javax.persistence.loadgraph", graph);
