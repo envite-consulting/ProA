@@ -1,18 +1,15 @@
 // Utilities
 import { defineStore } from 'pinia'
 
-interface PaperLayout {
-  sx: number,
-  tx: number,
-  ty: number
-}
-
 export const useAppStore = defineStore('app', {
   state: () => {
     return {
       selectedProjectId: null as number | null,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
-      paperLayoutByProject: {} as { [key: number]: PaperLayout }
+      stringByProject: {} as { [key: number]: string },
+      filtersByProject: {} as { [key: number]: string },
+      hiddenCellsByProject: {} as { [key: number]: string },
+      hiddenPortsByProject: {} as { [key: number]: string },
     }
   },
   actions: {
@@ -22,15 +19,40 @@ export const useAppStore = defineStore('app', {
     getGraphForProject(id: number): string {
       return this.graphByProject[id];
     },
-    setPaperLayoutForProject(id: number, paperLayout: PaperLayout) {
-      this.paperLayoutByProject[id] = paperLayout;
+    setPaperLayoutForProject(id: number, string: string) {
+      this.stringByProject[id] = string;
     },
-    getPaperLayoutForProject(id: number): PaperLayout {
-      return this.paperLayoutByProject[id];
+    getPaperLayoutForProject(id: number): string {
+      return this.stringByProject[id];
+    },
+    setFiltersForProject(id: number, filters: string) {
+      this.filtersByProject[id] = filters;
+    },
+    getFiltersForProject(id: number): string {
+      return this.filtersByProject[id];
+    },
+    setHiddenCellsForProject(id: number, hiddenCells: string) {
+      this.hiddenCellsByProject[id] = hiddenCells;
+    },
+    getHiddenCellsForProject(id: number): string {
+      return this.hiddenCellsByProject[id];
+    },
+    setHiddenPortsForProject(id: number, hiddenPorts: string) {
+      this.hiddenPortsByProject[id] = hiddenPorts;
+    },
+    getHiddenPortsForProject(id: number): string {
+      return this.hiddenPortsByProject[id];
     }
   },
   persist: {
     storage: sessionStorage,
-    paths: ['selectedProjectId', 'graphByProject', 'paperLayoutByProject'],
+    paths: [
+      'selectedProjectId',
+      'graphByProject',
+      'stringByProject',
+      'filtersByProject',
+      'hiddenCellsByProject',
+      'hiddenPortsByProject'
+    ]
   },
 })
