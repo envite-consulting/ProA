@@ -1,5 +1,5 @@
 <template>
-  <v-toolbar>
+  <v-toolbar v-if="selectedProjectName">
     <v-toolbar-title>
       <div class="d-flex align-center">
         <span>{{ selectedProjectName }}</span>

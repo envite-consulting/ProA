@@ -1,5 +1,5 @@
 <template>
-  <v-toolbar>
+  <v-toolbar v-if="selectedProjectName">
     <v-toolbar-title>
       <div class="d-flex align-center">
         <span>{{ selectedProjectName }}</span>
@@ -22,7 +22,7 @@
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
   </v-toolbar>
-  <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
+  <v-card :class="selectedProjectName ? 'full-screen-below-toolbar' : 'full-screen'" @mouseup="saveGraphState">
     <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
     <div style="position: absolute; top: 0; right: 0;">
