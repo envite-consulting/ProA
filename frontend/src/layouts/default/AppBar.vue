@@ -18,7 +18,7 @@
         v-for="item in items"
         :key="item.title"
         dense
-        :disabled="!useAppStore.selectedProjectId && item.title !== 'Projektübersicht'"
+        :disabled="!useAppStore().selectedProjectId && item.title !== 'Projektübersicht'"
       >
         <!-- <v-list-item-icon>
             <v-icon>{{ item.icon }}</v-icon>
