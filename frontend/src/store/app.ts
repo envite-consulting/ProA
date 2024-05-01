@@ -1,7 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
 
-interface PaperLayout {
+export interface PaperLayout {
   sx: number,
   tx: number,
   ty: number

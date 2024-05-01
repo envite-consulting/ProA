@@ -77,7 +77,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { useAppStore } from "../../store/app";
+import { useAppStore } from "@/store/app";
 
 interface Project {
   id: number
@@ -101,7 +101,10 @@ export default defineComponent({
   methods: {
     fetchProjects() {
       axios.get("/api/project").then((result: { data: Project[] }) => {
-        this.projects = result.data.sort(a => a.id == this.store.selectedProjectId ? -1 : 0);
+        const sortProjectsByActiveFirst = (project: Project): number => {
+          return project.id == this.store.selectedProjectId ? -1 : 0;
+        };
+        this.projects = result.data.sort(sortProjectsByActiveFirst);
       })
     },
     createProject() {
