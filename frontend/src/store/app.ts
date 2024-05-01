@@ -12,7 +12,7 @@ export const useAppStore = defineStore('app', {
     return {
       selectedProjectId: null as number | null,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
-      stringByProject: {} as { [key: number]: string },
+      paperLayoutByProject: {} as { [key: number]: string },
       filtersByProject: {} as { [key: number]: string },
       hiddenCellsByProject: {} as { [key: number]: string },
       hiddenPortsByProject: {} as { [key: number]: string },
@@ -26,10 +26,10 @@ export const useAppStore = defineStore('app', {
       return this.graphByProject[id];
     },
     setPaperLayoutForProject(id: number, string: string) {
-      this.stringByProject[id] = string;
+      this.paperLayoutByProject[id] = string;
     },
     getPaperLayoutForProject(id: number): string {
-      return this.stringByProject[id];
+      return this.paperLayoutByProject[id];
     },
     setFiltersForProject(id: number, filters: string) {
       this.filtersByProject[id] = filters;
@@ -55,7 +55,7 @@ export const useAppStore = defineStore('app', {
     paths: [
       'selectedProjectId',
       'graphByProject',
-      'stringByProject',
+      'paperLayoutByProject',
       'filtersByProject',
       'hiddenCellsByProject',
       'hiddenPortsByProject'
