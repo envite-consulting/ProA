@@ -1,6 +1,11 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
+    <v-toolbar-title>
+      <div class="d-flex align-center">
+        <span>{{ selectedProjectName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+      </div>
+    </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn icon @click="toggleLegend">
       <v-icon>mdi-map-legend</v-icon>
@@ -179,6 +184,7 @@ export default defineComponent({
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    selectedVersionName: '' as string,
     store: useAppStore(),
     showLegend: false
   }),
@@ -234,6 +240,7 @@ export default defineComponent({
     }
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
+      this.selectedVersionName = result.data.version;
     })
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);

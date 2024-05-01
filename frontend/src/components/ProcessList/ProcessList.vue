@@ -1,8 +1,13 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+    <v-toolbar-title>
+      <div class="d-flex align-center">
+        <span>{{ selectedProjectName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+      </div>
+    </v-toolbar-title>
   </v-toolbar>
-  <ProcessDetailDialog ref="processDetailDialog" />
+  <ProcessDetailDialog ref="processDetailDialog"/>
   <v-list lines="two" class="pa-6">
     <template v-for="(model, index) in processModels" :key="'process-'+model.id">
       <v-list-item>
@@ -10,14 +15,15 @@
 
         <v-list-item-subtitle>
           {{ new Date(model.createdAt).toLocaleString("de-DE") }} {{ !!model.description ? '-' : '' }} {{
-    model.description }}
+            model.description
+          }}
         </v-list-item-subtitle>
         <template v-slot:append>
           <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
-            @click="() => deleteProcessModel(model.id)"></v-btn>
+                 @click="() => deleteProcessModel(model.id)"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
-            @click="() => showProcessInfoDialog(model.id)"></v-btn>
+                 @click="() => showProcessInfoDialog(model.id)"></v-btn>
         </template>
       </v-list-item>
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
@@ -26,7 +32,7 @@
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
-        @click="uploadDialog = true" size="large" />
+             @click="uploadDialog = true" size="large"/>
     </v-fab-transition>
   </div>
 
@@ -103,6 +109,7 @@ export default defineComponent({
     processModels: [] as ProcessModel[],
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    selectedVersionName: '' as string,
   }),
   mounted: function () {
     this.selectedProjectId = useAppStore().selectedProjectId;
@@ -112,11 +119,11 @@ export default defineComponent({
     }
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
+      this.selectedVersionName = result.data.version;
     })
     this.fetchProcessModels();
   },
-  watch: {
-  },
+  watch: {},
   methods: {
 
     showProcessInfoDialog(processId: number) {

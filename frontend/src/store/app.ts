@@ -5,6 +5,7 @@ export const useAppStore = defineStore('app', {
   state: () => {
     return {
       selectedProjectId: null as number | null,
+      activeProjectByGroup: {} as { [key: string]: string },
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
       stringByProject: {} as { [key: number]: string },
       filtersByProject: {} as { [key: number]: string },
@@ -13,6 +14,12 @@ export const useAppStore = defineStore('app', {
     }
   },
   actions: {
+    setActiveProjectForGroup(projectGroupName: string, project: string) {
+      this.activeProjectByGroup[projectGroupName] = project;
+    },
+    getActiveProjectForGroup(projectGroupName: string): string {
+      return this.activeProjectByGroup[projectGroupName];
+    },
     setGraphForProject(id: number, graph: string) {
       this.graphByProject[id] = graph;
     },
@@ -48,6 +55,7 @@ export const useAppStore = defineStore('app', {
     storage: sessionStorage,
     paths: [
       'selectedProjectId',
+      'activeProjectByGroup',
       'graphByProject',
       'stringByProject',
       'filtersByProject',

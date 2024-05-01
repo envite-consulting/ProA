@@ -1,14 +1,14 @@
 package de.envite.proa.usecases.project;
 
-import java.util.List;
-
 import de.envite.proa.entities.Project;
+
+import java.util.List;
 
 public interface ProjectRepository {
 
-	Project createProject(String name);
+    Project createProject(String name, String version);
 
-	List<Project> getProjects();
+    List<Project> getProjects();
 
-	Project getProject(Long projectId);
+    Project getProject(Long projectId);
 }
