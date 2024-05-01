@@ -18,6 +18,7 @@
         v-for="item in items"
         :key="item.title"
         dense
+        :disabled="!useAppStore().selectedProjectId && item.title !== 'Projektübersicht'"
       >
         <!-- <v-list-item-icon>
             <v-icon>{{ item.icon }}</v-icon>
@@ -32,8 +33,10 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { useAppStore } from "@/store/app";
 
 export default defineComponent({
+  methods: { useAppStore },
   data: () => ({
     drawer: false,
     group: null,

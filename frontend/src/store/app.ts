@@ -1,6 +1,12 @@
 // Utilities
 import { defineStore } from 'pinia'
 
+export interface PaperLayout {
+  sx: number,
+  tx: number,
+  ty: number
+}
+
 export const useAppStore = defineStore('app', {
   state: () => {
     return {
