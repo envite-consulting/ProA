@@ -18,6 +18,12 @@ public class ProcessConnectionTable {
 	@GeneratedValue
 	private Long id;
 
+	/**
+	 * the name of the common elements, e.g. the name of the connecting start and
+	 * end event
+	 */
+	private String label;
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	private ProcessModelTable callingProcess;
 
@@ -33,7 +39,7 @@ public class ProcessConnectionTable {
 	private String callingElement;
 
 	private String calledElement;
-	
-    @ManyToOne
-    private ProjectTable project;
+
+	@ManyToOne
+	private ProjectTable project;
 }

@@ -147,6 +147,8 @@ interface Connection {
 
   calledProcessid: number
   calledElementType: ProcessElementType
+
+  label: string
 }
 
 interface DataStore {
@@ -367,6 +369,17 @@ export default defineComponent({
             source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
+
+          if (!!connection.label){
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: connection.label
+                }
+              }
+            });
+          }
+
           return link;
         });
 

@@ -14,4 +14,6 @@ public class ProcessConnection {
 	
 	private Long calledProcessid;
 	private ProcessElementType calledElementType;
+	
+	private String label;
 }
