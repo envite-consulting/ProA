@@ -1,13 +1,19 @@
 // Utilities
 import { defineStore } from 'pinia'
 
+export interface PaperLayout {
+  sx: number,
+  tx: number,
+  ty: number
+}
+
 export const useAppStore = defineStore('app', {
   state: () => {
     return {
       selectedProjectId: null as number | null,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
       portsInformationByProject: {} as {[key: number]: { [key: string]: string[] }},
-      stringByProject: {} as { [key: number]: string },
+      paperLayoutByProject: {} as { [key: number]: string },
       filtersByProject: {} as { [key: number]: string },
       hiddenCellsByProject: {} as { [key: number]: string },
       hiddenPortsByProject: {} as { [key: number]: string },
@@ -27,10 +33,10 @@ export const useAppStore = defineStore('app', {
       return this.portsInformationByProject[id];
     },
     setPaperLayoutForProject(id: number, string: string) {
-      this.stringByProject[id] = string;
+      this.paperLayoutByProject[id] = string;
     },
     getPaperLayoutForProject(id: number): string {
-      return this.stringByProject[id];
+      return this.paperLayoutByProject[id];
     },
     setFiltersForProject(id: number, filters: string) {
       this.filtersByProject[id] = filters;
@@ -56,7 +62,7 @@ export const useAppStore = defineStore('app', {
     paths: [
       'selectedProjectId',
       'graphByProject',
-      'stringByProject',
+      'paperLayoutByProject',
       'filtersByProject',
       'hiddenCellsByProject',
       'hiddenPortsByProject'

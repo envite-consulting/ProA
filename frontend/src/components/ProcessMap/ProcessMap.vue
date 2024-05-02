@@ -371,6 +371,10 @@ export default defineComponent({
     saveHiddenPorts() {
       this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
     },
+    closeMenus() {
+      this.showFilterMenu = false;
+      this.showLegend = false;
+    },
     resetFilters() {
       this.filterGraphInput['hideIntermediateEvents'] = false;
       this.filterGraphInput['hideStartEndEvents'] = false;
@@ -382,7 +386,7 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenCells();
       this.saveHiddenPorts();
-      this.showFilterMenu = false;
+      this.closeMenus();
     },
     fetchProcessModels() {
       this.resetFilters();
@@ -530,9 +534,15 @@ export default defineComponent({
       }
     },
     toggleLegend() {
+      if (!this.showLegend) {
+        this.closeMenus();
+      }
       this.showLegend = !this.showLegend;
     },
     toggleFilterMenu() {
+      if (!this.showFilterMenu) {
+        this.closeMenus();
+      }
       this.showFilterMenu = !this.showFilterMenu;
     },
     filterGraph() {
