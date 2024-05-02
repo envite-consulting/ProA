@@ -305,6 +305,7 @@ export default defineComponent({
 
     const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
+      Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
@@ -398,6 +399,9 @@ export default defineComponent({
           this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
           this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
           this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+
+
+          this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
 
           return createAbstractProcessElement(process.name, process.id);
         });
