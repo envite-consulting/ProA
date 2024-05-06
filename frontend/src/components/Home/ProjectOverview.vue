@@ -89,23 +89,24 @@
         </v-card-title>
         <v-card-text>
           <v-container>
-            <v-row>
-              <v-col cols="12" sm="12" md="12">
-                <v-select
-                  label="Version"
-                  v-model="newVersionInitialProject"
-                  :items="newVersionForGroup.projects"
-                  item-title="version"
-                  item-value="id"
-                  hide-details
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" sm="12" md="12" class="py-0 ps-5">
-                <v-icon icon="mdi-arrow-right" size="large"></v-icon>
-              </v-col>
-            </v-row>
+            <!-- TODO: Add version select to copy from existing version -->
+            <!--            <v-row>-->
+            <!--              <v-col cols="12" sm="12" md="12">-->
+            <!--                <v-select-->
+            <!--                  label="Version"-->
+            <!--                  v-model="newVersionInitialProject"-->
+            <!--                  :items="newVersionForGroup.projects"-->
+            <!--                  item-title="version"-->
+            <!--                  item-value="id"-->
+            <!--                  hide-details-->
+            <!--                ></v-select>-->
+            <!--              </v-col>-->
+            <!--            </v-row>-->
+            <!--            <v-row>-->
+            <!--              <v-col cols="12" sm="12" md="12" class="py-0 ps-5">-->
+            <!--                <v-icon icon="mdi-arrow-right" size="large"></v-icon>-->
+            <!--              </v-col>-->
+            <!--            </v-row>-->
             <v-row>
               <v-col cols="12" sm="12" md="12">
                 <v-text-field label="Neue Version" v-model="newVersionName"></v-text-field>
