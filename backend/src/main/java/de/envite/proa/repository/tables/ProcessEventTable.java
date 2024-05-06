@@ -25,7 +25,7 @@ public class ProcessEventTable {
     @Enumerated(EnumType.STRING)
     private EventType eventType;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProcessModelTable processModel;
     
     @ManyToOne

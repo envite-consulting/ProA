@@ -59,8 +59,6 @@ public class ProcessMapRepositoryTest {
 	@Test
 	public void testGetProcessMap() {
 		// Arrange
-		LocalDateTime dateTime1 = LocalDateTime.now();
-		LocalDateTime dateTime2 = LocalDateTime.now();
 
 		ProcessMapRepositoryImpl repository = new ProcessMapRepositoryImpl(//
 				projectDao,
@@ -73,13 +71,11 @@ public class ProcessMapRepositoryTest {
 		processModel1.setId(PROCESS_MODEL_ID_1);
 		processModel1.setName(PROCESS_MODEL_NAME_1);
 		processModel1.setDescription(PROCESS_DESCRIPTION_1);
-		processModel1.setCreatedAt(dateTime1);
 
 		ProcessModelTable processModel2 = new ProcessModelTable();
 		processModel2.setId(PROCESS_MODEL_ID_2);
 		processModel2.setName(PROCESS_MODEL_NAME_2);
 		processModel2.setDescription(PROCESS_DESCRIPTION_2);
-		processModel2.setCreatedAt(dateTime2);
 
 		when(processModelDao.getProcessModels(any())).thenReturn(Arrays.asList(processModel1, processModel2));
 
@@ -111,10 +107,10 @@ public class ProcessMapRepositoryTest {
 		// Assert
 		assertThat(processMap.getProcesses())//
 				.hasSize(2)//
-				.extracting("id", "processName", "description", "createdAt")//
+				.extracting("id", "name", "description")//
 				.contains(//
-						tuple(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, PROCESS_DESCRIPTION_1, dateTime1), //
-						tuple(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, PROCESS_DESCRIPTION_2, dateTime2));
+						tuple(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, PROCESS_DESCRIPTION_1), //
+						tuple(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, PROCESS_DESCRIPTION_2));
 
 		assertThat(processMap.getConnections())//
 				.hasSize(1)//
