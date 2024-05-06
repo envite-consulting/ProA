@@ -3,11 +3,15 @@
   <v-container fluid style="margin: auto">
 
     <v-card v-for="(group, index) in projectGroups" :key="index" width="300px" height="252px"
-            style="float: left; margin: 16px">
+            style="float: left; margin: 16px" :class="{ 'active-card': activeProjectByGroup[group.name]?.id === store.selectedProjectId }">
 
-      <v-card-title v-text="group.name"></v-card-title>
+      <div class="d-flex flex-row justify-space-between align-center">
+        <v-card-title v-text="group.name"></v-card-title>
 
-      <v-card-text>
+        <p v-if="activeProjectByGroup[group.name]?.id === store.selectedProjectId" class="active-text">AKTIV</p>
+      </div>
+
+      <v-card-text class="pt-0">
         <v-select
           label="Version"
           density="compact"
@@ -127,7 +131,18 @@
     </v-dialog>
   </v-container>
 </template>
-<style scoped></style>
+<style scoped>
+.active-card {
+  box-shadow: 0 0 10px 3px rgba(24, 103, 192, 0.5);
+}
+
+.active-text {
+  padding: 8px 16px;
+  color: #1867c0;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+</style>
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
@@ -152,12 +167,12 @@ interface ActiveProjectByGroup {
 
 export default defineComponent({
   data: () => ({
+    store: useAppStore(),
     projects: [] as Project[],
     projectDialog: false as boolean,
     showNewVersionDialog: false as boolean,
     newProjectName: "" as string,
     newProjectVersionName: "1.0",
-    store: useAppStore(),
     activeProjectByGroup: {} as ActiveProjectByGroup,
     newVersionForGroup: {} as ProjectGroup,
     newVersionName: "" as string,
@@ -210,8 +225,11 @@ export default defineComponent({
       return new Date(dateString).toLocaleString("de-DE");
     },
     fetchProjects() {
-      axios.get("/api/project").then(result => {
-        this.projects = result.data;
+      axios.get("/api/project").then((result: { data: Project[] }) => {
+        const sortProjectsByActiveFirst = (project: Project): number => {
+          return project.id == this.store.selectedProjectId ? -1 : 0;
+        };
+        this.projects = result.data.sort(sortProjectsByActiveFirst);
       })
     },
     createProject(projectName: string = '', projectVersion: string = '') {

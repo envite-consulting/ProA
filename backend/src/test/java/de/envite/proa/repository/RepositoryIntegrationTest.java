@@ -117,7 +117,7 @@ public class RepositoryIntegrationTest {
         // Assert
         assertThat(processMap.getProcesses())//
                 .hasSize(2)//
-                .extracting("id", "processName")//
+                .extracting("id", "name")//
                 .contains(tuple(processId1, PROCESS_MODEL_NAME), //
                         tuple(processId2, PROCESS_MODEL_NAME_2));
 
@@ -180,7 +180,7 @@ public class RepositoryIntegrationTest {
         // Assert
         assertThat(processMap.getProcesses())//
                 .hasSize(1)//
-                .extracting("id", "processName")//
+                .extracting("id", "name")//
                 .contains(tuple(processId1, PROCESS_MODEL_NAME));
 
         assertThat(processMap.getConnections()).hasSize(0);
