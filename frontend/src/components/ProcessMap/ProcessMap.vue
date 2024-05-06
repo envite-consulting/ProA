@@ -170,6 +170,7 @@ interface FilterGraphInput {
   hideIntermediateEvents: boolean;
   hideStartEndEvents: boolean;
   hideProcessesWithoutConnections: boolean;
+  hideConnectionLabels: boolean;
 }
 
 export default defineComponent({
@@ -205,14 +206,16 @@ export default defineComponent({
           hideCallActivities: false,
           hideIntermediateEvents: false,
           hideStartEndEvents: false,
-          hideProcessesWithoutConnections: false
+          hideProcessesWithoutConnections: false,
+          hideConnectionLabels: false,
         });
     const filterOptions = {
       hideAbstractDataStores: 'Ressourcen',
       hideCallActivities: 'Aufrufaktivitäten',
       hideIntermediateEvents: 'Zwischenereignisse',
       hideStartEndEvents: 'End- zu Start-Verbindungen',
-      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen'
+      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen',
+      hideConnectionLabels: "Verbindungslabels",
     };
     const filtersCount = computed(() => {
       return Object.values(filterGraphInput).filter(value => value === true).length;
@@ -508,7 +511,8 @@ export default defineComponent({
         hideCallActivities,
         hideIntermediateEvents,
         hideStartEndEvents,
-        hideProcessesWithoutConnections
+        hideProcessesWithoutConnections,
+        hideConnectionLabels,
       } = this.filterGraphInput;
 
       graph.addCells(this.hiddenCells);
@@ -581,8 +585,15 @@ export default defineComponent({
         }
 
       }
+
       this.hiddenCells.push(...processesWithoutConnections);
       graph.removeCells(processesWithoutConnections);
+
+      if(hideConnectionLabels){
+        for (const link of graph.getLinks()) {
+          link.removeLabel();
+        }
+      }
 
       this.saveGraphState();
       this.saveFilters();
