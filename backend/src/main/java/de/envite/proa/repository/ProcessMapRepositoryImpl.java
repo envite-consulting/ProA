@@ -42,7 +42,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	public ProcessMap getProcessMap(Long projectId) {
 		
 		ProjectTable projectTable = projectDao.findById(projectId);
-		List<ProcessDetails> processModelInformation = getProcessInformation(projectTable);
+		List<ProcessDetails> processModelInformation = getProcessDetails(projectTable);
 		List<ProcessConnection> processConnections = getProcessConnections(projectTable);
 		List<DataStore> dataStores = getDataStores(projectTable);
 		List<DataStoreConnection> dataStoreConnections = getDataStoreConnections(projectTable);
@@ -56,7 +56,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return map;
 	}
 
-	private List<ProcessDetails> getProcessInformation(ProjectTable projectTable) {
+	private List<ProcessDetails> getProcessDetails(ProjectTable projectTable) {
 
 		return processModelDao//
 				.getProcessModels(projectTable)//

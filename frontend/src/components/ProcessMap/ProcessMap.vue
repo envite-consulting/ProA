@@ -396,7 +396,7 @@ export default defineComponent({
 
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
 
-          const filterEmpty = (label: string) => label != undefined && label != null && label != '';
+          const filterEmpty = (label: string) => !!label;
 
           this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
           this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
@@ -404,11 +404,10 @@ export default defineComponent({
           this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
           this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-
-          this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
-
           return createAbstractProcessElement(process.name, process.id);
         });
+
+        this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
 
         graph.addCell(abstracProcessShapes);
 

@@ -65,7 +65,8 @@ export const useAppStore = defineStore('app', {
       'paperLayoutByProject',
       'filtersByProject',
       'hiddenCellsByProject',
-      'hiddenPortsByProject'
+      'hiddenPortsByProject',
+      'portsInformationByProject',
     ]
   },
 })
