@@ -216,13 +216,15 @@ export default defineComponent({
     const projectId = appStore.selectedProjectId;
     const processDetailDialog = ref(null);
     const showFilterMenu = ref(false);
-    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId);
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
     const hiddenPorts: {
       [key: string]: dia.Element.Port[]
     } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId);
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
     const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId);
+    const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
+    const hiddenLinks: { [key: string]: string }  = persistedHiddenLinks ?? {} as { [key: string]: string } ;
+    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
     const filterGraphInput: FilterGraphInput = reactive(
       !!persistedFilterGraphInput ?
         JSON.parse(persistedFilterGraphInput) :
@@ -250,6 +252,7 @@ export default defineComponent({
       showFilterMenu,
       hiddenPorts,
       hiddenCells,
+      hiddenLinks,
       filterGraphInput,
       filterOptions,
       filtersCount
@@ -370,8 +373,9 @@ export default defineComponent({
     saveFilters() {
       this.store.setFiltersForProject(this.store.selectedProjectId!, JSON.stringify(this.filterGraphInput));
     },
-    saveHiddenCells() {
+    saveHiddenElements() {
       this.store.setHiddenCellsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenCells));
+      this.store.setHiddenLinksForProject(this.store.selectedProjectId!, this.hiddenLinks);
     },
     saveHiddenPorts() {
       this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
@@ -386,10 +390,11 @@ export default defineComponent({
       this.filterGraphInput['hideCallActivities'] = false;
       this.filterGraphInput['hideProcessesWithoutConnections'] = false;
       this.filterGraphInput['hideAbstractDataStores'] = false;
+      this.filterGraphInput['hideConnectionLabels'] = false;
       this.hiddenCells = [];
       this.hiddenPorts = {};
       this.saveFilters();
-      this.saveHiddenCells();
+      this.saveHiddenElements();
       this.saveHiddenPorts();
       this.closeMenus();
     },
@@ -570,6 +575,22 @@ export default defineComponent({
         hideConnectionLabels,
       } = this.filterGraphInput;
 
+      if(!hideConnectionLabels){
+
+        for (const link of graph.getLinks()) {
+          const label = this.hiddenLinks[link.id];
+          if (!!label){
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: label
+                }
+              }
+            });
+          }
+        }
+      }
+        
       graph.addCells(this.hiddenCells);
       this.hiddenCells = [];
       for (const [cellId, ports] of Object.entries(this.hiddenPorts)) {
@@ -646,13 +667,17 @@ export default defineComponent({
 
       if(hideConnectionLabels){
         for (const link of graph.getLinks()) {
+          const labelText = link.labels()[0]?.attrs!.text!.text;
+          if(!!labelText){
+            this.hiddenLinks[link.id] = labelText;
+          }
           link.removeLabel();
         }
       }
 
       this.saveGraphState();
       this.saveFilters();
-      this.saveHiddenCells();
+      this.saveHiddenElements();
       this.saveHiddenPorts();
     }
   }
