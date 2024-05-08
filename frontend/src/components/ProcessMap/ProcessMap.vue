@@ -112,7 +112,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, reactive, ref } from 'vue';
-import { dia, shapes } from '@joint/core';
+import { dia, linkTools, shapes } from '@joint/core';
 import { graph, paper } from './jointjs/JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
@@ -126,6 +126,8 @@ import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
+
+import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
 
 const scrollStep = 20;
 
@@ -188,13 +190,13 @@ export default defineComponent({
     const projectId = appStore.selectedProjectId;
     const processDetailDialog = ref(null);
     const showFilterMenu = ref(false);
-    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId);
+    const persistedHiddenPorts = projectId ? appStore.getHiddenPortsForProject(projectId) : null;
     const hiddenPorts: {
       [key: string]: dia.Element.Port[]
     } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId);
+    const persistedHiddenCells = projectId ? appStore.getHiddenCellsForProject(projectId) : null;
     const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId);
+    const persistedFilterGraphInput = projectId ? appStore.getFiltersForProject(projectId) : null;
     const filterGraphInput: FilterGraphInput = reactive(
       !!persistedFilterGraphInput ?
         JSON.parse(persistedFilterGraphInput) :
@@ -272,7 +274,164 @@ export default defineComponent({
       paper.scale(sx);
       paper.translate(tx, ty);
     }
+
+    const clearTools = () => {
+      if (!lastView) return;
+      lastView.removeTools();
+    }
+    let timer: NodeJS.Timeout;
+    let lastView: dia.LinkView;
+    paper.on("link:mouseenter", (linkView) => {
+      clearTimeout(timer);
+      clearTools();
+      lastView = linkView;
+      linkView.addTools(
+        new dia.ToolsView({
+          name: "onhover",
+          tools: [
+            new PortTargetArrowhead(),
+            new linkTools.Remove({
+              distance: -60,
+              action: removeLink,
+              markup: [
+                {
+                  tagName: "circle",
+                  selector: "button",
+                  attributes: {
+                    r: 10,
+                    fill: "#FFD5E8",
+                    stroke: "#FD0B88",
+                    "stroke-width": 2,
+                    cursor: "pointer"
+                  }
+                },
+                {
+                  tagName: "path",
+                  selector: "icon",
+                  attributes: {
+                    d: "M -4 -4 4 4 M -4 4 4 -4",
+                    fill: "none",
+                    stroke: "#333",
+                    "stroke-width": 3,
+                    "pointer-events": "none"
+                  }
+                }
+              ]
+            })
+          ]
+        })
+      );
+    });
+
+    paper.on("link:mouseleave", () => {
+      timer = setTimeout(() => clearTools(), 500);
+    });
+
+    paper.on('link:change:position', (linkView) => {
+      console.log('Target snapped back to original element');
+    });
+
+
+    paper.on("link:connect", async (linkView) => {
+      const link = linkView.model;
+      const callingProcessid = link.source().id;
+      const calledProcessid = link.target().id;
+      const callingElementType = this.getProcessElementType(link.source().port || '');
+      const calledElementType = this.getProcessElementType(link.target().port || '');
+
+      if (!callingElementType || !calledElementType) {
+        return;
+      }
+
+      try {
+        await axios.post(`/api/project/${this.selectedProjectId}/process-map/connection`, {
+          callingProcessid,
+          calledProcessid,
+          callingElementType,
+          calledElementType
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error("Error while adding connection:", error);
+      }
+    });
+
+    paper.on("link:disconnect", async (linkView, evt, prevElementView, prevMagnet) => {
+      const link = linkView.model;
+      const callingProcessid = link?.source()?.id?.toString();
+      const calledProcessid = prevElementView.model.id.toString();
+      const callingElementType = this.getProcessElementType(link?.source()?.port || '');
+      const calledElementType = this.getProcessElementType(prevMagnet.getAttribute('port') || '');
+      await removeLinkHelper(callingProcessid, callingElementType, calledProcessid, calledElementType);
+    });
+
+    const removeProcessLink = async (callingProcessid: string, callingElementType: string, calledProcessid: string, calledElementType: string) => {
+      try {
+        await axios.patch(`/api/project/${this.selectedProjectId}/process-map/connection`, {
+          callingProcessid,
+          callingElementType,
+          calledProcessid,
+          calledElementType
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error("Error while removing connection:", error);
+      }
+    }
+
+    const removeDataStoreLink = async (processid: string, dataStoreId: string) => {
+      dataStoreId = dataStoreId.split('-')[1];
+      try {
+        await axios.patch(`/api/project/${this.selectedProjectId}/process-map/ds-connection`, {
+          processid,
+          dataStoreId
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error("Error while removing connection:", error);
+      }
+    }
+
+    const removeLink = async (evt: dia.Event, linkView: dia.LinkView, toolView: dia.ToolView) => {
+      linkView.model.remove({ ui: true, tool: toolView.cid });
+      const link = linkView.model;
+      const callingProcessid = link?.source()?.id?.toString();
+      const calledProcessid = link?.target()?.id?.toString();
+      const callingElementType = this.getProcessElementType(link.source().port || '');
+      const calledElementType = this.getProcessElementType(link.target().port || '');
+      await removeLinkHelper(callingProcessid, callingElementType, calledProcessid, calledElementType);
+    }
+
+    const removeLinkHelper = async (callingProcessid: string | undefined, callingElementType: string | null, calledProcessid: string | undefined, calledElementType: string | null) => {
+      if (!callingProcessid || !calledProcessid) {
+        return;
+      }
+      if (callingProcessid.startsWith('ds')) {
+        await removeDataStoreLink(calledProcessid, callingProcessid);
+        return;
+      }
+
+      if (calledProcessid.startsWith('ds')) {
+        await removeDataStoreLink(callingProcessid, calledProcessid);
+        return;
+      }
+      if (!callingElementType || !calledElementType) {
+        return;
+      }
+
+      await removeProcessLink(callingProcessid, callingElementType, calledProcessid, calledElementType);
+    }
   },
+
   methods: {
     zoomIn() {
       const { sx: sx0 } = paper.scale();
@@ -472,6 +631,23 @@ export default defineComponent({
         default:
           return '';
       }
+    },
+    getProcessElementType(portId: string): ProcessElementType | null {
+      const mappings: { [key: string]: ProcessElementType } = {
+        'start-': 'START_EVENT',
+        'i-catch-event-': 'INTERMEDIATE_CATCH_EVENT',
+        'i-throw-event-': 'INTERMEDIATE_THROW_EVENT',
+        'end-': 'END_EVENT',
+        'call-': 'CALL_ACTIVITY'
+      };
+
+      for (const prefix in mappings) {
+        if (portId.startsWith(prefix)) {
+          return mappings[prefix];
+        }
+      }
+
+      return null;
     },
     toggleLegend() {
       this.showLegend = !this.showLegend;
