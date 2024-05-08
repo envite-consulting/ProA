@@ -282,6 +282,9 @@ export default defineComponent({
     let timer: NodeJS.Timeout;
     let lastView: dia.LinkView;
     paper.on("link:mouseenter", (linkView) => {
+      if (linkView.model.get("source").id.toString().startsWith('ds')) {
+        return;
+      }
       clearTimeout(timer);
       clearTools();
       lastView = linkView;
@@ -326,11 +329,6 @@ export default defineComponent({
     paper.on("link:mouseleave", () => {
       timer = setTimeout(() => clearTools(), 500);
     });
-
-    paper.on('link:change:position', (linkView) => {
-      console.log('Target snapped back to original element');
-    });
-
 
     paper.on("link:connect", async (linkView) => {
       const link = linkView.model;
@@ -468,7 +466,9 @@ export default defineComponent({
       this.savePaperLayout();
     },
     saveGraphState() {
-      this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+      setTimeout(() => {
+        this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+      }, 50);
     },
     savePaperLayout() {
       this.store.setPaperLayoutForProject(this.store.selectedProjectId!, JSON.stringify({
