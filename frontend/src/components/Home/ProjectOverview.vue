@@ -3,7 +3,8 @@
   <v-container fluid style="margin: auto">
 
     <v-card v-for="(group, index) in projectGroups" :key="index" width="300px" height="252px"
-            style="float: left; margin: 16px" :class="{ 'active-card': activeProjectByGroup[group.name]?.id === store.selectedProjectId }">
+            style="float: left; margin: 16px"
+            :class="{ 'active-card': activeProjectByGroup[group.name]?.id === store.selectedProjectId }">
 
       <div class="d-flex flex-row justify-space-between align-center">
         <v-card-title v-text="group.name"></v-card-title>
@@ -93,24 +94,6 @@
         </v-card-title>
         <v-card-text>
           <v-container>
-            <!-- TODO: Add version select to copy from existing version -->
-            <!--            <v-row>-->
-            <!--              <v-col cols="12" sm="12" md="12">-->
-            <!--                <v-select-->
-            <!--                  label="Version"-->
-            <!--                  v-model="newVersionInitialProject"-->
-            <!--                  :items="newVersionForGroup.projects"-->
-            <!--                  item-title="version"-->
-            <!--                  item-value="id"-->
-            <!--                  hide-details-->
-            <!--                ></v-select>-->
-            <!--              </v-col>-->
-            <!--            </v-row>-->
-            <!--            <v-row>-->
-            <!--              <v-col cols="12" sm="12" md="12" class="py-0 ps-5">-->
-            <!--                <v-icon icon="mdi-arrow-right" size="large"></v-icon>-->
-            <!--              </v-col>-->
-            <!--            </v-row>-->
             <v-row>
               <v-col cols="12" sm="12" md="12">
                 <v-text-field label="Neue Version" v-model="newVersionName"></v-text-field>
@@ -148,7 +131,7 @@ import { defineComponent } from 'vue'
 import axios from 'axios';
 import { useAppStore } from "@/store/app";
 
-interface Project {
+export interface Project {
   id: number
   name: string
   version: string
@@ -161,7 +144,7 @@ interface ProjectGroup {
   projects: Project[]
 }
 
-interface ActiveProjectByGroup {
+export interface ActiveProjectByGroup {
   [key: string]: Project
 }
 
@@ -200,7 +183,7 @@ export default defineComponent({
 
       for (const group of projectGroups) {
         const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
-        this.activeProjectByGroup[group.name] = persistedActiveProject ? JSON.parse(persistedActiveProject) : group.projects[0];
+        this.activeProjectByGroup[group.name] = persistedActiveProject ?? group.projects[0];
       }
 
       return projectGroups;
@@ -219,7 +202,7 @@ export default defineComponent({
     },
     setActiveProject(groupName: string, projectId: number) {
       this.activeProjectByGroup[groupName] = this.projects.find(project => project.id === projectId)!;
-      this.store.setActiveProjectForGroup(groupName, JSON.stringify(this.activeProjectByGroup[groupName]));
+      this.store.setActiveProjectForGroup(groupName, this.activeProjectByGroup[groupName]);
     },
     formatDate(dateString: string) {
       return new Date(dateString).toLocaleString("de-DE");
