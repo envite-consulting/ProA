@@ -9,7 +9,7 @@
 	</parent>
 
 	<artifactId>pro-a-backend</artifactId>
-	<name>ProA Frontend</name>
+	<name>ProA Backend</name>
 
 	<properties>
 		<compiler-plugin.version>3.11.0</compiler-plugin.version>
@@ -100,6 +100,7 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<finalName>pro-a-${revision}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>${quarkus.platform.group-id}</groupId>
