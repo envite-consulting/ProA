@@ -72,7 +72,7 @@
             </v-row>
             <v-row>
               <v-col cols="12" sm="12" md="12">
-                <v-text-field label="Version" ref="newVersionVersionInput" v-model="newVersionName" placeholder="1.0"
+                <v-text-field label="Version" v-model="newVersionName" placeholder="1.0"
                               :rules="versionRules"></v-text-field>
               </v-col>
             </v-row>
