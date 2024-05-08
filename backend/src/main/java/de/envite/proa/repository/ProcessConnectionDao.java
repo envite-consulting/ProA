@@ -4,6 +4,7 @@ import java.util.List;
 
 import de.envite.proa.entities.DataStoreConnectionWithoutAccess;
 import de.envite.proa.entities.ProcessConnection;
+import de.envite.proa.entities.ProcessElementType;
 import de.envite.proa.repository.tables.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -79,13 +80,35 @@ public class ProcessConnectionDao {
 	}
 
 	private ProcessConnectionTable map(Long projectId, ProcessConnection connection) {
+		ProcessElementType callingElementType = connection.getCallingElementType();
+		ProcessElementType calledElementType = connection.getCalledElementType();
+		ProcessModelTable callingProcess = em.find(ProcessModelTable.class, connection.getCallingProcessid());
+		ProcessModelTable calledProcess = em.find(ProcessModelTable.class, connection.getCalledProcessid());
+		String callingElement = getElementId(callingElementType, callingProcess);
+		String calledElement = getElementId(calledElementType, calledProcess);
+
 		ProcessConnectionTable table = new ProcessConnectionTable();
-		table.setCallingProcess(em.find(ProcessModelTable.class, connection.getCallingProcessid()));
-		table.setCalledProcess(em.find(ProcessModelTable.class, connection.getCalledProcessid()));
-		table.setCallingElementType(connection.getCallingElementType());
-		table.setCalledElementType(connection.getCalledElementType());
+		table.setCallingProcess(callingProcess);
+		table.setCalledProcess(calledProcess);
+		table.setCallingElementType(callingElementType);
+		table.setCalledElementType(calledElementType);
+		table.setCallingElement(callingElement);
+		table.setCalledElement(calledElement);
 		table.setProject(em.find(ProjectTable.class, projectId));
 		return table;
+	}
+
+	private String getElementId(ProcessElementType elementType, ProcessModelTable processModel) {
+		if (elementType == ProcessElementType.CALL_ACTIVITY) {
+			return em
+					.createQuery("SELECT cat.elementId FROM CallActivityTable cat "
+							+ "WHERE cat.processModel = :processModel", String.class)
+					.setParameter("processModel", processModel).getResultList().stream().findFirst().orElse(null);
+		}
+		return em
+				.createQuery("SELECT pe.elementId FROM ProcessEventTable pe " + "WHERE pe.processModel = :processModel",
+						String.class)
+				.setParameter("processModel", processModel).getResultList().stream().findFirst().orElse(null);
 	}
 
 	private DataStoreConnectionTable map(Long projectId, DataStoreConnectionWithoutAccess connection) {
