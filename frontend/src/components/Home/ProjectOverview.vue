@@ -66,19 +66,21 @@
           <v-container>
             <v-row>
               <v-col cols="12" sm="12" md="12">
-                <v-text-field label="Name" v-model="newProjectName"></v-text-field>
+                <v-text-field label="Name" v-model="newProjectName"
+                              :rules="[() => !!newProjectName || 'Projektname erforderlich']"></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col cols="12" sm="12" md="12">
-                <v-text-field label="Version" v-model="newProjectVersionName"></v-text-field>
+                <v-text-field label="Version" ref="newVersionVersionInput" v-model="newVersionName" placeholder="1.0"
+                              :rules="versionRules"></v-text-field>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="projectDialog = false">
+          <v-btn color="blue-darken-1" variant="text" @click="closeNewProjectOrVersionDialog">
             Schließen
           </v-btn>
           <v-btn color="blue-darken-1" variant="text" @click="createProject()">
@@ -90,7 +92,7 @@
     <v-dialog v-model="showNewVersionDialog" persistent width="600">
       <v-card>
         <v-card-title class="pt-4 pb-0 px-5">
-          Neue Version für {{ newVersionForGroup.name }}
+          Neue Version für {{ newProjectName }}
         </v-card-title>
         <v-card-text>
           <v-container>
@@ -103,10 +105,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="showNewVersionDialog = false">
+          <v-btn color="blue-darken-1" variant="text" @click="closeNewProjectOrVersionDialog">
             Schließen
           </v-btn>
-          <v-btn color="blue-darken-1" variant="text" @click="createProject(newVersionForGroup.name, newVersionName)">
+          <v-btn color="blue-darken-1" variant="text" @click="createProject()">
             Speichern
           </v-btn>
         </v-card-actions>
@@ -155,14 +157,21 @@ export default defineComponent({
     projectDialog: false as boolean,
     showNewVersionDialog: false as boolean,
     newProjectName: "" as string,
-    newProjectVersionName: "1.0",
     activeProjectByGroup: {} as ActiveProjectByGroup,
-    newVersionForGroup: {} as ProjectGroup,
     newVersionName: "" as string,
     newVersionInitialProject: {} as Project
   }),
 
   computed: {
+    versionRules() {
+      return [
+        (): boolean | string => !this.versionNameExists || "Versionsname existiert bereits",
+        (): boolean | string => !!this.newVersionName || "Versionsname erforderlich",
+      ]
+    },
+    versionNameExists() {
+      return !!this.projects.find(project => project.version === this.newVersionName && project.name === this.newProjectName);
+    },
     projectGroups(): ProjectGroup[] {
       const groupedProjects: { [key: string]: Project[] } = {};
       for (const project of this.projects) {
@@ -196,7 +205,7 @@ export default defineComponent({
   },
   methods: {
     openNewVersionDialog(projectGroup: ProjectGroup) {
-      this.newVersionForGroup = projectGroup;
+      this.newProjectName = projectGroup.name;
       this.showNewVersionDialog = true;
       this.newVersionInitialProject = this.activeProjectByGroup[projectGroup.name];
     },
@@ -215,17 +224,21 @@ export default defineComponent({
         this.projects = result.data.sort(sortProjectsByActiveFirst);
       })
     },
-    createProject(projectName: string = '', projectVersion: string = '') {
+    createProject() {
+      const projectName = this.newProjectName;
+      const projectVersion = this.newVersionName;
+      if (this.versionNameExists || !projectName || !projectVersion) {
+        return;
+      }
+
       let formData = new FormData();
-      formData.append("name", projectName || this.newProjectName);
-      formData.append("version", projectVersion || this.newProjectVersionName);
+      formData.append("name", projectName);
+      formData.append("version", projectVersion);
 
       axios.post("/api/project", formData).then(result => {
         this.projectDialog = false;
         this.showNewVersionDialog = false;
         this.newProjectName = "";
-        this.newProjectVersionName = "1.0";
-        this.newVersionForGroup = {} as ProjectGroup;
         this.newVersionName = "";
         this.setActiveProject(result.data.name, result.data.id);
         this.projects.push(result.data);
@@ -234,6 +247,12 @@ export default defineComponent({
     openProject(id: number) {
       useAppStore().selectedProjectId = id;
       this.$router.push("/ProcessList")
+    },
+    closeNewProjectOrVersionDialog() {
+      this.projectDialog = false;
+      this.showNewVersionDialog = false;
+      this.newProjectName = "";
+      this.newVersionName = "";
     }
   }
 });
