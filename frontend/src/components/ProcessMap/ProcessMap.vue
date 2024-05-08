@@ -219,13 +219,13 @@ export default defineComponent({
     const projectId = appStore.selectedProjectId;
     const processDetailDialog = ref(null);
     const showFilterMenu = ref(false);
-    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId);
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
     const hiddenPorts: {
       [key: string]: dia.Element.Port[]
     } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId);
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
     const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId);
+    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
     const filterGraphInput: FilterGraphInput = reactive(
       !!persistedFilterGraphInput ?
         JSON.parse(persistedFilterGraphInput) :
