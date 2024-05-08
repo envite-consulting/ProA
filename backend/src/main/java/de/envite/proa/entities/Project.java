@@ -9,6 +9,7 @@ public class Project {
 
 	private Long id;
 	private String name;
+	private String version;
 	private LocalDateTime createdAt;
-    private LocalDateTime modifiedAt;
+	private LocalDateTime modifiedAt;
 }

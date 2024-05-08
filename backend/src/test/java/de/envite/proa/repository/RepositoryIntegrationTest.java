@@ -9,16 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.envite.proa.entities.DataAccess;
-import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessActivity;
-import de.envite.proa.entities.ProcessDataStore;
-import de.envite.proa.entities.ProcessDetails;
-import de.envite.proa.entities.ProcessElementType;
-import de.envite.proa.entities.ProcessEvent;
-import de.envite.proa.entities.ProcessMap;
-import de.envite.proa.entities.ProcessModel;
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.*;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -36,7 +27,9 @@ public class RepositoryIntegrationTest {
 	private static final String ACTIVITY_ID = "ActivityId";
 	private static final String PROCESS_MODEL_NAME_2 = "TestProcessModel2";
 	private static final String PROJECT_NAME = "Project Name";
+	private static final String PROJECT_VERSION = "1.0";
 	private static final String PROJECT_NAME_2 = "Project Name 2";
+	private static final String PROJECT_VERSION_2 = "2.0";
 
 	@Inject
 	private EntityManager entityManager;
@@ -71,7 +64,7 @@ public class RepositoryIntegrationTest {
 		model.setCallActivities(Arrays.asList(activity));
 
 		// Act
-		Project project = projectRepository.createProject(PROJECT_NAME);
+		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 		Long processId = processModelrepository.saveProcessModel(project.getId(), model);
 		ProcessDetails processDetails = processModelrepository.getProcessDetails(processId);
 
@@ -115,7 +108,7 @@ public class RepositoryIntegrationTest {
 		model2.setDataStores(Arrays.asList(dataStore));
 
 		// Act
-		Project project = projectRepository.createProject(PROJECT_NAME);
+		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 		Long processId1 = processModelrepository.saveProcessModel(project.getId(), model1);
 		Long processId2 = processModelrepository.saveProcessModel(project.getId(), model2);
 
@@ -176,7 +169,7 @@ public class RepositoryIntegrationTest {
 		model2.setDataStores(Arrays.asList(dataStore));
 
 		// Act
-		Project project = projectRepository.createProject(PROJECT_NAME);
+		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 		Long processId1 = processModelrepository.saveProcessModel(project.getId(), model1);
 		Long processId2 = processModelrepository.saveProcessModel(project.getId(), model2);
 
@@ -203,8 +196,8 @@ public class RepositoryIntegrationTest {
 	public void testGetProjects() {
 
 		// Arange
-		Long projectId1 = projectRepository.createProject(PROJECT_NAME).getId();
-		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2).getId();
+		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
+		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2).getId();
 
 		// Act
 		List<Project> projects = projectRepository.getProjects();
@@ -212,17 +205,18 @@ public class RepositoryIntegrationTest {
 		// Assert
 		assertThat(projects)//
 				.hasSize(2)//
-				.extracting("id", "name")//
-				.contains(tuple(projectId1, PROJECT_NAME), tuple(projectId2, PROJECT_NAME_2));
+				.extracting("id", "name", "version")//
+				.contains(tuple(projectId1, PROJECT_NAME, PROJECT_VERSION),
+						tuple(projectId2, PROJECT_NAME_2, PROJECT_VERSION_2));
 
 	}
-	
+
 	@Test
 	@Transactional
 	public void testGetProject() {
 
 		// Arange
-		Long projectId = projectRepository.createProject(PROJECT_NAME).getId();
+		Long projectId = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act
 		Project project = projectRepository.getProject(projectId);
@@ -230,7 +224,7 @@ public class RepositoryIntegrationTest {
 		// Assert
 		assertThat(project.getId()).isEqualTo(projectId);
 		assertThat(project.getName()).isEqualTo(PROJECT_NAME);
-
+		assertThat(project.getVersion()).isEqualTo(PROJECT_VERSION);
 	}
 
 	/**

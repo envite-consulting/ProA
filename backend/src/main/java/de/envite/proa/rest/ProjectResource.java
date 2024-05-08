@@ -21,22 +21,21 @@ public class ProjectResource {
 	private ProjectUsecase usecase;
 
 	/**
-	 * 
 	 * Creates a new project
-	 * 
+	 *
 	 * @param name the name of the project to be created
 	 * @return the created project
 	 */
 	@POST
 	@Path("/project")
-	public Project uploadProcessModel(@RestForm String name) {
+	public Project uploadProcessModel(@RestForm String name, @RestForm String version) {
 
-		return usecase.createProject(name);
+		return usecase.createProject(name, version);
 	}
 
 	/**
-	 * This methods gets the names and the corresponding ids of all projects
-	 * in order to show them as tiles in the frontend
+	 * This methods gets the names and the corresponding ids of all projects in
+	 * order to show them as tiles in the frontend
 	 */
 	@GET
 	@Path("/project")
@@ -44,7 +43,7 @@ public class ProjectResource {
 	public List<Project> getProcessInformation() {
 		return usecase.getProjects();
 	}
-	
+
 	@GET
 	@Path("/project/{projectId}")
 	@Produces(MediaType.APPLICATION_JSON)

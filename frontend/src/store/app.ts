@@ -1,5 +1,9 @@
 // Utilities
 import { defineStore } from 'pinia'
+import {
+  ActiveProjectByGroup,
+  Project
+} from "@/components/Home/ProjectOverview.vue";
 
 export interface PaperLayout {
   sx: number,
@@ -11,8 +15,11 @@ export const useAppStore = defineStore('app', {
   state: () => {
     return {
       selectedProjectId: null as number | null,
+      activeProjectByGroup: {} as ActiveProjectByGroup,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
-      portsInformationByProject: {} as {[key: number]: { [key: string]: string[] }},
+      portsInformationByProject: {} as {
+        [key: number]: { [key: string]: string[] }
+      },
       paperLayoutByProject: {} as { [key: number]: string },
       filtersByProject: {} as { [key: number]: string },
       hiddenCellsByProject: {} as { [key: number]: string },
@@ -20,13 +27,21 @@ export const useAppStore = defineStore('app', {
     }
   },
   actions: {
+    setActiveProjectForGroup(projectGroupName: string, project: Project) {
+      this.activeProjectByGroup[projectGroupName] = project;
+    },
+    getActiveProjectForGroup(projectGroupName: string): Project {
+      return this.activeProjectByGroup[projectGroupName];
+    },
     setGraphForProject(id: number, graph: string) {
       this.graphByProject[id] = graph;
     },
     getGraphForProject(id: number): string {
       return this.graphByProject[id];
     },
-    setPortsInformationByProject(id: number, portsInformation: { [key: string]: string[] }){
+    setPortsInformationByProject(id: number, portsInformation: {
+      [key: string]: string[]
+    }) {
       this.portsInformationByProject[id] = portsInformation;
     },
     getPortsInformationByProject(id: number): { [key: string]: string[] } {
@@ -61,6 +76,7 @@ export const useAppStore = defineStore('app', {
     storage: sessionStorage,
     paths: [
       'selectedProjectId',
+      'activeProjectByGroup',
       'graphByProject',
       'paperLayoutByProject',
       'filtersByProject',
