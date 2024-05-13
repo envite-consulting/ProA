@@ -7,6 +7,10 @@ on:
         description: the release version
         required: true
         type: String
+      developmentVersion:
+        description: the next dev iteration version
+        required: true
+        type: String
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,7 +31,7 @@ jobs:
         run: ./mvnw -B release:clean release:prepare -DreleaseVersion=$RELEASE_VERSION -DdevelopmentVersion=$DEV_VERSION
         env:
           RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
-          DEV_VERSION: ${{format('{0}-snapshot',  github.event.inputs.releaseVersion) }}
+          DEV_VERSION: ${{ github.event.inputs.developmentVersion }}
       - name: Checkout
         uses: actions/checkout@v4
         with:
