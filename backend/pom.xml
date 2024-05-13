@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>de.envite</groupId>
 		<artifactId>pro-a</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.0-snapshot</version>
 	</parent>
 
 	<artifactId>pro-a-backend</artifactId>
