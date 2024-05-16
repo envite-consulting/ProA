@@ -1,29 +1,57 @@
 // Utilities
 import { defineStore } from 'pinia'
+import {
+  ActiveProjectByGroup,
+  Project
+} from "@/components/Home/ProjectOverview.vue";
+
+export interface PaperLayout {
+  sx: number,
+  tx: number,
+  ty: number
+}
 
 export const useAppStore = defineStore('app', {
   state: () => {
     return {
       selectedProjectId: null as number | null,
+      activeProjectByGroup: {} as ActiveProjectByGroup,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
-      stringByProject: {} as { [key: number]: string },
+      portsInformationByProject: {} as {
+        [key: number]: { [key: string]: string[] }
+      },
+      paperLayoutByProject: {} as { [key: number]: string },
       filtersByProject: {} as { [key: number]: string },
       hiddenCellsByProject: {} as { [key: number]: string },
       hiddenPortsByProject: {} as { [key: number]: string },
     }
   },
   actions: {
+    setActiveProjectForGroup(projectGroupName: string, project: Project) {
+      this.activeProjectByGroup[projectGroupName] = project;
+    },
+    getActiveProjectForGroup(projectGroupName: string): Project {
+      return this.activeProjectByGroup[projectGroupName];
+    },
     setGraphForProject(id: number, graph: string) {
       this.graphByProject[id] = graph;
     },
     getGraphForProject(id: number): string {
       return this.graphByProject[id];
     },
+    setPortsInformationByProject(id: number, portsInformation: {
+      [key: string]: string[]
+    }) {
+      this.portsInformationByProject[id] = portsInformation;
+    },
+    getPortsInformationByProject(id: number): { [key: string]: string[] } {
+      return this.portsInformationByProject[id];
+    },
     setPaperLayoutForProject(id: number, string: string) {
-      this.stringByProject[id] = string;
+      this.paperLayoutByProject[id] = string;
     },
     getPaperLayoutForProject(id: number): string {
-      return this.stringByProject[id];
+      return this.paperLayoutByProject[id];
     },
     setFiltersForProject(id: number, filters: string) {
       this.filtersByProject[id] = filters;
@@ -48,11 +76,13 @@ export const useAppStore = defineStore('app', {
     storage: sessionStorage,
     paths: [
       'selectedProjectId',
+      'activeProjectByGroup',
       'graphByProject',
-      'stringByProject',
+      'paperLayoutByProject',
       'filtersByProject',
       'hiddenCellsByProject',
-      'hiddenPortsByProject'
+      'hiddenPortsByProject',
+      'portsInformationByProject',
     ]
   },
 })

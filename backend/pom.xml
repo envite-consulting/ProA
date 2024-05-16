@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>de.envite</groupId>
 		<artifactId>pro-a</artifactId>
-		<version>${revision}</version>
+		<version>1.0.0-snapshot</version>
 	</parent>
 
 	<artifactId>pro-a-backend</artifactId>
-	<name>ProA Frontend</name>
+	<name>ProA Backend</name>
 
 	<properties>
 		<compiler-plugin.version>3.11.0</compiler-plugin.version>
@@ -100,6 +100,7 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<finalName>pro-a-${project.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>${quarkus.platform.group-id}</groupId>

@@ -1,6 +1,11 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
+    <v-toolbar-title>
+      <div class="d-flex align-center">
+        <span>{{ selectedProjectName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+      </div>
+    </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn icon @click="toggleLegend">
       <v-icon>mdi-map-legend</v-icon>
@@ -17,7 +22,7 @@
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
   </v-toolbar>
-  <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
+  <v-card :class="selectedProjectName ? 'full-screen-below-toolbar' : 'full-screen'" @mouseup="saveGraphState">
     <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
     <div style="position: absolute; top: 0; right: 0;">
@@ -92,6 +97,12 @@
       </v-fab-transition>
     </div>
   </v-card>
+  <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
+    <ul v-if="tooltipList.length > 0">
+      <li v-for="item in tooltipList">{{ item }}</li>
+    </ul>
+    <span v-if="tooltipList.length === 0">Keine Informationen vorhanden</span>
+  </v-tooltip>
 </template>
 
 <style>
@@ -131,9 +142,24 @@ import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
 
 const scrollStep = 20;
 
+interface Event {
+  elementId: string
+  label: string
+}
+
+interface Activity {
+  elementId: string
+  label: string
+}
+
 interface Process {
   id: number
-  processName: string
+  name: string
+  startEvents: Event[]
+  intermediateCatchEvents: Event[]
+  intermediateThrowEvents: Event[]
+  endEvents: Event[]
+  activities: Activity[]
 }
 
 type ProcessElementType =
@@ -181,22 +207,27 @@ export default defineComponent({
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    selectedVersionName: '' as string,
+    tooltipVisible: false,
+    mouseX: '',
+    mouseY: '',
+    portsInformation: {} as { [key: string]: string[] },
+    tooltipList: [] as string[],
     store: useAppStore(),
     showLegend: false
   }),
-
   setup() {
     const appStore = useAppStore();
     const projectId = appStore.selectedProjectId;
     const processDetailDialog = ref(null);
     const showFilterMenu = ref(false);
-    const persistedHiddenPorts = projectId ? appStore.getHiddenPortsForProject(projectId) : null;
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
     const hiddenPorts: {
       [key: string]: dia.Element.Port[]
     } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
-    const persistedHiddenCells = projectId ? appStore.getHiddenCellsForProject(projectId) : null;
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
     const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-    const persistedFilterGraphInput = projectId ? appStore.getFiltersForProject(projectId) : null;
+    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
     const filterGraphInput: FilterGraphInput = reactive(
       !!persistedFilterGraphInput ?
         JSON.parse(persistedFilterGraphInput) :
@@ -227,7 +258,6 @@ export default defineComponent({
       filtersCount
     };
   },
-
   mounted: function () {
     this.selectedProjectId = this.store.selectedProjectId;
     if (!this.selectedProjectId) {
@@ -236,6 +266,7 @@ export default defineComponent({
     }
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
+      this.selectedVersionName = result.data.version;
     })
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
@@ -262,8 +293,28 @@ export default defineComponent({
       paper.translate(tx0 - tx, ty0 - ty);
     });
 
+    paper.on('element:mouseover', (view, evt) => {
+      var port = view.findAttribute('port', evt.target);
+      if (port) {
+
+        this.tooltipList = this.portsInformation[port];
+        this.tooltipVisible = true;
+
+        this.mouseX = evt.clientX! + "px !important";
+        this.mouseY = evt.clientY! + "px !important";
+      }
+    });
+
+    paper.on('element:mouseout', (view, evt) => {
+      var port = view.findAttribute('port', evt.target);
+      if (port) {
+        this.tooltipVisible = false;
+      }
+    });
+
     const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
+      Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
@@ -429,7 +480,6 @@ export default defineComponent({
       await removeProcessLink(callingProcessid, callingElementType, calledProcessid, calledElementType);
     }
   },
-
   methods: {
     zoomIn() {
       const { sx: sx0 } = paper.scale();
@@ -486,6 +536,10 @@ export default defineComponent({
     saveHiddenPorts() {
       this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
     },
+    closeMenus() {
+      this.showFilterMenu = false;
+      this.showLegend = false;
+    },
     resetFilters() {
       this.filterGraphInput['hideIntermediateEvents'] = false;
       this.filterGraphInput['hideStartEndEvents'] = false;
@@ -497,7 +551,7 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenCells();
       this.saveHiddenPorts();
-      this.showFilterMenu = false;
+      this.closeMenus();
     },
     fetchProcessModels() {
       this.resetFilters();
@@ -506,8 +560,19 @@ export default defineComponent({
       axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
         let abstracProcessShapes = result.data.processes.map((process: Process) => {
-          return createAbstractProcessElement(process.processName, process.id);
+
+          const filterEmpty = (label: string) => !!label;
+
+          this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+
+          return createAbstractProcessElement(process.name, process.id);
         });
+
+        this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
 
         graph.addCell(abstracProcessShapes);
 
@@ -650,9 +715,15 @@ export default defineComponent({
       return null;
     },
     toggleLegend() {
+      if (!this.showLegend) {
+        this.closeMenus();
+      }
       this.showLegend = !this.showLegend;
     },
     toggleFilterMenu() {
+      if (!this.showFilterMenu) {
+        this.closeMenus();
+      }
       this.showFilterMenu = !this.showFilterMenu;
     },
     filterGraph() {
@@ -744,4 +815,4 @@ export default defineComponent({
     }
   }
 })
-</script>../ProcessMap/jointjs/JointJSDiagram
+</script>

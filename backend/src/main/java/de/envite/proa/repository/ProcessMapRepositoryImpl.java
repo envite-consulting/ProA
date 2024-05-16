@@ -3,7 +3,12 @@ package de.envite.proa.repository;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.DataStore;
+import de.envite.proa.entities.DataStoreConnection;
+import de.envite.proa.entities.ProcessConnection;
+import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.ProcessMap;
+import de.envite.proa.entities.DataStoreConnectionWithoutAccess;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
@@ -39,7 +44,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	public ProcessMap getProcessMap(Long projectId) {
 
 		ProjectTable projectTable = projectDao.findById(projectId);
-		List<ProcessInformation> processModelInformation = getProcessInformation(projectTable);
+		List<ProcessDetails> processModelInformation = getProcessDetails(projectTable);
 		List<ProcessConnection> processConnections = getProcessConnections(projectTable);
 		List<DataStore> dataStores = getDataStores(projectTable);
 		List<DataStoreConnection> dataStoreConnections = getDataStoreConnections(projectTable);
@@ -68,16 +73,12 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return processConnectionDao.deleteConnection(projectId, connection);
 	}
 
-	private List<ProcessInformation> getProcessInformation(ProjectTable projectTable) {
+	private List<ProcessDetails> getProcessDetails(ProjectTable projectTable) {
 
 		return processModelDao//
 				.getProcessModels(projectTable)//
 				.stream()//
-				.map(model -> new ProcessInformation(//
-						model.getId(), //
-						model.getName(), //
-						model.getDescription(), //
-						model.getCreatedAt()))//
+				.map(ProcessDetailsMapper::map)//
 				.collect(Collectors.toList());
 	}
 

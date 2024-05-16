@@ -25,6 +25,6 @@ public class ProcessDataStoreTable {
     @Enumerated(EnumType.STRING)
     private DataAccess access;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProcessModelTable processModel;
 }

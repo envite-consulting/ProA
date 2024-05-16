@@ -1,0 +1,28 @@
+name: Backend - Continuous Integration
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDKs with Matrix Build
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 21
+          cache: 'maven'
+      - name: Build with Maven Wrapper
+        working-directory: ./backend
+        run: ./mvnw clean verify
