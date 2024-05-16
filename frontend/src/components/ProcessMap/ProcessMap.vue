@@ -7,6 +7,9 @@
       </div>
     </v-toolbar-title>
     <v-spacer></v-spacer>
+    <v-btn icon @click="fetchProcessInstances">
+      <v-icon>mdi-play</v-icon>
+    </v-btn>
     <v-btn icon @click="toggleLegend">
       <v-icon>mdi-map-legend</v-icon>
     </v-btn>
@@ -401,7 +404,7 @@ export default defineComponent({
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
-        let abstracProcessShapes = result.data.processes.map((process: Process) => {
+        let abstracProcessShapes: AbstractProcessShape[] = result.data.processes.map((process: Process) => {
 
           const filterEmpty = (label: string) => !!label;
 
@@ -637,6 +640,19 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenCells();
       this.saveHiddenPorts();
+    },
+    fetchProcessInstances() {
+      for (const cell of graph.getCells()) {
+        if (cell instanceof AbstractProcessShape) {
+          const randomNum = Math.random();
+          const displayNum = randomNum < 0.5 ? 0 : Math.floor(Math.random() * 9) + 1;
+          if (displayNum === 0) {
+            cell.hideActiveInstances();
+          } else {
+            cell.setActiveInstances(displayNum);
+          }
+        }
+      }
     }
   }
 })
