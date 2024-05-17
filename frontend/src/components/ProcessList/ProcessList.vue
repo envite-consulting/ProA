@@ -20,7 +20,9 @@
         </v-list-item-subtitle>
         <template v-slot:append>
           <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
-                 @click="() => deleteProcessModel(model.id)"></v-btn>
+                 @click="async () => await deleteProcessModel(model.id)"></v-btn>
+          <v-btn color="grey-lighten-1" icon="mdi-upload" variant="text"
+                 @click="openSingleUploadDialog(model.id)"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
           <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
                  @click="() => showProcessInfoDialog(model.id)"></v-btn>
@@ -32,33 +34,42 @@
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
-             @click="uploadDialog = true" size="large"/>
+             @click="openMultipleUploadDialog" size="large"/>
     </v-fab-transition>
   </div>
 
   <v-dialog v-model="uploadDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">Prozessmodell hochladen</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">Prozessmodelle hochladen</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'single'">Prozessmodell austauschen</span>
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row>
             <v-col cols="12" sm="12" md="12">
-              <v-file-input label="Prozessmodell" v-model="processModel" chips multiple></v-file-input>
+              <v-file-input v-if="uploadDialogMode === 'multiple'" label="Prozessmodelle" v-model="processModelFiles"
+                            chips
+                            multiple></v-file-input>
+              <v-file-input v-if="uploadDialogMode === 'single'" label="Prozessmodell" v-model="processModelFiles"
+                            chips></v-file-input>
             </v-col>
             <v-col cols="12" sm="12" md="12">
-              <v-textarea label="Beschreibung" v-model="description"></v-textarea>
+              <v-textarea label="Beschreibung" v-model="description"
+                          :hint="processModelFiles.length > 1 ? 'Achtung: Beschreibung wird für alle Modelle übernommen' : undefined"></v-textarea>
             </v-col>
           </v-row>
         </v-container>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" variant="text" @click="uploadDialog = false">
+        <v-btn color="blue-darken-1" variant="text" @click="closeUploadDialog">
           Schließen
         </v-btn>
-        <v-btn color="blue-darken-1" variant="text" @click="uploadProcessModel">
+        <v-btn v-if="uploadDialogMode === 'multiple'" color="blue-darken-1" variant="text" @click="uploadProcessModels">
+          Speichern
+        </v-btn>
+        <v-btn v-if="uploadDialogMode === 'single'" color="blue-darken-1" variant="text" @click="swapProcessModel">
           Speichern
         </v-btn>
       </v-card-actions>
@@ -85,7 +96,7 @@
 import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
-import { useAppStore } from "../../store/app";
+import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 
 declare interface ProcessModel {
@@ -95,24 +106,32 @@ declare interface ProcessModel {
   createdAt: string
 }
 
+enum UploadDialogMode {
+  SINGLE = 'single',
+  MULTIPLE = 'multiple'
+}
+
 export default defineComponent({
 
   components: {
     ProcessDetailDialog
   },
   data: () => ({
-    uploadDialog: false,
+    appStore: useAppStore(),
+    uploadDialog: false as boolean,
+    uploadDialogMode: UploadDialogMode.MULTIPLE as UploadDialogMode,
+    replaceProcessModel: null as number | null,
     progressDialog: false,
     progress: 0,
     description: '',
-    processModel: [] as File[],
+    processModelFiles: [] as File[],
     processModels: [] as ProcessModel[],
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
   }),
   mounted: function () {
-    this.selectedProjectId = useAppStore().selectedProjectId;
+    this.selectedProjectId = this.appStore.selectedProjectId;
     if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
@@ -125,49 +144,74 @@ export default defineComponent({
   },
   watch: {},
   methods: {
-
     showProcessInfoDialog(processId: number) {
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
-    deleteProcessModel(processId: number) {
-      axios.delete("/api/process-model/" + processId).then(() => {
+    async deleteProcessModel(processId: number) {
+      await axios.delete("/api/process-model/" + processId).then(() => {
+        this.appStore.setProcessModelsChanged();
         this.fetchProcessModels();
       })
     },
     fetchProcessModels() {
-
       axios.get("/api/project/" + this.selectedProjectId + "/process-model").then(result => {
         this.processModels = result.data;
       })
     },
-
-    async uploadProcessModel() {
-      if (this.processModel !== null && this.processModel.length > 0) {
+    async uploadProcessModels() {
+      if (this.processModelFiles.length > 0) {
 
         this.progressDialog = true;
-        const progressSteps = 100 / (this.processModel.length * 2);
+        const progressSteps = 100 / (this.processModelFiles.length * 2);
 
-        for (const processModel of this.processModel) {
+        for (const processModel of this.processModelFiles) {
           this.progress += progressSteps;
-
-          let formData = new FormData();
-          formData.append("processModel", processModel);
-          formData.append("fileName", processModel.name);
-          formData.append("description", this.description);
-
-          await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
-
+          await this.uploadProcessModel(processModel);
           this.progress += progressSteps;
         }
-        this.fetchProcessModels();
-        this.processModel = [];
-        this.description = '';
-        this.progressDialog = false;
-        this.progress = 0;
-        this.uploadDialog = false;
+        this.afterUploadActions();
       }
     },
+    async uploadProcessModel(processModelFile: File) {
+      let formData = new FormData();
+      formData.append("processModel", processModelFile);
+      formData.append("fileName", processModelFile.name);
+      formData.append("description", this.description);
 
+      await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
+    },
+    async swapProcessModel() {
+      if (this.processModelFiles.length === 1) {
+        this.progressDialog = true;
+        const oldModelId = this.replaceProcessModel!;
+        await this.deleteProcessModel(oldModelId);
+        this.progress += 50;
+        await this.uploadProcessModel(this.processModelFiles[0]);
+        this.afterUploadActions();
+      }
+    },
+    afterUploadActions() {
+      this.fetchProcessModels();
+      this.progressDialog = false;
+      this.progress = 0;
+      this.closeUploadDialog();
+      this.appStore.setProcessModelsChanged();
+    },
+    openSingleUploadDialog(modelId: number) {
+      this.uploadDialog = true;
+      this.uploadDialogMode = UploadDialogMode.SINGLE;
+      this.replaceProcessModel = modelId;
+    },
+    openMultipleUploadDialog() {
+      this.uploadDialog = true;
+      this.uploadDialogMode = UploadDialogMode.MULTIPLE;
+    },
+    closeUploadDialog() {
+      this.uploadDialog = false;
+      this.processModelFiles = [];
+      this.description = '';
+      this.replaceProcessModel = null;
+    }
   }
 })
 </script>
