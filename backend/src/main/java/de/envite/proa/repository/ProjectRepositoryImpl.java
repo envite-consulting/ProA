@@ -9,7 +9,6 @@ import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.usecases.project.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
@@ -24,10 +23,11 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 
 	@Transactional
 	@Override
-	public Project createProject(String name) {
+	public Project createProject(String name, String version) {
 
 		ProjectTable table = new ProjectTable();
 		table.setName(name);
+		table.setVersion(version);
 		table.setCreatedAt(LocalDateTime.now());
 		table.setModifiedAt(LocalDateTime.now());
 
@@ -45,7 +45,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}
-	
+
 	@Override
 	public Project getProject(Long projectId) {
 		return map(dao.findById(projectId));
@@ -56,6 +56,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		Project project = new Project();
 		project.setId(table.getId());
 		project.setName(table.getName());
+		project.setVersion(table.getVersion());
 		project.setCreatedAt(table.getCreatedAt());
 		project.setModifiedAt(table.getModifiedAt());
 

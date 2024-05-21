@@ -1,6 +1,11 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{selectedProjectName}}</v-toolbar-title>
+    <v-toolbar-title>
+      <div class="d-flex align-center">
+        <span>{{ selectedProjectName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+      </div>
+    </v-toolbar-title>
   </v-toolbar>
   <v-list lines="two" class="pa-6">
     <template v-for="(model, index) in processModels" :key="'process-'+model.id">
@@ -36,11 +41,11 @@
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
               <v-text-field v-model="clientId" class="text-field__styled" dense color="#26376B"
-                placeholder="Client ID"></v-text-field>
+                            placeholder="Client ID"></v-text-field>
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
               <v-text-field v-model="clientSecret" class="text-field__styled" dense color="#26376B"
-                placeholder="Client Secret" type="password"></v-text-field>
+                            placeholder="Client Secret" type="password"></v-text-field>
             </v-col>
             <v-col v-if="tokenError">
               Es ist ein Fehler aufgetreten!
@@ -51,8 +56,10 @@
               </v-btn>
             </v-col>
             <v-col cols="12" sm="12" md="12">
-              <v-text-field :disabled="!token" v-model="creatorEMail" class="text-field__styled" dense color="#26376B"
-                placeholder="Ersteller E-Mail"></v-text-field>
+              <v-text-field :disabled="!token" v-model="creatorEMail" class="text-field__styled"
+                            dense color="#26376B" placeholder="Ersteller E-Mail"
+                            hint="Optional: Es werden nur Prozessmodelle der angegebenen Ersteller E-Mail abgerufen">
+              </v-text-field>
             </v-col>
             <v-col>
               <v-btn :disabled="!token" color="blue-darken-1" @click="fetchProcessModels">
@@ -82,7 +89,7 @@
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
-        @click="camundaCloudDialog = true" size="large" />
+             @click="camundaCloudDialog = true" size="large"/>
     </v-fab-transition>
   </div>
 </template>
@@ -115,18 +122,19 @@ export default defineComponent({
     token: null,
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    selectedVersionName: '' as string
   }),
 
-  watch: {
-  },
+  watch: {},
   mounted: function () {
     this.selectedProjectId = useAppStore().selectedProjectId;
-    if(!this.selectedProjectId){
+    if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
     }
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
+      this.selectedVersionName = result.data.version;
     })
   },
   methods: {

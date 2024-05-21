@@ -1,6 +1,11 @@
 <template>
   <v-toolbar>
-    <v-toolbar-title>{{ selectedProjectName }}</v-toolbar-title>
+    <v-toolbar-title>
+      <div class="d-flex align-center">
+        <span>{{ selectedProjectName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+      </div>
+    </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-btn icon @click="toggleLegend">
       <v-icon>mdi-map-legend</v-icon>
@@ -17,7 +22,7 @@
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
   </v-toolbar>
-  <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
+  <v-card :class="selectedProjectName ? 'full-screen-below-toolbar' : 'full-screen'" @mouseup="saveGraphState">
     <ProcessDetailDialog ref="processDetailDialog"/>
     <div id="graph-container" class="full-screen"></div>
     <div style="position: absolute; top: 0; right: 0;">
@@ -203,6 +208,7 @@ export default defineComponent({
   data: () => ({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
+    selectedVersionName: '' as string,
     tooltipVisible: false,
     mouseX: '',
     mouseY: '',
@@ -266,6 +272,7 @@ export default defineComponent({
     }
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
+      this.selectedVersionName = result.data.version;
     })
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
@@ -311,12 +318,20 @@ export default defineComponent({
       }
     });
 
+    const appStore = useAppStore();
+    if (appStore.getProcessModelsChangeFlag()) {
+      this.fetchProcessModels();
+      appStore.unsetProcessModelsChanged();
+      return;
+    }
+
     const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
       Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
+      return;
     }
     const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
     if (!!persistedLayout) {

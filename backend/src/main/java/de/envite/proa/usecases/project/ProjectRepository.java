@@ -6,7 +6,7 @@ import de.envite.proa.entities.Project;
 
 public interface ProjectRepository {
 
-	Project createProject(String name);
+	Project createProject(String name, String version);
 
 	List<Project> getProjects();
 

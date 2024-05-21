@@ -8,15 +8,15 @@ import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class ProjectUsecase {
-	
+
 	@Inject
 	private ProjectRepository repository;
-	
-	public Project createProject(String name) {
-		return repository.createProject(name);
+
+	public Project createProject(String name, String version) {
+		return repository.createProject(name, version);
 	}
-	
-	public List<Project> getProjects(){
+
+	public List<Project> getProjects() {
 		return repository.getProjects();
 	}
 
