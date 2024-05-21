@@ -8,7 +8,6 @@ import de.envite.proa.entities.DataStoreConnection;
 import de.envite.proa.entities.ProcessConnection;
 import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessMap;
-import de.envite.proa.entities.DataStoreConnectionWithoutAccess;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
@@ -16,7 +15,6 @@ import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class ProcessMapRepositoryImpl implements ProcessMapRespository {
@@ -59,18 +57,18 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	}
 
 	@Override
-	public Response addConnection(Long projectId, ProcessConnection connection) {
-		return processConnectionDao.addConnection(projectId, connection);
+	public void addConnection(Long projectId, ProcessConnection connection) {
+		processConnectionDao.addConnection(projectId, connection);
 	}
 
 	@Override
-	public Response deleteConnection(Long projectId, ProcessConnection connection) {
-		return processConnectionDao.deleteConnection(projectId, connection);
+	public void deleteConnection(Long projectId, ProcessConnection connection) {
+		processConnectionDao.deleteConnection(projectId, connection);
 	}
 
 	@Override
-	public Response deleteConnection(Long projectId, DataStoreConnectionWithoutAccess connection) {
-		return processConnectionDao.deleteConnection(projectId, connection);
+	public void deleteConnection(Long projectId, DataStoreConnection connection) {
+		processConnectionDao.deleteConnection(projectId, connection);
 	}
 
 	private List<ProcessDetails> getProcessDetails(ProjectTable projectTable) {

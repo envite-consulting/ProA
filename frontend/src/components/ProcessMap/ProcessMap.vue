@@ -437,7 +437,7 @@ export default defineComponent({
     const removeDataStoreLink = async (processid: string, dataStoreId: string) => {
       dataStoreId = dataStoreId.split('-')[1];
       try {
-        await axios.patch(`/api/project/${this.selectedProjectId}/process-map/ds-connection`, {
+        await axios.patch(`/api/project/${this.selectedProjectId}/process-map/datastore-connection`, {
           processid,
           dataStoreId
         }, {
@@ -455,8 +455,8 @@ export default defineComponent({
       const link = linkView.model;
       const callingProcessid = link?.source()?.id?.toString();
       const calledProcessid = link?.target()?.id?.toString();
-      const callingElementType = this.getProcessElementType(link.source().port || '');
-      const calledElementType = this.getProcessElementType(link.target().port || '');
+      const callingElementType = this.getProcessElementType(link.source().port!);
+      const calledElementType = this.getProcessElementType(link.target().port!);
       await removeLinkHelper(callingProcessid, callingElementType, calledProcessid, calledElementType);
     }
 
