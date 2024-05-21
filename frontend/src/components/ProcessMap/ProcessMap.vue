@@ -310,12 +310,20 @@ export default defineComponent({
       }
     });
 
+    const appStore = useAppStore();
+    if (appStore.getProcessModelsChangeFlag()) {
+      this.fetchProcessModels();
+      appStore.unsetProcessModelsChanged();
+      return;
+    }
+
     const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
       Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
+      return;
     }
     const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
     if (!!persistedLayout) {

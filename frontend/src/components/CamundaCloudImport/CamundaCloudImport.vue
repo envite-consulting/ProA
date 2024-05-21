@@ -56,8 +56,10 @@
               </v-btn>
             </v-col>
             <v-col cols="12" sm="12" md="12">
-              <v-text-field :disabled="!token" v-model="creatorEMail" class="text-field__styled" dense color="#26376B"
-                            placeholder="Ersteller E-Mail"></v-text-field>
+              <v-text-field :disabled="!token" v-model="creatorEMail" class="text-field__styled"
+                            dense color="#26376B" placeholder="Ersteller E-Mail"
+                            hint="Optional: Es werden nur Prozessmodelle der angegebenen Ersteller E-Mail abgerufen">
+              </v-text-field>
             </v-col>
             <v-col>
               <v-btn :disabled="!token" color="blue-darken-1" @click="fetchProcessModels">
