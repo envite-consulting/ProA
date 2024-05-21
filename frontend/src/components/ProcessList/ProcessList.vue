@@ -100,10 +100,10 @@
 <style></style>
 
 <script lang="ts">
-import {defineComponent} from 'vue';
+import { defineComponent } from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
-import {useAppStore} from "@/store/app";
+import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 
 declare interface ProcessModel {
