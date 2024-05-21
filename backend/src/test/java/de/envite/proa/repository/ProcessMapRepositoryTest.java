@@ -1,6 +1,7 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
@@ -32,6 +33,8 @@ public class ProcessMapRepositoryTest {
 
 	private static final String CALLING_ELEMENT_ID = "callingElementId";
 	private static final String CALLED_ELEMENT_ID = "calledElementId";
+	
+	private static final String COMMON_LABEL = "event label";
 
 	private static final String DATA_STORE_LABEL = "dataStoreLabel";
 	private static final Long DATA_STORE_ID = 3L;
@@ -82,7 +85,8 @@ public class ProcessMapRepositoryTest {
 		processConnectionTable.setCalledProcess(processModel2);
 		processConnectionTable.setCalledElement(CALLED_ELEMENT_ID);
 		processConnectionTable.setCalledElementType(ProcessElementType.START_EVENT);
-
+		processConnectionTable.setLabel(COMMON_LABEL);
+		
 		when(processConnectionDao.getProcessConnections(any())).thenReturn(Arrays.asList(processConnectionTable));
 
 		DataStoreTable dataStoreTable = new DataStoreTable();
@@ -109,9 +113,9 @@ public class ProcessMapRepositoryTest {
 
 		assertThat(processMap.getConnections())//
 				.hasSize(1)//
-				.extracting("callingProcessid", "callingElementType", "calledProcessid", "calledElementType")//
+				.extracting("callingProcessid", "callingElementType", "calledProcessid", "calledElementType", "label")//
 				.contains(tuple(PROCESS_MODEL_ID_1, ProcessElementType.END_EVENT, PROCESS_MODEL_ID_2,
-						ProcessElementType.START_EVENT));
+						ProcessElementType.START_EVENT, COMMON_LABEL));
 
 		assertThat(processMap.getDataStores())//
 				.hasSize(1)//

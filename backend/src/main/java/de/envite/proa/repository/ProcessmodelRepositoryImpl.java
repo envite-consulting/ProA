@@ -149,6 +149,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCalledProcess(table);
 			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			// called element remains empty
+			connection.setLabel(callActivityTable.getLabel());
 			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
@@ -167,6 +168,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			// start event
 			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			// called element remains empty
+			connection.setLabel(process.getName());
 			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
@@ -218,6 +220,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 
+			connection.setLabel(event.getLabel());
 			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
@@ -247,6 +250,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 
+			connection.setLabel(event.getLabel());
 			connection.setProject(projectTable);
 			processConnectionDao.persist(connection);
 		});
