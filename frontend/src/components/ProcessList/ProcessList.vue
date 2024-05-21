@@ -89,10 +89,10 @@
 <style></style>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import {defineComponent} from 'vue';
 import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
-import { useAppStore } from "@/store/app";
+import {useAppStore} from "@/store/app";
 import getProject from "../projectService";
 
 declare interface ProcessModel {
@@ -174,10 +174,11 @@ export default defineComponent({
       this.processModelFiles.forEach(async (file) => {
         try {
           const content = await readFileContent(file);
-          const { name, description } = parseBPMNContent(content);
+          const {name, description} = parseBPMNContent(content);
+          const fileExtensionMatcher = /\.[^/.]+$/;
           this.processModelsToUpload.push({
             file,
-            name: name || file.name.replace(/\.[^/.]+$/, ""),
+            name: name || file.name.replace(fileExtensionMatcher, ""),
             description,
           });
         } catch (error) {
