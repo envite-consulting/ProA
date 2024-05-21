@@ -213,7 +213,7 @@ export default defineComponent({
       for (const file of this.processModelFiles) {
         try {
           const content = await readFileContent(file);
-          const {name, description} = parseBPMNContent(content);
+          const { name, description } = parseBPMNContent(content);
           this.processModelsToUpload.push({
             file,
             name: name || file.name.replace(this.fileExtensionMatcher, ""),
