@@ -23,7 +23,7 @@
     </v-btn>
   </v-toolbar>
   <v-card :class="selectedProjectName ? 'full-screen-below-toolbar' : 'full-screen'" @mouseup="saveGraphState">
-    <ProcessDetailDialog ref="processDetailDialog"/>
+    <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
     <div id="graph-container" class="full-screen"></div>
     <div style="position: absolute; top: 0; right: 0;">
       <v-list v-if="showLegend">
@@ -41,7 +41,8 @@
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="1.5"></LegendItem>
         <LegendItem text="Endereignis" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="3"></LegendItem>
-        <LegendItem text="Zwischenereignis" path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
+        <LegendItem text="Zwischenereignis"
+                    path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
                     width="30"
                     height="30" view-box="-37 -12 24 24" stroke-width="2"></LegendItem>
         <LegendItem text="Aufrufaktivität"
@@ -72,7 +73,8 @@
                size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up"
+               @click="goUp"
                size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
@@ -111,6 +113,7 @@
   height: calc(100% - 64px) !important;
 }
 
+
 .full-screen {
   width: 100%;
   height: 100%;
@@ -137,6 +140,7 @@ import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
+import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
 
 const scrollStep = 20;
 
@@ -201,6 +205,7 @@ interface FilterGraphInput {
 
 export default defineComponent({
   components: {
+    ProcessDetailSidebar,
     LegendItem,
     ProcessDetailDialog
   },
@@ -229,7 +234,7 @@ export default defineComponent({
     const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
     const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
     const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
-    const hiddenLinks: { [key: string]: string }  = persistedHiddenLinks ?? {} as { [key: string]: string } ;
+    const hiddenLinks: { [key: string]: string } = persistedHiddenLinks ?? {} as { [key: string]: string };
     const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
     const filterGraphInput: FilterGraphInput = reactive(
       !!persistedFilterGraphInput ?
@@ -277,11 +282,16 @@ export default defineComponent({
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
-    const showProcessInfoDialog = (this.processDetailDialog! as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog;
+    const openDetailsSidebar = (model: AbstractProcessShape) => {
+      if (this.$refs.processDetailSidebar) {
+        const processDetailSideBar = this.$refs.processDetailSidebar as InstanceType<typeof ProcessDetailSidebar>;
+        processDetailSideBar.open(model)
+      }
+    }
     paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
         if (!cellView.model.id.toString().startsWith('ds')) {
-          showProcessInfoDialog(+cellView.model.id);
+          openDetailsSidebar(cellView.model as AbstractProcessShape);
         }
       }
     );
@@ -448,7 +458,7 @@ export default defineComponent({
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
 
-          if (!!connection.label){
+          if (!!connection.label) {
             link.appendLabel({
               attrs: {
                 text: {
@@ -590,11 +600,11 @@ export default defineComponent({
         hideConnectionLabels,
       } = this.filterGraphInput;
 
-      if(!hideConnectionLabels){
+      if (!hideConnectionLabels) {
 
         for (const link of graph.getLinks()) {
           const label = this.hiddenLinks[link.id];
-          if (!!label){
+          if (!!label) {
             link.appendLabel({
               attrs: {
                 text: {
@@ -605,7 +615,7 @@ export default defineComponent({
           }
         }
       }
-        
+
       graph.addCells(this.hiddenCells);
       this.hiddenCells = [];
       for (const [cellId, ports] of Object.entries(this.hiddenPorts)) {
@@ -680,10 +690,10 @@ export default defineComponent({
       this.hiddenCells.push(...processesWithoutConnections);
       graph.removeCells(processesWithoutConnections);
 
-      if(hideConnectionLabels){
+      if (hideConnectionLabels) {
         for (const link of graph.getLinks()) {
           const labelText = link.labels()[0]?.attrs!.text!.text;
-          if(!!labelText){
+          if (!!labelText) {
             this.hiddenLinks[link.id] = labelText;
           }
           link.removeLabel();
