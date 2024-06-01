@@ -47,11 +47,11 @@
       <v-card-text>
         <v-container>
           <v-row class="pb-5">
-            <v-col cols="12" sm="12" md="12">
+            <v-col cols="12" sm="12" md="12" class="pt-0">
               <v-file-input v-if="uploadDialogMode === 'multiple'" label="Prozessmodelle" v-model="processModelFiles"
-                            chips multiple @change="handleFileSelection"></v-file-input>
+                            chips multiple @change="handleFileSelection" hide-details></v-file-input>
               <v-file-input v-if="uploadDialogMode === 'single'" label="Prozessmodell" v-model="processModelFiles" chips
-                            @change="handleFileSelection"></v-file-input>
+                            @change="handleFileSelection" hide-details></v-file-input>
             </v-col>
           </v-row>
           <v-row v-for="(file, index) in processModelsToUpload" :key="'file-' + index" class="py-5 mt-0">
@@ -60,7 +60,35 @@
               <v-text-field hide-details label="Name" v-model="file.name"></v-text-field>
             </v-col>
             <v-col cols="12" sm="12" md="12" class="py-1">
-              <v-textarea hide-details rows="3" label="Beschreibung" v-model="file.description"></v-textarea>
+              <v-row no-gutters align="center">
+                <v-col style="position: relative;">
+                  <v-textarea hide-details rows="3" label="Beschreibung" v-model="file.description">
+                  </v-textarea>
+                  <v-overlay
+                    class="align-center justify-center"
+                    :model-value="file.aiLoading"
+                    contained
+                    persistent
+                    scrim="grey"
+                  >
+                    <v-progress-circular
+                      color="primary"
+                      size="24"
+                      indeterminate
+                    ></v-progress-circular>
+                  </v-overlay>
+                </v-col>
+                <v-col class="d-flex justify-end" cols="auto">
+                  <v-tooltip text="Beschreibung mit AI generieren" location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" color="grey" class="ms-2 hover-icon"
+                              @click="generateDescription(file)">
+                        mdi-auto-fix
+                      </v-icon>
+                    </template>
+                  </v-tooltip>
+                </v-col>
+              </v-row>
             </v-col>
           </v-row>
         </v-container>
@@ -97,7 +125,15 @@
 
 </template>
 
-<style></style>
+<style scoped>
+.hover-icon {
+  transition: color 0.3s ease-in-out;
+}
+
+.hover-icon:hover {
+  color: #757575 !important;
+}
+</style>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
@@ -105,11 +141,12 @@ import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 declare interface ProcessModel {
   id: number,
-  processName: string
-  description: string
+  processName: string,
+  description: string,
   createdAt: string
 }
 
@@ -119,9 +156,11 @@ enum UploadDialogMode {
 }
 
 interface ProcessModelToUpload {
-  file: File
-  name: string
-  description: string
+  file: File,
+  name: string,
+  description: string,
+  content: string,
+  aiLoading: boolean
 }
 
 export default defineComponent({
@@ -175,7 +214,7 @@ export default defineComponent({
       })
     },
 
-    openSingleUploadDialog(modelId) {
+    openSingleUploadDialog(modelId: number) {
       this.uploadDialog = true;
       this.uploadDialogMode = UploadDialogMode.SINGLE;
       this.replaceProcessModel = modelId;
@@ -189,16 +228,16 @@ export default defineComponent({
     async handleFileSelection() {
       this.processModelsToUpload = [];
 
-      const readFileContent = (file) => {
+      const readFileContent = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result);
+          reader.onload = (event) => resolve(event.target?.result as string);
           reader.onerror = (error) => reject(error);
           reader.readAsText(file);
         });
       };
 
-      const parseBPMNContent = (content) => {
+      const parseBPMNContent = (content: string) => {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(content, "text/xml");
         const nameElement = xmlDoc.querySelector("bpmn\\:process") || xmlDoc.querySelector("process");
@@ -218,6 +257,8 @@ export default defineComponent({
             file,
             name: name || file.name.replace(this.fileExtensionMatcher, ""),
             description,
+            content,
+            aiLoading: false
           });
         } catch (error) {
           console.error("Error reading file content: ", error);
@@ -281,6 +322,33 @@ export default defineComponent({
       this.progressDialog = false;
       this.replaceProcessModel = null;
       this.progress = 0;
+    },
+
+    async generateDescription(processModelToUpload: ProcessModelToUpload) {
+      processModelToUpload.aiLoading = true;
+
+      const content = processModelToUpload.content;
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+      if (!apiKey) {
+        console.error("No API key found. Please set the GEMINI_API_KEY environment variable.");
+        return;
+      }
+      const genAi = new GoogleGenerativeAI(apiKey);
+      const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const promptInstructions = 'Ich möchte, dass du aus dem folgenden XML-Dokument ' +
+        'eine kurze Beschreibung für einen Geschäftsprozess generierst. ' +
+        'Die Beschreibung soll maximal 1-3 Sätze lang sein. ' +
+        'Bitte achte genaustens darauf, dass die Beschreibung nicht länger als ' +
+        '255 Zeichen lang ist. Sie darf unter keinen Umständen länger sein!\n\n'
+
+      const prompt = promptInstructions + content;
+
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      processModelToUpload.description = response.text().trim();
+
+      processModelToUpload.aiLoading = false;
     }
   }
 })
