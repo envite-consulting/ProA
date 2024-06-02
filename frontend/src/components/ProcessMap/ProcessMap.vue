@@ -286,10 +286,13 @@ export default defineComponent({
       }
     );
 
+    const savePaperLayout = this.savePaperLayout;
+
     paper.on('paper:pinch', function (evt, x, y, sx) {
       evt.preventDefault();
       const { sx: sx0 } = paper.scale();
       paper.scaleUniformAtPoint(sx0 * sx, { x, y });
+      savePaperLayout();
     });
 
     paper.on('paper:pan', function (evt, tx, ty) {
@@ -297,6 +300,7 @@ export default defineComponent({
       evt.stopPropagation();
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - tx, ty0 - ty);
+      savePaperLayout();
     });
 
     paper.on('element:mouseover', (view, evt) => {
@@ -605,7 +609,7 @@ export default defineComponent({
           }
         }
       }
-        
+
       graph.addCells(this.hiddenCells);
       this.hiddenCells = [];
       for (const [cellId, ports] of Object.entries(this.hiddenPorts)) {
