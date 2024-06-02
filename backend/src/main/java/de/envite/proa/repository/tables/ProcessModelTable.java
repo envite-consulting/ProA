@@ -37,6 +37,7 @@ public class ProcessModelTable {
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<ProcessDataStoreTable> dataStores = new ArrayList<>();
 
+	@Lob
 	@Column
 	private String description;
 	
