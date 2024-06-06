@@ -17,6 +17,26 @@ export class AbstractProcessShape extends dia.Element {
     this.hiddenPorts = [];
   }
 
+  highlightStartPort() {
+    const startPortId = "start-" + this.id;
+    this.portProp(startPortId, 'attrs/portBody/stroke', "#0074FA"); // Set fill to blue
+  }
+
+  highlightEndPort() {
+    const endPortId = "end-" + this.id;
+    this.portProp(endPortId, 'attrs/portBody/stroke', "#0074FA"); // Set fill to blue
+  }
+
+  unhighlightStartPort() {
+    const startPortId = "start-" + this.id;
+    this.portProp(startPortId, 'attrs/portBody/stroke', "black"); // Set fill to blue
+  }
+
+  unhighlightEndPort() {
+    const endPortId = "end-" + this.id;
+    this.portProp(endPortId, 'attrs/portBody/stroke', "black"); // Set fill to blue
+  }
+
   defaults() {
     return {
       ...super.defaults,
