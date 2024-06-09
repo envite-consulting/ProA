@@ -3,42 +3,40 @@ package de.envite.proa.repository;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.envite.proa.entities.DataStore;
-import de.envite.proa.entities.DataStoreConnection;
-import de.envite.proa.entities.ProcessConnection;
-import de.envite.proa.entities.ProcessDetails;
-import de.envite.proa.entities.ProcessMap;
-import de.envite.proa.entities.DataStoreConnectionWithoutAccess;
-import de.envite.proa.repository.tables.DataStoreConnectionTable;
-import de.envite.proa.repository.tables.DataStoreTable;
-import de.envite.proa.repository.tables.ProcessConnectionTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.entities.*;
+import de.envite.proa.repository.tables.*;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 
 @ApplicationScoped
 public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
-	private ProjectDao projectDao;
-	private ProcessModelDao processModelDao;
-	private ProcessConnectionDao processConnectionDao;
-	private DataStoreDao dataStoreDao;
-	private DataStoreConnectionDao dataStoreConnectionDao;
+	private final ProjectDao projectDao;
+	private final ProcessModelDao processModelDao;
+	private final ProcessConnectionDao processConnectionDao;
+	private final DataStoreDao dataStoreDao;
+	private final DataStoreConnectionDao dataStoreConnectionDao;
+	private final CallActivityDao callActivityDao;
+	private final ProcessEventDao processEventDao;
 
 	@Inject
 	public ProcessMapRepositoryImpl(ProjectDao projectDao, //
-			ProcessModelDao processModelDao, //
-			ProcessConnectionDao processConnectionDao, //
-			DataStoreDao dataStoreDao, //
-			DataStoreConnectionDao dataStoreConnectionDao) {
+                                    ProcessModelDao processModelDao, //
+                                    ProcessConnectionDao processConnectionDao, //
+                                    DataStoreDao dataStoreDao, //
+                                    DataStoreConnectionDao dataStoreConnectionDao, //
+									CallActivityDao callActivityDao, //
+									ProcessEventDao processEventDao //
+	) {
 		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.processConnectionDao = processConnectionDao;
 		this.dataStoreDao = dataStoreDao;
 		this.dataStoreConnectionDao = dataStoreConnectionDao;
-	}
+        this.callActivityDao = callActivityDao;
+        this.processEventDao = processEventDao;
+    }
 
 	@Override
 	public ProcessMap getProcessMap(Long projectId) {
@@ -59,18 +57,20 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	}
 
 	@Override
-	public Response addConnection(Long projectId, ProcessConnection connection) {
-		return processConnectionDao.addConnection(projectId, connection);
+	public void addConnection(Long projectId, ProcessConnection connection) {
+		System.out.println("adding connection");
+		ProcessConnectionTable processConnection = map(projectId, connection);
+		processConnectionDao.addConnection(processConnection);
 	}
 
 	@Override
-	public Response deleteConnection(Long projectId, ProcessConnection connection) {
-		return processConnectionDao.deleteConnection(projectId, connection);
+	public void deleteProcessConnection(Long connectionId) {
+		processConnectionDao.deleteConnection(connectionId);
 	}
 
 	@Override
-	public Response deleteConnection(Long projectId, DataStoreConnectionWithoutAccess connection) {
-		return processConnectionDao.deleteConnection(projectId, connection);
+	public void deleteDataStoreConnection(Long connectionId) {
+		dataStoreConnectionDao.deleteConnection(connectionId);
 	}
 
 	private List<ProcessDetails> getProcessDetails(ProjectTable projectTable) {
@@ -115,6 +115,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	private DataStoreConnection map(DataStoreConnectionTable table) {
 		DataStoreConnection connection = new DataStoreConnection();
+		connection.setId(table.getId());
 		connection.setProcessid(table.getProcess().getId());
 		connection.setDataStoreId(table.getDataStore().getId());
 		connection.setAccess(table.getAccess());
@@ -123,6 +124,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	private ProcessConnection map(ProcessConnectionTable table) {
 		ProcessConnection connection = new ProcessConnection();
+		connection.setId(table.getId());
 		connection.setCallingProcessid(table.getCallingProcess().getId());
 		connection.setCallingElementType(table.getCallingElementType());
 
@@ -130,4 +132,49 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		connection.setCalledElementType(table.getCalledElementType());
 		return connection;
 	}
+
+	private ProcessConnectionTable map(Long projectId, ProcessConnection connection) {
+		ProcessElementType callingElementType = connection.getCallingElementType();
+		ProcessElementType calledElementType = connection.getCalledElementType();
+		ProcessModelTable callingProcess = processModelDao.find(connection.getCallingProcessid());
+		ProcessModelTable calledProcess = processModelDao.find(connection.getCalledProcessid());
+		String callingElement = getOrCreateElementId(callingElementType, callingProcess);
+		String calledElement = getOrCreateElementId(calledElementType, calledProcess);
+
+		ProcessConnectionTable table = new ProcessConnectionTable();
+		table.setCallingProcess(callingProcess);
+		table.setCalledProcess(calledProcess);
+		table.setCallingElementType(callingElementType);
+		table.setCalledElementType(calledElementType);
+		table.setCallingElement(callingElement);
+		table.setCalledElement(calledElement);
+		table.setProject(projectDao.findById(projectId));
+		return table;
+	}
+
+	private String getOrCreateElementId(ProcessElementType elementType, ProcessModelTable processModel) {
+		if (elementType == ProcessElementType.CALL_ACTIVITY) {
+			CallActivityTable callActivity = callActivityDao.findForProcessModel(processModel);
+			if (callActivity == null) {
+				return "";
+			}
+			return callActivity.getElementId();
+		}
+		EventType eventType = map(elementType);
+		ProcessEventTable processEvent = processEventDao.findForProcessModelAndEventType(processModel, eventType);
+		if (processEvent == null) {
+			return "";
+		}
+		return processEvent.getElementId();
+	}
+
+	private EventType map(ProcessElementType elementType) {
+        return switch (elementType) {
+			case ProcessElementType.START_EVENT -> EventType.START;
+			case ProcessElementType.INTERMEDIATE_CATCH_EVENT -> EventType.INTERMEDIATE_CATCH;
+			case ProcessElementType.INTERMEDIATE_THROW_EVENT -> EventType.INTERMEDIATE_THROW;
+			case ProcessElementType.END_EVENT -> EventType.END;
+            default -> null;
+        };
+    }
 }

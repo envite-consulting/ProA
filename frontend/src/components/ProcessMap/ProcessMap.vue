@@ -170,6 +170,8 @@ type ProcessElementType =
   | "CALL_ACTIVITY";
 
 interface Connection {
+  id: number
+
   callingProcessid: number
   callingElementType: ProcessElementType
 
@@ -185,9 +187,10 @@ interface DataStore {
 type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
 
 interface DataStoreConnection {
-  processid: number
-  dataStoreId: number
-  access: DataAccess
+  id: number;
+  processid: number;
+  dataStoreId: number;
+  access: DataAccess;
 }
 
 interface FilterGraphInput {
@@ -410,74 +413,58 @@ export default defineComponent({
 
     paper.on("link:disconnect", async (linkView, evt, prevElementView, prevMagnet) => {
       const link = linkView.model;
+      const connectionId = link?.attributes?.connectionId;
       const callingProcessid = link?.source()?.id?.toString();
       const calledProcessid = prevElementView.model.id.toString();
-      const callingElementType = this.getProcessElementType(link?.source()?.port || '');
-      const calledElementType = this.getProcessElementType(prevMagnet.getAttribute('port') || '');
-      await removeLinkHelper(callingProcessid, callingElementType, calledProcessid, calledElementType);
+      if (!callingProcessid || !calledProcessid || !connectionId) {
+        console.error("Error while removing connection");
+        return;
+      }
+      await removeLinkHelper(connectionId, callingProcessid, calledProcessid);
     });
 
-    const removeProcessLink = async (callingProcessid: string, callingElementType: string, calledProcessid: string, calledElementType: string) => {
+    const removeProcessLink = async (connectionId: number): Promise<boolean> => {
       try {
-        await axios.patch(`/api/project/${this.selectedProjectId}/process-map/connection`, {
-          callingProcessid,
-          callingElementType,
-          calledProcessid,
-          calledElementType
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        await axios.delete(`/api/project/process-map/process-connection/${connectionId}`);
+        return true;
       } catch (error) {
-        console.error("Error while removing connection:", error);
+        console.error("Error while removing process connection:", error);
+        return false;
       }
     }
 
-    const removeDataStoreLink = async (processid: string, dataStoreId: string) => {
-      dataStoreId = dataStoreId.split('-')[1];
+    const removeDataStoreLink = async (connectionId: number): Promise<boolean> => {
       try {
-        await axios.patch(`/api/project/${this.selectedProjectId}/process-map/ds-connection`, {
-          processid,
-          dataStoreId
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        await axios.delete(`/api/project/process-map/datastore-connection/${connectionId}`);
+        return true;
       } catch (error) {
-        console.error("Error while removing connection:", error);
+        console.error("Error while removing datastore connection:", error);
+        return false;
       }
     }
 
-    const removeLink = async (evt: dia.Event, linkView: dia.LinkView, toolView: dia.ToolView) => {
-      linkView.model.remove({ ui: true, tool: toolView.cid });
+    const removeLink = async (evt: dia.Event, linkView: dia.LinkView, toolView: dia.ToolView): Promise<void> => {
       const link = linkView.model;
+      const connectionId = link?.attributes?.connectionId;
       const callingProcessid = link?.source()?.id?.toString();
       const calledProcessid = link?.target()?.id?.toString();
-      const callingElementType = this.getProcessElementType(link.source().port || '');
-      const calledElementType = this.getProcessElementType(link.target().port || '');
-      await removeLinkHelper(callingProcessid, callingElementType, calledProcessid, calledElementType);
+      if (!callingProcessid || !calledProcessid || !connectionId) {
+        console.error("Error while removing connection");
+        return;
+      }
+      const wasLinkRemoved = await removeLinkHelper(connectionId, callingProcessid, calledProcessid);
+      if (!wasLinkRemoved) {
+        return;
+      }
+      linkView.model.remove({ ui: true, tool: toolView.cid });
     }
 
-    const removeLinkHelper = async (callingProcessid: string | undefined, callingElementType: string | null, calledProcessid: string | undefined, calledElementType: string | null) => {
-      if (!callingProcessid || !calledProcessid) {
-        return;
-      }
-      if (callingProcessid.startsWith('ds')) {
-        await removeDataStoreLink(calledProcessid, callingProcessid);
-        return;
+    const removeLinkHelper = async (connectionId: number, callingProcessid: string, calledProcessid: string): Promise<boolean> => {
+      if (callingProcessid.startsWith('ds') || calledProcessid.startsWith('ds')) {
+        return await removeDataStoreLink(connectionId);
       }
 
-      if (calledProcessid.startsWith('ds')) {
-        await removeDataStoreLink(callingProcessid, calledProcessid);
-        return;
-      }
-      if (!callingElementType || !calledElementType) {
-        return;
-      }
-
-      await removeProcessLink(callingProcessid, callingElementType, calledProcessid, calledElementType);
+      return await removeProcessLink(connectionId);
     }
   },
   methods: {
@@ -584,6 +571,7 @@ export default defineComponent({
           const calledPortPrefix = component.getPortPrefix(connection.calledElementType);
 
           link.set({
+            connectionId: connection.id,
             source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
@@ -620,6 +608,7 @@ export default defineComponent({
             });
 
             link.set({
+              connectionId: connection.id,
               source: { id: connection.processid, port: "call-" + connection.processid },
               target: {
                 id: "ds-" + connection.dataStoreId,
@@ -635,6 +624,7 @@ export default defineComponent({
           } else if (connection.access === "WRITE") {
 
             link.set({
+              connectionId: connection.id,
               source: { id: connection.processid, port: "call-" + connection.processid },
               target: {
                 id: "ds-" + connection.dataStoreId,
@@ -649,6 +639,7 @@ export default defineComponent({
             })
           } else if (connection.access === "READ") {
             link.set({
+              connectionId: connection.id,
               target: { id: connection.processid, port: "call-" + connection.processid },
               source: {
                 id: "ds-" + connection.dataStoreId,
