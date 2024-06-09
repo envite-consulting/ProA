@@ -130,6 +130,8 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 		connection.setCalledProcessid(table.getCalledProcess().getId());
 		connection.setCalledElementType(table.getCalledElementType());
+		
+		connection.setLabel(table.getLabel());
 		return connection;
 	}
 
