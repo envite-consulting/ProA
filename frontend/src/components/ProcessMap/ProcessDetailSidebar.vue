@@ -16,17 +16,53 @@
           <div v-if="details.startEvents && details.startEvents.length > 0" class="mb-2">
             <v-list-subheader>Startaktivitäten</v-list-subheader>
             <v-list-item v-for="(start, index) in details.startEvents" :key="'startEvent-' + index">
-              <v-chip @click="goToProcessModel(start.elementId)" @mouseenter="model!.highlightStartPort()"
-                      @mouseleave="model!.unhighlightStartPort()">{{ start.label || 'Start' }}
+              <v-chip @click="goToProcessModel(start.elementId)"
+                      @mouseenter="model!.highlightPort(ProcessElementType.START_EVENT)"
+                      @mouseleave="model!.unhighlightPort(ProcessElementType.START_EVENT)">{{ start.label || 'Start' }}
               </v-chip>
             </v-list-item>
           </div>
 
-          <div class="mb-2">
+          <div v-if="details.endEvents && details.endEvents.length > 0" class="mb-2">
             <v-list-subheader>Endaktivitäten</v-list-subheader>
             <v-list-item v-for="(end, index) in details.endEvents" :key="'endEvent' + index">
-              <v-chip @click="goToProcessModel(end.elementId)" @mouseenter="model!.highlightEndPort()"
-                      @mouseleave="model!.unhighlightEndPort()">{{ end.label || 'Ende' }}
+              <v-chip @click="goToProcessModel(end.elementId)"
+                      @mouseenter="model!.highlightPort(ProcessElementType.END_EVENT)"
+                      @mouseleave="model!.unhighlightPort(ProcessElementType.END_EVENT)">{{ end.label || 'Ende' }}
+              </v-chip>
+            </v-list-item>
+          </div>
+
+          <div v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" class="mb-2">
+            <v-list-subheader>Zwischenereignisse fangend</v-list-subheader>
+            <v-list-item v-for="(event, index) in details.intermediateCatchEvents" :key="'endEvent' + index">
+              <v-chip @click="goToProcessModel(event.elementId)"
+                      @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)"
+                      @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)">
+                {{ event.label || 'Zwischenereignis' }}
+              </v-chip>
+            </v-list-item>
+          </div>
+
+          <div v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" class="mb-2">
+            <v-list-subheader>Zwischenereignisse werfend</v-list-subheader>
+            <v-list-item v-for="(event, index) in details.intermediateThrowEvents"
+                         :key="'intermediateThrowEvent' + index">
+              <v-chip @click="goToProcessModel(event.elementId)"
+                      @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)"
+                      @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)">
+                {{ event.label || 'Zwischenereignise' }}
+              </v-chip>
+            </v-list-item>
+          </div>
+
+          <div v-if="details.activities && details.activities.length > 0" class="mb-2">
+            <v-list-subheader>Aufrufaktivitäten</v-list-subheader>
+            <v-list-item v-for="(activity, index) in details.activities" :key="'activity' + index">
+              <v-chip @click="goToProcessModel(activity.elementId)"
+                      @mouseenter="model!.highlightPort(ProcessElementType.CALL_ACTIVITY)"
+                      @mouseleave="model!.unhighlightPort(ProcessElementType.CALL_ACTIVITY)">
+                {{ activity.label || 'Aktivitär' }}
               </v-chip>
             </v-list-item>
           </div>
@@ -85,6 +121,7 @@ import { Process } from '@/components/ProcessDetailDialog.vue';
 import axios from 'axios';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { AbstractProcessShape } from "@/components/ProcessMap/jointjs/AbstractProcessElement";
+import { ProcessElementType } from "@/components/ProcessMap/ProcessMap.vue";
 
 interface RouteObject {
   path: string,
@@ -95,6 +132,11 @@ interface RouteObject {
 
 export default defineComponent({
   name: 'ProcessDetailSidebar',
+  computed: {
+    ProcessElementType() {
+      return ProcessElementType
+    }
+  },
   data: () => ({
     showSidebar: false as boolean,
     details: {} as Process,
@@ -142,8 +184,9 @@ export default defineComponent({
     },
     unhighlightPorts() {
       if (this.model) {
-        this.model.unhighlightStartPort();
-        this.model.unhighlightEndPort();
+        for (const elementType of Object.values(ProcessElementType)) {
+          this.model.unhighlightPort(elementType);
+        }
       }
     },
     saveGraphState() {
