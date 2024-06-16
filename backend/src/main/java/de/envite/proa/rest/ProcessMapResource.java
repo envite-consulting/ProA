@@ -13,7 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 public class ProcessMapResource {
 
 	@Inject
-	public ProcessMapUsecase usecase;
+	private ProcessMapUsecase usecase;
 
 	@GET
 	@Path("/project/{projectId}/process-map")
