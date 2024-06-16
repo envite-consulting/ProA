@@ -58,7 +58,6 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	@Override
 	public void addConnection(Long projectId, ProcessConnection connection) {
-		System.out.println("adding connection");
 		ProcessConnectionTable processConnection = map(projectId, connection);
 		processConnectionDao.addConnection(processConnection);
 	}
