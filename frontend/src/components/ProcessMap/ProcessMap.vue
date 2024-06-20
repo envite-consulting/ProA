@@ -7,9 +7,13 @@
       </div>
     </v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-btn icon @click="fetchProcessInstances">
-      <v-icon>mdi-play</v-icon>
-    </v-btn>
+    <v-tooltip text="Prozessinstanzen abrufen" location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn icon v-bind="props" @click="openConnectionDialog">
+          <v-icon>mdi-play</v-icon>
+        </v-btn>
+      </template>
+    </v-tooltip>
     <v-btn icon @click="toggleLegend">
       <v-icon>mdi-map-legend</v-icon>
     </v-btn>
@@ -26,7 +30,7 @@
     </v-btn>
   </v-toolbar>
   <v-card :class="selectedProjectName ? 'full-screen-below-toolbar' : 'full-screen'" @mouseup="saveGraphState">
-    <ProcessDetailDialog ref="processDetailDialog"/>
+    <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
     <div id="graph-container" class="full-screen"></div>
     <div style="position: absolute; top: 0; right: 0;">
       <v-list v-if="showLegend">
@@ -44,7 +48,8 @@
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="1.5"></LegendItem>
         <LegendItem text="Endereignis" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="3"></LegendItem>
-        <LegendItem text="Zwischenereignis" path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
+        <LegendItem text="Zwischenereignis"
+                    path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
                     width="30"
                     height="30" view-box="-37 -12 24 24" stroke-width="2"></LegendItem>
         <LegendItem text="Aufrufaktivität"
@@ -75,7 +80,8 @@
                size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
+        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up"
+               @click="goUp"
                size="large"/>
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
@@ -106,6 +112,39 @@
     </ul>
     <span v-if="tooltipList.length === 0">Keine Informationen vorhanden</span>
   </v-tooltip>
+
+  <v-dialog v-model="isConnectionDialogOpened" max-width="600">
+    <v-card title="Mit Camunda Operate API verbinden">
+      <v-card-text>
+        <div class="my-2">
+          <v-text-field label="Client ID" v-model="settings.operateClientId" :error-messages="operateError" hide-details
+                        class="mb-2" @input="operateError = ''" :loading="isValidating" :disabled="isValidating">
+          </v-text-field>
+          <v-text-field label="Client Secret" v-model="settings.operateClientSecret"
+                        :type="showOperateClientSecret ? 'text' : 'password'"
+                        :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
+                        @click:append-inner="showOperateClientSecret = !showOperateClientSecret"
+                        :error-messages="operateError" @input="operateError = ''" :loading="isValidating"
+                        :disabled="isValidating">
+          </v-text-field>
+          <v-checkbox color="blue-darken-1" label="Informationen speichern?" v-model="saveConnectionInfo"></v-checkbox>
+        </div>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="blue-darken-1"
+          text="Verbinden"
+          @click="fetchProcessInstances">
+        </v-btn>
+        <v-btn
+          color="blue-darken-1"
+          text="Schließen"
+          @click="isConnectionDialogOpened = false"
+        ></v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style>
@@ -113,6 +152,7 @@
   width: 100%;
   height: calc(100% - 64px) !important;
 }
+
 
 .full-screen {
   width: 100%;
@@ -140,6 +180,8 @@ import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
+import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
+import { Settings } from "@/layouts/default/AppBar.vue";
 
 const scrollStep = 20;
 
@@ -163,12 +205,13 @@ interface Process {
   activities: Activity[]
 }
 
-type ProcessElementType =
-  "START_EVENT"
-  | "INTERMEDIATE_CATCH_EVENT"
-  | "INTERMEDIATE_THROW_EVENT"
-  | "END_EVENT"
-  | "CALL_ACTIVITY";
+export enum ProcessElementType {
+  START_EVENT = "START_EVENT",
+  INTERMEDIATE_CATCH_EVENT = "INTERMEDIATE_CATCH_EVENT",
+  INTERMEDIATE_THROW_EVENT = "INTERMEDIATE_THROW_EVENT",
+  END_EVENT = "END_EVENT",
+  CALL_ACTIVITY = "CALL_ACTIVITY"
+}
 
 interface Connection {
   callingProcessid: number
@@ -176,6 +219,8 @@ interface Connection {
 
   calledProcessid: number
   calledElementType: ProcessElementType
+
+  label: string
 }
 
 interface DataStore {
@@ -197,10 +242,29 @@ interface FilterGraphInput {
   hideIntermediateEvents: boolean;
   hideStartEndEvents: boolean;
   hideProcessesWithoutConnections: boolean;
+  hideConnectionLabels: boolean;
+}
+
+export const getPortPrefix = (elementType: ProcessElementType): string => {
+  switch (elementType) {
+    case ProcessElementType.START_EVENT:
+      return 'start-';
+    case ProcessElementType.INTERMEDIATE_CATCH_EVENT:
+      return 'i-catch-event-';
+    case ProcessElementType.INTERMEDIATE_THROW_EVENT:
+      return 'i-throw-event-';
+    case ProcessElementType.END_EVENT:
+      return 'end-'
+    case ProcessElementType.CALL_ACTIVITY:
+      return 'call-'
+    default:
+      return '';
+  }
 }
 
 export default defineComponent({
   components: {
+    ProcessDetailSidebar,
     LegendItem,
     ProcessDetailDialog
   },
@@ -215,7 +279,13 @@ export default defineComponent({
     portsInformation: {} as { [key: string]: string[] },
     tooltipList: [] as string[],
     store: useAppStore(),
-    showLegend: false
+    showLegend: false,
+    settings: {} as Settings,
+    operateError: '' as string,
+    isValidating: false as boolean,
+    isConnectionDialogOpened: false as boolean,
+    showOperateClientSecret: false as boolean,
+    saveConnectionInfo: true as boolean
   }),
   setup() {
     const appStore = useAppStore();
@@ -228,6 +298,8 @@ export default defineComponent({
     } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
     const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
     const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+    const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
+    const hiddenLinks: { [key: string]: string } = persistedHiddenLinks ?? {} as { [key: string]: string };
     const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
     const filterGraphInput: FilterGraphInput = reactive(
       !!persistedFilterGraphInput ?
@@ -237,14 +309,16 @@ export default defineComponent({
           hideCallActivities: false,
           hideIntermediateEvents: false,
           hideStartEndEvents: false,
-          hideProcessesWithoutConnections: false
+          hideProcessesWithoutConnections: false,
+          hideConnectionLabels: false,
         });
     const filterOptions = {
       hideAbstractDataStores: 'Ressourcen',
       hideCallActivities: 'Aufrufaktivitäten',
       hideIntermediateEvents: 'Zwischenereignisse',
       hideStartEndEvents: 'End- zu Start-Verbindungen',
-      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen'
+      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen',
+      hideConnectionLabels: "Verbindungslabels",
     };
     const filtersCount = computed(() => {
       return Object.values(filterGraphInput).filter(value => value === true).length;
@@ -254,6 +328,7 @@ export default defineComponent({
       showFilterMenu,
       hiddenPorts,
       hiddenCells,
+      hiddenLinks,
       filterGraphInput,
       filterOptions,
       filtersCount
@@ -272,19 +347,27 @@ export default defineComponent({
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
-    const showProcessInfoDialog = (this.processDetailDialog! as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog;
+    const openDetailsSidebar = (model: AbstractProcessShape) => {
+      if (this.$refs.processDetailSidebar) {
+        const processDetailSideBar = this.$refs.processDetailSidebar as InstanceType<typeof ProcessDetailSidebar>;
+        processDetailSideBar.open(model)
+      }
+    }
     paper.on('cell:pointerdblclick',
       function (cellView, evt, x, y) {
         if (!cellView.model.id.toString().startsWith('ds')) {
-          showProcessInfoDialog(+cellView.model.id);
+          openDetailsSidebar(cellView.model as AbstractProcessShape);
         }
       }
     );
+
+    const savePaperLayout = this.savePaperLayout;
 
     paper.on('paper:pinch', function (evt, x, y, sx) {
       evt.preventDefault();
       const { sx: sx0 } = paper.scale();
       paper.scaleUniformAtPoint(sx0 * sx, { x, y });
+      savePaperLayout();
     });
 
     paper.on('paper:pan', function (evt, tx, ty) {
@@ -292,6 +375,7 @@ export default defineComponent({
       evt.stopPropagation();
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - tx, ty0 - ty);
+      savePaperLayout();
     });
 
     paper.on('element:mouseover', (view, evt) => {
@@ -313,12 +397,20 @@ export default defineComponent({
       }
     });
 
+    const appStore = useAppStore();
+    if (appStore.getProcessModelsChangeFlag()) {
+      this.fetchProcessModels();
+      appStore.unsetProcessModelsChanged();
+      return;
+    }
+
     const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
     if (!!persistedGraph) {
       Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
+      return;
     }
     const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
     if (!!persistedLayout) {
@@ -375,8 +467,9 @@ export default defineComponent({
     saveFilters() {
       this.store.setFiltersForProject(this.store.selectedProjectId!, JSON.stringify(this.filterGraphInput));
     },
-    saveHiddenCells() {
+    saveHiddenElements() {
       this.store.setHiddenCellsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenCells));
+      this.store.setHiddenLinksForProject(this.store.selectedProjectId!, this.hiddenLinks);
     },
     saveHiddenPorts() {
       this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
@@ -391,10 +484,11 @@ export default defineComponent({
       this.filterGraphInput['hideCallActivities'] = false;
       this.filterGraphInput['hideProcessesWithoutConnections'] = false;
       this.filterGraphInput['hideAbstractDataStores'] = false;
+      this.filterGraphInput['hideConnectionLabels'] = false;
       this.hiddenCells = [];
       this.hiddenPorts = {};
       this.saveFilters();
-      this.saveHiddenCells();
+      this.saveHiddenElements();
       this.saveHiddenPorts();
       this.closeMenus();
     },
@@ -425,13 +519,24 @@ export default defineComponent({
 
           const link = new shapes.standard.Link();
 
-          const callingPortPrefix = component.getPortPrefix(connection.callingElementType);
-          const calledPortPrefix = component.getPortPrefix(connection.calledElementType);
+          const callingPortPrefix = getPortPrefix(connection.callingElementType);
+          const calledPortPrefix = getPortPrefix(connection.calledElementType);
 
           link.set({
             source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
+
+          if (!!connection.label) {
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: connection.label
+                }
+              }
+            });
+          }
+
           return link;
         });
 
@@ -526,22 +631,6 @@ export default defineComponent({
         this.saveGraphState();
       })
     },
-    getPortPrefix(elementType: ProcessElementType) {
-      switch (elementType) {
-        case 'START_EVENT':
-          return 'start-';
-        case 'INTERMEDIATE_CATCH_EVENT':
-          return 'i-catch-event-';
-        case 'INTERMEDIATE_THROW_EVENT':
-          return 'i-throw-event-';
-        case 'END_EVENT':
-          return 'end-'
-        case 'CALL_ACTIVITY':
-          return 'call-'
-        default:
-          return '';
-      }
-    },
     toggleLegend() {
       if (!this.showLegend) {
         this.closeMenus();
@@ -560,8 +649,25 @@ export default defineComponent({
         hideCallActivities,
         hideIntermediateEvents,
         hideStartEndEvents,
-        hideProcessesWithoutConnections
+        hideProcessesWithoutConnections,
+        hideConnectionLabels,
       } = this.filterGraphInput;
+
+      if (!hideConnectionLabels) {
+
+        for (const link of graph.getLinks()) {
+          const label = this.hiddenLinks[link.id];
+          if (!!label) {
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: label
+                }
+              }
+            });
+          }
+        }
+      }
 
       graph.addCells(this.hiddenCells);
       this.hiddenCells = [];
@@ -633,13 +739,48 @@ export default defineComponent({
         }
 
       }
+
       this.hiddenCells.push(...processesWithoutConnections);
       graph.removeCells(processesWithoutConnections);
 
+      if (hideConnectionLabels) {
+        for (const link of graph.getLinks()) {
+          const labelText = link.labels()[0]?.attrs!.text!.text;
+          if (!!labelText) {
+            this.hiddenLinks[link.id] = labelText;
+          }
+          link.removeLabel();
+        }
+      }
+
       this.saveGraphState();
       this.saveFilters();
-      this.saveHiddenCells();
+      this.saveHiddenElements();
       this.saveHiddenPorts();
+    },
+    connectToOperate() {
+      if (!this.settings.operateClientId || !this.settings.operateClientSecret) {
+        return;
+      }
+      this.isConnectionDialogOpened = false;
+    },
+    openConnectionDialog() {
+      if (this.settings.operateClientId && this.settings.operateClientSecret) {
+        try {
+          this.fetchProcessInstances();
+        } catch (error) {
+          this.resetAndOpenConnectionDialog();
+        }
+      } else {
+        this.resetAndOpenConnectionDialog();
+      }
+    },
+    resetAndOpenConnectionDialog() {
+      this.showOperateClientSecret = false;
+      this.operateError = '';
+      this.isValidating = false;
+      this.saveConnectionInfo = true;
+      this.isConnectionDialogOpened = true;
     },
     fetchProcessInstances() {
       for (const cell of graph.getCells()) {

@@ -35,6 +35,14 @@
 import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
 
+export interface Settings {
+  geminiApiKey: string;
+  modelerClientId: string;
+  modelerClientSecret: string;
+  operateClientId: string;
+  operateClientSecret: string;
+}
+
 export default defineComponent({
   methods: { useAppStore },
   data: () => ({

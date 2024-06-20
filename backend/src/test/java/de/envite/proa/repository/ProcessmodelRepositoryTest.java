@@ -119,6 +119,8 @@ public class ProcessmodelRepositoryTest {
 		assertThat(connection.getCallingProcess().getName()).isEqualTo(NEW_PROCESS_MODEL_NAME);
 		assertThat(connection.getCallingElement()).isEqualTo(NEW_EVENT_ID);
 		assertThat(connection.getCallingElementType()).isEqualTo(ProcessElementType.END_EVENT);
+		
+		assertThat(connection.getLabel()).isEqualTo(COMMON_EVENT_LABEL);
 	}
 
 	@Test
@@ -174,6 +176,8 @@ public class ProcessmodelRepositoryTest {
 		assertThat(connection.getCallingProcess().getName()).isEqualTo(EXISTING_PROCESS_MODEL_NAME);
 		assertThat(connection.getCallingElement()).isEqualTo(EXISTING_EVENT_ID);
 		assertThat(connection.getCallingElementType()).isEqualTo(ProcessElementType.END_EVENT);
+		
+		assertThat(connection.getLabel()).isEqualTo(COMMON_EVENT_LABEL);
 	}
 
 	@Test
@@ -223,6 +227,8 @@ public class ProcessmodelRepositoryTest {
 		assertThat(connection.getCalledProcess().getName()).isEqualTo(EXISTING_PROCESS_MODEL_NAME);
 		assertThat(connection.getCalledElement()).isNull();
 		assertThat(connection.getCalledElementType()).isEqualTo(ProcessElementType.START_EVENT);
+		
+		assertThat(connection.getLabel()).isEqualTo(EXISTING_PROCESS_MODEL_NAME);
 	}
 
 	@Test
@@ -272,6 +278,8 @@ public class ProcessmodelRepositoryTest {
 		assertThat(connection.getCalledProcess().getName()).isEqualTo(NEW_PROCESS_MODEL_NAME);
 		assertThat(connection.getCalledElement()).isNull();
 		assertThat(connection.getCalledElementType()).isEqualTo(ProcessElementType.START_EVENT);
+		
+		assertThat(connection.getLabel()).isEqualTo(NEW_PROCESS_MODEL_NAME);
 	}
 
 	@Test

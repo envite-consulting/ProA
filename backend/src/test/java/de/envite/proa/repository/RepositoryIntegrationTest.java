@@ -123,8 +123,8 @@ public class RepositoryIntegrationTest {
 
 		assertThat(processMap.getConnections())//
 				.hasSize(1)//
-				.extracting("callingProcessid", "callingElementType", "calledProcessid", "calledElementType")//
-				.contains(tuple(processId2, ProcessElementType.END_EVENT, processId1, ProcessElementType.START_EVENT));
+				.extracting("callingProcessid", "callingElementType", "calledProcessid", "calledElementType", "label")//
+				.contains(tuple(processId2, ProcessElementType.END_EVENT, processId1, ProcessElementType.START_EVENT, EVENT_LABEL));
 
 		assertThat(processMap.getDataStores())//
 				.hasSize(1)//
