@@ -40,12 +40,19 @@
               Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
-              <v-text-field v-model="clientId" class="text-field__styled" dense color="#26376B"
+              <v-text-field v-model="settings.modelerClientId" class="text-field__styled" dense color="#26376B"
                             placeholder="Client ID"></v-text-field>
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
-              <v-text-field v-model="clientSecret" class="text-field__styled" dense color="#26376B"
-                            placeholder="Client Secret" type="password"></v-text-field>
+              <v-text-field v-model="settings.modelerClientSecret" class="text-field__styled" dense color="#26376B"
+                            placeholder="Client Secret"
+                            :type="showOperateClientSecret ? 'text' : 'password'"
+                            :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
+                            @click:append-inner="showOperateClientSecret = !showOperateClientSecret"></v-text-field>
+            </v-col>
+            <v-col v-if="!token" cols="12" sm="12" md="12">
+              <v-checkbox v-model="saveClientInformation" label="Informationen speichern?" color="primary"
+                          hide-details></v-checkbox>
             </v-col>
             <v-col v-if="tokenError">
               Es ist ein Fehler aufgetreten!
@@ -89,7 +96,7 @@
   <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
-             @click="camundaCloudDialog = true" size="large"/>
+             @click="openDialog" size="large"/>
     </v-fab-transition>
   </div>
 </template>
@@ -97,8 +104,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { useAppStore } from "../../store/app";
+import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
+import { Settings } from "@/layouts/default/AppBar.vue";
 
 declare interface ProcessModel {
   id: string,
@@ -109,12 +117,15 @@ declare interface ProcessModel {
   }
 }
 
+const appStore = useAppStore();
+
 export default defineComponent({
   data: () => ({
+    showOperateClientSecret: false as boolean,
     camundaCloudDialog: false as boolean,
     loadingDialog: false as boolean,
-    clientId: "" as string,
-    clientSecret: "" as string,
+    settings: {} as Settings,
+    saveClientInformation: true as boolean,
     creatorEMail: null,
     processModels: [] as ProcessModel[],
     selectedProcessModels: [] as ProcessModel[],
@@ -135,14 +146,20 @@ export default defineComponent({
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
       this.selectedVersionName = result.data.version;
-    })
+    });
+    this.fetchSettings();
   },
   methods: {
+    async openDialog() {
+      this.showOperateClientSecret = false;
+      await this.fetchSettings();
+      this.camundaCloudDialog = true;
+    },
     fetchToken() {
       this.loadingDialog = true;
       axios.post("/api/camunda-cloud/token", {
-        "client_id": this.clientId,
-        "client_secret": this.clientSecret,
+        "client_id": this.settings.modelerClientId,
+        "client_secret": this.settings.modelerClientSecret,
       }).then(result => {
         console.log(result);
         this.token = result.data;
@@ -154,12 +171,15 @@ export default defineComponent({
         this.loadingDialog = false;
       })
     },
-    fetchProcessModels() {
+    async fetchProcessModels() {
       this.loadingDialog = true;
       axios.post("/api/camunda-cloud", {
         "token": this.token,
         "email": this.creatorEMail,
-      }).then(result => {
+      }).then(async result => {
+        if (this.saveClientInformation) {
+          await this.saveSettings();
+        }
         this.processModels = result.data.items;
         this.camundaCloudDialog = false;
         this.loadingDialog = false;
@@ -171,7 +191,6 @@ export default defineComponent({
       })
     },
     importProcessModels() {
-
       this.loadingDialog = true;
       const selectedProcessModelIds: string[] = this.selectedProcessModels.map(model => {
         return model.id;
@@ -188,6 +207,37 @@ export default defineComponent({
         console.log(error);
         this.loadingDialog = false;
       });
+    },
+    async fetchSettings() {
+      try {
+        await axios.get("/api/settings").then(result => {
+          this.settings = result.data;
+        });
+      } catch (error) {
+        this.settings = {} as Settings;
+      }
+
+      this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+      this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
+      this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
+    },
+    async saveSettings() {
+      const doSettingsExist = async () => {
+        try {
+          await axios.get("/api/settings");
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      if (await doSettingsExist()) {
+        await axios.patch("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
+      } else {
+        await axios.post("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
+      }
     }
   }
 })
