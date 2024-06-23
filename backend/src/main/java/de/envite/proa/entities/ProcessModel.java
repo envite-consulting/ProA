@@ -23,4 +23,6 @@ public class ProcessModel {
     private List<ProcessDataStore> dataStores = new ArrayList<>();
 
     private String description;
+
+    private String bpmnProcessId;
 }

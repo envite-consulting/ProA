@@ -25,6 +25,7 @@ public class ProcessmodelMapper {
 		table.setDataStores(mapDataStore(processModel.getDataStores(), table));
 		table.setDescription(processModel.getDescription());
 		table.setProject(projectTable);
+		table.setBpmnProcessId(processModel.getBpmnProcessId());
 		return table;
 	}
 

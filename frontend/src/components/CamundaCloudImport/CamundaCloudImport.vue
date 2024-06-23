@@ -138,7 +138,7 @@ export default defineComponent({
 
   watch: {},
   mounted: function () {
-    this.selectedProjectId = useAppStore().selectedProjectId;
+    this.selectedProjectId = appStore.selectedProjectId;
     if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
@@ -161,7 +161,6 @@ export default defineComponent({
         "client_id": this.settings.modelerClientId,
         "client_secret": this.settings.modelerClientSecret,
       }).then(result => {
-        console.log(result);
         this.token = result.data;
         this.tokenError = false;
         this.loadingDialog = false;

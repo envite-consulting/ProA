@@ -24,7 +24,7 @@
         v-for="item in items"
         :key="item.title"
         dense
-        :disabled="!useAppStore().selectedProjectId && item.title !== 'Projektübersicht'"
+        :disabled="!appStore.selectedProjectId && item.title !== 'Projektübersicht'"
       >
         {{ item.title }}
       </v-list-item>
@@ -32,7 +32,7 @@
   </v-navigation-drawer>
 
   <v-navigation-drawer
-    v-model="openSettings"
+    v-model="appStore.areSettingsOpened"
     location="right"
     temporary
     width="400"
@@ -69,14 +69,17 @@
       </div>
       <div class="mt-2 mb-4">
         <p class="text-subtitle-1 text-grey-darken-2 mb-1">Camunda Operate Verbindung</p>
-        <v-text-field label="Client ID" v-model="settings.operateClientId" :error-messages="operateError" hide-details
-                      class="mb-2" @input="operateError = ''" :loading="isValidating" :disabled="isValidating">
+        <v-text-field label="Client ID" v-model="settings.operateClientId"
+                      :error-messages="appStore.operateConnectionError" hide-details
+                      class="mb-2" @input="appStore.setOperateConnectionError('')" :loading="isValidating"
+                      :disabled="isValidating">
         </v-text-field>
         <v-text-field label="Client Secret" v-model="settings.operateClientSecret"
                       :type="showOperateClientSecret ? 'text' : 'password'"
                       :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append-inner="showOperateClientSecret = !showOperateClientSecret"
-                      :error-messages="operateError" @input="operateError = ''" :loading="isValidating"
+                      :error-messages="appStore.operateConnectionError" @input="appStore.setOperateConnectionError('')"
+                      :loading="isValidating"
                       :disabled="isValidating">
         </v-text-field>
       </div>
@@ -124,18 +127,14 @@ export interface Settings {
 
 export default defineComponent({
   data: () => ({
+    appStore: useAppStore(),
     drawer: false as boolean,
     settings: {} as Settings,
-    openSettings: false as boolean,
     showApiKey: false as boolean,
     apiKeyError: "" as string,
-    apiKeySuccess: false as boolean,
     showModelerClientSecret: false as boolean,
     modelerError: "" as string,
-    modelerSuccess: false as boolean,
     showOperateClientSecret: false as boolean,
-    operateError: "" as string,
-    operateSuccess: false as boolean,
     group: null,
     isValidating: false as boolean,
     items: [
@@ -159,10 +158,11 @@ export default defineComponent({
   }),
 
   methods: {
-    useAppStore,
-    async toggleSettings() {
-      this.openSettings = !this.openSettings;
-      if (!this.openSettings) {
+    toggleSettings() {
+      this.appStore.setAreSettingsOpened(!this.appStore.getAreSettingsOpened());
+    },
+    async handleAfterToggle() {
+      if (!this.appStore.getAreSettingsOpened()) {
         await this.resetSettingsBar();
       } else {
         await this.fetchSettings();
@@ -190,10 +190,12 @@ export default defineComponent({
         await axios.post("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
       }
 
-      await this.toggleSettings();
+      this.toggleSettings();
     },
     async validateSettings(): Promise<boolean> {
       this.isValidating = true;
+      const operateConnectionInvalidMsg = "Camunda Operate Verbindung ungültig";
+      const operateConnectionError = this.appStore.getOperateConnectionError();
       this.resetValidation();
 
       const [isAPIKeyValid, isModelerConnectionValid, isOperateConnectionValid] = await Promise.all([
@@ -203,20 +205,14 @@ export default defineComponent({
       ]);
       this.isValidating = false;
 
-      const {
-        geminiApiKey,
-        modelerClientId,
-        modelerClientSecret,
-        operateClientId,
-        operateClientSecret
-      } = this.settings;
+      if (operateConnectionError !== operateConnectionInvalidMsg) {
+        this.appStore.setOperateConnectionError(operateConnectionError);
+      }
+
       if (!isAPIKeyValid || !isModelerConnectionValid || !isOperateConnectionValid) {
         if (!isAPIKeyValid) this.apiKeyError = "API Key ungültig";
-        if (geminiApiKey && isAPIKeyValid) this.apiKeySuccess = true;
         if (!isModelerConnectionValid) this.modelerError = "Camunda Modeler Verbindung ungültig";
-        if (modelerClientId && modelerClientSecret && isModelerConnectionValid) this.modelerSuccess = true;
-        if (!isOperateConnectionValid) this.operateError = "Camunda Operate Verbindung ungültig";
-        if (operateClientId && operateClientSecret && isOperateConnectionValid) this.operateSuccess = true;
+        if (!isOperateConnectionValid) this.appStore.setOperateConnectionError(operateConnectionInvalidMsg);
         return false;
       }
       return true;
@@ -275,10 +271,7 @@ export default defineComponent({
     resetValidation() {
       this.apiKeyError = "";
       this.modelerError = "";
-      this.operateError = "";
-      this.apiKeySuccess = false;
-      this.modelerSuccess = false;
-      this.operateSuccess = false;
+      this.appStore.setOperateConnectionError("");
     },
     async fetchSettings() {
       try {
@@ -310,6 +303,9 @@ export default defineComponent({
     group() {
       this.drawer = false;
     },
+    'appStore.areSettingsOpened'() {
+      this.handleAfterToggle();
+    }
   },
 })
 </script>

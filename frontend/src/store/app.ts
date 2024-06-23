@@ -25,7 +25,9 @@ export const useAppStore = defineStore('app', {
       hiddenCellsByProject: {} as { [key: number]: string },
       hiddenPortsByProject: {} as { [key: number]: string },
       hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
-      processModelsChangeFlag: false as boolean
+      processModelsChangeFlag: false as boolean,
+      areSettingsOpened: false as boolean,
+      operateConnectionError: '' as string
     }
   },
   actions: {
@@ -87,6 +89,18 @@ export const useAppStore = defineStore('app', {
     },
     getProcessModelsChangeFlag() {
       return this.processModelsChangeFlag
+    },
+    setAreSettingsOpened(opened: boolean) {
+      this.areSettingsOpened = opened;
+    },
+    getAreSettingsOpened() {
+      return this.areSettingsOpened
+    },
+    setOperateConnectionError(error: string) {
+      this.operateConnectionError = error
+    },
+    getOperateConnectionError() {
+      return this.operateConnectionError
     }
   },
   persist: {
@@ -101,7 +115,9 @@ export const useAppStore = defineStore('app', {
       'hiddenPortsByProject',
       'portsInformationByProject',
       'hiddenLinksByProject',
-      'processModelsChangeFlag'
+      'processModelsChangeFlag',
+      'areSettingsOpened',
+      'operateConnectionError'
     ]
   },
 })

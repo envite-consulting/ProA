@@ -24,6 +24,8 @@ public class ProcessModelTable {
 
 	private String name;
 
+	private String bpmnProcessId;
+
 	@Lob
 	@Column
 	private String bpmnXml;

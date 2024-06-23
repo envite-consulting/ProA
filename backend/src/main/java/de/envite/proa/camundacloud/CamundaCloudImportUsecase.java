@@ -15,6 +15,9 @@ public class CamundaCloudImportUsecase {
 	@RestClient
 	private CamundaModelerService camundaModelerService;
 
+	@RestClient
+	private CamundaOperateService camundaOperateService;
+
 	@Inject
 	private ProcessModelUsecase usecase;
 
@@ -25,8 +28,12 @@ public class CamundaCloudImportUsecase {
 		return camundaModelerService.getProcessModels("Bearer " + configuration.getToken(), search);
 	}
 
-	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config) {
+	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
+		ProcessInstancesFilter filter = new ProcessInstancesFilter();
+		return camundaOperateService.getProcessInstances("Bearer " + configuration.getToken(), filter);
+	}
 
+	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config) {
 		for (String id : config.getSelectedProcessModelIds()) {
 			CamundaProcessModelResponse processModel = camundaModelerService
 					.getProcessModel("Bearer " + config.getToken(), id);
@@ -35,9 +42,7 @@ public class CamundaCloudImportUsecase {
 	}
 
 	private String getProcessXml(CamundaProcessModelResponse processModel) {
-		String content = processModel.getContent();
-		System.out.println(content);
-		return content;
+		return processModel.getContent();
 	}
 
 	public String getToken(CloudCredentials credentials) {

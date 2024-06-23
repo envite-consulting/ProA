@@ -9,7 +9,7 @@
     <v-spacer></v-spacer>
     <v-tooltip text="Prozessinstanzen abrufen" location="bottom">
       <template v-slot:activator="{ props }">
-        <v-btn icon v-bind="props" @click="openConnectionDialog">
+        <v-btn icon v-bind="props" @click="handleFetchProcessInstances">
           <v-icon>mdi-play</v-icon>
         </v-btn>
       </template>
@@ -112,39 +112,6 @@
     </ul>
     <span v-if="tooltipList.length === 0">Keine Informationen vorhanden</span>
   </v-tooltip>
-
-  <v-dialog v-model="isConnectionDialogOpened" max-width="600">
-    <v-card title="Mit Camunda Operate API verbinden">
-      <v-card-text>
-        <div class="my-2">
-          <v-text-field label="Client ID" v-model="settings.operateClientId" :error-messages="operateError" hide-details
-                        class="mb-2" @input="operateError = ''" :loading="isValidating" :disabled="isValidating">
-          </v-text-field>
-          <v-text-field label="Client Secret" v-model="settings.operateClientSecret"
-                        :type="showOperateClientSecret ? 'text' : 'password'"
-                        :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
-                        @click:append-inner="showOperateClientSecret = !showOperateClientSecret"
-                        :error-messages="operateError" @input="operateError = ''" :loading="isValidating"
-                        :disabled="isValidating">
-          </v-text-field>
-          <v-checkbox color="blue-darken-1" label="Informationen speichern?" v-model="saveConnectionInfo"></v-checkbox>
-        </div>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="blue-darken-1"
-          text="Verbinden"
-          @click="fetchProcessInstances">
-        </v-btn>
-        <v-btn
-          color="blue-darken-1"
-          text="Schließen"
-          @click="isConnectionDialogOpened = false"
-        ></v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
 </template>
 
 <style>
@@ -196,13 +163,14 @@ interface Activity {
 }
 
 interface Process {
-  id: number
-  name: string
-  startEvents: Event[]
-  intermediateCatchEvents: Event[]
-  intermediateThrowEvents: Event[]
-  endEvents: Event[]
-  activities: Activity[]
+  id: number;
+  bpmnProcessId: string;
+  name: string;
+  startEvents: Event[];
+  intermediateCatchEvents: Event[];
+  intermediateThrowEvents: Event[];
+  endEvents: Event[];
+  activities: Activity[];
 }
 
 export enum ProcessElementType {
@@ -245,6 +213,11 @@ interface FilterGraphInput {
   hideConnectionLabels: boolean;
 }
 
+interface ProcessInstance {
+  bpmnProcessId: string;
+  state: string;
+}
+
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
     case ProcessElementType.START_EVENT:
@@ -281,11 +254,7 @@ export default defineComponent({
     store: useAppStore(),
     showLegend: false,
     settings: {} as Settings,
-    operateError: '' as string,
-    isValidating: false as boolean,
-    isConnectionDialogOpened: false as boolean,
-    showOperateClientSecret: false as boolean,
-    saveConnectionInfo: true as boolean
+    operateToken: '' as string
   }),
   setup() {
     const appStore = useAppStore();
@@ -508,7 +477,7 @@ export default defineComponent({
           this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
           this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-          return createAbstractProcessElement(process.name, process.id);
+          return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
         });
 
         this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
@@ -758,39 +727,62 @@ export default defineComponent({
       this.saveHiddenElements();
       this.saveHiddenPorts();
     },
-    connectToOperate() {
+    async fetchSettings() {
+      try {
+        await axios.get("/api/settings").then(result => {
+          this.settings = result.data;
+        });
+      } catch (error) {
+        this.settings = {} as Settings;
+      }
+
+      this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+      this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
+      this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
+    },
+    async handleFetchProcessInstances() {
+      await this.fetchSettings();
       if (!this.settings.operateClientId || !this.settings.operateClientSecret) {
+        this.store.setOperateConnectionError("Camunda Operate Verbindung fehlt");
+        this.store.setAreSettingsOpened(true);
         return;
       }
-      this.isConnectionDialogOpened = false;
-    },
-    openConnectionDialog() {
-      if (this.settings.operateClientId && this.settings.operateClientSecret) {
-        try {
-          this.fetchProcessInstances();
-        } catch (error) {
-          this.resetAndOpenConnectionDialog();
-        }
-      } else {
-        this.resetAndOpenConnectionDialog();
+      try {
+        const result = await axios.post("/api/camunda-cloud/token", {
+          "client_id": this.settings.operateClientId,
+          "client_secret": this.settings.operateClientSecret,
+          "audience": "operate.camunda.io"
+        });
+        this.operateToken = result.data;
+        await this.fetchProcessInstances();
+      } catch (error) {
+        this.store.setAreSettingsOpened(true);
+        return;
       }
     },
-    resetAndOpenConnectionDialog() {
-      this.showOperateClientSecret = false;
-      this.operateError = '';
-      this.isValidating = false;
-      this.saveConnectionInfo = true;
-      this.isConnectionDialogOpened = true;
-    },
-    fetchProcessInstances() {
+    async fetchProcessInstances() {
+      const result = await axios.post("/api/camunda-cloud/process-instances", {
+        "token": this.operateToken,
+        "email": null
+      });
+      const items = result.data.items;
+      const countByProcess = items.reduce((acc: Map<string, number>, item: ProcessInstance) => {
+        if (acc.get(item.bpmnProcessId) && item.state == 'ACTIVE') {
+          acc.set(item.bpmnProcessId, acc.get(item.bpmnProcessId)! + 1);
+        } else {
+          acc.set(item.bpmnProcessId, 1);
+        }
+        return acc;
+      }, new Map<string, number>());
       for (const cell of graph.getCells()) {
         if (cell instanceof AbstractProcessShape) {
-          const randomNum = Math.random();
-          const displayNum = randomNum < 0.5 ? 0 : Math.floor(Math.random() * 9) + 1;
-          if (displayNum === 0) {
-            cell.hideActiveInstances();
+          const countForBpmnProcessId = countByProcess.get(cell.attributes.bpmnProcessId);
+          if (countForBpmnProcessId) {
+            cell.setActiveInstances(countForBpmnProcessId);
           } else {
-            cell.setActiveInstances(displayNum);
+            cell.hideActiveInstances();
           }
         }
       }
