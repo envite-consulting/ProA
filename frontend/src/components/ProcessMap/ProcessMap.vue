@@ -126,7 +126,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, reactive, ref } from 'vue';
-import { dia, shapes } from '@joint/core';
+import { dia, linkTools, shapes } from '@joint/core';
 import { graph, paper } from './jointjs/JointJSDiagram';
 //MIT License
 import { DirectedGraph } from '@joint/layout-directed-graph';
@@ -141,6 +141,8 @@ import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
+
+import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
 
 const scrollStep = 20;
 
@@ -173,6 +175,8 @@ export enum ProcessElementType {
 }
 
 interface Connection {
+  id: number
+
   callingProcessid: number
   callingElementType: ProcessElementType
 
@@ -190,9 +194,10 @@ interface DataStore {
 type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
 
 interface DataStoreConnection {
-  processid: number
-  dataStoreId: number
-  access: DataAccess
+  id: number;
+  processid: number;
+  dataStoreId: number;
+  access: DataAccess;
 }
 
 interface FilterGraphInput {
@@ -371,6 +376,144 @@ export default defineComponent({
       paper.scale(sx);
       paper.translate(tx, ty);
     }
+
+    const clearTools = () => {
+      if (!lastView) return;
+      lastView.removeTools();
+    }
+    let timer: NodeJS.Timeout;
+    let lastView: dia.LinkView;
+    paper.on("link:mouseenter", (linkView) => {
+      if (linkView.model.get("source").id.toString().startsWith('ds')) {
+        return;
+      }
+      clearTimeout(timer);
+      clearTools();
+      lastView = linkView;
+      linkView.addTools(
+        new dia.ToolsView({
+          name: "onhover",
+          tools: [
+            new PortTargetArrowhead(),
+            new linkTools.Remove({
+              distance: -60,
+              action: removeLink,
+              markup: [
+                {
+                  tagName: "circle",
+                  selector: "button",
+                  attributes: {
+                    r: 10,
+                    fill: "#FFD5E8",
+                    stroke: "#FD0B88",
+                    "stroke-width": 2,
+                    cursor: "pointer"
+                  }
+                },
+                {
+                  tagName: "path",
+                  selector: "icon",
+                  attributes: {
+                    d: "M -4 -4 4 4 M -4 4 4 -4",
+                    fill: "none",
+                    stroke: "#333",
+                    "stroke-width": 3,
+                    "pointer-events": "none"
+                  }
+                }
+              ]
+            })
+          ]
+        })
+      );
+    });
+
+    paper.on("link:mouseleave", () => {
+      timer = setTimeout(() => clearTools(), 500);
+    });
+
+    paper.on("link:connect", async (linkView) => {
+      const link = linkView.model;
+      const callingProcessid = link.source().id;
+      const calledProcessid = link.target().id;
+      const callingElementType = this.getProcessElementType(link.source().port || '');
+      const calledElementType = this.getProcessElementType(link.target().port || '');
+
+      if (!callingElementType || !calledElementType) {
+        return;
+      }
+
+      try {
+        await axios.post(`/api/project/${this.selectedProjectId}/process-map/connection`, {
+          callingProcessid,
+          calledProcessid,
+          callingElementType,
+          calledElementType
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error("Error while adding connection:", error);
+      }
+    });
+
+    paper.on("link:disconnect", async (linkView, evt, prevElementView, prevMagnet) => {
+      const link = linkView.model;
+      const connectionId = link?.attributes?.connectionId;
+      const callingProcessid = link?.source()?.id?.toString();
+      const calledProcessid = prevElementView.model.id.toString();
+      if (!callingProcessid || !calledProcessid || !connectionId) {
+        console.error("Error while removing connection");
+        return;
+      }
+      await removeLinkHelper(connectionId, callingProcessid, calledProcessid);
+    });
+
+    const removeProcessLink = async (connectionId: number): Promise<boolean> => {
+      try {
+        await axios.delete(`/api/project/process-map/process-connection/${connectionId}`);
+        return true;
+      } catch (error) {
+        console.error("Error while removing process connection:", error);
+        return false;
+      }
+    }
+
+    const removeDataStoreLink = async (connectionId: number): Promise<boolean> => {
+      try {
+        await axios.delete(`/api/project/process-map/datastore-connection/${connectionId}`);
+        return true;
+      } catch (error) {
+        console.error("Error while removing datastore connection:", error);
+        return false;
+      }
+    }
+
+    const removeLink = async (evt: dia.Event, linkView: dia.LinkView, toolView: dia.ToolView): Promise<void> => {
+      const link = linkView.model;
+      const connectionId = link?.attributes?.connectionId;
+      const callingProcessid = link?.source()?.id?.toString();
+      const calledProcessid = link?.target()?.id?.toString();
+      if (!callingProcessid || !calledProcessid || !connectionId) {
+        console.error("Error while removing connection");
+        return;
+      }
+      const wasLinkRemoved = await removeLinkHelper(connectionId, callingProcessid, calledProcessid);
+      if (!wasLinkRemoved) {
+        return;
+      }
+      linkView.model.remove({ ui: true, tool: toolView.cid });
+    }
+
+    const removeLinkHelper = async (connectionId: number, callingProcessid: string, calledProcessid: string): Promise<boolean> => {
+      if (callingProcessid.startsWith('ds') || calledProcessid.startsWith('ds')) {
+        return await removeDataStoreLink(connectionId);
+      }
+
+      return await removeProcessLink(connectionId);
+    }
   },
   methods: {
     zoomIn() {
@@ -408,7 +551,9 @@ export default defineComponent({
       this.savePaperLayout();
     },
     saveGraphState() {
-      this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+      setTimeout(() => {
+        this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+      }, 50);
     },
     savePaperLayout() {
       this.store.setPaperLayoutForProject(this.store.selectedProjectId!, JSON.stringify({
@@ -476,6 +621,7 @@ export default defineComponent({
           const calledPortPrefix = getPortPrefix(connection.calledElementType);
 
           link.set({
+            connectionId: connection.id,
             source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
@@ -523,6 +669,7 @@ export default defineComponent({
             });
 
             link.set({
+              connectionId: connection.id,
               source: { id: connection.processid, port: "call-" + connection.processid },
               target: {
                 id: "ds-" + connection.dataStoreId,
@@ -538,6 +685,7 @@ export default defineComponent({
           } else if (connection.access === "WRITE") {
 
             link.set({
+              connectionId: connection.id,
               source: { id: connection.processid, port: "call-" + connection.processid },
               target: {
                 id: "ds-" + connection.dataStoreId,
@@ -552,6 +700,7 @@ export default defineComponent({
             })
           } else if (connection.access === "READ") {
             link.set({
+              connectionId: connection.id,
               target: { id: connection.processid, port: "call-" + connection.processid },
               source: {
                 id: "ds-" + connection.dataStoreId,

@@ -47,6 +47,12 @@ public class DataStoreConnectionDao {
 		removeDataStoresThatDontHaveConnections(dataStores);
 	}
 
+	@Transactional
+	public void deleteConnection(Long connectionId) {
+		DataStoreConnectionTable dataStoreConnection = em.find(DataStoreConnectionTable.class, connectionId);
+		em.remove(dataStoreConnection);
+	}
+
 	private void deleteConnectionsToProcessModel(ProcessModelTable processModel) {
 		em.createQuery("DELETE FROM DataStoreConnectionTable dc WHERE dc.process = :processModel")
 				.setParameter("processModel", processModel)//
@@ -73,7 +79,7 @@ public class DataStoreConnectionDao {
 					.setParameter("dataStore", dataStore)//
 					.getResultList();
 
-			if (dataStoreConnections.size() == 0) {
+			if (dataStoreConnections.isEmpty()) {
 				em.createQuery("DELETE FROM DataStoreTable ds WHERE ds.id = :id")//
 						.setParameter("id", dataStore.getId())//
 						.executeUpdate();

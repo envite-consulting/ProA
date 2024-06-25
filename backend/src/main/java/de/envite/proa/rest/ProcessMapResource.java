@@ -2,12 +2,11 @@ package de.envite.proa.rest;
 
 import org.jboss.resteasy.reactive.RestPath;
 
+import de.envite.proa.entities.ProcessConnection;
 import de.envite.proa.entities.ProcessMap;
 import de.envite.proa.usecases.processmap.ProcessMapUsecase;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("")
@@ -21,5 +20,23 @@ public class ProcessMapResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public ProcessMap getProcessMap(@RestPath Long projectId) {
 		return usecase.getProcessMap(projectId);
+	}
+
+	@POST
+	@Path("/project/{projectId}/process-map/connection")
+	public void addConnection(@RestPath Long projectId, ProcessConnection connection) {
+		usecase.addConnection(projectId, connection);
+	}
+
+	@DELETE
+	@Path("/project/process-map/process-connection/{connectionId}")
+	public void deleteProcessConnection(@RestPath Long connectionId) {
+		usecase.deleteProcessConnection(connectionId);
+	}
+
+	@DELETE
+	@Path("/project/process-map/datastore-connection/{connectionId}")
+	public void deleteDataStoreConnection(@RestPath Long connectionId) {
+		usecase.deleteDataStoreConnection(connectionId);
 	}
 }

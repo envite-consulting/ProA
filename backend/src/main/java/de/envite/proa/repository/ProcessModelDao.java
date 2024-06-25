@@ -90,7 +90,6 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable find(Long id) {
-
 		return em.find(ProcessModelTable.class, id);
 	}
 
