@@ -166,12 +166,13 @@ interface Process {
   activities: Activity[]
 }
 
-type ProcessElementType =
-  "START_EVENT"
-  | "INTERMEDIATE_CATCH_EVENT"
-  | "INTERMEDIATE_THROW_EVENT"
-  | "END_EVENT"
-  | "CALL_ACTIVITY";
+export enum ProcessElementType {
+  START_EVENT = "START_EVENT",
+  INTERMEDIATE_CATCH_EVENT = "INTERMEDIATE_CATCH_EVENT",
+  INTERMEDIATE_THROW_EVENT = "INTERMEDIATE_THROW_EVENT",
+  END_EVENT = "END_EVENT",
+  CALL_ACTIVITY = "CALL_ACTIVITY"
+}
 
 interface Connection {
   id: number
@@ -206,6 +207,23 @@ interface FilterGraphInput {
   hideStartEndEvents: boolean;
   hideProcessesWithoutConnections: boolean;
   hideConnectionLabels: boolean;
+}
+
+export const getPortPrefix = (elementType: ProcessElementType): string => {
+  switch (elementType) {
+    case ProcessElementType.START_EVENT:
+      return 'start-';
+    case ProcessElementType.INTERMEDIATE_CATCH_EVENT:
+      return 'i-catch-event-';
+    case ProcessElementType.INTERMEDIATE_THROW_EVENT:
+      return 'i-throw-event-';
+    case ProcessElementType.END_EVENT:
+      return 'end-'
+    case ProcessElementType.CALL_ACTIVITY:
+      return 'call-'
+    default:
+      return '';
+  }
 }
 
 export default defineComponent({
@@ -599,8 +617,8 @@ export default defineComponent({
 
           const link = new shapes.standard.Link();
 
-          const callingPortPrefix = component.getPortPrefix(connection.callingElementType);
-          const calledPortPrefix = component.getPortPrefix(connection.calledElementType);
+          const callingPortPrefix = getPortPrefix(connection.callingElementType);
+          const calledPortPrefix = getPortPrefix(connection.calledElementType);
 
           link.set({
             connectionId: connection.id,
@@ -714,39 +732,6 @@ export default defineComponent({
         paper.unfreeze();
         this.saveGraphState();
       })
-    },
-    getPortPrefix(elementType: ProcessElementType) {
-      switch (elementType) {
-        case 'START_EVENT':
-          return 'start-';
-        case 'INTERMEDIATE_CATCH_EVENT':
-          return 'i-catch-event-';
-        case 'INTERMEDIATE_THROW_EVENT':
-          return 'i-throw-event-';
-        case 'END_EVENT':
-          return 'end-'
-        case 'CALL_ACTIVITY':
-          return 'call-'
-        default:
-          return '';
-      }
-    },
-    getProcessElementType(portId: string): ProcessElementType | null {
-      const mappings: { [key: string]: ProcessElementType } = {
-        'start-': 'START_EVENT',
-        'i-catch-event-': 'INTERMEDIATE_CATCH_EVENT',
-        'i-throw-event-': 'INTERMEDIATE_THROW_EVENT',
-        'end-': 'END_EVENT',
-        'call-': 'CALL_ACTIVITY'
-      };
-
-      for (const prefix in mappings) {
-        if (portId.startsWith(prefix)) {
-          return mappings[prefix];
-        }
-      }
-
-      return null;
     },
     toggleLegend() {
       if (!this.showLegend) {

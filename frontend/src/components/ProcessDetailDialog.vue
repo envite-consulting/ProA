@@ -7,7 +7,7 @@
       <v-card-text>
         <v-container>
           <v-row>
-            <v-col cols="12" sm="6" md="6">
+            <v-col v-if="details.startEvents && details.startEvents.length > 0" cols="12" sm="6" md="6">
               <b>Start Events</b>
               <ul class="mt-1">
                 <li v-for="(start, index) in details.startEvents" :key="'startEvent-' + index" class="mb-2">
@@ -16,11 +16,38 @@
                 </li>
               </ul>
             </v-col>
-            <v-col cols="12" sm="6" md="6">
+            <v-col v-if="details.endEvents && details.endEvents.length > 0" cols="12" sm="6" md="6">
               <b class="mb-2">End Events</b>
               <ul class="mt-1">
                 <li v-for="(end, index) in details.endEvents" :key="'endEvent-' + index" class="mb-2">
                   <v-chip @click="goToProcessModel(end.elementId)">{{ end.label || 'Ende' }}
+                  </v-chip>
+                </li>
+              </ul>
+            </v-col>
+            <v-col v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">Zwischenereignisse fangend</b>
+              <ul class="mt-1">
+                <li v-for="(event, index) in details.intermediateCatchEvents" :key="'intermediateCatchEvent-' + index" class="mb-2">
+                  <v-chip @click="goToProcessModel(event.elementId)">{{ event.label || 'Zwischenereignis' }}
+                  </v-chip>
+                </li>
+              </ul>
+            </v-col>
+            <v-col v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">Zwischenereignisse werfend</b>
+              <ul class="mt-1">
+                <li v-for="(event, index) in details.intermediateThrowEvents" :key="'intermediateThrowEvent-' + index" class="mb-2">
+                  <v-chip @click="goToProcessModel(event.elementId)">{{ event.label || 'Zwischenereignis' }}
+                  </v-chip>
+                </li>
+              </ul>
+            </v-col>
+            <v-col v-if="details.activities && details.activities.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">Aufrufaktivitäten</b>
+              <ul class="mt-1">
+                <li v-for="(activity, index) in details.activities" :key="'activity-' + index" class="mb-2">
+                  <v-chip @click="goToProcessModel(activity.elementId)">{{ activity.label || 'Aktivität' }}
                   </v-chip>
                 </li>
               </ul>
@@ -70,11 +97,14 @@ import { dia } from "@joint/core";
 import BpmnViewer from "bpmn-js";
 
 export interface Process {
-  id: number,
-  name: string
-  description: string
-  startEvents: Event[]
-  endEvents: Event[]
+  id: number;
+  name: string;
+  description: string;
+  startEvents: Event[];
+  endEvents: Event[];
+  intermediateCatchEvents: Event[];
+  intermediateThrowEvents: Event[];
+  activities: Event[];
 }
 
 declare interface Event {
@@ -103,6 +133,8 @@ export default defineComponent({
       await this.fetchProcessModel(processId);
       axios.get("/api/process-model/" + processId + "/details").then(result => {
         this.details = result.data;
+        console.log(result.data);
+        console.log(this.details);
       })
     },
     async goToProcessModel(portId: string | null) {
