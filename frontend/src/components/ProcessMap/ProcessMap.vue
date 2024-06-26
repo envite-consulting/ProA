@@ -733,6 +733,23 @@ export default defineComponent({
         this.saveGraphState();
       })
     },
+    getProcessElementType(portId: string): ProcessElementType | null {
+      const mappings: { [key: string]: ProcessElementType } = {
+        'start-': ProcessElementType.START_EVENT,
+        'i-catch-event-': ProcessElementType.INTERMEDIATE_CATCH_EVENT,
+        'i-throw-event-': ProcessElementType.INTERMEDIATE_THROW_EVENT,
+        'end-': ProcessElementType.END_EVENT,
+        'call-': ProcessElementType.CALL_ACTIVITY
+      };
+
+      for (const prefix in mappings) {
+        if (portId.startsWith(prefix)) {
+          return mappings[prefix];
+        }
+      }
+
+      return null;
+    },
     toggleLegend() {
       if (!this.showLegend) {
         this.closeMenus();
