@@ -31,7 +31,10 @@
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
   </v-list>
-  <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
+  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px;">
+    <v-btn class="me-5" prepend-icon="mdi-cloud-search" @click="goToC8Import">
+      Aus C8 importieren
+    </v-btn>
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
              @click="openMultipleUploadDialog" size="large"/>
@@ -293,6 +296,9 @@ export default defineComponent({
       this.progressDialog = false;
       this.replaceProcessModel = null;
       this.progress = 0;
+    },
+    goToC8Import() {
+      this.$router.push("CamundaCloudImport");
     }
   }
 })

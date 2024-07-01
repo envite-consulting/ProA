@@ -8,10 +8,19 @@
     </v-toolbar-title>
   </v-toolbar>
   <v-list lines="two" class="pa-6">
+    <div v-if="processModels.length > 0">
+      <v-list-item>
+        <v-checkbox hide-details @change="toggleSelectAll" v-model="selectAll">
+          <template v-slot:label>
+            <span class="ms-3">Alle auswählen</span>
+          </template>
+        </v-checkbox>
+      </v-list-item>
+      <v-divider></v-divider>
+    </div>
     <template v-for="(model, index) in processModels" :key="'process-'+model.id">
       <v-list-item>
         <v-list-item-title>{{ model.name }}</v-list-item-title>
-
         <v-list-item-subtitle>
           {{ new Date(model.created).toLocaleString("de-DE") }} - {{ model.updatedBy.email }}
         </v-list-item-subtitle>
@@ -23,9 +32,6 @@
       </v-list-item>
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
-    <v-btn prepend-icon="mdi-import" @click="importProcessModels" v-if="selectedProcessModels.length > 0">
-      Prozessmodelle importieren
-    </v-btn>
   </v-list>
   <v-dialog v-model="camundaCloudDialog" persistent width="600">
     <v-card>
@@ -86,7 +92,11 @@
       </v-list-item>
     </v-list>
   </v-dialog>
-  <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
+  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px;">
+    <v-btn class="me-5" prepend-icon="mdi-import" @click="importProcessModels"
+           v-if="selectedProcessModels.length > 0">
+      Prozessmodelle importieren
+    </v-btn>
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
              @click="camundaCloudDialog = true" size="large"/>
@@ -122,7 +132,8 @@ export default defineComponent({
     token: null,
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
-    selectedVersionName: '' as string
+    selectedVersionName: '' as string,
+    selectAll: false as boolean
   }),
 
   watch: {},
@@ -184,10 +195,18 @@ export default defineComponent({
         this.processModels = this.processModels.filter(model => !selectedProcessModelIds.includes(model.id));
         this.selectedProcessModels = [];
         this.loadingDialog = false;
+        this.$router.push("/ProcessList");
       }).catch(error => {
         console.log(error);
         this.loadingDialog = false;
       });
+    },
+    toggleSelectAll() {
+      if (this.selectAll) {
+        this.selectedProcessModels = this.processModels;
+      } else {
+        this.selectedProcessModels = [];
+      }
     }
   }
 })
