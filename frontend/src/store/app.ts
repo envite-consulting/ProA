@@ -27,7 +27,8 @@ export const useAppStore = defineStore('app', {
       hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
       processModelsChangeFlag: false as boolean,
       areSettingsOpened: false as boolean,
-      operateConnectionError: '' as string
+      operateConnectionError: '' as string,
+      operateClusterError: '' as string
     }
   },
   actions: {
@@ -101,6 +102,12 @@ export const useAppStore = defineStore('app', {
     },
     getOperateConnectionError() {
       return this.operateConnectionError
+    },
+    setOperateClusterError(error: string) {
+      this.operateClusterError = error
+    },
+    getOperateClusterError() {
+      return this.operateClusterError
     }
   },
   persist: {
@@ -117,7 +124,8 @@ export const useAppStore = defineStore('app', {
       'hiddenLinksByProject',
       'processModelsChangeFlag',
       'areSettingsOpened',
-      'operateConnectionError'
+      'operateConnectionError',
+      'operateClusterError'
     ]
   },
 })

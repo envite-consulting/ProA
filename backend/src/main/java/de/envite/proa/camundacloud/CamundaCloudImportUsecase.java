@@ -1,10 +1,13 @@
 package de.envite.proa.camundacloud;
 
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import de.envite.proa.usecases.ProcessModelUsecase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.net.URI;
 
 @ApplicationScoped
 public class CamundaCloudImportUsecase {
@@ -14,9 +17,6 @@ public class CamundaCloudImportUsecase {
 
 	@RestClient
 	private CamundaModelerService camundaModelerService;
-
-	@RestClient
-	private CamundaOperateService camundaOperateService;
 
 	@Inject
 	private ProcessModelUsecase usecase;
@@ -30,6 +30,17 @@ public class CamundaCloudImportUsecase {
 
 	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
 		ProcessInstancesFilter filter = new ProcessInstancesFilter();
+
+		String operateUri = "https://" + //
+				configuration.getRegionId() + //
+				".operate.camunda.io/" + //
+				configuration.getClusterId();
+
+		CamundaOperateService camundaOperateService = RestClientBuilder //
+				.newBuilder() //
+				.baseUri(URI.create(operateUri)) //
+				.build(CamundaOperateService.class);
+
 		return camundaOperateService.getProcessInstances("Bearer " + configuration.getToken(), filter);
 	}
 

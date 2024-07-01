@@ -31,72 +31,7 @@
     </v-list>
   </v-navigation-drawer>
 
-  <v-navigation-drawer
-    v-model="appStore.areSettingsOpened"
-    location="right"
-    temporary
-    width="400"
-  >
-    <div class="d-flex flex-column ma-3 ms-4">
-      <div class="d-flex align-center">
-        <p class="text-h6">Einstellungen</p>
-        <v-btn class="ms-auto" variant="text" icon @click="toggleSettings">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </div>
-      <div class="mt-2">
-        <p class="text-subtitle-1 text-grey-darken-2 mb-1">Gemini API Key</p>
-        <v-text-field label="API Key" v-model="settings.geminiApiKey" :type="showApiKey ? 'text' : 'password'"
-                      :append-inner-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
-                      @click:append-inner="showApiKey = !showApiKey"
-                      :error-messages="apiKeyError" @input="apiKeyError = ''" :loading="isValidating"
-                      :disabled="isValidating">
-        </v-text-field>
-      </div>
-      <div class="mt-2">
-        <p class="text-subtitle-1 text-grey-darken-2 mb-1">Camunda Modeler Verbindung</p>
-        <v-text-field label="Client ID" v-model="settings.modelerClientId" hide-details class="mb-2"
-                      :error-messages="modelerError" @input="modelerError = ''" :loading="isValidating"
-                      :disabled="isValidating">
-        </v-text-field>
-        <v-text-field :loading="isValidating" :disabled="isValidating" label="Client Secret"
-                      v-model="settings.modelerClientSecret"
-                      :type="showModelerClientSecret ? 'text' : 'password'"
-                      :append-inner-icon="showModelerClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
-                      @click:append-inner="showModelerClientSecret = !showModelerClientSecret"
-                      :error-messages="modelerError" @input="modelerError = ''">
-        </v-text-field>
-      </div>
-      <div class="mt-2 mb-4">
-        <p class="text-subtitle-1 text-grey-darken-2 mb-1">Camunda Operate Verbindung</p>
-        <v-text-field label="Client ID" v-model="settings.operateClientId"
-                      :error-messages="appStore.operateConnectionError" hide-details
-                      class="mb-2" @input="appStore.setOperateConnectionError('')" :loading="isValidating"
-                      :disabled="isValidating">
-        </v-text-field>
-        <v-text-field label="Client Secret" v-model="settings.operateClientSecret"
-                      :type="showOperateClientSecret ? 'text' : 'password'"
-                      :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
-                      @click:append-inner="showOperateClientSecret = !showOperateClientSecret"
-                      :error-messages="appStore.operateConnectionError" @input="appStore.setOperateConnectionError('')"
-                      :loading="isValidating"
-                      :disabled="isValidating">
-        </v-text-field>
-      </div>
-      <div class="d-flex">
-        <div class="mt-3 me-3">
-          <v-btn color="primary" @click="saveSettings">Speichern</v-btn>
-        </div>
-        <div class="mt-3">
-          <v-tooltip text="Werte auf Umgebungsvariablen zurücksetzen" location="bottom">
-            <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" color="grey" @click="resetSettings">Zurücksetzen</v-btn>
-            </template>
-          </v-tooltip>
-        </div>
-      </div>
-    </div>
-  </v-navigation-drawer>
+  <SettingsDrawer />
 </template>
 
 <style scoped>
@@ -106,37 +41,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import axios from "axios";
-
-export interface Settings {
-  geminiApiKey: string;
-  modelerClientId: string;
-  modelerClientSecret: string;
-  operateClientId: string;
-  operateClientSecret: string;
-}
-
-export interface Settings {
-  geminiApiKey: string;
-  modelerClientId: string;
-  modelerClientSecret: string;
-  operateClientId: string;
-  operateClientSecret: string;
-}
+import SettingsDrawer from "@/components/SettingsDrawer.vue";
 
 export default defineComponent({
+  components: { SettingsDrawer },
   data: () => ({
     appStore: useAppStore(),
     drawer: false as boolean,
-    settings: {} as Settings,
-    showApiKey: false as boolean,
-    apiKeyError: "" as string,
-    showModelerClientSecret: false as boolean,
-    modelerError: "" as string,
-    showOperateClientSecret: false as boolean,
     group: null,
-    isValidating: false as boolean,
     items: [
       {
         title: 'Projektübersicht',
@@ -160,152 +72,13 @@ export default defineComponent({
   methods: {
     toggleSettings() {
       this.appStore.setAreSettingsOpened(!this.appStore.getAreSettingsOpened());
-    },
-    async handleAfterToggle() {
-      if (!this.appStore.getAreSettingsOpened()) {
-        await this.resetSettingsBar();
-      } else {
-        await this.fetchSettings();
-        await this.validateSettings();
-      }
-    },
-    async saveSettings() {
-      const doSettingsExist = async () => {
-        try {
-          await axios.get("/api/settings");
-          return true;
-        } catch (error) {
-          return false;
-        }
-      }
-
-      const areSettingsValid = await this.validateSettings();
-      if (!areSettingsValid) {
-        return;
-      }
-
-      if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
-      } else {
-        await axios.post("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
-      }
-
-      this.toggleSettings();
-    },
-    async validateSettings(): Promise<boolean> {
-      this.isValidating = true;
-      const operateConnectionInvalidMsg = "Camunda Operate Verbindung ungültig";
-      const operateConnectionError = this.appStore.getOperateConnectionError();
-      this.resetValidation();
-
-      const [isAPIKeyValid, isModelerConnectionValid, isOperateConnectionValid] = await Promise.all([
-        this.validateAPIKey(),
-        this.validateModelerConnection(),
-        this.validateOperateConnection()
-      ]);
-      this.isValidating = false;
-
-      if (operateConnectionError !== operateConnectionInvalidMsg) {
-        this.appStore.setOperateConnectionError(operateConnectionError);
-      }
-
-      if (!isAPIKeyValid || !isModelerConnectionValid || !isOperateConnectionValid) {
-        if (!isAPIKeyValid) this.apiKeyError = "API Key ungültig";
-        if (!isModelerConnectionValid) this.modelerError = "Camunda Modeler Verbindung ungültig";
-        if (!isOperateConnectionValid) this.appStore.setOperateConnectionError(operateConnectionInvalidMsg);
-        return false;
-      }
-      return true;
-    },
-    async validateAPIKey() {
-      const { geminiApiKey } = this.settings;
-      if (!geminiApiKey) {
-        return true;
-      }
-      const genAI = new GoogleGenerativeAI(geminiApiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      try {
-        await model.generateContent("write yes")
-        return true;
-      } catch (error) {
-        return false;
-      }
-    },
-    async validateModelerConnection() {
-      const { modelerClientId, modelerClientSecret } = this.settings;
-      if (!modelerClientId && !modelerClientSecret) return true;
-      if (!modelerClientId || !modelerClientSecret) return false;
-      try {
-        await axios.post("/api/camunda-cloud/token", {
-          "client_id": modelerClientId,
-          "client_secret": modelerClientSecret,
-        });
-        return true;
-      } catch (error) {
-        return false;
-      }
-    },
-    async validateOperateConnection() {
-      const { operateClientId, operateClientSecret } = this.settings;
-      if (!operateClientId && !operateClientSecret) return true;
-      if (!operateClientId || !operateClientSecret) return false;
-      try {
-        await axios.post("/api/camunda-cloud/token", {
-          "client_id": operateClientId,
-          "client_secret": operateClientSecret,
-          "audience": "operate.camunda.io"
-        });
-        return true;
-      } catch (error) {
-        return false;
-      }
-    },
-    async resetSettingsBar() {
-      await this.fetchSettings();
-      this.resetValidation();
-      this.showApiKey = false;
-      this.showModelerClientSecret = false;
-      this.showOperateClientSecret = false;
-    },
-    resetValidation() {
-      this.apiKeyError = "";
-      this.modelerError = "";
-      this.appStore.setOperateConnectionError("");
-    },
-    async fetchSettings() {
-      try {
-        await axios.get("/api/settings").then(result => {
-          this.settings = result.data;
-        });
-      } catch (error) {
-        this.settings = {} as Settings;
-      }
-
-      this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
-      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
-      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
-      this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
-      this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
-    },
-    resetSettings() {
-      this.settings = {
-        geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || "",
-        modelerClientId: import.meta.env.VITE_MODELER_CLIENT_ID || "",
-        modelerClientSecret: import.meta.env.VITE_MODELER_CLIENT_SECRET || "",
-        operateClientId: import.meta.env.VITE_OPERATE_CLIENT_ID || "",
-        operateClientSecret: import.meta.env.VITE_OPERATE_CLIENT_SECRET || ""
-      }
     }
   },
 
   watch: {
     group() {
       this.drawer = false;
-    },
-    'appStore.areSettingsOpened'() {
-      this.handleAfterToggle();
     }
-  },
+  }
 })
 </script>

@@ -18,4 +18,6 @@ public class SettingsTable {
 	private String modelerClientSecret;
 	private String operateClientId;
 	private String operateClientSecret;
+	private String operateRegionId;
+	private String operateClusterId;
 }

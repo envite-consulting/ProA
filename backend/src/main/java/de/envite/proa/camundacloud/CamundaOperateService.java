@@ -7,7 +7,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
 @Path("/v1/process-instances")
-@RegisterRestClient(configKey = "camunda-operate-service")
+@RegisterRestClient
 public interface CamundaOperateService {
 
 	@POST

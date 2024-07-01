@@ -106,7 +106,7 @@ import { defineComponent } from 'vue'
 import axios from 'axios';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
-import { Settings } from "@/layouts/default/AppBar.vue";
+import { Settings } from "../SettingsDrawer.vue"
 
 declare interface ProcessModel {
   id: string,
@@ -175,6 +175,8 @@ export default defineComponent({
       axios.post("/api/camunda-cloud", {
         "token": this.token,
         "email": this.creatorEMail,
+        "regionId": null,
+        "clusterId": null
       }).then(async result => {
         if (this.saveClientInformation) {
           await this.saveSettings();
@@ -216,11 +218,8 @@ export default defineComponent({
         this.settings = {} as Settings;
       }
 
-      this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
       this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
-      this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
-      this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
     },
     async saveSettings() {
       const doSettingsExist = async () => {

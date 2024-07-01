@@ -148,7 +148,7 @@ import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
-import { Settings } from "@/layouts/default/AppBar.vue";
+import { Settings } from "@/components/SettingsDrawer.vue";
 
 const scrollStep = 20;
 
@@ -741,11 +741,18 @@ export default defineComponent({
       this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
       this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
       this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
+      this.settings.operateRegionId = this.settings.operateRegionId || import.meta.env.VITE_OPERATE_REGION_ID;
+      this.settings.operateClusterId = this.settings.operateClusterId || import.meta.env.VITE_OPERATE_CLUSTER_ID;
     },
     async handleFetchProcessInstances() {
       await this.fetchSettings();
       if (!this.settings.operateClientId || !this.settings.operateClientSecret) {
         this.store.setOperateConnectionError("Camunda Operate Verbindung fehlt");
+        this.store.setAreSettingsOpened(true);
+        return;
+      }
+      if (!this.settings.operateRegionId || !this.settings.operateClusterId) {
+        this.store.setOperateClusterError("Region und/oder Cluster fehlen");
         this.store.setAreSettingsOpened(true);
         return;
       }
@@ -765,16 +772,18 @@ export default defineComponent({
     async fetchProcessInstances() {
       const result = await axios.post("/api/camunda-cloud/process-instances", {
         "token": this.operateToken,
-        "email": null
+        "email": null,
+        "regionId": this.settings.operateRegionId,
+        "clusterId": this.settings.operateClusterId
       });
       const items = result.data.items;
-      const countByProcess = items.reduce((acc: Map<string, number>, item: ProcessInstance) => {
-        if (acc.get(item.bpmnProcessId) && item.state == 'ACTIVE') {
-          acc.set(item.bpmnProcessId, acc.get(item.bpmnProcessId)! + 1);
+      const countByProcess = items.reduce((countByProcess: Map<string, number>, item: ProcessInstance) => {
+        if (countByProcess.get(item.bpmnProcessId) && item.state == 'ACTIVE') {
+          countByProcess.set(item.bpmnProcessId, countByProcess.get(item.bpmnProcessId)! + 1);
         } else {
-          acc.set(item.bpmnProcessId, 1);
+          countByProcess.set(item.bpmnProcessId, 1);
         }
-        return acc;
+        return countByProcess;
       }, new Map<string, number>());
       for (const cell of graph.getCells()) {
         if (cell instanceof AbstractProcessShape) {

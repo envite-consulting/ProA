@@ -38,6 +38,8 @@ public class SettingsRepositoryImpl implements SettingsRepository {
 		settings.setModelerClientSecret(table.getModelerClientSecret());
 		settings.setOperateClientId(table.getOperateClientId());
 		settings.setOperateClientSecret(table.getOperateClientSecret());
+		settings.setOperateRegionId(table.getOperateRegionId());
+		settings.setOperateClusterId(table.getOperateClusterId());
 		return settings;
 	}
 
@@ -48,6 +50,8 @@ public class SettingsRepositoryImpl implements SettingsRepository {
 		table.setModelerClientSecret(settings.getModelerClientSecret());
 		table.setOperateClientId(settings.getOperateClientId());
 		table.setOperateClientSecret(settings.getOperateClientSecret());
+		table.setOperateRegionId(settings.getOperateRegionId());
+		table.setOperateClusterId(settings.getOperateClusterId());
 		return table;
 	}
 
@@ -68,6 +72,12 @@ public class SettingsRepositoryImpl implements SettingsRepository {
 		}
 		if (settings.getOperateClientSecret() != null) {
 			table.setOperateClientSecret(settings.getOperateClientSecret());
+		}
+		if (settings.getOperateRegionId() != null) {
+			table.setOperateRegionId(settings.getOperateRegionId());
+		}
+		if (settings.getOperateClusterId() != null) {
+			table.setOperateClusterId(settings.getOperateClusterId());
 		}
 
 		return table;
