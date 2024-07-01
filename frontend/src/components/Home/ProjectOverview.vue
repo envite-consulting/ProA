@@ -54,7 +54,7 @@
       </v-card-title>
       <v-spacer></v-spacer>
       <v-card-actions>
-        <v-btn color="primary" text="Erstellen" block @click="projectDialog = true"></v-btn>
+        <v-btn color="primary" text="Erstellen" block @click="openNewProjectDialog"></v-btn>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="projectDialog" persistent width="600">
@@ -67,13 +67,14 @@
             <v-row>
               <v-col cols="12" sm="12" md="12">
                 <v-text-field label="Name" v-model="newProjectName"
-                              :rules="[() => !!newProjectName || 'Projektname erforderlich']"></v-text-field>
+                              :rules="[() => !!newProjectName || 'Projektname erforderlich']"
+                              ref="newProjectNameInput"></v-text-field>
               </v-col>
             </v-row>
             <v-row>
               <v-col cols="12" sm="12" md="12">
                 <v-text-field label="Version" v-model="newVersionName" placeholder="1.0"
-                              :rules="versionRules"></v-text-field>
+                              :rules="versionRules" ref="newVersionNameInput"></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -98,7 +99,8 @@
           <v-container>
             <v-row>
               <v-col cols="12" sm="12" md="12">
-                <v-text-field label="Neue Version" v-model="newVersionName"></v-text-field>
+                <v-text-field ref="newVersionInput" label="Neue Version" v-model="newVersionName"
+                              :rules="versionRules"></v-text-field>
               </v-col>
             </v-row>
           </v-container>
@@ -132,6 +134,7 @@
 import { defineComponent } from 'vue'
 import axios from 'axios';
 import { useAppStore } from "@/store/app";
+import { VTextField } from "vuetify/components";
 
 export interface Project {
   id: number
@@ -205,9 +208,15 @@ export default defineComponent({
   },
   methods: {
     openNewVersionDialog(projectGroup: ProjectGroup) {
+      this.newVersionName = "";
       this.newProjectName = projectGroup.name;
       this.showNewVersionDialog = true;
       this.newVersionInitialProject = this.activeProjectByGroup[projectGroup.name];
+    },
+    openNewProjectDialog() {
+      this.newProjectName = "";
+      this.newVersionName = "";
+      this.projectDialog = true;
     },
     setActiveProject(groupName: string, projectId: number) {
       this.activeProjectByGroup[groupName] = this.projects.find(project => project.id === projectId)!;
@@ -224,12 +233,24 @@ export default defineComponent({
         this.projects = result.data.sort(sortProjectsByActiveFirst);
       })
     },
-    createProject() {
-      const projectName = this.newProjectName;
-      const projectVersion = this.newVersionName;
-      if (this.versionNameExists || !projectName || !projectVersion) {
+    async createProject() {
+      const newProjectNameInput = this.$refs.newProjectNameInput as VTextField;
+      const newVersionNameInput = this.$refs.newVersionNameInput as VTextField;
+      const newVersionInput = this.$refs.newVersionInput as VTextField;
+
+      let errors: string[] = [];
+      if (this.showNewVersionDialog) {
+        errors = errors.concat(await newVersionInput.validate());
+      } else {
+        errors = errors.concat(await newProjectNameInput.validate());
+        errors = errors.concat(await newVersionNameInput.validate());
+      }
+      if (errors.length > 0) {
         return;
       }
+
+      const projectName = this.newProjectName;
+      const projectVersion = this.newVersionName;
 
       let formData = new FormData();
       formData.append("name", projectName);
@@ -238,8 +259,6 @@ export default defineComponent({
       axios.post("/api/project", formData).then(result => {
         this.projectDialog = false;
         this.showNewVersionDialog = false;
-        this.newProjectName = "";
-        this.newVersionName = "";
         this.setActiveProject(result.data.name, result.data.id);
         this.projects.push(result.data);
       });
@@ -251,8 +270,6 @@ export default defineComponent({
     closeNewProjectOrVersionDialog() {
       this.projectDialog = false;
       this.showNewVersionDialog = false;
-      this.newProjectName = "";
-      this.newVersionName = "";
     }
   }
 });
