@@ -8,7 +8,8 @@
     "importFromC8": "Import Processes from C8",
     "importProcessModels": "Import Process Models",
     "loading": "Loading...",
-    "retrieveProcessModels": "Retrieve Process Models"
+    "retrieveProcessModels": "Retrieve Process Models",
+    "selectAll": "Select All"
   },
   "general": {
     "activity": "Activity",
@@ -36,6 +37,7 @@
     "startEvents": "Start Events"
   },
   "processList": {
+    "importFromC8": "Import from C8",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
     "uploadProcessModels": "Upload Process Models",
