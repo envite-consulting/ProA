@@ -1,0 +1,74 @@
+{
+  "c8Import": {
+    "camundaConnectionSuccessMessage": "Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.",
+    "connect": "Verbinden",
+    "creatorEmail": "Ersteller E-Mail",
+    "creatorEmailHint": "Optional: Nur Prozessmodelle der angegebenen Ersteller E-Mail werden abgerufen",
+    "errorMessage": "Ein Fehler ist aufgetreten!",
+    "importFromC8": "Prozesse aus C8 importieren",
+    "importProcessModels": "Prozessmodelle importieren",
+    "loading": "Laden...",
+    "retrieveProcessModels": "Prozessmodelle abrufen"
+  },
+  "general": {
+    "activity": "Aktivität",
+    "callActivities": "Aufrufaktivitäten",
+    "cancel": "Abbrechen",
+    "description": "Beschreibung",
+    "end": "Ende",
+    "english": "Englisch",
+    "german": "Deutsch",
+    "intermediateCatchEvents": "Zwischenereignisse fangend",
+    "intermediateEvent": "Zwischenereignis",
+    "intermediateThrowEvents": "Zwischenereignisse werfend",
+    "processModel": "Prozessmodell",
+    "save": "Speichern"
+  },
+  "navigation": {
+    "c8Import": "C8 Import",
+    "processList": "Prozessliste",
+    "processMap": "Prozesskarte",
+    "projectOverview": "Projektübersicht"
+  },
+  "processDetailSidebar": {
+    "endEvents": "Endereignisse",
+    "goToProcessModel": "Zum Prozessmodell",
+    "startEvents": "Startereignisse"
+  },
+  "processList": {
+    "processModels": "Prozessmodelle",
+    "replaceProcessModel": "Prozessmodell ersetzen",
+    "uploadProcessModels": "Prozessmodelle hochladen",
+    "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
+  },
+  "processMap": {
+    "callActivity": "Aufrufaktivität",
+    "connectionLabels": "Verbindungslabels",
+    "database": "Datenbank",
+    "endEvent": "Endereignis",
+    "endToStartConnections": "Ende-zu-Start-Verbindungen",
+    "hide": "Ausblenden",
+    "intermediateEvents": "Zwischenereignisse",
+    "legend": "Legende",
+    "noInformationAvailable": "Keine Informationen verfügbar",
+    "process": "Prozess",
+    "processesWithoutConnections": "Prozesse ohne Verbindungen",
+    "resources": "Ressourcen",
+    "startEvent": "Startereignis"
+  },
+  "projectOverview": {
+    "active": "AKTIV",
+    "create": "Erstellen",
+    "createProject": "Projekt erstellen",
+    "createdOn": "Erstellt am",
+    "lastModifiedOn": "Zuletzt geändert am",
+    "newProject": "Neues Projekt",
+    "newVersion": "Neue Version",
+    "newVersionFor": "Neue Version für",
+    "open": "Öffnen",
+    "projectNameRequired": "Projektname ist erforderlich",
+    "projectVersionRequired": "Projektversion ist erforderlich",
+    "versionNameExists": "Versionsname existiert bereits",
+    "versionNameRequired": "Versionsname ist erforderlich"
+  }
+}

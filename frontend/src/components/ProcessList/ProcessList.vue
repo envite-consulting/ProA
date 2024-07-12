@@ -14,7 +14,7 @@
         <v-list-item-title>{{ model.processName }}</v-list-item-title>
 
         <v-list-item-subtitle>
-          {{ new Date(model.createdAt).toLocaleString("de-DE") }} {{ !!model.description ? '-' : '' }} {{
+          {{ getLocaleDate(model.createdAt) }} {{ !!model.description ? '-' : '' }} {{
             model.description
           }}
         </v-list-item-subtitle>
@@ -41,16 +41,18 @@
   <v-dialog v-model="uploadDialog" persistent width="600" @after-leave="resetUploadDialog">
     <v-card>
       <v-card-title>
-        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">Prozessmodelle hochladen</span>
-        <span class="text-h5" v-if="uploadDialogMode === 'single'">Prozessmodell austauschen</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">{{ $t('processList.uploadProcessModels') }}</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'single'">{{ $t('processList.replaceProcessModel') }}</span>
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row class="pb-5">
             <v-col cols="12" sm="12" md="12">
-              <v-file-input v-if="uploadDialogMode === 'multiple'" label="Prozessmodelle" v-model="processModelFiles"
+              <v-file-input v-if="uploadDialogMode === 'multiple'" :label="$t('processList.processModels')"
+                            v-model="processModelFiles"
                             chips multiple @change="handleFileSelection"></v-file-input>
-              <v-file-input v-if="uploadDialogMode === 'single'" label="Prozessmodell" v-model="processModelFiles" chips
+              <v-file-input v-if="uploadDialogMode === 'single'" :label="$t('general.processModel')"
+                            v-model="processModelFiles" chips
                             @change="handleFileSelection"></v-file-input>
             </v-col>
           </v-row>
@@ -60,7 +62,8 @@
               <v-text-field hide-details label="Name" v-model="file.name"></v-text-field>
             </v-col>
             <v-col cols="12" sm="12" md="12" class="py-1">
-              <v-textarea hide-details rows="3" label="Beschreibung" v-model="file.description"></v-textarea>
+              <v-textarea hide-details rows="3" :label="$t('general.description')"
+                          v-model="file.description"></v-textarea>
             </v-col>
           </v-row>
         </v-container>
@@ -68,13 +71,13 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue-darken-1" variant="text" @click="closeUploadDialog">
-          Schließen
+          {{ $t('general.cancel') }}
         </v-btn>
         <v-btn v-if="uploadDialogMode === 'multiple'" color="blue-darken-1" variant="text" @click="uploadProcessModels">
-          Speichern
+          {{ $t('general.save') }}
         </v-btn>
         <v-btn v-if="uploadDialogMode === 'single'" color="blue-darken-1" variant="text" @click="swapProcessModel">
-          Speichern
+          {{ $t('general.save') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -83,14 +86,14 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        Lade Prozessmodelle hoch...
+        {{ $t('processList.uploadingProcessModels') }}
         <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
       </template>
 
       <v-card-actions>
         <v-spacer></v-spacer>
 
-        <v-btn text="Close" variant="text" @click="progressDialog = false"></v-btn>
+        <v-btn :text="$t('general.cancel')" variant="text" @click="progressDialog = false"></v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -293,6 +296,10 @@ export default defineComponent({
       this.progressDialog = false;
       this.replaceProcessModel = null;
       this.progress = 0;
+    },
+    getLocaleDate(date: string): string {
+      const locales = this.appStore.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      return new Date(date).toLocaleString(locales);
     }
   }
 })
