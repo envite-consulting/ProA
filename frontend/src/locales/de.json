@@ -5,6 +5,7 @@
     "creatorEmail": "Ersteller E-Mail",
     "creatorEmailHint": "Optional: Nur Prozessmodelle der angegebenen Ersteller E-Mail werden abgerufen",
     "errorMessage": "Ein Fehler ist aufgetreten!",
+    "import": "Importieren",
     "importFromC8": "Prozesse aus C8 importieren",
     "importProcessModels": "Prozessmodelle importieren",
     "loading": "Laden...",
@@ -27,9 +28,11 @@
   },
   "navigation": {
     "c8Import": "C8 Import",
+    "camundaCloudImport": "C8 Import",
     "processList": "Prozessliste",
     "processMap": "Prozesskarte",
-    "projectOverview": "Projektübersicht"
+    "projectOverview": "Projektübersicht",
+    "processView": "Prozessansicht"
   },
   "processDetailSidebar": {
     "endEvents": "Endereignisse",
@@ -38,8 +41,10 @@
   },
   "processList": {
     "importFromC8": "Aus C8 importieren",
+    "navigateToC8Import": "Zu C8 Import navigieren",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
+    "toTheProcessMap": "Zur Prozesskarte",
     "uploadProcessModels": "Prozessmodelle hochladen",
     "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
   },

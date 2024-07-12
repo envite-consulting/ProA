@@ -8,7 +8,7 @@
     </v-toolbar-title>
   </v-toolbar>
   <v-list lines="two" class="pa-6">
-    <div v-if="processModels.length > 0">
+    <div v-if="importedProcessModels.length > 0">
       <v-list-item>
         <v-checkbox hide-details @change="toggleSelectAll" v-model="selectAll">
           <template v-slot:label>
@@ -95,22 +95,58 @@
       </v-list-item>
     </v-list>
   </v-dialog>
-  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px;">
-    <v-btn class="me-5" prepend-icon="mdi-import" @click="importProcessModels"
-           v-if="selectedProcessModels.length > 0">
-      {{ $t('c8Import.importProcessModels') }}
-    </v-btn>
+  <div class="ma-4" style="position: fixed; z-index: 1; right: 8px; bottom: 8px">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
              @click="camundaCloudDialog = true" size="large"/>
     </v-fab-transition>
   </div>
+  <div class="ma-4 d-flex align-center justify-center"
+       style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px"
+       v-if="selectedProcessModels.length > 0">
+    <v-btn prepend-icon="mdi-import" @click="importProcessModels">
+      {{ $t('c8Import.import') }}
+    </v-btn>
+  </div>
+  <div class="ma-4" v-if="importedProcessModels.length > 0"
+       :style="{ position: 'fixed', right: '8px', top: stickyButtonTop + 'px' }">
+    <v-menu :close-on-content-click="false">
+      <template v-slot:activator="{ props }">
+        <v-badge v-if="emailSelects.filter(emailSelect => emailSelect.selected).length > 0"
+                 :content="emailSelects.filter(emailSelect => emailSelect.selected).length">
+          <v-fab-transition>
+            <v-btn class="mt-auto pointer-events-initial" elevation="8" icon="mdi-filter-outline"
+                   v-bind="props" size="large"/>
+          </v-fab-transition>
+        </v-badge>
+        <v-fab-transition v-else>
+          <v-btn class="mt-auto pointer-events-initial" elevation="8" icon="mdi-filter-outline"
+                 v-bind="props" size="large"/>
+        </v-fab-transition>
+      </template>
+      <v-list density="compact" class="pa-2">
+        <v-list-subheader>Ersteller E-Mail</v-list-subheader>
+        <v-list-item
+          v-for="(emailSelect, index) in emailSelects"
+          :key="'imported-email-' + index"
+        >
+          <v-checkbox v-model="emailSelect.selected" hide-details density="compact"
+                      @update:model-value="filterSelectedModels">
+            <template v-slot:label>
+              <span class="ms-1">{{ emailSelect.email }}</span>
+            </template>
+          </v-checkbox>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+  </div>
 </template>
-<style scoped></style>
+<style scoped>
+</style>
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { useAppStore } from "../../store/app";
+import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 
 declare interface ProcessModel {
@@ -122,6 +158,14 @@ declare interface ProcessModel {
   }
 }
 
+interface EmailSelect {
+  email: string,
+  selected: boolean
+}
+
+const minStickyOffset = 72;
+const maxStickyOffset = 136;
+
 export default defineComponent({
   data: () => ({
     camundaCloudDialog: false as boolean,
@@ -129,6 +173,7 @@ export default defineComponent({
     clientId: "" as string,
     clientSecret: "" as string,
     creatorEMail: null,
+    importedProcessModels: [] as ProcessModel[],
     processModels: [] as ProcessModel[],
     selectedProcessModels: [] as ProcessModel[],
     tokenError: false,
@@ -136,7 +181,9 @@ export default defineComponent({
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
-    selectAll: false as boolean
+    selectAll: false as boolean,
+    emailSelects: [] as EmailSelect[],
+    stickyButtonTop: Math.max(minStickyOffset, maxStickyOffset - scrollY),
   }),
 
   watch: {},
@@ -149,7 +196,11 @@ export default defineComponent({
     getProject(this.selectedProjectId).then(result => {
       this.selectedProjectName = result.data.name;
       this.selectedVersionName = result.data.version;
-    })
+    });
+    window.addEventListener('scroll', this.updateStickyButton);
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.updateStickyButton);
   },
   methods: {
     fetchToken() {
@@ -158,12 +209,10 @@ export default defineComponent({
         "client_id": this.clientId,
         "client_secret": this.clientSecret,
       }).then(result => {
-        console.log(result);
         this.token = result.data;
         this.tokenError = false;
         this.loadingDialog = false;
       }).catch(error => {
-        console.log(error);
         this.tokenError = true;
         this.loadingDialog = false;
       })
@@ -174,7 +223,13 @@ export default defineComponent({
         "token": this.token,
         "email": this.creatorEMail,
       }).then(result => {
-        this.processModels = result.data.items;
+        const items: ProcessModel[] = result.data.items;
+        this.processModels = items;
+        this.importedProcessModels = items;
+        this.emailSelects = [...new Set(items.map(item => item.updatedBy.email))].sort().map(email => ({
+          email,
+          selected: false
+        }));
         this.camundaCloudDialog = false;
         this.loadingDialog = false;
       }).catch(error => {
@@ -185,7 +240,6 @@ export default defineComponent({
       })
     },
     importProcessModels() {
-
       this.loadingDialog = true;
       const selectedProcessModelIds: string[] = this.selectedProcessModels.map(model => {
         return model.id;
@@ -214,6 +268,23 @@ export default defineComponent({
       } else {
         this.selectedProcessModels = [];
       }
+    },
+    filterSelectedModels() {
+      const selectedEmails = this.emailSelects.filter(select => select.selected).map(select => select.email);
+      if (selectedEmails.length == 0) {
+        this.processModels = this.importedProcessModels;
+        this.updateSelectAll();
+        return;
+      }
+      this.processModels = this.importedProcessModels.filter(model => selectedEmails.includes(model.updatedBy.email));
+      this.selectedProcessModels = this.selectedProcessModels.filter(model => selectedEmails.includes(model.updatedBy.email));
+      this.updateSelectAll();
+    },
+    updateSelectAll() {
+      this.selectAll = this.selectedProcessModels.length == this.processModels.length;
+    },
+    updateStickyButton() {
+      this.stickyButtonTop = Math.max(minStickyOffset, maxStickyOffset - scrollY);
     }
   }
 })

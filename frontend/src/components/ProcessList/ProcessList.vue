@@ -31,14 +31,28 @@
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
   </v-list>
-  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px;">
-    <v-btn class="me-5" prepend-icon="mdi-cloud-search" @click="goToC8Import">
-      {{ $t('processList.importFromC8') }}
-    </v-btn>
+  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px; z-index: 1;">
+    <v-tooltip location="top">
+      <template v-slot:activator="{ props }">
+        <v-fab-transition>
+          <v-btn class="mt-auto pointer-events-initial me-4" color="primary" elevation="8" icon="mdi-cloud"
+                 @click="goToC8Import" size="large" v-bind="props"></v-btn>
+        </v-fab-transition>
+      </template>
+      <span>{{ $t('processList.navigateToC8Import') }}</span>
+    </v-tooltip>
+
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
              @click="openMultipleUploadDialog" size="large"/>
     </v-fab-transition>
+  </div>
+  <div v-if="processModels.length > 0" class="d-flex align-center justify-center ma-4"
+       style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px;">
+    <v-btn prepend-icon="mdi-map"
+           @click="goToProcessMap">
+      {{ $t('processList.toTheProcessMap') }}
+    </v-btn>
   </div>
 
   <v-dialog v-model="uploadDialog" persistent width="600" @after-leave="resetUploadDialog">
@@ -306,6 +320,9 @@ export default defineComponent({
     getLocaleDate(date: string): string {
       const locales = this.appStore.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
       return new Date(date).toLocaleString(locales);
+    },
+    goToProcessMap() {
+      this.$router.push("ProcessMap");
     }
   }
 })
