@@ -31,14 +31,28 @@
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
   </v-list>
-  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px;">
-    <v-btn class="me-5" prepend-icon="mdi-cloud-search" @click="goToC8Import">
-      Aus C8 importieren
-    </v-btn>
+  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px; z-index: 1;">
+    <v-tooltip location="top">
+      <template v-slot:activator="{ props }">
+        <v-fab-transition>
+          <v-btn class="mt-auto pointer-events-initial me-4" color="primary" elevation="8" icon="mdi-cloud"
+                 @click="goToC8Import" size="large" v-bind="props"></v-btn>
+        </v-fab-transition>
+      </template>
+      <span>Zu C8 Import navigieren</span>
+    </v-tooltip>
+
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
              @click="openMultipleUploadDialog" size="large"/>
     </v-fab-transition>
+  </div>
+  <div v-if="processModels.length > 0" class="d-flex align-center justify-center ma-4"
+       style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px;">
+    <v-btn prepend-icon="mdi-map"
+           @click="goToProcessMap">
+      Zur Prozesskarte
+    </v-btn>
   </div>
 
   <v-dialog v-model="uploadDialog" persistent width="600" @after-leave="resetUploadDialog">
@@ -299,6 +313,9 @@ export default defineComponent({
     },
     goToC8Import() {
       this.$router.push("CamundaCloudImport");
+    },
+    goToProcessMap() {
+      this.$router.push("ProcessMap");
     }
   }
 })

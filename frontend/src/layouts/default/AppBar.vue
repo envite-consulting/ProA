@@ -2,7 +2,7 @@
   <v-app-bar color="primary" prominent>
     <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
 
-    <v-toolbar-title>ProA</v-toolbar-title>
+    <v-toolbar-title>ProA – {{ getCurrentRouteName }}</v-toolbar-title>
 
     <v-spacer></v-spacer>
 
@@ -35,8 +35,48 @@
 import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
 
+enum AppRoutes {
+  ProjectOverview = 'ProjectOverview',
+  ProcessList = 'ProcessList',
+  ProcessView = 'ProcessView',
+  CamundaCloudImport = 'CamundaCloudImport',
+  ProcessMap = 'ProcessMap',
+}
+
+enum AppRoutesGerman {
+  ProjectOverview = 'Projektübersicht',
+  ProcessList = 'Prozessliste',
+  ProcessView = 'Prozessansicht',
+  CamundaCloudImport = 'C8 Import',
+  ProcessMap = 'Prozesskarte',
+}
+
 export default defineComponent({
-  methods: { useAppStore },
+  methods: {
+    useAppStore,
+    getGermanRouteName(routeName: string): string {
+      switch (routeName) {
+        case AppRoutes.ProjectOverview:
+          return AppRoutesGerman.ProjectOverview
+        case AppRoutes.ProcessList:
+          return AppRoutesGerman.ProcessList
+        case AppRoutes.ProcessView:
+          return AppRoutesGerman.ProcessView
+        case AppRoutes.CamundaCloudImport:
+          return AppRoutesGerman.CamundaCloudImport
+        case AppRoutes.ProcessMap:
+          return AppRoutesGerman.ProcessMap
+        default:
+          return routeName
+      }
+    }
+  },
+  computed: {
+    getCurrentRouteName() {
+      const routeName = (this.$router.currentRoute.value.name || '').toString();
+      return this.getGermanRouteName(routeName);
+    }
+  },
   data: () => ({
     drawer: false,
     group: null,
@@ -46,12 +86,12 @@ export default defineComponent({
         route: '/'
       },
       {
-        title: 'C8 Import',
-        route: '/CamundaCloudImport'
-      },
-      {
         title: 'Prozessliste',
         route: '/ProcessList'
+      },
+      {
+        title: 'C8 Import',
+        route: '/CamundaCloudImport'
       },
       {
         title: 'Prozesskarte',
