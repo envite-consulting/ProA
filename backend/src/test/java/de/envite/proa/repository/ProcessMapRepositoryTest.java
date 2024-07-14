@@ -92,6 +92,7 @@ public class ProcessMapRepositoryTest {
 		processConnectionTable.setCalledProcess(processModel2);
 		processConnectionTable.setCalledElement(CALLED_ELEMENT_ID);
 		processConnectionTable.setCalledElementType(ProcessElementType.START_EVENT);
+		processConnectionTable.setUserCreated(false);
 
 		when(processConnectionDao.getProcessConnections(any())).thenReturn(List.of(processConnectionTable));
 		processConnectionTable.setLabel(COMMON_LABEL);

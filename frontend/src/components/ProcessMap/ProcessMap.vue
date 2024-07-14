@@ -448,7 +448,8 @@ export default defineComponent({
           callingProcessid,
           calledProcessid,
           callingElementType,
-          calledElementType
+          calledElementType,
+          userCreated: true
         }, {
           headers: {
             'Content-Type': 'application/json'

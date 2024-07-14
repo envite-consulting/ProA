@@ -237,14 +237,15 @@ export default defineComponent({
       }
     },
 
-    async uploadProcessModel(processModel: ProcessModelToUpload) {
+    async uploadProcessModel(processModel: ProcessModelToUpload): Promise<number> {
       let formData = new FormData();
       const fileName = processModel.name || processModel.file.name.replace(this.fileExtensionMatcher, "");
       formData.append("processModel", processModel.file);
       formData.append("fileName", fileName);
       formData.append("description", processModel.description);
 
-      await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
+      const { data } = await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
+      return data;
     },
 
     async uploadProcessModels() {
@@ -263,14 +264,20 @@ export default defineComponent({
       }
     },
 
+    async copyUserConnections(oldProcessId: number, newProcessId: number) {
+      await axios.post("/api/project/" + this.selectedProjectId + "/copy-connections/" + oldProcessId + "/" + newProcessId);
+    },
+
     async swapProcessModel() {
       if (this.processModelsToUpload.length === 1) {
         this.progressDialog = true;
         const oldModelId = this.replaceProcessModel;
+        const newProcessId = await this.uploadProcessModel(this.processModelsToUpload[0]);
+        this.progress += 33;
+        await this.copyUserConnections(oldModelId!, newProcessId);
+        this.progress += 33;
         await this.deleteProcessModel(oldModelId!);
-        this.progress += 50;
 
-        await this.uploadProcessModel(this.processModelsToUpload[0]);
         this.afterUploadActions();
       }
     },

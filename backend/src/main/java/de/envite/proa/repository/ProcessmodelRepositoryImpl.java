@@ -151,6 +151,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			// called element remains empty
 			connection.setLabel(callActivityTable.getLabel());
 			connection.setProject(projectTable);
+			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
 	}
@@ -170,6 +171,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			// called element remains empty
 			connection.setLabel(process.getName());
 			connection.setProject(projectTable);
+			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
 	}
@@ -222,6 +224,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 			connection.setLabel(event.getLabel());
 			connection.setProject(projectTable);
+			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
 	}
@@ -252,6 +255,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 			connection.setLabel(event.getLabel());
 			connection.setProject(projectTable);
+			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
 	}

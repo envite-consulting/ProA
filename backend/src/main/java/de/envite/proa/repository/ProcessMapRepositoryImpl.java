@@ -1,6 +1,8 @@
 package de.envite.proa.repository;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.envite.proa.entities.*;
@@ -22,21 +24,21 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	@Inject
 	public ProcessMapRepositoryImpl(ProjectDao projectDao, //
-                                    ProcessModelDao processModelDao, //
-                                    ProcessConnectionDao processConnectionDao, //
-                                    DataStoreDao dataStoreDao, //
-                                    DataStoreConnectionDao dataStoreConnectionDao, //
-									CallActivityDao callActivityDao, //
-									ProcessEventDao processEventDao //
+			ProcessModelDao processModelDao, //
+			ProcessConnectionDao processConnectionDao, //
+			DataStoreDao dataStoreDao, //
+			DataStoreConnectionDao dataStoreConnectionDao, //
+			CallActivityDao callActivityDao, //
+			ProcessEventDao processEventDao //
 	) {
 		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.processConnectionDao = processConnectionDao;
 		this.dataStoreDao = dataStoreDao;
 		this.dataStoreConnectionDao = dataStoreConnectionDao;
-        this.callActivityDao = callActivityDao;
-        this.processEventDao = processEventDao;
-    }
+		this.callActivityDao = callActivityDao;
+		this.processEventDao = processEventDao;
+	}
 
 	@Override
 	public ProcessMap getProcessMap(Long projectId) {
@@ -60,6 +62,40 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	public void addConnection(Long projectId, ProcessConnection connection) {
 		ProcessConnectionTable processConnection = map(projectId, connection);
 		processConnectionDao.addConnection(processConnection);
+	}
+
+	@Override
+	public void copyConnections(Long projectId, Long oldProcessId, Long newProcessId) {
+		ProjectTable project = projectDao.findById(projectId);
+		ProcessModelTable oldProcess = processModelDao.find(oldProcessId);
+		ProcessModelTable newProcess = processModelDao.find(newProcessId);
+		List<ProcessConnectionTable> oldConnections = processConnectionDao.getProcessConnections(project, oldProcess);
+		List<ProcessConnectionTable> newConnections = processConnectionDao.getProcessConnections(project, newProcess);
+		Set<Long> newConnectionSources = new HashSet<>();
+		Set<Long> newConnectionTargets = new HashSet<>();
+
+		newConnections.forEach(connection -> {
+			boolean isOutgoing = connection.getCallingProcess().getId().equals(newProcessId);
+			if (isOutgoing) {
+				newConnectionTargets.add(connection.getCalledProcess().getId());
+			} else {
+				newConnectionSources.add(connection.getCallingProcess().getId());
+			}
+		});
+
+		oldConnections.stream().filter(ProcessConnectionTable::getUserCreated).forEach(connection -> {
+			boolean isOutgoing = connection.getCallingProcess().getId().equals(oldProcessId);
+			if (isOutgoing && newConnectionTargets.contains(connection.getCalledProcess().getId())) {
+				return;
+			}
+			if (!isOutgoing && newConnectionSources.contains(connection.getCallingProcess().getId())) {
+				return;
+			}
+			connection.setCallingProcess(isOutgoing ? newProcess : connection.getCallingProcess());
+			connection.setCalledProcess(isOutgoing ? connection.getCalledProcess() : newProcess);
+			ProcessConnectionTable newConnection = map(projectId, map(connection));
+			processConnectionDao.persist(newConnection);
+		});
 	}
 
 	@Override
@@ -129,8 +165,9 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 		connection.setCalledProcessid(table.getCalledProcess().getId());
 		connection.setCalledElementType(table.getCalledElementType());
-		
+
 		connection.setLabel(table.getLabel());
+		connection.setUserCreated(table.getUserCreated());
 		return connection;
 	}
 
@@ -150,6 +187,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		table.setCallingElement(callingElement);
 		table.setCalledElement(calledElement);
 		table.setProject(projectDao.findById(projectId));
+		table.setUserCreated(connection.getUserCreated());
 		return table;
 	}
 
@@ -170,12 +208,12 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	}
 
 	private EventType map(ProcessElementType elementType) {
-        return switch (elementType) {
+		return switch (elementType) {
 			case ProcessElementType.START_EVENT -> EventType.START;
 			case ProcessElementType.INTERMEDIATE_CATCH_EVENT -> EventType.INTERMEDIATE_CATCH;
 			case ProcessElementType.INTERMEDIATE_THROW_EVENT -> EventType.INTERMEDIATE_THROW;
 			case ProcessElementType.END_EVENT -> EventType.END;
-            default -> null;
-        };
-    }
+			default -> null;
+		};
+	}
 }
