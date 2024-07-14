@@ -125,7 +125,7 @@
 </style>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref } from 'vue';
+import { defineComponent } from 'vue';
 import { dia, linkTools, shapes } from '@joint/core';
 import { graph, paper } from './jointjs/JointJSDiagram';
 //MIT License
@@ -143,6 +143,7 @@ import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
 
 import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
+import FilterOptions = dia.Paper.FilterOptions;
 
 const scrollStep = 20;
 
@@ -209,6 +210,11 @@ interface FilterGraphInput {
   hideConnectionLabels: boolean;
 }
 
+type HiddenPorts = { [key: string]: dia.Element.Port[] };
+type PortsInformation = { [key: string]: string[] };
+type HiddenCells = dia.Cell[];
+type HiddenLinks = { [key: string]: string };
+
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
     case ProcessElementType.START_EVENT:
@@ -233,67 +239,63 @@ export default defineComponent({
     ProcessDetailDialog
   },
 
-  data: () => ({
-    selectedProjectId: null as number | null,
-    selectedProjectName: '' as string,
-    selectedVersionName: '' as string,
-    tooltipVisible: false,
-    mouseX: '',
-    mouseY: '',
-    portsInformation: {} as { [key: string]: string[] },
-    tooltipList: [] as string[],
-    store: useAppStore(),
-    showLegend: false
-  }),
-  setup() {
+  data: () => {
     const appStore = useAppStore();
-    const projectId = appStore.selectedProjectId;
-    const processDetailDialog = ref(null);
-    const showFilterMenu = ref(false);
-    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
-    const hiddenPorts: {
-      [key: string]: dia.Element.Port[]
-    } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
-    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-    const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
-    const hiddenLinks: { [key: string]: string } = persistedHiddenLinks ?? {} as { [key: string]: string };
+    const projectId: number | null = appStore.selectedProjectId;
     const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
-    const filterGraphInput: FilterGraphInput = reactive(
-      !!persistedFilterGraphInput ?
-        JSON.parse(persistedFilterGraphInput) :
-        {
-          hideAbstractDataStores: false,
-          hideCallActivities: false,
-          hideIntermediateEvents: false,
-          hideStartEndEvents: false,
-          hideProcessesWithoutConnections: false,
-          hideConnectionLabels: false,
-        });
-    const filterOptions = {
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
+    const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
+
+    const filterGraphInput: FilterGraphInput = !!persistedFilterGraphInput ? JSON.parse(persistedFilterGraphInput) : {
+      hideAbstractDataStores: false,
+      hideCallActivities: false,
+      hideIntermediateEvents: false,
+      hideStartEndEvents: false,
+      hideProcessesWithoutConnections: false,
+      hideConnectionLabels: false
+    };
+    const filterOptions: FilterOptions = {
       hideAbstractDataStores: 'Ressourcen',
       hideCallActivities: 'Aufrufaktivitäten',
       hideIntermediateEvents: 'Zwischenereignisse',
       hideStartEndEvents: 'End- zu Start-Verbindungen',
       hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen',
-      hideConnectionLabels: "Verbindungslabels",
+      hideConnectionLabels: 'Verbindungslabels',
     };
-    const filtersCount = computed(() => {
-      return Object.values(filterGraphInput).filter(value => value === true).length;
-    });
+    const hiddenCells: HiddenCells = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+    const hiddenLinks: HiddenLinks = persistedHiddenLinks ?? {};
+    const hiddenPorts: HiddenPorts = persistedHiddenPorts ? JSON.parse(persistedHiddenPorts) : {};
+    const portsInformation: PortsInformation = {};
+
     return {
-      processDetailDialog,
-      showFilterMenu,
-      hiddenPorts,
-      hiddenCells,
-      hiddenLinks,
+      mouseX: '' as string,
+      mouseY: '' as string,
+      selectedProjectId: null as number | null,
+      selectedProjectName: '' as string,
+      selectedVersionName: '' as string,
+      showFilterMenu: false as boolean,
+      showLegend: false as boolean,
+      tooltipList: [] as string[],
+      tooltipVisible: false as boolean,
+      appStore,
       filterGraphInput,
       filterOptions,
-      filtersCount
-    };
+      hiddenCells,
+      hiddenLinks,
+      hiddenPorts,
+      portsInformation,
+      projectId
+    }
   },
-  mounted: function () {
-    this.selectedProjectId = this.store.selectedProjectId;
+
+  computed: {
+    filtersCount(): number {
+      return Object.values(this.filterGraphInput).filter(value => value === true).length
+    }
+  },
+
+  mounted() {
     if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
@@ -362,15 +364,15 @@ export default defineComponent({
       return;
     }
 
-    const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
+    const persistedGraph = this.appStore.getGraphForProject(this.appStore.selectedProjectId!);
     if (!!persistedGraph) {
-      Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
+      Object.assign(this.portsInformation, this.appStore.getPortsInformationByProject(this.appStore.selectedProjectId!));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
       return;
     }
-    const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
+    const persistedLayout = this.appStore.getPaperLayoutForProject(this.appStore.selectedProjectId!);
     if (!!persistedLayout) {
       const { sx, tx, ty } = JSON.parse(persistedLayout);
       paper.scale(sx);
@@ -552,25 +554,25 @@ export default defineComponent({
     },
     saveGraphState() {
       setTimeout(() => {
-        this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+        this.appStore.setGraphForProject(this.selectedProjectId!, JSON.stringify(graph));
       }, 50);
     },
     savePaperLayout() {
-      this.store.setPaperLayoutForProject(this.store.selectedProjectId!, JSON.stringify({
+      this.appStore.setPaperLayoutForProject(this.selectedProjectId!, JSON.stringify({
         sx: paper.scale().sx,
         tx: paper.translate().tx,
         ty: paper.translate().ty
       }));
     },
     saveFilters() {
-      this.store.setFiltersForProject(this.store.selectedProjectId!, JSON.stringify(this.filterGraphInput));
+      this.appStore.setFiltersForProject(this.selectedProjectId!, JSON.stringify(this.filterGraphInput));
     },
     saveHiddenElements() {
-      this.store.setHiddenCellsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenCells));
-      this.store.setHiddenLinksForProject(this.store.selectedProjectId!, this.hiddenLinks);
+      this.appStore.setHiddenCellsForProject(this.selectedProjectId!, JSON.stringify(this.hiddenCells));
+      this.appStore.setHiddenLinksForProject(this.selectedProjectId!, this.hiddenLinks);
     },
     saveHiddenPorts() {
-      this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
+      this.appStore.setHiddenPortsForProject(this.selectedProjectId!, JSON.stringify(this.hiddenPorts));
     },
     closeMenus() {
       this.showFilterMenu = false;
@@ -609,7 +611,7 @@ export default defineComponent({
           return createAbstractProcessElement(process.name, process.id);
         });
 
-        this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
+        this.appStore.setPortsInformationByProject(this.selectedProjectId!, this.portsInformation);
 
         graph.addCell(abstracProcessShapes);
 
