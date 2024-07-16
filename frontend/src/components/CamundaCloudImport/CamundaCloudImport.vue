@@ -172,12 +172,12 @@ export default defineComponent({
     loadingDialog: false as boolean,
     clientId: "" as string,
     clientSecret: "" as string,
-    creatorEMail: null,
+    creatorEMail: null as string | null,
     importedProcessModels: [] as ProcessModel[],
     processModels: [] as ProcessModel[],
     selectedProcessModels: [] as ProcessModel[],
-    tokenError: false,
-    token: null,
+    tokenError: false as boolean,
+    token: null as string | null,
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
@@ -221,7 +221,7 @@ export default defineComponent({
       this.loadingDialog = true;
       axios.post("/api/camunda-cloud", {
         "token": this.token,
-        "email": this.creatorEMail,
+        "email": this.isBlank(this.creatorEMail) ? null : this.creatorEMail
       }).then(result => {
         const items: ProcessModel[] = result.data.items;
         this.processModels = items;
@@ -285,6 +285,9 @@ export default defineComponent({
     },
     updateStickyButton() {
       this.stickyButtonTop = Math.max(minStickyOffset, maxStickyOffset - scrollY);
+    },
+    isBlank(s: string | null) {
+      return !s || /^\s*$/.test(s);
     }
   }
 })
