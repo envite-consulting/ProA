@@ -71,9 +71,17 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		ProcessModelTable newProcess = processModelDao.find(newProcessId);
 		List<ProcessConnectionTable> oldConnections = processConnectionDao.getProcessConnections(project, oldProcess);
 		List<ProcessConnectionTable> newConnections = processConnectionDao.getProcessConnections(project, newProcess);
+
 		Set<Long> newConnectionSources = new HashSet<>();
 		Set<Long> newConnectionTargets = new HashSet<>();
+		divideNewConnectionsIntoSets(newConnections, newProcessId, newConnectionSources, newConnectionTargets);
 
+		copyUserCreatedConnections(projectId, oldProcessId, newProcess, oldConnections, newConnectionSources,
+				newConnectionTargets);
+	}
+
+	private void divideNewConnectionsIntoSets(List<ProcessConnectionTable> newConnections, Long newProcessId,
+			Set<Long> newConnectionSources, Set<Long> newConnectionTargets) {
 		newConnections.forEach(connection -> {
 			boolean isOutgoing = connection.getCallingProcess().getId().equals(newProcessId);
 			if (isOutgoing) {
@@ -82,7 +90,11 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				newConnectionSources.add(connection.getCallingProcess().getId());
 			}
 		});
+	}
 
+	private void copyUserCreatedConnections(Long projectId, Long oldProcessId, ProcessModelTable newProcess,
+			List<ProcessConnectionTable> oldConnections, Set<Long> newConnectionSources,
+			Set<Long> newConnectionTargets) {
 		oldConnections.stream().filter(ProcessConnectionTable::getUserCreated).forEach(connection -> {
 			boolean isOutgoing = connection.getCallingProcess().getId().equals(oldProcessId);
 			if (isOutgoing && newConnectionTargets.contains(connection.getCalledProcess().getId())) {
