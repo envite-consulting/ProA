@@ -112,8 +112,8 @@
        :style="{ position: 'fixed', right: '8px', top: stickyButtonTop + 'px' }">
     <v-menu :close-on-content-click="false">
       <template v-slot:activator="{ props }">
-        <v-badge v-if="emailSelects.filter(emailSelect => emailSelect.selected).length > 0"
-                 :content="emailSelects.filter(emailSelect => emailSelect.selected).length">
+        <v-badge v-if="emailSelections.filter(emailSelection => emailSelection.selected).length > 0"
+                 :content="emailSelections.filter(emailSelection => emailSelection.selected).length">
           <v-fab-transition>
             <v-btn class="mt-auto pointer-events-initial" elevation="8" icon="mdi-filter-outline"
                    v-bind="props" size="large"/>
@@ -127,13 +127,13 @@
       <v-list density="compact" class="pa-2">
         <v-list-subheader>Ersteller E-Mail</v-list-subheader>
         <v-list-item
-          v-for="(emailSelect, index) in emailSelects"
+          v-for="(emailSelection, index) in emailSelections"
           :key="'imported-email-' + index"
         >
-          <v-checkbox v-model="emailSelect.selected" hide-details density="compact"
+          <v-checkbox v-model="emailSelection.selected" hide-details density="compact"
                       @update:model-value="filterSelectedModels">
             <template v-slot:label>
-              <span class="ms-1">{{ emailSelect.email }}</span>
+              <span class="ms-1">{{ emailSelection.email }}</span>
             </template>
           </v-checkbox>
         </v-list-item>
@@ -158,7 +158,7 @@ declare interface ProcessModel {
   }
 }
 
-interface EmailSelect {
+interface EmailSelection {
   email: string,
   selected: boolean
 }
@@ -182,7 +182,7 @@ export default defineComponent({
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
     selectAll: false as boolean,
-    emailSelects: [] as EmailSelect[],
+    emailSelections: [] as EmailSelection[],
     stickyButtonTop: Math.max(minStickyOffset, maxStickyOffset - scrollY),
   }),
 
@@ -223,13 +223,15 @@ export default defineComponent({
         "token": this.token,
         "email": this.isBlank(this.creatorEMail) ? null : this.creatorEMail
       }).then(result => {
-        const items: ProcessModel[] = result.data.items;
-        this.processModels = items;
-        this.importedProcessModels = items;
-        this.emailSelects = [...new Set(items.map(item => item.updatedBy.email))].sort().map(email => ({
-          email,
-          selected: false
-        }));
+        const processModels: ProcessModel[] = result.data.items;
+        this.processModels = processModels;
+        this.importedProcessModels = processModels;
+        this.emailSelections = [...new Set(processModels.map(processModel => processModel.updatedBy.email))]
+          .sort()
+          .map(email => ({
+            email,
+            selected: false
+          }));
         this.camundaCloudDialog = false;
         this.loadingDialog = false;
       }).catch(error => {
@@ -270,14 +272,18 @@ export default defineComponent({
       }
     },
     filterSelectedModels() {
-      const selectedEmails = this.emailSelects.filter(select => select.selected).map(select => select.email);
+      const selectedEmails = this.emailSelections
+        .filter(emailSelection => emailSelection.selected)
+        .map(emailSelection => emailSelection.email);
       if (selectedEmails.length == 0) {
         this.processModels = this.importedProcessModels;
         this.updateSelectAll();
         return;
       }
-      this.processModels = this.importedProcessModels.filter(model => selectedEmails.includes(model.updatedBy.email));
-      this.selectedProcessModels = this.selectedProcessModels.filter(model => selectedEmails.includes(model.updatedBy.email));
+      this.processModels = this.importedProcessModels
+        .filter(model => selectedEmails.includes(model.updatedBy.email));
+      this.selectedProcessModels = this.selectedProcessModels
+        .filter(model => selectedEmails.includes(model.updatedBy.email));
       this.updateSelectAll();
     },
     updateSelectAll() {
