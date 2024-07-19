@@ -1,0 +1,74 @@
+{
+  "c8Import": {
+    "camundaConnectionSuccessMessage": "Connected to Camunda 8. You can call up process models.",
+    "connect": "Connect",
+    "creatorEmail": "Creator Email",
+    "creatorEmailHint": "Optional: Only process models of the specified creator email are retrieved",
+    "errorMessage": "An error has occurred!",
+    "importFromC8": "Import Processes from C8",
+    "importProcessModels": "Import Process Models",
+    "loading": "Loading...",
+    "retrieveProcessModels": "Retrieve Process Models"
+  },
+  "general": {
+    "activity": "Activity",
+    "callActivities": "Call Activities",
+    "cancel": "Cancel",
+    "description": "Description",
+    "end": "End",
+    "english": "English",
+    "german": "German",
+    "intermediateCatchEvents": "Intermediate Catch Events",
+    "intermediateEvent": "Intermediate Event",
+    "intermediateThrowEvents": "Intermediate Throw Events",
+    "processModel": "Process Model",
+    "save": "Save"
+  },
+  "navigation": {
+    "c8Import": "C8 Import",
+    "processList": "Process List",
+    "processMap": "Process Map",
+    "projectOverview": "Project Overview"
+  },
+  "processDetailSidebar": {
+    "endEvents": "End Events",
+    "goToProcessModel": "Go to Process Model",
+    "startEvents": "Start Events"
+  },
+  "processList": {
+    "processModels": "Process Models",
+    "replaceProcessModel": "Replace Process Model",
+    "uploadProcessModels": "Upload Process Models",
+    "uploadingProcessModels": "Uploading Process Models..."
+  },
+  "processMap": {
+    "callActivity": "Call Activity",
+    "connectionLabels": "Connection Labels",
+    "database": "Database",
+    "endEvent": "End Event",
+    "endToStartConnections": "End to Start Connections",
+    "hide": "Hide",
+    "intermediateEvents": "Intermediate Events",
+    "legend": "Legend",
+    "noInformationAvailable": "No information available",
+    "process": "Process",
+    "processesWithoutConnections": "Processes without Connections",
+    "resources": "Resources",
+    "startEvent": "Start Event"
+  },
+  "projectOverview": {
+    "active": "ACTIVE",
+    "create": "Create",
+    "createProject": "Create Project",
+    "createdOn": "Created on",
+    "lastModifiedOn": "Last modified on",
+    "newProject": "New Project",
+    "newVersion": "New Version",
+    "newVersionFor": "New Version for",
+    "open": "Open",
+    "projectNameRequired": "Project Name is required",
+    "projectVersionRequired": "Project Version is required",
+    "versionNameExists": "Version Name already exists",
+    "versionNameRequired": "Version Name is required"
+  }
+}

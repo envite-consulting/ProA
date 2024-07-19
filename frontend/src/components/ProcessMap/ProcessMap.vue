@@ -28,31 +28,32 @@
     <div style="position: absolute; top: 0; right: 0;">
       <v-list v-if="showLegend">
         <v-list-item>
-          <v-list-item-title class="font-weight-bold">Legende</v-list-item-title>
+          <v-list-item-title class="font-weight-bold">{{ $t('processMap.legend') }}</v-list-item-title>
         </v-list-item>
         <v-divider></v-divider>
-        <LegendItem text="Prozess" path="M 0 0 h 140 l 10 35 l -10 35 H 0 l 10 -35 l -10 -35 Z" width="30"
+        <LegendItem :text="$t('processMap.process')" path="M 0 0 h 140 l 10 35 l -10 35 H 0 l 10 -35 l -10 -35 Z"
+                    width="30"
                     height="30" view-box="-2 -2 154 74" stroke-width="8"></LegendItem>
-        <LegendItem text="Datenbank"
+        <LegendItem :text="$t('processMap.database')"
                     path="M 1.5 9 C 15.5 19 75.5 19 90.5 9 l 0 90 c -15 10 -75 10 -89 0 l 0 -90 C 15.5 -1 75.5 -1 90.5 9 v 15 c -15 10 -75 10 -89 0"
                     width="30"
                     height="30" view-box="-0.5 -0.5 93 109" stroke-width="5"></LegendItem>
-        <LegendItem text="Startereignis" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
+        <LegendItem :text="$t('processMap.startEvent')" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="1.5"></LegendItem>
-        <LegendItem text="Endereignis" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
+        <LegendItem :text="$t('processMap.endEvent')" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="3"></LegendItem>
-        <LegendItem text="Zwischenereignis"
+        <LegendItem :text="$t('general.intermediateEvent')"
                     path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
                     width="30"
                     height="30" view-box="-37 -12 24 24" stroke-width="2"></LegendItem>
-        <LegendItem text="Aufrufaktivität"
+        <LegendItem :text="$t('processMap.callActivity')"
                     path="M 35 -10 a3,3 0 0 1 3,3 v15 a3,3 0 0 1 -3,3 h-25 a3,3 0 0 1 -3,-3 v-15 a3,3 0 0 1 3,-3 z"
                     width="30"
                     height="30" view-box="5 -12 35 25" stroke-width="2"></LegendItem>
       </v-list>
       <v-list v-if="showFilterMenu">
         <v-list-item>
-          <v-list-item-title class="font-weight-bold">Ausblenden:</v-list-item-title>
+          <v-list-item-title class="font-weight-bold">{{ $t('processMap.hide') }}:</v-list-item-title>
         </v-list-item>
         <v-divider></v-divider>
         <v-list-item class="filter-item" v-for="(label, filterOption) in filterOptions" :key="filterOption">
@@ -103,7 +104,7 @@
     <ul v-if="tooltipList.length > 0">
       <li v-for="item in tooltipList">{{ item }}</li>
     </ul>
-    <span v-if="tooltipList.length === 0">Keine Informationen vorhanden</span>
+    <span v-if="tooltipList.length === 0">{{ $t('processMap.noInformationAvailable') }}</span>
   </v-tooltip>
 </template>
 
@@ -143,7 +144,6 @@ import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
 
 import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
-import FilterOptions = dia.Paper.FilterOptions;
 
 const scrollStep = 20;
 
@@ -212,8 +212,16 @@ interface FilterGraphInput {
 
 type HiddenPorts = { [key: string]: dia.Element.Port[] };
 type PortsInformation = { [key: string]: string[] };
-type HiddenCells = dia.Cell[];
 type HiddenLinks = { [key: string]: string };
+
+interface FilterOptions {
+  hideAbstractDataStores: string;
+  hideCallActivities: string;
+  hideIntermediateEvents: string;
+  hideStartEndEvents: string;
+  hideProcessesWithoutConnections: string;
+  hideConnectionLabels: string;
+}
 
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
@@ -241,11 +249,11 @@ export default defineComponent({
 
   data: () => {
     const appStore = useAppStore();
-    const projectId: number | null = appStore.selectedProjectId;
-    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
-    const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
-    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
+    const selectedProjectId: number | null = appStore.getSelectedProjectId();
+    const persistedFilterGraphInput = appStore.getFiltersForProject(selectedProjectId!);
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(selectedProjectId!);
+    const persistedHiddenLinks = appStore.getHiddenLinksForProject(selectedProjectId!);
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(selectedProjectId!);
 
     const filterGraphInput: FilterGraphInput = !!persistedFilterGraphInput ? JSON.parse(persistedFilterGraphInput) : {
       hideAbstractDataStores: false,
@@ -255,15 +263,8 @@ export default defineComponent({
       hideProcessesWithoutConnections: false,
       hideConnectionLabels: false
     };
-    const filterOptions: FilterOptions = {
-      hideAbstractDataStores: 'Ressourcen',
-      hideCallActivities: 'Aufrufaktivitäten',
-      hideIntermediateEvents: 'Zwischenereignisse',
-      hideStartEndEvents: 'End- zu Start-Verbindungen',
-      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen',
-      hideConnectionLabels: 'Verbindungslabels',
-    };
-    const hiddenCells: HiddenCells = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+
+    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
     const hiddenLinks: HiddenLinks = persistedHiddenLinks ?? {};
     const hiddenPorts: HiddenPorts = persistedHiddenPorts ? JSON.parse(persistedHiddenPorts) : {};
     const portsInformation: PortsInformation = {};
@@ -271,7 +272,6 @@ export default defineComponent({
     return {
       mouseX: '' as string,
       mouseY: '' as string,
-      selectedProjectId: null as number | null,
       selectedProjectName: '' as string,
       selectedVersionName: '' as string,
       showFilterMenu: false as boolean,
@@ -280,18 +280,27 @@ export default defineComponent({
       tooltipVisible: false as boolean,
       appStore,
       filterGraphInput,
-      filterOptions,
       hiddenCells,
       hiddenLinks,
       hiddenPorts,
       portsInformation,
-      projectId
+      selectedProjectId
     }
   },
 
   computed: {
     filtersCount(): number {
       return Object.values(this.filterGraphInput).filter(value => value === true).length
+    },
+    filterOptions(): FilterOptions {
+      return {
+        hideAbstractDataStores: this.$t('processMap.resources'),
+        hideCallActivities: this.$t('general.callActivities'),
+        hideIntermediateEvents: this.$t('processMap.intermediateEvents'),
+        hideStartEndEvents: this.$t('processMap.endToStartConnections'),
+        hideProcessesWithoutConnections: this.$t('processMap.processesWithoutConnections'),
+        hideConnectionLabels: this.$t('processMap.connectionLabels')
+      }
     }
   },
 
@@ -721,6 +730,7 @@ export default defineComponent({
         });
 
         graph.addCell(dataStoreConnectionShapes);
+
         paper.freeze();
         var graphBBox = DirectedGraph.layout(graph, {
           nodeSep: 150,
@@ -732,6 +742,7 @@ export default defineComponent({
 
         paper.transformToFitContent();
         paper.unfreeze();
+
         this.saveGraphState();
       })
     },
@@ -775,7 +786,6 @@ export default defineComponent({
       } = this.filterGraphInput;
 
       if (!hideConnectionLabels) {
-
         for (const link of graph.getLinks()) {
           const label = this.hiddenLinks[link.id];
           if (!!label) {
@@ -858,7 +868,6 @@ export default defineComponent({
             cell.removePorts(portIds);
           }
         }
-
       }
 
       this.hiddenCells.push(...processesWithoutConnections);
