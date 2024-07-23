@@ -28,13 +28,6 @@ public class ProcessMapResource {
 		usecase.addConnection(projectId, connection);
 	}
 
-	@POST
-	@Path("/project/{projectId}/copy-connections/{oldProcessId}/{newProcessId}")
-	public void addDataStoreConnection(@RestPath Long projectId, @RestPath Long oldProcessId,
-			@RestPath Long newProcessId) {
-		usecase.copyConnections(projectId, oldProcessId, newProcessId);
-	}
-
 	@DELETE
 	@Path("/project/process-map/process-connection/{connectionId}")
 	public void deleteProcessConnection(@RestPath Long connectionId) {

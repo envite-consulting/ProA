@@ -95,12 +95,19 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	private void copyUserCreatedConnections(Long projectId, Long oldProcessId, ProcessModelTable newProcess,
 			List<ProcessConnectionTable> oldConnections, Set<Long> newConnectionSources,
 			Set<Long> newConnectionTargets) {
+		Long newProcessId = newProcess.getId();
 		oldConnections.stream().filter(ProcessConnectionTable::getUserCreated).forEach(connection -> {
 			boolean isOutgoing = connection.getCallingProcess().getId().equals(oldProcessId);
 			if (isOutgoing && newConnectionTargets.contains(connection.getCalledProcess().getId())) {
 				return;
 			}
+			if (isOutgoing && connection.getCalledProcess().getId().equals(newProcessId)) {
+				return;
+			}
 			if (!isOutgoing && newConnectionSources.contains(connection.getCallingProcess().getId())) {
+				return;
+			}
+			if (!isOutgoing && connection.getCallingProcess().getId().equals(newProcessId)) {
 				return;
 			}
 			connection.setCallingProcess(isOutgoing ? newProcess : connection.getCallingProcess());
