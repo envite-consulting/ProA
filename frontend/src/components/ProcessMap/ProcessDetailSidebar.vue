@@ -14,7 +14,7 @@
       <v-container class="flex-grow-1 overflow-auto py-0">
         <v-list dense>
           <div v-if="details.startEvents && details.startEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('processDetailSidebar.startEvents') }}</v-list-subheader>
+            <v-list-subheader>Startaktivitäten</v-list-subheader>
             <v-list-item v-for="(start, index) in details.startEvents" :key="'startEvent-' + index">
               <v-chip @click="goToProcessModel(start.elementId)"
                       @mouseenter="model!.highlightPort(ProcessElementType.START_EVENT)"
@@ -24,53 +24,51 @@
           </div>
 
           <div v-if="details.endEvents && details.endEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('processDetailSidebar.endEvents') }}</v-list-subheader>
+            <v-list-subheader>Endaktivitäten</v-list-subheader>
             <v-list-item v-for="(end, index) in details.endEvents" :key="'endEvent' + index">
               <v-chip @click="goToProcessModel(end.elementId)"
                       @mouseenter="model!.highlightPort(ProcessElementType.END_EVENT)"
-                      @mouseleave="model!.unhighlightPort(ProcessElementType.END_EVENT)">{{
-                  end.label || $t('general.end')
-                }}
+                      @mouseleave="model!.unhighlightPort(ProcessElementType.END_EVENT)">{{ end.label || 'Ende' }}
               </v-chip>
             </v-list-item>
           </div>
 
           <div v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('general.intermediateCatchEvents') }}</v-list-subheader>
+            <v-list-subheader>Zwischenereignisse fangend</v-list-subheader>
             <v-list-item v-for="(event, index) in details.intermediateCatchEvents" :key="'endEvent' + index">
               <v-chip @click="goToProcessModel(event.elementId)"
                       @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)"
                       @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)">
-                {{ event.label || $t('general.intermediateEvent') }}
+                {{ event.label || 'Zwischenereignis' }}
               </v-chip>
             </v-list-item>
           </div>
 
           <div v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('general.intermediateThrowEvents') }}</v-list-subheader>
+            <v-list-subheader>Zwischenereignisse werfend</v-list-subheader>
             <v-list-item v-for="(event, index) in details.intermediateThrowEvents"
                          :key="'intermediateThrowEvent' + index">
               <v-chip @click="goToProcessModel(event.elementId)"
                       @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)"
                       @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)">
-                {{ event.label || $t('general.intermediateEvent') }}
+                {{ event.label || 'Zwischenereignise' }}
               </v-chip>
             </v-list-item>
           </div>
 
           <div v-if="details.activities && details.activities.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('general.callActivities') }}</v-list-subheader>
+            <v-list-subheader>Aufrufaktivitäten</v-list-subheader>
             <v-list-item v-for="(activity, index) in details.activities" :key="'activity' + index">
               <v-chip @click="goToProcessModel(activity.elementId)"
                       @mouseenter="model!.highlightPort(ProcessElementType.CALL_ACTIVITY)"
                       @mouseleave="model!.unhighlightPort(ProcessElementType.CALL_ACTIVITY)">
-                {{ activity.label || $t('general.activity') }}
+                {{ activity.label || 'Aktivitär' }}
               </v-chip>
             </v-list-item>
           </div>
 
           <div v-if="details.description" class="mb-4">
-            <v-list-subheader>{{ $t('general.description') }}</v-list-subheader>
+            <v-list-subheader>Beschreibung</v-list-subheader>
             <v-list-item>
               {{ details.description }}
             </v-list-item>
@@ -80,7 +78,7 @@
       <v-container class="flex-shrink-0 text-center mb-4">
         <div id="process-model-viewer" class="mb-4"></div>
         <v-btn color="blue-darken-1" variant="text" @click="goToProcessModel(null)">
-          {{ $t('processDetailSidebar.goToProcessModel') }}
+          Zum Prozessmodell
         </v-btn>
       </v-container>
     </div>

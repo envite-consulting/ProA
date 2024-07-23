@@ -2,7 +2,7 @@
   <v-dialog v-model="infoDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">{{ $t('general.processModel') }}: {{ details.name }}</span>
+        <span class="text-h5">Prozessmodell: {{ details.name }}</span>
       </v-card-title>
       <v-card-text>
         <v-container>
@@ -20,44 +20,34 @@
               <b class="mb-2">End Events</b>
               <ul class="mt-1">
                 <li v-for="(end, index) in details.endEvents" :key="'endEvent-' + index" class="mb-2">
-                  <v-chip @click="goToProcessModel(end.elementId)">{{ end.label || $t('general.end') }}
+                  <v-chip @click="goToProcessModel(end.elementId)">{{ end.label || 'Ende' }}
                   </v-chip>
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6"
-                   md="6">
-              <b class="mb-2">{{ $t('general.intermediateCatchEvents') }}</b>
+            <v-col v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">Zwischenereignisse fangend</b>
               <ul class="mt-1">
-                <li v-for="(event, index) in details.intermediateCatchEvents" :key="'intermediateCatchEvent-' + index"
-                    class="mb-2">
-                  <v-chip @click="goToProcessModel(event.elementId)">{{
-                      event.label || $t('general.intermediateEvent')
-                    }}
+                <li v-for="(event, index) in details.intermediateCatchEvents" :key="'intermediateCatchEvent-' + index" class="mb-2">
+                  <v-chip @click="goToProcessModel(event.elementId)">{{ event.label || 'Zwischenereignis' }}
                   </v-chip>
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6"
-                   md="6">
-              <b class="mb-2">{{ $t('general.intermediateThrowEvents') }}</b>
+            <v-col v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">Zwischenereignisse werfend</b>
               <ul class="mt-1">
-                <li v-for="(event, index) in details.intermediateThrowEvents" :key="'intermediateThrowEvent-' + index"
-                    class="mb-2">
-                  <v-chip @click="goToProcessModel(event.elementId)">{{
-                      event.label || $t('general.intermediateEvent')
-                    }}
+                <li v-for="(event, index) in details.intermediateThrowEvents" :key="'intermediateThrowEvent-' + index" class="mb-2">
+                  <v-chip @click="goToProcessModel(event.elementId)">{{ event.label || 'Zwischenereignis' }}
                   </v-chip>
                 </li>
               </ul>
             </v-col>
             <v-col v-if="details.activities && details.activities.length > 0" cols="12" sm="6" md="6">
-              <b class="mb-2">{{ $t('general.callActivities') }}</b>
+              <b class="mb-2">Aufrufaktivitäten</b>
               <ul class="mt-1">
                 <li v-for="(activity, index) in details.activities" :key="'activity-' + index" class="mb-2">
-                  <v-chip @click="goToProcessModel(activity.elementId)">{{
-                      activity.label || $t('general.activity')
-                    }}
+                  <v-chip @click="goToProcessModel(activity.elementId)">{{ activity.label || 'Aktivität' }}
                   </v-chip>
                 </li>
               </ul>
@@ -65,7 +55,7 @@
           </v-row>
           <div v-if="details.description" class="px-3 pb-3">
             <v-row>
-              <b>{{ $t('general.description') }}:</b>
+              <b>Beschreibung:</b>
             </v-row>
             <v-row>
               <p class="description-text">{{ details.description }}</p>
@@ -77,10 +67,10 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue-darken-1" variant="text" @click="goToProcessModel(null)">
-          {{ $t('general.processModel') }}
+          Prozessmodell
         </v-btn>
         <v-btn color="blue-darken-1" variant="text" @click="infoDialog = false">
-          {{ $t('general.cancel') }}
+          Schließen
         </v-btn>
       </v-card-actions>
     </v-card>

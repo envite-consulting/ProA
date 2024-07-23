@@ -28,32 +28,31 @@
     <div style="position: absolute; top: 0; right: 0;">
       <v-list v-if="showLegend">
         <v-list-item>
-          <v-list-item-title class="font-weight-bold">{{ $t('processMap.legend') }}</v-list-item-title>
+          <v-list-item-title class="font-weight-bold">Legende</v-list-item-title>
         </v-list-item>
         <v-divider></v-divider>
-        <LegendItem :text="$t('processMap.process')" path="M 0 0 h 140 l 10 35 l -10 35 H 0 l 10 -35 l -10 -35 Z"
-                    width="30"
+        <LegendItem text="Prozess" path="M 0 0 h 140 l 10 35 l -10 35 H 0 l 10 -35 l -10 -35 Z" width="30"
                     height="30" view-box="-2 -2 154 74" stroke-width="8"></LegendItem>
-        <LegendItem :text="$t('processMap.database')"
+        <LegendItem text="Datenbank"
                     path="M 1.5 9 C 15.5 19 75.5 19 90.5 9 l 0 90 c -15 10 -75 10 -89 0 l 0 -90 C 15.5 -1 75.5 -1 90.5 9 v 15 c -15 10 -75 10 -89 0"
                     width="30"
                     height="30" view-box="-0.5 -0.5 93 109" stroke-width="5"></LegendItem>
-        <LegendItem :text="$t('processMap.startEvent')" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
+        <LegendItem text="Startereignis" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="1.5"></LegendItem>
-        <LegendItem :text="$t('processMap.endEvent')" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
+        <LegendItem text="Endereignis" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
                     height="30" view-box="-1.99999 -22 24 24" stroke-width="3"></LegendItem>
-        <LegendItem :text="$t('general.intermediateEvent')"
+        <LegendItem text="Zwischenereignis"
                     path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
                     width="30"
                     height="30" view-box="-37 -12 24 24" stroke-width="2"></LegendItem>
-        <LegendItem :text="$t('processMap.callActivity')"
+        <LegendItem text="Aufrufaktivität"
                     path="M 35 -10 a3,3 0 0 1 3,3 v15 a3,3 0 0 1 -3,3 h-25 a3,3 0 0 1 -3,-3 v-15 a3,3 0 0 1 3,-3 z"
                     width="30"
                     height="30" view-box="5 -12 35 25" stroke-width="2"></LegendItem>
       </v-list>
       <v-list v-if="showFilterMenu">
         <v-list-item>
-          <v-list-item-title class="font-weight-bold">{{ $t('processMap.hide') }}:</v-list-item-title>
+          <v-list-item-title class="font-weight-bold">Ausblenden:</v-list-item-title>
         </v-list-item>
         <v-divider></v-divider>
         <v-list-item class="filter-item" v-for="(label, filterOption) in filterOptions" :key="filterOption">
@@ -104,7 +103,7 @@
     <ul v-if="tooltipList.length > 0">
       <li v-for="item in tooltipList">{{ item }}</li>
     </ul>
-    <span v-if="tooltipList.length === 0">{{ $t('processMap.noInformationAvailable') }}</span>
+    <span v-if="tooltipList.length === 0">Keine Informationen vorhanden</span>
   </v-tooltip>
 </template>
 
@@ -210,15 +209,6 @@ interface FilterGraphInput {
   hideConnectionLabels: boolean;
 }
 
-interface FilterOptions {
-  hideAbstractDataStores: string;
-  hideCallActivities: string;
-  hideIntermediateEvents: string;
-  hideStartEndEvents: string;
-  hideProcessesWithoutConnections: string;
-  hideConnectionLabels: string;
-}
-
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
     case ProcessElementType.START_EVENT:
@@ -255,20 +245,6 @@ export default defineComponent({
     store: useAppStore(),
     showLegend: false
   }),
-
-  computed: {
-    filterOptions(): FilterOptions {
-      return {
-        hideAbstractDataStores: this.$t('processMap.resources'),
-        hideCallActivities: this.$t('general.callActivities'),
-        hideIntermediateEvents: this.$t('processMap.intermediateEvents'),
-        hideStartEndEvents: this.$t('processMap.endToStartConnections'),
-        hideProcessesWithoutConnections: this.$t('processMap.processesWithoutConnections'),
-        hideConnectionLabels: this.$t('processMap.connectionLabels')
-      }
-    }
-  },
-
   setup() {
     const appStore = useAppStore();
     const projectId = appStore.selectedProjectId;
@@ -294,6 +270,14 @@ export default defineComponent({
           hideProcessesWithoutConnections: false,
           hideConnectionLabels: false,
         });
+    const filterOptions = {
+      hideAbstractDataStores: 'Ressourcen',
+      hideCallActivities: 'Aufrufaktivitäten',
+      hideIntermediateEvents: 'Zwischenereignisse',
+      hideStartEndEvents: 'End- zu Start-Verbindungen',
+      hideProcessesWithoutConnections: 'Prozesse ohne Verbindungen',
+      hideConnectionLabels: "Verbindungslabels",
+    };
     const filtersCount = computed(() => {
       return Object.values(filterGraphInput).filter(value => value === true).length;
     });
@@ -304,6 +288,7 @@ export default defineComponent({
       hiddenCells,
       hiddenLinks,
       filterGraphInput,
+      filterOptions,
       filtersCount
     };
   },

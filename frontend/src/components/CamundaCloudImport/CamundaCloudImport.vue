@@ -22,7 +22,7 @@
       <v-list-item>
         <v-list-item-title>{{ model.name }}</v-list-item-title>
         <v-list-item-subtitle>
-          {{ getLocaleDate(model.created) }} - {{ model.updatedBy.email }}
+          {{ new Date(model.created).toLocaleString("de-DE") }} - {{ model.updatedBy.email }}
         </v-list-item-subtitle>
         <template v-slot:prepend="{ isActive }">
           <v-list-item-action start>
@@ -36,14 +36,14 @@
   <v-dialog v-model="camundaCloudDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">{{ $t('c8Import.importFromC8') }}</span>
+        <span class="text-h5">Prozesse aus C8 importieren</span>
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row>
             <v-col v-if="!!token">
               <v-icon icon="mdi-check-circle" color="green"></v-icon>
-              {{ $t('c8Import.camundaConnectionSuccessMessage') }}
+              Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
               <v-text-field v-model="clientId" class="text-field__styled" dense color="#26376B"
@@ -54,22 +54,22 @@
                             placeholder="Client Secret" type="password"></v-text-field>
             </v-col>
             <v-col v-if="tokenError">
-              {{ $t('c8Import.errorMessage') }}
+              Es ist ein Fehler aufgetreten!
             </v-col>
             <v-col v-if="!token">
               <v-btn color="blue-darken-1" @click="fetchToken">
-                {{ $t('c8Import.connect') }}
+                Verbinden
               </v-btn>
             </v-col>
             <v-col cols="12" sm="12" md="12">
               <v-text-field :disabled="!token" v-model="creatorEMail" class="text-field__styled"
-                            dense color="#26376B" :placeholder="$t('c8Import.creatorEmail')"
-                            :hint="$t('c8Import.creatorEmailHint')">
+                            dense color="#26376B" placeholder="Ersteller E-Mail"
+                            hint="Optional: Es werden nur Prozessmodelle der angegebenen Ersteller E-Mail abgerufen">
               </v-text-field>
             </v-col>
             <v-col>
               <v-btn :disabled="!token" color="blue-darken-1" @click="fetchProcessModels">
-                {{ $t('c8Import.retrieveProcessModels') }}
+                Prozessmodelle abrufen
               </v-btn>
             </v-col>
           </v-row>
@@ -78,14 +78,14 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue-darken-1" variant="text" @click="camundaCloudDialog = false">
-          {{ $t('general.cancel') }}
+          Schließen
         </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
   <v-dialog v-model="loadingDialog" max-width="320" persistent>
     <v-list class="py-2" color="primary" elevation="12" rounded="lg">
-      <v-list-item :title="$t('c8Import.loading')">
+      <v-list-item title="Laden ...">
         <template v-slot:append>
           <v-progress-circular color="primary" indeterminate="disable-shrink" size="16" width="2"></v-progress-circular>
         </template>
@@ -102,7 +102,7 @@
        style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px"
        v-if="selectedProcessModels.length > 0">
     <v-btn prepend-icon="mdi-import" @click="importProcessModels">
-      {{ $t('c8Import.importProcessModels') }}
+      Importieren
     </v-btn>
   </div>
   <div class="ma-4" v-if="importedProcessModels.length > 0"
@@ -287,10 +287,6 @@ export default defineComponent({
     },
     isBlank(s: string | null) {
       return !s || /^\s*$/.test(s);
-    },
-    getLocaleDate(date: string): string {
-      const locales = useAppStore().getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
-      return new Date(date).toLocaleString(locales);
     }
   }
 })
