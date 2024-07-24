@@ -241,7 +241,6 @@ export default defineComponent({
       try {
         await axios.post("/api/camunda-cloud/process-instances", {
           "token": operateToken,
-          "email": null,
           "regionId": this.settings.operateRegionId,
           "clusterId": this.settings.operateClusterId
         });

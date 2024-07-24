@@ -29,8 +29,6 @@ public class CamundaCloudImportUsecase {
 	}
 
 	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
-		ProcessInstancesFilter filter = new ProcessInstancesFilter();
-
 		String operateUri = "https://" + //
 				configuration.getRegionId() + //
 				".operate.camunda.io/" + //
@@ -40,6 +38,12 @@ public class CamundaCloudImportUsecase {
 				.newBuilder() //
 				.baseUri(URI.create(operateUri)) //
 				.build(CamundaOperateService.class);
+
+		String bpmnProcessId = configuration.getBpmnProcessId();
+
+		ProcessInstancesFilter filter = bpmnProcessId != null
+				? new ProcessInstancesFilter(bpmnProcessId)
+				: new ProcessInstancesFilter();
 
 		return camundaOperateService.getProcessInstances("Bearer " + configuration.getToken(), filter);
 	}

@@ -9,4 +9,5 @@ public class CamundaCloudFetchConfiguration {
 	private String email;
 	private String regionId;
 	private String clusterId;
+	private String bpmnProcessId;
 }

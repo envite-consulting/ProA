@@ -770,13 +770,18 @@ export default defineComponent({
       }
     },
     async fetchProcessInstances() {
-      const result = await axios.post("/api/camunda-cloud/process-instances", {
-        "token": this.operateToken,
-        "email": null,
-        "regionId": this.settings.operateRegionId,
-        "clusterId": this.settings.operateClusterId
+      const promises = graph.getCells().filter(cell => cell instanceof AbstractProcessShape).map(cell => {
+        return axios.post("/api/camunda-cloud/process-instances", {
+          "token": this.operateToken,
+          "regionId": this.settings.operateRegionId,
+          "clusterId": this.settings.operateClusterId,
+          "bpmnProcessId": cell.attributes.bpmnProcessId
+        });
       });
-      const items = result.data.items;
+
+      const results = await Promise.all(promises);
+      const items = results.flatMap(result => result.data.items);
+
       const countByProcess = items.reduce((countByProcess: Map<string, number>, item: ProcessInstance) => {
         if (countByProcess.get(item.bpmnProcessId) && item.state == 'ACTIVE') {
           countByProcess.set(item.bpmnProcessId, countByProcess.get(item.bpmnProcessId)! + 1);
