@@ -2,7 +2,7 @@
   <v-app-bar color="primary" prominent>
     <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
 
-    <v-toolbar-title>ProA</v-toolbar-title>
+    <v-toolbar-title>ProA – {{ currentRouteName }}</v-toolbar-title>
 
     <v-spacer></v-spacer>
 
@@ -68,6 +68,12 @@ export default defineComponent({
       useAppStore().setSelectedLanguage(language);
       i18n.global.locale = language;
     },
+    lowerFirstLetter(s: string | undefined) {
+      if (!s) {
+        return '';
+      }
+      return s.charAt(0).toLowerCase() + s.slice(1);
+    }
   },
 
   data: () => ({
@@ -113,6 +119,9 @@ export default defineComponent({
           route: '/ProcessMap'
         },
       ];
+    },
+    currentRouteName() {
+      return this.$t('navigation.' + this.lowerFirstLetter(this.$route.name?.toString()));
     }
   },
 

@@ -143,8 +143,6 @@ export default defineComponent({
       await this.fetchProcessModel(processId);
       axios.get("/api/process-model/" + processId + "/details").then(result => {
         this.details = result.data;
-        console.log(result.data);
-        console.log(this.details);
       })
     },
     async goToProcessModel(portId: string | null) {
