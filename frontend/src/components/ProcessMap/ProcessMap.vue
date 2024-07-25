@@ -115,15 +115,6 @@ export default defineComponent({
     }
   },
 
-  setup() {
-    const appStore = useAppStore();
-    const selectedProjectId: number = appStore.getSelectedProjectId()!;
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(selectedProjectId);
-    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-
-    return { hiddenCells };
-  },
-
   mounted() {
     if (!this.selectedProjectId) {
       this.$router.push("/");
@@ -467,7 +458,7 @@ export default defineComponent({
         }
       }
 
-      graph.addCells(this.hiddenCells);
+      graph.addCells(this.hiddenCells.map(cell => cell?.attributes ? cell.attributes : cell) as dia.Cell[]);
       this.hiddenCells = [];
       for (const [cellId, ports] of Object.entries(this.hiddenPorts)) {
         const cell = graph.getCell(cellId);
