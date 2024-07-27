@@ -2,9 +2,7 @@ package de.envite.proa.repository;
 
 import java.util.List;
 
-import de.envite.proa.repository.tables.ProcessConnectionTable;
-import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -28,18 +26,28 @@ public class ProcessConnectionDao {
 	@Transactional
 	public List<ProcessConnectionTable> getProcessConnections(ProjectTable projectTable) {
 		return em//
-				.createQuery("SELECT pc FROM ProcessConnectionTable pc WHERE pc.project = :project", ProcessConnectionTable.class)//
-				.setParameter("project", projectTable)
-				.getResultList();
+				.createQuery("SELECT pc FROM ProcessConnectionTable pc WHERE pc.project = :project",
+						ProcessConnectionTable.class)//
+				.setParameter("project", projectTable).getResultList();
 	}
 
 	@Transactional
 	public void deleteForProcessModel(Long id) {
-
 		ProcessModelTable processModel = em.find(ProcessModelTable.class, id);
 		em.createQuery(
 				"DELETE FROM ProcessConnectionTable pc WHERE pc.callingProcess = :processModel OR pc.calledProcess = :processModel")
 				.setParameter("processModel", processModel)//
 				.executeUpdate();
+	}
+
+	@Transactional
+	public void addConnection(ProcessConnectionTable processConnection) {
+		em.persist(processConnection);
+	}
+
+	@Transactional
+	public void deleteConnection(Long connectionId) {
+		ProcessConnectionTable processConnection = em.find(ProcessConnectionTable.class, connectionId);
+		em.remove(processConnection);
 	}
 }

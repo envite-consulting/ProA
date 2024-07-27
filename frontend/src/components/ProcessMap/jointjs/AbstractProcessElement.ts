@@ -1,4 +1,5 @@
 import { dia, util } from '@joint/core';
+import { ProcessElementType, getPortPrefix } from "@/components/ProcessMap/ProcessMap.vue";
 
 export class AbstractProcessShape extends dia.Element {
 
@@ -15,6 +16,16 @@ export class AbstractProcessShape extends dia.Element {
   showAllPorts(): void {
     this.addPorts(this.hiddenPorts);
     this.hiddenPorts = [];
+  }
+
+  highlightPort(elementType: ProcessElementType) {
+    const portId = getPortPrefix(elementType) + this.id;
+    this.portProp(portId, 'attrs/portBody/stroke', "#0074FA");
+  }
+
+  unhighlightPort(elementType: ProcessElementType) {
+    const portId = getPortPrefix(elementType) + this.id;
+    this.portProp(portId, 'attrs/portBody/stroke', "black");
   }
 
   defaults() {

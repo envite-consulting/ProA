@@ -17,6 +17,13 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
 
+### Setting up environment variables
+
+- Duplicate the `.env-sample` in the backend folder and rename the file to `.env`
+- Set up a [Google AI Studio](https://aistudio.google.com/app) account and create an API key
+- Set up a billing account (the Gemini API is free of charge for 1 million tokens per minute/15 requests per minute/15,000 requests per day)
+- Copy the API key into the `.env` file variable `VITE_GEMINI_API_KEY`
+
 ### Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:

@@ -4,6 +4,7 @@ import java.util.List;
 
 import de.envite.proa.entities.EventType;
 import de.envite.proa.repository.tables.ProcessEventTable;
+import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -32,5 +33,18 @@ public class ProcessEventDao {
 				.setParameter("eventType", eventType)//
 				.setParameter("project", projectTable)//
 				.getResultList();
+	}
+
+	@Transactional
+	public ProcessEventTable findForProcessModelAndEventType(ProcessModelTable processModel, EventType eventType) {
+		return em.createQuery(
+				"SELECT e FROM ProcessEventTable e WHERE e.processModel = :processModel AND e.eventType = :eventType",
+				ProcessEventTable.class) //
+				.setParameter("processModel", processModel) //
+				.setParameter("eventType", eventType) //
+				.getResultList() //
+				.stream() //
+				.findFirst() //
+				.orElse(null);
 	}
 }

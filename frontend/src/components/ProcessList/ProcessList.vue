@@ -14,7 +14,7 @@
         <v-list-item-title>{{ model.processName }}</v-list-item-title>
 
         <v-list-item-subtitle>
-          {{ new Date(model.createdAt).toLocaleString("de-DE") }} {{ !!model.description ? '-' : '' }} {{
+          {{ getLocaleDate(model.createdAt) }} {{ !!model.description ? '-' : '' }} {{
             model.description
           }}
         </v-list-item-subtitle>
@@ -31,26 +31,43 @@
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
   </v-list>
-  <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
+  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px; z-index: 1;">
+    <v-tooltip location="top">
+      <template v-slot:activator="{ props }">
+        <v-fab-transition>
+          <v-btn class="mt-auto pointer-events-initial me-4" color="primary" elevation="8" icon="mdi-cloud"
+                 @click="goToC8Import" size="large" v-bind="props"></v-btn>
+        </v-fab-transition>
+      </template>
+      <span>{{ $t('processList.navigateToC8Import') }}</span>
+    </v-tooltip>
+
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
              @click="openMultipleUploadDialog" size="large"/>
     </v-fab-transition>
   </div>
+  <div v-if="processModels.length > 0" class="d-flex align-center justify-center ma-4"
+       style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px;">
+    <v-btn prepend-icon="mdi-map"
+           @click="goToProcessMap">
+      {{ $t('processList.toTheProcessMap') }}
+    </v-btn>
+  </div>
 
   <v-dialog v-model="uploadDialog" persistent width="600" @after-leave="resetUploadDialog">
     <v-card>
       <v-card-title>
-        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">Prozessmodelle hochladen</span>
-        <span class="text-h5" v-if="uploadDialogMode === 'single'">Prozessmodell austauschen</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">{{ $t('processList.uploadProcessModels') }}</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'single'">{{ $t('processList.replaceProcessModel') }}</span>
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row class="pb-5">
             <v-col cols="12" sm="12" md="12" class="pt-0">
-              <v-file-input v-if="uploadDialogMode === 'multiple'" label="Prozessmodelle" v-model="processModelFiles"
+              <v-file-input v-if="uploadDialogMode === 'multiple'" :label="$t('processList.processModels')" v-model="processModelFiles"
                             chips multiple @change="handleFileSelection" hide-details></v-file-input>
-              <v-file-input v-if="uploadDialogMode === 'single'" label="Prozessmodell" v-model="processModelFiles" chips
+              <v-file-input v-if="uploadDialogMode === 'single'" :label="$t('general.processModel')" v-model="processModelFiles" chips
                             @change="handleFileSelection" hide-details></v-file-input>
             </v-col>
           </v-row>
@@ -62,7 +79,7 @@
             <v-col cols="12" sm="12" md="12" class="py-1">
               <v-row no-gutters align="center">
                 <v-col style="position: relative;">
-                  <v-textarea hide-details rows="3" label="Beschreibung" v-model="file.description">
+                  <v-textarea hide-details rows="3" :label="$t('general.description')" v-model="file.description">
                   </v-textarea>
                   <v-overlay
                     class="align-center justify-center"
@@ -96,13 +113,13 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue-darken-1" variant="text" @click="closeUploadDialog">
-          Schließen
+          {{ $t('general.cancel') }}
         </v-btn>
         <v-btn v-if="uploadDialogMode === 'multiple'" color="blue-darken-1" variant="text" @click="uploadProcessModels">
-          Speichern
+          {{ $t('general.save') }}
         </v-btn>
         <v-btn v-if="uploadDialogMode === 'single'" color="blue-darken-1" variant="text" @click="swapProcessModel">
-          Speichern
+          {{ $t('general.save') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -111,14 +128,14 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        Lade Prozessmodelle hoch...
+        {{ $t('processList.uploadingProcessModels') }}
         <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
       </template>
 
       <v-card-actions>
         <v-spacer></v-spacer>
 
-        <v-btn text="Close" variant="text" @click="progressDialog = false"></v-btn>
+        <v-btn :text="$t('general.cancel')" variant="text" @click="progressDialog = false"></v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -142,6 +159,11 @@ import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+interface BPMNContent {
+  name: string,
+  description: string
+}
 
 declare interface ProcessModel {
   id: number,
@@ -231,13 +253,25 @@ export default defineComponent({
       const readFileContent = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = (event) => resolve(event.target?.result as string);
-          reader.onerror = (error) => reject(error);
+
+          reader.onload = () => {
+            const result = reader.result;
+            if (typeof result === "string") {
+              resolve(result);
+            } else {
+              reject(new Error("File content is not a string"));
+            }
+          };
+
+          reader.onerror = () => {
+            reject(new Error("Error reading file"));
+          };
+
           reader.readAsText(file);
         });
       };
 
-      const parseBPMNContent = (content: string) => {
+      const parseBPMNContent = (content: string): BPMNContent => {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(content, "text/xml");
         const nameElement = xmlDoc.querySelector("bpmn\\:process") || xmlDoc.querySelector("process");
@@ -349,6 +383,16 @@ export default defineComponent({
       processModelToUpload.description = response.text().trim();
 
       processModelToUpload.aiLoading = false;
+    },
+    goToC8Import() {
+      this.$router.push("CamundaCloudImport");
+    },
+    getLocaleDate(date: string): string {
+      const locales = this.appStore.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      return new Date(date).toLocaleString(locales);
+    },
+    goToProcessMap() {
+      this.$router.push("ProcessMap");
     }
   }
 })
