@@ -4,6 +4,7 @@ import {
   ActiveProjectByGroup,
   Project
 } from "@/components/Home/ProjectOverview.vue";
+import { LanguageCode } from "@/layouts/default/AppBar.vue";
 
 export interface PaperLayout {
   sx: number,
@@ -26,6 +27,7 @@ export const useAppStore = defineStore('app', {
       hiddenPortsByProject: {} as { [key: number]: string },
       hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
       processModelsChangeFlag: false as boolean,
+      selectedLanguage: 'en' as LanguageCode,
       areSettingsOpened: false as boolean,
       operateConnectionError: '' as string,
       operateClusterError: '' as string
@@ -91,6 +93,12 @@ export const useAppStore = defineStore('app', {
     getProcessModelsChangeFlag() {
       return this.processModelsChangeFlag
     },
+    setSelectedLanguage(language: LanguageCode) {
+      this.selectedLanguage = language;
+    },
+    getSelectedLanguage(): LanguageCode {
+      return this.selectedLanguage;
+    },
     setAreSettingsOpened(opened: boolean) {
       this.areSettingsOpened = opened;
     },
@@ -123,6 +131,7 @@ export const useAppStore = defineStore('app', {
       'portsInformationByProject',
       'hiddenLinksByProject',
       'processModelsChangeFlag',
+      'selectedLanguage',
       'areSettingsOpened',
       'operateConnectionError',
       'operateClusterError'

@@ -7,14 +7,15 @@
   >
     <div class="d-flex flex-column ma-3 ms-4">
       <div class="d-flex align-center">
-        <p class="text-h6">Einstellungen</p>
+        <p class="text-h6">{{ $t('general.settings') }}</p>
         <v-btn class="ms-auto" variant="text" icon @click="closeSettingsDrawer">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
       <div class="mt-2">
-        <p class="text-subtitle-1 text-grey-darken-2 mb-1">Gemini API Key</p>
-        <v-text-field label="API Key" v-model="settings.geminiApiKey" :type="showApiKey ? 'text' : 'password'"
+        <p class="text-subtitle-1 text-grey-darken-2 mb-1">{{ $t('settingsDrawer.geminiApiKey') }}</p>
+        <v-text-field :label="$t('settingsDrawer.apiKey')" v-model="settings.geminiApiKey"
+                      :type="showApiKey ? 'text' : 'password'"
                       :append-inner-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append-inner="showApiKey = !showApiKey"
                       :error-messages="apiKeyError" @input="apiKeyError = ''" :loading="isValidating"
@@ -22,12 +23,13 @@
         </v-text-field>
       </div>
       <div class="mt-2">
-        <p class="text-subtitle-1 text-grey-darken-2 mb-1">Camunda Modeler Verbindung</p>
-        <v-text-field label="Client ID" v-model="settings.modelerClientId" hide-details class="mb-2"
+        <p class="text-subtitle-1 text-grey-darken-2 mb-1">{{ $t('settingsDrawer.camundaModelerConnection') }}</p>
+        <v-text-field :label="$t('general.clientId')" v-model="settings.modelerClientId" hide-details
+                      class="mb-2"
                       :error-messages="modelerError" @input="modelerError = ''" :loading="isValidating"
                       :disabled="isValidating">
         </v-text-field>
-        <v-text-field :loading="isValidating" :disabled="isValidating" label="Client Secret"
+        <v-text-field :loading="isValidating" :disabled="isValidating" :label="$t('general.clientSecret')"
                       v-model="settings.modelerClientSecret"
                       :type="showModelerClientSecret ? 'text' : 'password'"
                       :append-inner-icon="showModelerClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
@@ -36,13 +38,13 @@
         </v-text-field>
       </div>
       <div class="mt-2 mb-4">
-        <p class="text-subtitle-1 text-grey-darken-2 mb-1">Camunda Operate Verbindung</p>
-        <v-text-field label="Client ID" v-model="settings.operateClientId"
+        <p class="text-subtitle-1 text-grey-darken-2 mb-1">{{ $t('settingsDrawer.camundaOperateConnection') }}</p>
+        <v-text-field :label="$t('general.clientId')" v-model="settings.operateClientId"
                       :error-messages="appStore.operateConnectionError" hide-details
                       class="mb-2" @input="appStore.setOperateConnectionError('')" :loading="isValidating"
                       :disabled="isValidating">
         </v-text-field>
-        <v-text-field label="Client Secret" v-model="settings.operateClientSecret"
+        <v-text-field :label="$t('general.clientSecret')" v-model="settings.operateClientSecret"
                       :type="showOperateClientSecret ? 'text' : 'password'"
                       :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append-inner="showOperateClientSecret = !showOperateClientSecret"
@@ -50,12 +52,12 @@
                       :loading="isValidating"
                       :disabled="isValidating">
         </v-text-field>
-        <v-text-field label="Region ID" v-model="settings.operateRegionId"
+        <v-text-field :label="$t('settingsDrawer.regionId')" v-model="settings.operateRegionId"
                       :error-messages="appStore.operateClusterError" @input="appStore.setOperateClusterError('')"
                       :loading="isValidating"
                       :disabled="isValidating" hide-details class="mb-2">
         </v-text-field>
-        <v-text-field label="Cluster ID" v-model="settings.operateClusterId"
+        <v-text-field :label="$t('settingsDrawer.clusterId')" v-model="settings.operateClusterId"
                       :error-messages="appStore.operateClusterError" @input="appStore.setOperateClusterError('')"
                       :loading="isValidating"
                       :disabled="isValidating">
@@ -63,12 +65,12 @@
       </div>
       <div class="d-flex">
         <div class="mt-3 me-3">
-          <v-btn color="primary" @click="saveSettings">Speichern</v-btn>
+          <v-btn color="primary" @click="saveSettings">{{ $t('general.save') }}</v-btn>
         </div>
         <div class="mt-3">
-          <v-tooltip text="Auf Umgebungsvariablen zurücksetzen" location="bottom">
+          <v-tooltip :text="$t('settingsDrawer.resetToEnvVariables')" location="bottom">
             <template v-slot:activator="{ props }">
-              <v-btn v-bind="props" color="grey" @click="resetSettings">Zurücksetzen</v-btn>
+              <v-btn v-bind="props" color="grey" @click="resetSettings">{{ $t('settingsDrawer.reset') }}</v-btn>
             </template>
           </v-tooltip>
         </div>
@@ -110,6 +112,10 @@ export default defineComponent({
     modelerError: "",
     isValidating: false
   }),
+
+  mounted() {
+    if (Object.keys(this.settings).length === 0) this.handleAfterToggle()
+  },
 
   methods: {
     async handleAfterToggle() {
@@ -155,10 +161,13 @@ export default defineComponent({
       this.closeSettingsDrawer();
     },
     async validateSettings(): Promise<boolean> {
+      const languages = ['en', 'de']
       this.isValidating = true;
-      const operateConnectionInvalidMsg = "Camunda Operate Verbindung ungültig";
+      const operateConnectionInvalidMsgs =
+        languages.map(lang => this.$t(`${lang}.settingsDrawer.operateConnectionInvalidMsg`));
       const operateConnectionError = this.appStore.getOperateConnectionError();
-      const operateClusterInvalidMsg = "Region und/oder Cluster ungültig";
+      const operateClusterInvalidMsgs =
+        languages.map(lang => this.$t(`${lang}.settingsDrawer.operateClusterInvalidMsg`));
       const operateClusterError = this.appStore.getOperateClusterError();
       this.resetValidation();
 
@@ -173,19 +182,23 @@ export default defineComponent({
       const isOperateClusterValid = await this.validateOperateClusterId(operateToken || '');
       this.isValidating = false;
 
-      if (operateConnectionError !== operateConnectionInvalidMsg) {
+      if (!operateConnectionInvalidMsgs.includes(operateConnectionError)) {
         this.appStore.setOperateConnectionError(operateConnectionError);
       }
 
-      if (operateClusterError !== operateClusterInvalidMsg) {
+      if (!operateClusterInvalidMsgs.includes(operateClusterError)) {
         this.appStore.setOperateClusterError(operateClusterError);
       }
 
       if (!isAPIKeyValid || !isModelerConnectionValid || !isOperateConnectionValid || !isOperateClusterValid) {
-        if (!isAPIKeyValid) this.apiKeyError = "API Key ungültig";
-        if (!isModelerConnectionValid) this.modelerError = "Camunda Modeler Verbindung ungültig";
-        if (!isOperateConnectionValid) this.appStore.setOperateConnectionError(operateConnectionInvalidMsg);
-        if (!isOperateClusterValid) this.appStore.setOperateClusterError("Region und/oder Cluster ungültig");
+        if (!isAPIKeyValid) this.apiKeyError = this.$t('settingsDrawer.apiKeyInvalidMsg');
+        if (!isModelerConnectionValid) this.modelerError = this.$t('settingsDrawer.modelerConnectionInvalidMsg');
+        if (!isOperateConnectionValid) {
+          this.appStore.setOperateConnectionError(this.$t('settingsDrawer.operateConnectionInvalidMsg'));
+        }
+        if (!isOperateClusterValid) {
+          this.appStore.setOperateClusterError(this.$t('settingsDrawer.operateClusterInvalidMsg'));
+        }
         return false;
       }
       return true;

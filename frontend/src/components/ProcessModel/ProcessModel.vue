@@ -38,6 +38,12 @@
                size="large"/>
       </v-fab-transition>
     </div>
+    <div class="ma-4" style="position: absolute; top: 8px; left: 8px;">
+      <v-btn prepend-icon="mdi-arrow-left"
+             @click="goBack">
+        Zurück
+      </v-btn>
+    </div>
   </v-card>
 </template>
 <style>
@@ -136,6 +142,10 @@ export default defineComponent({
       const url = new URL(window.location.href);
       url.searchParams.delete('portId');
       window.history.replaceState({}, '', url.pathname + url.search);
+    },
+    goBack() {
+      this.removeQueryParams();
+      this.$router.go(-1);
     }
   }
 })

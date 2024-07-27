@@ -1,0 +1,100 @@
+{
+  "c8Import": {
+    "camundaConnectionSuccessMessage": "Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.",
+    "connect": "Verbinden",
+    "creatorEmail": "Ersteller E-Mail",
+    "creatorEmailHint": "Optional: Nur Prozessmodelle der angegebenen Ersteller E-Mail werden abgerufen",
+    "errorMessage": "Ein Fehler ist aufgetreten!",
+    "import": "Importieren",
+    "importFromC8": "Prozesse aus C8 importieren",
+    "importProcessModels": "Prozessmodelle importieren",
+    "loading": "Laden...",
+    "retrieveProcessModels": "Prozessmodelle abrufen",
+    "selectAll": "Alle auswählen",
+    "saveInformationQuestion": "Informationen speichern?"
+  },
+  "general": {
+    "activity": "Aktivität",
+    "callActivities": "Aufrufaktivitäten",
+    "cancel": "Abbrechen",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret",
+    "description": "Beschreibung",
+    "end": "Ende",
+    "english": "Englisch",
+    "german": "Deutsch",
+    "intermediateCatchEvents": "Zwischenereignisse fangend",
+    "intermediateEvent": "Zwischenereignis",
+    "intermediateThrowEvents": "Zwischenereignisse werfend",
+    "processModel": "Prozessmodell",
+    "save": "Speichern",
+    "settings": "Einstellungen"
+  },
+  "navigation": {
+    "c8Import": "C8 Import",
+    "camundaCloudImport": "C8 Import",
+    "processList": "Prozessliste",
+    "processMap": "Prozesskarte",
+    "projectOverview": "Projektübersicht",
+    "processView": "Prozessansicht"
+  },
+  "processDetailSidebar": {
+    "endEvents": "Endereignisse",
+    "goToProcessModel": "Zum Prozessmodell",
+    "startEvents": "Startereignisse"
+  },
+  "processList": {
+    "importFromC8": "Aus C8 importieren",
+    "navigateToC8Import": "Zu C8 Import navigieren",
+    "processModels": "Prozessmodelle",
+    "replaceProcessModel": "Prozessmodell ersetzen",
+    "toTheProcessMap": "Zur Prozesskarte",
+    "uploadProcessModels": "Prozessmodelle hochladen",
+    "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
+  },
+  "processMap": {
+    "callActivity": "Aufrufaktivität",
+    "connectionLabels": "Verbindungslabels",
+    "database": "Datenbank",
+    "endEvent": "Endereignis",
+    "endToStartConnections": "Ende-zu-Start-Verbindungen",
+    "hide": "Ausblenden",
+    "intermediateEvents": "Zwischenereignisse",
+    "legend": "Legende",
+    "noInformationAvailable": "Keine Informationen verfügbar",
+    "process": "Prozess",
+    "processesWithoutConnections": "Prozesse ohne Verbindungen",
+    "resources": "Ressourcen",
+    "retrieveProcessInstances": "Prozessinstanzen abrufen",
+    "startEvent": "Startereignis"
+  },
+  "projectOverview": {
+    "active": "AKTIV",
+    "create": "Erstellen",
+    "createProject": "Projekt erstellen",
+    "createdOn": "Erstellt am",
+    "lastModifiedOn": "Zuletzt geändert am",
+    "newProject": "Neues Projekt",
+    "newVersion": "Neue Version",
+    "newVersionFor": "Neue Version für",
+    "open": "Öffnen",
+    "projectNameRequired": "Projektname ist erforderlich",
+    "projectVersionRequired": "Projektversion ist erforderlich",
+    "versionNameExists": "Versionsname existiert bereits",
+    "versionNameRequired": "Versionsname ist erforderlich"
+  },
+  "settingsDrawer": {
+    "apiKey": "API Key",
+    "apiKeyInvalidMsg": "API Key ungültig",
+    "camundaModelerConnection": "Camunda Modeler Verbindung",
+    "camundaOperateConnection": "Camunda Operate Verbindung",
+    "clusterId": "Cluster ID",
+    "geminiApiKey": "Gemini API Key",
+    "modelerConnectionInvalidMsg": "Camunda Modeler Verbindung ungültig",
+    "operateClusterInvalidMsg": "Region und/oder Cluster ungültig",
+    "operateConnectionInvalidMsg": "Camunda Operate Verbindung ungültig",
+    "regionId": "Region ID",
+    "reset": "Zurücksetzen",
+    "resetToEnvVariables": "Zurücksetzen auf Umgebungsvariablen"
+  }
+}
