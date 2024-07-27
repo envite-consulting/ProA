@@ -9,7 +9,8 @@
       <div class="d-flex flex-row justify-space-between align-center">
         <v-card-title v-text="group.name"></v-card-title>
 
-        <p v-if="activeProjectByGroup[group.name]?.id === store.selectedProjectId" class="active-text">AKTIV</p>
+        <p v-if="activeProjectByGroup[group.name]?.id === store.selectedProjectId" class="active-text">
+          {{ $t('projectOverview.active') }}</p>
       </div>
 
       <v-card-text class="pt-0">
@@ -25,19 +26,19 @@
         ></v-select>
         <v-btn variant="plain" class="pa-0" @click="openNewVersionDialog(group)">
           <v-icon icon="mdi-plus" size="large"></v-icon>
-          Neue Version
+          {{ $t('projectOverview.newVersion') }}
         </v-btn>
-        <div>Erstellt am: {{
+        <div>{{ $t('projectOverview.createdOn') }}: {{
             formatDate(activeProjectByGroup[group.name].createdAt)
           }}
         </div>
-        <div>Zuletzt geändert am: {{
+        <div>{{ $t('projectOverview.lastModifiedOn') }}: {{
             formatDate(activeProjectByGroup[group.name].modifiedAt)
           }}
         </div>
       </v-card-text>
       <v-divider></v-divider>
-      <v-list-item append-icon="mdi-chevron-right" lines="two" subtitle="Öffnen" link
+      <v-list-item append-icon="mdi-chevron-right" lines="two" :subtitle="$t('projectOverview.open')" link
                    @click="() => openProject(activeProjectByGroup[group.name].id)"></v-list-item>
     </v-card>
 
@@ -49,25 +50,25 @@
           </v-icon>
         </div>
         <div style="text-align: center;">
-          Neues Projekt
+          {{ $t('projectOverview.newProject') }}
         </div>
       </v-card-title>
       <v-spacer></v-spacer>
       <v-card-actions>
-        <v-btn color="primary" text="Erstellen" block @click="openNewProjectDialog"></v-btn>
+        <v-btn color="primary" :text="$t('projectOverview.create')" block @click="openNewProjectDialog"></v-btn>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="projectDialog" persistent width="600">
       <v-card>
         <v-card-title>
-          <span class="text-h5">Projekt anlegen</span>
+          <span class="text-h5">{{ $t('projectOverview.createProject') }}</span>
         </v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12" sm="12" md="12">
                 <v-text-field label="Name" v-model="newProjectName"
-                              :rules="[() => !!newProjectName || 'Projektname erforderlich']"
+                              :rules="[() => !!newProjectName || $t('projectOverview.projectNameRequired')]"
                               ref="newProjectNameInput"></v-text-field>
               </v-col>
             </v-row>
@@ -82,10 +83,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue-darken-1" variant="text" @click="closeNewProjectOrVersionDialog">
-            Schließen
+            {{ $t('general.cancel') }}
           </v-btn>
           <v-btn color="blue-darken-1" variant="text" @click="createProject()">
-            Speichern
+            {{ $t('general.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -93,13 +94,13 @@
     <v-dialog v-model="showNewVersionDialog" persistent width="600">
       <v-card>
         <v-card-title class="pt-4 pb-0 px-5">
-          Neue Version für {{ newProjectName }}
+          {{ $t('projectOverview.newVersionFor') }} {{ newProjectName }}
         </v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12" sm="12" md="12">
-                <v-text-field ref="newVersionInput" label="Neue Version" v-model="newVersionName"
+                <v-text-field ref="newVersionInput" :label="$t('projectOverview.newVersion')" v-model="newVersionName"
                               :rules="versionRules"></v-text-field>
               </v-col>
             </v-row>
@@ -108,10 +109,10 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue-darken-1" variant="text" @click="closeNewProjectOrVersionDialog">
-            Schließen
+            {{ $t('general.cancel') }}
           </v-btn>
           <v-btn color="blue-darken-1" variant="text" @click="createProject()">
-            Speichern
+            {{ $t('general.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -168,8 +169,8 @@ export default defineComponent({
   computed: {
     versionRules() {
       return [
-        (): boolean | string => !this.versionNameExists || "Versionsname existiert bereits",
-        (): boolean | string => !!this.newVersionName || "Versionsname erforderlich",
+        (): boolean | string => !this.versionNameExists || this.$t('projectOverview.versionNameExists'),
+        (): boolean | string => !!this.newVersionName || this.$t('projectOverview.versionNameRequired'),
       ]
     },
     versionNameExists() {
@@ -223,7 +224,8 @@ export default defineComponent({
       this.store.setActiveProjectForGroup(groupName, this.activeProjectByGroup[groupName]);
     },
     formatDate(dateString: string) {
-      return new Date(dateString).toLocaleString("de-DE");
+      const locales = useAppStore().getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      return new Date(dateString).toLocaleString(locales);
     },
     fetchProjects() {
       axios.get("/api/project").then((result: { data: Project[] }) => {
