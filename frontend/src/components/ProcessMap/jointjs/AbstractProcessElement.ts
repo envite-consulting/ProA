@@ -1,5 +1,7 @@
 import { dia, util } from '@joint/core';
-import { ProcessElementType, getPortPrefix } from "@/components/ProcessMap/ProcessMap.vue";
+
+import { getPortPrefix } from "@/components/ProcessMap/ProcessMap.vue";
+import { ProcessElementType} from "@/components/ProcessMap/types";
 
 export class AbstractProcessShape extends dia.Element {
 

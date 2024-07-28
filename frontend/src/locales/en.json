@@ -50,6 +50,7 @@
   },
   "processMap": {
     "callActivity": "Call Activity",
+    "clear": "Clear",
     "connectionLabels": "Connection Labels",
     "database": "Database",
     "endEvent": "End Event",

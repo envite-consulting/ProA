@@ -31,6 +31,12 @@ export const useAppStore = defineStore('app', {
     }
   },
   actions: {
+    setSelectedProjectId(id: number) {
+      this.selectedProjectId = id;
+    },
+    getSelectedProjectId(): number | null {
+      return this.selectedProjectId;
+    },
     setActiveProjectForGroup(projectGroupName: string, project: Project) {
       this.activeProjectByGroup[projectGroupName] = project;
     },

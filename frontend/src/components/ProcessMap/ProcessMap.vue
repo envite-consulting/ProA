@@ -1,104 +1,10 @@
 <template>
-  <v-toolbar>
-    <v-toolbar-title>
-      <div class="d-flex align-center">
-        <span>{{ selectedProjectName }}</span>
-        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
-      </div>
-    </v-toolbar-title>
-    <v-spacer></v-spacer>
-    <v-btn icon @click="toggleLegend">
-      <v-icon>mdi-map-legend</v-icon>
-    </v-btn>
-    <v-btn v-if="filtersCount > 0" @click="toggleFilterMenu" icon style="margin-right: 5px">
-      <v-badge color="white" :bordered="true" :content="filtersCount">
-        <v-icon>mdi-filter-outline</v-icon>
-      </v-badge>
-    </v-btn>
-    <v-btn v-else @click="toggleFilterMenu" icon style="margin-right: 5px">
-      <v-icon>mdi-filter-outline</v-icon>
-    </v-btn>
-    <v-btn icon @click="fetchProcessModels">
-      <v-icon>mdi-refresh</v-icon>
-    </v-btn>
-  </v-toolbar>
-  <v-card :class="selectedProjectName ? 'full-screen-below-toolbar' : 'full-screen'" @mouseup="saveGraphState">
+  <ProcessMapToolbar ref="toolbar" :selectedProjectId="selectedProjectId"
+                     @fetchProcessModels="fetchProcessModels" @filterGraph="filterGraph"/>
+  <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
     <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
     <div id="graph-container" class="full-screen"></div>
-    <div style="position: absolute; top: 0; right: 0;">
-      <v-list v-if="showLegend">
-        <v-list-item>
-          <v-list-item-title class="font-weight-bold">{{ $t('processMap.legend') }}</v-list-item-title>
-        </v-list-item>
-        <v-divider></v-divider>
-        <LegendItem :text="$t('processMap.process')" path="M 0 0 h 140 l 10 35 l -10 35 H 0 l 10 -35 l -10 -35 Z"
-                    width="30"
-                    height="30" view-box="-2 -2 154 74" stroke-width="8"></LegendItem>
-        <LegendItem :text="$t('processMap.database')"
-                    path="M 1.5 9 C 15.5 19 75.5 19 90.5 9 l 0 90 c -15 10 -75 10 -89 0 l 0 -90 C 15.5 -1 75.5 -1 90.5 9 v 15 c -15 10 -75 10 -89 0"
-                    width="30"
-                    height="30" view-box="-0.5 -0.5 93 109" stroke-width="5"></LegendItem>
-        <LegendItem :text="$t('processMap.startEvent')" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
-                    height="30" view-box="-1.99999 -22 24 24" stroke-width="1.5"></LegendItem>
-        <LegendItem :text="$t('processMap.endEvent')" path="M 10 -20 a 10 10 0 1 0 0.00001 0 Z" width="30"
-                    height="30" view-box="-1.99999 -22 24 24" stroke-width="3"></LegendItem>
-        <LegendItem :text="$t('general.intermediateEvent')"
-                    path="M -25 -10 a 10 10 0 1 0 0.00001 0 Z M -25 -7 a 7 7 0 1 0 0.00001 0 Z"
-                    width="30"
-                    height="30" view-box="-37 -12 24 24" stroke-width="2"></LegendItem>
-        <LegendItem :text="$t('processMap.callActivity')"
-                    path="M 35 -10 a3,3 0 0 1 3,3 v15 a3,3 0 0 1 -3,3 h-25 a3,3 0 0 1 -3,-3 v-15 a3,3 0 0 1 3,-3 z"
-                    width="30"
-                    height="30" view-box="5 -12 35 25" stroke-width="2"></LegendItem>
-      </v-list>
-      <v-list v-if="showFilterMenu">
-        <v-list-item>
-          <v-list-item-title class="font-weight-bold">{{ $t('processMap.hide') }}:</v-list-item-title>
-        </v-list-item>
-        <v-divider></v-divider>
-        <v-list-item class="filter-item" v-for="(label, filterOption) in filterOptions" :key="filterOption">
-          <v-checkbox v-model="filterGraphInput[filterOption]" :label="label" color="primary"
-                      @change="filterGraph" hide-details></v-checkbox>
-        </v-list-item>
-      </v-list>
-    </div>
-    <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left"
-               @click="goLeft"
-               size="large"/>
-      </v-fab-transition>
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right"
-               @click="goRight"
-               size="large"/>
-      </v-fab-transition>
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up"
-               @click="goUp"
-               size="large"/>
-      </v-fab-transition>
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down"
-               @click="goDown"
-               size="large"/>
-      </v-fab-transition>
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus"
-               @click="zoomIn"
-               size="large"/>
-      </v-fab-transition>
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus"
-               @click="zoomOut"
-               size="large"/>
-      </v-fab-transition>
-      <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen"
-               @click="fitToScreen"
-               size="large"/>
-      </v-fab-transition>
-    </div>
+    <NavigationButtons :selectedProjectId="selectedProjectId"/>
   </v-card>
   <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
     <ul v-if="tooltipList.length > 0">
@@ -114,110 +20,42 @@
   height: calc(100% - 64px) !important;
 }
 
-
 .full-screen {
   width: 100%;
   height: 100%;
 }
-
-.filter-item {
-  height: 1rem;
-}
 </style>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref } from 'vue';
-import { dia, linkTools, shapes } from '@joint/core';
-import { graph, paper } from './jointjs/JointJSDiagram';
-//MIT License
+import axios from 'axios';
+import { defineComponent } from 'vue';
+import { dia, shapes } from '@joint/core';
 import { DirectedGraph } from '@joint/layout-directed-graph';
 
+import { graph, paper } from './jointjs/JointJSDiagram';
 import createAbstractProcessElement, { AbstractProcessShape } from "./jointjs/AbstractProcessElement";
 import createAbstractDataStoreElement, { AbstractDataStoreShape } from "./jointjs/AbstractDataStoreElement";
+import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
+import createLinkRemoveButton from "@/components/ProcessMap/jointjs/createLinkRemoveButton";
+import {
+  Connection,
+  DataStore,
+  DataStoreConnection,
+  FilterGraphInput,
+  HiddenLinks,
+  HiddenPorts,
+  PortsInformation,
+  Process,
+  ProcessElementType
+} from "./types";
 
-import axios from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
+import ProcessMapToolbar from "@/components/ProcessMap/ProcessMapToolbar.vue";
+import NavigationButtons from "@/components/ProcessMap/Navigation.vue";
+import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 import { useAppStore } from "@/store/app";
-import getProject from "../projectService";
-import LegendItem from "@/components/ProcessMap/LegendItem.vue";
-import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
-
-import { PortTargetArrowhead } from "./jointjs/PortTargetArrowHead";
-
-const scrollStep = 20;
-
-interface Event {
-  elementId: string
-  label: string
-}
-
-interface Activity {
-  elementId: string
-  label: string
-}
-
-interface Process {
-  id: number
-  name: string
-  startEvents: Event[]
-  intermediateCatchEvents: Event[]
-  intermediateThrowEvents: Event[]
-  endEvents: Event[]
-  activities: Activity[]
-}
-
-export enum ProcessElementType {
-  START_EVENT = "START_EVENT",
-  INTERMEDIATE_CATCH_EVENT = "INTERMEDIATE_CATCH_EVENT",
-  INTERMEDIATE_THROW_EVENT = "INTERMEDIATE_THROW_EVENT",
-  END_EVENT = "END_EVENT",
-  CALL_ACTIVITY = "CALL_ACTIVITY"
-}
-
-interface Connection {
-  id: number
-
-  callingProcessid: number
-  callingElementType: ProcessElementType
-
-  calledProcessid: number
-  calledElementType: ProcessElementType
-
-  label: string
-}
-
-interface DataStore {
-  id: number
-  name: string
-}
-
-type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
-
-interface DataStoreConnection {
-  id: number;
-  processid: number;
-  dataStoreId: number;
-  access: DataAccess;
-}
-
-interface FilterGraphInput {
-  hideAbstractDataStores: boolean;
-  hideCallActivities: boolean;
-  hideIntermediateEvents: boolean;
-  hideStartEndEvents: boolean;
-  hideProcessesWithoutConnections: boolean;
-  hideConnectionLabels: boolean;
-}
-
-interface FilterOptions {
-  hideAbstractDataStores: string;
-  hideCallActivities: string;
-  hideIntermediateEvents: string;
-  hideStartEndEvents: string;
-  hideProcessesWithoutConnections: string;
-  hideConnectionLabels: string;
-}
 
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
@@ -238,121 +76,67 @@ export const getPortPrefix = (elementType: ProcessElementType): string => {
 
 export default defineComponent({
   components: {
-    ProcessDetailSidebar,
+    NavigationButtons,
     LegendItem,
-    ProcessDetailDialog
+    ProcessDetailSidebar,
+    ProcessDetailDialog,
+    ProcessMapToolbar
   },
 
-  data: () => ({
-    selectedProjectId: null as number | null,
-    selectedProjectName: '' as string,
-    selectedVersionName: '' as string,
-    tooltipVisible: false,
-    mouseX: '',
-    mouseY: '',
-    portsInformation: {} as { [key: string]: string[] },
-    tooltipList: [] as string[],
-    store: useAppStore(),
-    showLegend: false
-  }),
+  data() {
+    const appStore = useAppStore();
+    const selectedProjectId: number = appStore.getSelectedProjectId()!;
+    const persistedHiddenCells = appStore.getHiddenCellsForProject(selectedProjectId);
+    const persistedHiddenLinks = appStore.getHiddenLinksForProject(selectedProjectId);
+    const persistedHiddenPorts = appStore.getHiddenPortsForProject(selectedProjectId);
 
-  computed: {
-    filterOptions(): FilterOptions {
-      return {
-        hideAbstractDataStores: this.$t('processMap.resources'),
-        hideCallActivities: this.$t('general.callActivities'),
-        hideIntermediateEvents: this.$t('processMap.intermediateEvents'),
-        hideStartEndEvents: this.$t('processMap.endToStartConnections'),
-        hideProcessesWithoutConnections: this.$t('processMap.processesWithoutConnections'),
-        hideConnectionLabels: this.$t('processMap.connectionLabels')
-      }
+    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+    const hiddenLinks: HiddenLinks = persistedHiddenLinks ?? {};
+    const hiddenPorts: HiddenPorts = persistedHiddenPorts ? JSON.parse(persistedHiddenPorts) : {};
+    const portsInformation: PortsInformation = {};
+
+    return {
+      mouseX: '' as string,
+      mouseY: '' as string,
+      tooltipList: [] as string[],
+      tooltipVisible: false as boolean,
+      appStore,
+      hiddenCells,
+      hiddenLinks,
+      hiddenPorts,
+      portsInformation,
+      selectedProjectId,
     }
   },
 
-  setup() {
-    const appStore = useAppStore();
-    const projectId = appStore.selectedProjectId;
-    const processDetailDialog = ref(null);
-    const showFilterMenu = ref(false);
-    const persistedHiddenPorts = appStore.getHiddenPortsForProject(projectId!);
-    const hiddenPorts: {
-      [key: string]: dia.Element.Port[]
-    } = !!persistedHiddenPorts ? JSON.parse(persistedHiddenPorts!) : {};
-    const persistedHiddenCells = appStore.getHiddenCellsForProject(projectId!);
-    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
-    const persistedHiddenLinks = appStore.getHiddenLinksForProject(projectId!);
-    const hiddenLinks: { [key: string]: string } = persistedHiddenLinks ?? {} as { [key: string]: string };
-    const persistedFilterGraphInput = appStore.getFiltersForProject(projectId!);
-    const filterGraphInput: FilterGraphInput = reactive(
-      !!persistedFilterGraphInput ?
-        JSON.parse(persistedFilterGraphInput) :
-        {
-          hideAbstractDataStores: false,
-          hideCallActivities: false,
-          hideIntermediateEvents: false,
-          hideStartEndEvents: false,
-          hideProcessesWithoutConnections: false,
-          hideConnectionLabels: false,
-        });
-    const filtersCount = computed(() => {
-      return Object.values(filterGraphInput).filter(value => value === true).length;
-    });
-    return {
-      processDetailDialog,
-      showFilterMenu,
-      hiddenPorts,
-      hiddenCells,
-      hiddenLinks,
-      filterGraphInput,
-      filtersCount
-    };
+  computed: {
+    toolbar() {
+      return this.$refs.toolbar as InstanceType<typeof ProcessMapToolbar>;
+    }
   },
-  mounted: function () {
-    this.selectedProjectId = this.store.selectedProjectId;
+
+  mounted() {
     if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
     }
-    getProject(this.selectedProjectId).then(result => {
-      this.selectedProjectName = result.data.name;
-      this.selectedVersionName = result.data.version;
-    })
+
     const paperContainer = document.getElementById("graph-container");
     paperContainer!.appendChild(paper.el);
 
-    const openDetailsSidebar = (model: AbstractProcessShape) => {
-      if (this.$refs.processDetailSidebar) {
-        const processDetailSideBar = this.$refs.processDetailSidebar as InstanceType<typeof ProcessDetailSidebar>;
-        processDetailSideBar.open(model)
-      }
-    }
+    const processDetailSidebar = this.$refs.processDetailSidebar as InstanceType<typeof ProcessDetailSidebar>;
+
     paper.on('cell:pointerdblclick',
-      function (cellView, evt, x, y) {
-        if (!cellView.model.id.toString().startsWith('ds')) {
-          openDetailsSidebar(cellView.model as AbstractProcessShape);
+      function (cellView) {
+        const model = cellView.model;
+        if (model instanceof AbstractProcessShape) {
+          processDetailSidebar.open(model as AbstractProcessShape);
         }
       }
     );
 
-    const savePaperLayout = this.savePaperLayout;
-
-    paper.on('paper:pinch', function (evt, x, y, sx) {
-      evt.preventDefault();
-      const { sx: sx0 } = paper.scale();
-      paper.scaleUniformAtPoint(sx0 * sx, { x, y });
-      savePaperLayout();
-    });
-
-    paper.on('paper:pan', function (evt, tx, ty) {
-      evt.preventDefault();
-      evt.stopPropagation();
-      const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0 - tx, ty0 - ty);
-      savePaperLayout();
-    });
-
     paper.on('element:mouseover', (view, evt) => {
-      var port = view.findAttribute('port', evt.target);
+      const port = view.findAttribute('port', evt.target);
       if (port) {
 
         this.tooltipList = this.portsInformation[port];
@@ -364,28 +148,28 @@ export default defineComponent({
     });
 
     paper.on('element:mouseout', (view, evt) => {
-      var port = view.findAttribute('port', evt.target);
+      const port = view.findAttribute('port', evt.target);
       if (port) {
         this.tooltipVisible = false;
       }
     });
 
-    const appStore = useAppStore();
-    if (appStore.getProcessModelsChangeFlag()) {
+    const store = useAppStore();
+    if (store.getProcessModelsChangeFlag()) {
       this.fetchProcessModels();
-      appStore.unsetProcessModelsChanged();
+      store.unsetProcessModelsChanged();
       return;
     }
 
-    const persistedGraph = this.store.getGraphForProject(this.store.selectedProjectId!);
+    const persistedGraph = this.appStore.getGraphForProject(this.selectedProjectId);
     if (!!persistedGraph) {
-      Object.assign(this.portsInformation, this.store.getPortsInformationByProject(this.store.selectedProjectId!));
+      Object.assign(this.portsInformation, this.appStore.getPortsInformationByProject(this.selectedProjectId));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
       this.fetchProcessModels();
       return;
     }
-    const persistedLayout = this.store.getPaperLayoutForProject(this.store.selectedProjectId!);
+    const persistedLayout = this.appStore.getPaperLayoutForProject(this.selectedProjectId);
     if (!!persistedLayout) {
       const { sx, tx, ty } = JSON.parse(persistedLayout);
       paper.scale(sx);
@@ -410,34 +194,7 @@ export default defineComponent({
           name: "onhover",
           tools: [
             new PortTargetArrowhead(),
-            new linkTools.Remove({
-              distance: -60,
-              action: removeLink,
-              markup: [
-                {
-                  tagName: "circle",
-                  selector: "button",
-                  attributes: {
-                    r: 10,
-                    fill: "#FFD5E8",
-                    stroke: "#FD0B88",
-                    "stroke-width": 2,
-                    cursor: "pointer"
-                  }
-                },
-                {
-                  tagName: "path",
-                  selector: "icon",
-                  attributes: {
-                    d: "M -4 -4 4 4 M -4 4 4 -4",
-                    fill: "none",
-                    stroke: "#333",
-                    "stroke-width": 3,
-                    "pointer-events": "none"
-                  }
-                }
-              ]
-            })
+            createLinkRemoveButton(removeLink)
           ]
         })
       );
@@ -474,7 +231,7 @@ export default defineComponent({
       }
     });
 
-    paper.on("link:disconnect", async (linkView, evt, prevElementView, prevMagnet) => {
+    paper.on("link:disconnect", async (linkView, _evt, prevElementView) => {
       const link = linkView.model;
       const connectionId = link?.attributes?.connectionId;
       const callingProcessid = link?.source()?.id?.toString();
@@ -506,7 +263,7 @@ export default defineComponent({
       }
     }
 
-    const removeLink = async (evt: dia.Event, linkView: dia.LinkView, toolView: dia.ToolView): Promise<void> => {
+    const removeLink = async (_evt: dia.Event, linkView: dia.LinkView, toolView: dia.ToolView): Promise<void> => {
       const link = linkView.model;
       const connectionId = link?.attributes?.connectionId;
       const callingProcessid = link?.source()?.id?.toString();
@@ -531,87 +288,35 @@ export default defineComponent({
     }
   },
   methods: {
-    zoomIn() {
-      const { sx: sx0 } = paper.scale();
-      paper.scale(sx0 * 1.3);
-      this.savePaperLayout();
-    },
-    zoomOut() {
-      const { sx: sx0 } = paper.scale();
-      paper.scale(sx0 * 0.7);
-      this.savePaperLayout();
-    },
-    fitToScreen() {
-      paper.transformToFitContent();
-      this.savePaperLayout();
-    },
-    goRight() {
-      const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0 - scrollStep, ty0);
-      this.savePaperLayout();
-    },
-    goLeft() {
-      const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0 + scrollStep, ty0);
-      this.savePaperLayout();
-    },
-    goUp() {
-      const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0, ty0 + scrollStep);
-      this.savePaperLayout();
-    },
-    goDown() {
-      const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0, ty0 - scrollStep);
-      this.savePaperLayout();
-    },
     saveGraphState() {
       setTimeout(() => {
-        this.store.setGraphForProject(this.store.selectedProjectId!, JSON.stringify(graph));
+        this.appStore.setGraphForProject(this.selectedProjectId, JSON.stringify(graph));
       }, 50);
     },
-    savePaperLayout() {
-      this.store.setPaperLayoutForProject(this.store.selectedProjectId!, JSON.stringify({
-        sx: paper.scale().sx,
-        tx: paper.translate().tx,
-        ty: paper.translate().ty
-      }));
-    },
     saveFilters() {
-      this.store.setFiltersForProject(this.store.selectedProjectId!, JSON.stringify(this.filterGraphInput));
+      this.toolbar.saveFilters();
     },
     saveHiddenElements() {
-      this.store.setHiddenCellsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenCells));
-      this.store.setHiddenLinksForProject(this.store.selectedProjectId!, this.hiddenLinks);
+      this.appStore.setHiddenCellsForProject(this.selectedProjectId, JSON.stringify(this.hiddenCells));
+      this.appStore.setHiddenLinksForProject(this.selectedProjectId, this.hiddenLinks);
     },
     saveHiddenPorts() {
-      this.store.setHiddenPortsForProject(this.store.selectedProjectId!, JSON.stringify(this.hiddenPorts));
-    },
-    closeMenus() {
-      this.showFilterMenu = false;
-      this.showLegend = false;
+      this.appStore.setHiddenPortsForProject(this.selectedProjectId, JSON.stringify(this.hiddenPorts));
     },
     resetFilters() {
-      this.filterGraphInput['hideIntermediateEvents'] = false;
-      this.filterGraphInput['hideStartEndEvents'] = false;
-      this.filterGraphInput['hideCallActivities'] = false;
-      this.filterGraphInput['hideProcessesWithoutConnections'] = false;
-      this.filterGraphInput['hideAbstractDataStores'] = false;
-      this.filterGraphInput['hideConnectionLabels'] = false;
+      this.toolbar.clearFilters();
       this.hiddenCells = [];
       this.hiddenPorts = {};
       this.saveFilters();
       this.saveHiddenElements();
       this.saveHiddenPorts();
-      this.closeMenus();
     },
     fetchProcessModels() {
       this.resetFilters();
-      const component = this;
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
-        let abstracProcessShapes = result.data.processes.map((process: Process) => {
+        let abstractProcessShapes = result.data.processes.map((process: Process) => {
 
           const filterEmpty = (label: string) => !!label;
 
@@ -624,9 +329,9 @@ export default defineComponent({
           return createAbstractProcessElement(process.name, process.id);
         });
 
-        this.store.setPortsInformationByProject(this.store.selectedProjectId!, this.portsInformation);
+        this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
 
-        graph.addCell(abstracProcessShapes);
+        graph.addCell(abstractProcessShapes);
 
         let connectionsShapes = result.data.connections.map((connection: Connection) => {
 
@@ -665,6 +370,8 @@ export default defineComponent({
         let dataStoreConnectionShapes = result.data.dataStoreConnections.map((connection: DataStoreConnection) => {
 
           const link = new shapes.standard.Link();
+          const source = { id: connection.processid, port: "call-" + connection.processid };
+          const target = { id: "ds-" + connection.dataStoreId, anchor: { name: 'midSide', args: { rotate: true, } } };
 
           if (connection.access === "READ_WRITE") {
             link.attr({
@@ -678,64 +385,25 @@ export default defineComponent({
                 targetMarker: {
                   'type': 'path',
                   'stroke': 'black',
-
                 }
               }
             });
 
-            link.set({
-              connectionId: connection.id,
-              source: { id: connection.processid, port: "call-" + connection.processid },
-              target: {
-                id: "ds-" + connection.dataStoreId,
-                anchor: {
-                  name: 'midSide',
-                  args: {
-                    rotate: true,
-                  }
-
-                }
-              }
-            })
+            link.set({ connectionId: connection.id, source, target });
           } else if (connection.access === "WRITE") {
-
-            link.set({
-              connectionId: connection.id,
-              source: { id: connection.processid, port: "call-" + connection.processid },
-              target: {
-                id: "ds-" + connection.dataStoreId,
-                anchor: {
-                  name: 'midSide',
-                  args: {
-                    rotate: true,
-                  }
-
-                }
-              }
-            })
+            link.set({ connectionId: connection.id, source, target });
           } else if (connection.access === "READ") {
-            link.set({
-              connectionId: connection.id,
-              target: { id: connection.processid, port: "call-" + connection.processid },
-              source: {
-                id: "ds-" + connection.dataStoreId,
-                anchor: {
-                  name: 'midSide',
-                  args: {
-                    rotate: true,
-                  }
-
-                }
-              }
-            })
+            link.set({ connectionId: connection.id, source: target, target: source });
           }
 
           return link;
         });
 
         graph.addCell(dataStoreConnectionShapes);
+
         paper.freeze();
-        var graphBBox = DirectedGraph.layout(graph, {
+
+        DirectedGraph.layout(graph, {
           nodeSep: 150,
           edgeSep: 80,
           rankDir: "TB",
@@ -745,6 +413,7 @@ export default defineComponent({
 
         paper.transformToFitContent();
         paper.unfreeze();
+
         this.saveGraphState();
       })
     },
@@ -765,30 +434,16 @@ export default defineComponent({
 
       return null;
     },
-    toggleLegend() {
-      if (!this.showLegend) {
-        this.closeMenus();
-      }
-      this.showLegend = !this.showLegend;
-    },
-    toggleFilterMenu() {
-      if (!this.showFilterMenu) {
-        this.closeMenus();
-      }
-      this.showFilterMenu = !this.showFilterMenu;
-    },
-    filterGraph() {
-      const {
-        hideAbstractDataStores,
-        hideCallActivities,
-        hideIntermediateEvents,
-        hideStartEndEvents,
-        hideProcessesWithoutConnections,
-        hideConnectionLabels,
-      } = this.filterGraphInput;
+    filterGraph({
+                  hideAbstractDataStores,
+                  hideCallActivities,
+                  hideIntermediateEvents,
+                  hideStartEndEvents,
+                  hideProcessesWithoutConnections,
+                  hideConnectionLabels
+                }: FilterGraphInput) {
 
       if (!hideConnectionLabels) {
-
         for (const link of graph.getLinks()) {
           const label = this.hiddenLinks[link.id];
           if (!!label) {
@@ -803,7 +458,7 @@ export default defineComponent({
         }
       }
 
-      graph.addCells(this.hiddenCells);
+      graph.addCells(this.hiddenCells.map(cell => cell?.attributes ? cell.attributes : cell) as dia.Cell[]);
       this.hiddenCells = [];
       for (const [cellId, ports] of Object.entries(this.hiddenPorts)) {
         const cell = graph.getCell(cellId);
@@ -871,7 +526,6 @@ export default defineComponent({
             cell.removePorts(portIds);
           }
         }
-
       }
 
       this.hiddenCells.push(...processesWithoutConnections);

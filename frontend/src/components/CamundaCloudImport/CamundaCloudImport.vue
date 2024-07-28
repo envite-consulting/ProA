@@ -141,8 +141,7 @@
     </v-menu>
   </div>
 </template>
-<style scoped>
-</style>
+<style scoped></style>
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
