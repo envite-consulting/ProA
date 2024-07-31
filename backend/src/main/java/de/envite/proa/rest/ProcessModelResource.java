@@ -56,10 +56,7 @@ public class ProcessModelResource {
 			@RestForm String fileName, @RestForm String description) {
 		String content = readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
-		Long newProcessId = usecase.saveProcessModel(projectId, fileName, content, description);
-		usecase.copyConnections(projectId, oldProcessId, newProcessId);
-		usecase.deleteProcessModel(oldProcessId);
-		return newProcessId;
+		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description);
 	}
 
 	/**

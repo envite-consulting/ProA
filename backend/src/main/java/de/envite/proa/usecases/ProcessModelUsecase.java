@@ -56,10 +56,6 @@ public class ProcessModelUsecase {
 		return repository.getProcessModel(id);
 	}
 
-	public void copyConnections(Long projectId, Long oldProcessId, Long newProcessId) {
-		processMapRepository.copyConnections(projectId, oldProcessId, newProcessId);
-	}
-
 	public List<ProcessInformation> getProcessInformation(Long projectId) {
 		return repository.getProcessInformation(projectId);
 	}
@@ -70,5 +66,17 @@ public class ProcessModelUsecase {
 
 	public void deleteProcessModel(Long id) {
 		repository.deleteProcessModel(id);
+	}
+
+	public Long replaceProcessModel(Long projectId, Long oldProcessId, String fileName, String content,
+			String description) {
+		Long newProcessId = saveProcessModel(projectId, fileName, content, description);
+		copyConnections(projectId, oldProcessId, newProcessId);
+		deleteProcessModel(oldProcessId);
+		return newProcessId;
+	}
+
+	private void copyConnections(Long projectId, Long oldProcessId, Long newProcessId) {
+		processMapRepository.copyConnections(projectId, oldProcessId, newProcessId);
 	}
 }
