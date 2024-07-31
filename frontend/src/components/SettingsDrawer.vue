@@ -88,6 +88,7 @@ import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import i18n from "@/i18n";
 
 export interface Settings {
   geminiApiKey: string;
@@ -161,13 +162,13 @@ export default defineComponent({
       this.closeSettingsDrawer();
     },
     async validateSettings(): Promise<boolean> {
-      const languages = ['en', 'de']
+      const languages = i18n.global.availableLocales;
       this.isValidating = true;
       const operateConnectionInvalidMsgs =
-        languages.map(lang => this.$t(`${lang}.settingsDrawer.operateConnectionInvalidMsg`));
+        languages.map(lang => i18n.global.getLocaleMessage(lang).settingsDrawer.operateConnectionInvalidMsg);
       const operateConnectionError = this.appStore.getOperateConnectionError();
       const operateClusterInvalidMsgs =
-        languages.map(lang => this.$t(`${lang}.settingsDrawer.operateClusterInvalidMsg`));
+        languages.map(lang => i18n.global.getLocaleMessage(lang).settingsDrawer.operateClusterInvalidMsg);
       const operateClusterError = this.appStore.getOperateClusterError();
       this.resetValidation();
 

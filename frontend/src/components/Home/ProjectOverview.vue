@@ -266,7 +266,7 @@ export default defineComponent({
       });
     },
     openProject(id: number) {
-      useAppStore().selectedProjectId = id;
+      this.store.setSelectedProjectId(id);
       this.$router.push("/ProcessList")
     },
     closeNewProjectOrVersionDialog() {

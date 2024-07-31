@@ -54,6 +54,7 @@
   },
   "processMap": {
     "callActivity": "Aufrufaktivität",
+    "clear": "Löschen",
     "connectionLabels": "Verbindungslabels",
     "database": "Datenbank",
     "endEvent": "Endereignis",

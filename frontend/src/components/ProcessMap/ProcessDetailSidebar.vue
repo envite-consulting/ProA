@@ -123,14 +123,7 @@ import { Process } from '@/components/ProcessDetailDialog.vue';
 import axios from 'axios';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { AbstractProcessShape } from "@/components/ProcessMap/jointjs/AbstractProcessElement";
-import { ProcessElementType } from "@/components/ProcessMap/ProcessMap.vue";
-
-interface RouteObject {
-  path: string,
-  query?: {
-    portId: string
-  }
-}
+import { ProcessElementType, RouteObject } from "./types";
 
 export default defineComponent({
   name: 'ProcessDetailSidebar',
