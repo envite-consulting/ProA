@@ -47,6 +47,14 @@ import { defineComponent } from 'vue'
 
 import { paper } from "@/components/ProcessMap/jointjs/JointJSDiagram";
 import { useAppStore } from "@/store/app";
+import { dia } from "@joint/core";
+import TransformToFitContentOptions = dia.Paper.TransformToFitContentOptions;
+
+const transformFitToContentOptions: TransformToFitContentOptions = {
+  horizontalAlign: 'middle',
+  padding: 20,
+  verticalAlign: 'middle'
+}
 
 export default defineComponent({
   name: "NavigationButtons",
@@ -117,7 +125,7 @@ export default defineComponent({
       this.savePaperLayout();
     },
     fitToScreen() {
-      paper.transformToFitContent();
+      paper.transformToFitContent(transformFitToContentOptions);
       this.savePaperLayout();
     },
     savePaperLayout() {
