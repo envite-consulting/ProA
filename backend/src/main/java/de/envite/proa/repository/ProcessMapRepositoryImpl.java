@@ -157,14 +157,14 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		if (elementType == ProcessElementType.CALL_ACTIVITY) {
 			CallActivityTable callActivity = callActivityDao.findForProcessModel(processModel);
 			if (callActivity == null) {
-				return "";
+				return null;
 			}
 			return callActivity.getElementId();
 		}
 		EventType eventType = map(elementType);
 		ProcessEventTable processEvent = processEventDao.findForProcessModelAndEventType(processModel, eventType);
 		if (processEvent == null) {
-			return "";
+			return null;
 		}
 		return processEvent.getElementId();
 	}

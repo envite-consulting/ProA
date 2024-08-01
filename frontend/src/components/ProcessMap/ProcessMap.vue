@@ -211,10 +211,6 @@ export default defineComponent({
       const callingElementType = this.getProcessElementType(link.source().port || '');
       const calledElementType = this.getProcessElementType(link.target().port || '');
 
-      if (!callingElementType || !calledElementType) {
-        return;
-      }
-
       try {
         await axios.post(`/api/project/${this.selectedProjectId}/process-map/connection`, {
           callingProcessid,
