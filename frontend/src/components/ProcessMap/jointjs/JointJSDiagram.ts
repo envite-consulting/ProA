@@ -41,12 +41,12 @@ export const paper = new dia.Paper({
   validateConnection: (sourceView, sourceMagnet, targetView, targetMagnet) => {
     const targetGroup = targetView.findAttribute("port-group", targetMagnet);
     const target = targetView.model;
-    return sourceView !== targetView && !target.isLink() && targetGroup == "start";
+    return sourceView !== targetView && !target.isLink() && (targetGroup == "start" || targetGroup == "i-catch-event");
   },
   clickThreshold: 10,
   magnetThreshold: "onleave",
   linkPinning: false,
-  snapLinks: { radius: 20 },
+  snapLinks: { radius: 10 },
   snapLabels: true,
   markAvailable: true,
   highlighting: {
