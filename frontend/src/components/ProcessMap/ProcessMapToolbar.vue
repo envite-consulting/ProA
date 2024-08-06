@@ -9,6 +9,14 @@
 
     <v-spacer></v-spacer>
 
+    <v-tooltip :text="$t('processMap.retrieveProcessInstances')" location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn icon v-bind="props" @click="handleFetchProcessInstances">
+          <v-icon>mdi-play</v-icon>
+        </v-btn>
+      </template>
+    </v-tooltip>
+
     <v-menu location="bottom" :close-on-content-click="false">
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props" class="me-5px">
@@ -136,15 +144,18 @@ export default defineComponent({
   },
 
   methods: {
+    clearFilters() {
+      this.filterGraphInput = { ...this.defaultFilterGraphInput };
+      this.$emit('filterGraph', this.filterGraphInput);
+    },
     fetchProcessModels() {
       this.$emit('fetchProcessModels');
     },
     filterGraph() {
       this.$emit('filterGraph', this.filterGraphInput);
     },
-    clearFilters() {
-      this.filterGraphInput = { ...this.defaultFilterGraphInput };
-      this.$emit('filterGraph', this.filterGraphInput);
+    handleFetchProcessInstances() {
+      this.$emit('handleFetchProcessInstances');
     },
     saveFilters() {
       this.store.setFiltersForProject(this.selectedProjectId!, JSON.stringify(this.filterGraphInput));

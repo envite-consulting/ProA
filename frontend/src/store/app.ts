@@ -27,7 +27,10 @@ export const useAppStore = defineStore('app', {
       hiddenPortsByProject: {} as { [key: number]: string },
       hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
       processModelsChangeFlag: false as boolean,
-      selectedLanguage: 'en' as LanguageCode
+      selectedLanguage: 'en' as LanguageCode,
+      areSettingsOpened: false as boolean,
+      operateConnectionError: '' as string,
+      operateClusterError: '' as string
     }
   },
   actions: {
@@ -101,6 +104,24 @@ export const useAppStore = defineStore('app', {
     },
     getSelectedLanguage(): LanguageCode {
       return this.selectedLanguage;
+    },
+    setAreSettingsOpened(opened: boolean) {
+      this.areSettingsOpened = opened;
+    },
+    getAreSettingsOpened() {
+      return this.areSettingsOpened
+    },
+    setOperateConnectionError(error: string) {
+      this.operateConnectionError = error
+    },
+    getOperateConnectionError() {
+      return this.operateConnectionError
+    },
+    setOperateClusterError(error: string) {
+      this.operateClusterError = error
+    },
+    getOperateClusterError() {
+      return this.operateClusterError
     }
   },
   persist: {
@@ -116,7 +137,10 @@ export const useAppStore = defineStore('app', {
       'portsInformationByProject',
       'hiddenLinksByProject',
       'processModelsChangeFlag',
-      'selectedLanguage'
+      'selectedLanguage',
+      'areSettingsOpened',
+      'operateConnectionError',
+      'operateClusterError'
     ]
   },
 })

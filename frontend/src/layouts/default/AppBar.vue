@@ -28,6 +28,13 @@
       </v-list>
     </v-menu>
 
+    <v-tooltip :text="$t('general.settings')" location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn icon v-bind="props" @click="toggleSettings">
+          <v-icon>mdi-cog</v-icon>
+        </v-btn>
+      </template>
+    </v-tooltip>
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" location="left" temporary>
@@ -39,18 +46,24 @@
         v-for="item in items"
         :key="item.title"
         dense
-        :disabled="!useAppStore().selectedProjectId && item.title !== $t('navigation.projectOverview')"
+        :disabled="!appStore.selectedProjectId && item.title !== $t('navigation.projectOverview')"
         class="px-2"
       >
         <v-list-item-title class="text-body-1 font-weight-regular">{{ item.title }}</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
+
+  <SettingsDrawer />
 </template>
+
+<style scoped>
+</style>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
+import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import i18n from "@/i18n";
 
 export type LanguageCode = 'en' | 'de';
@@ -61,6 +74,7 @@ interface Language {
 }
 
 export default defineComponent({
+  components: { SettingsDrawer },
   methods: {
     useAppStore,
     changeLanguage(language: LanguageCode) {
@@ -73,10 +87,14 @@ export default defineComponent({
         return '';
       }
       return s.charAt(0).toLowerCase() + s.slice(1);
+    },
+    toggleSettings() {
+      this.appStore.setAreSettingsOpened(!this.appStore.getAreSettingsOpened());
     }
   },
 
   data: () => ({
+    appStore: useAppStore(),
     drawer: false as boolean,
     group: null,
     selectedLanguage: useAppStore().getSelectedLanguage() as LanguageCode,
@@ -127,8 +145,8 @@ export default defineComponent({
 
   watch: {
     group() {
-      this.drawer = false
-    },
-  },
+      this.drawer = false;
+    }
+  }
 })
 </script>

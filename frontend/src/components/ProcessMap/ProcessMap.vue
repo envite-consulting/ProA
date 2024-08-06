@@ -1,6 +1,7 @@
 <template>
   <ProcessMapToolbar ref="toolbar" :selectedProjectId="selectedProjectId"
-                     @fetchProcessModels="fetchProcessModels" @filterGraph="filterGraph"/>
+                     @fetchProcessModels="fetchProcessModels" @filterGraph="filterGraph"
+                     @handleFetchProcessInstances="handleFetchProcessInstances"/>
   <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
     <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
     <div id="graph-container" class="full-screen"></div>
@@ -46,7 +47,8 @@ import {
   HiddenPorts,
   PortsInformation,
   Process,
-  ProcessElementType
+  ProcessElementType,
+  ProcessInstance
 } from "./types";
 
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
@@ -56,6 +58,7 @@ import NavigationButtons from "@/components/ProcessMap/NavigationButtons.vue";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 import { useAppStore } from "@/store/app";
+import { Settings } from "@/components/SettingsDrawer.vue";
 
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
@@ -98,8 +101,10 @@ export default defineComponent({
     return {
       mouseX: '' as string,
       mouseY: '' as string,
+      operateToken: '' as string,
       tooltipList: [] as string[],
       tooltipVisible: false as boolean,
+      settings: {} as Settings,
       appStore,
       hiddenCells,
       hiddenLinks,
@@ -316,7 +321,7 @@ export default defineComponent({
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
 
-        let abstractProcessShapes = result.data.processes.map((process: Process) => {
+        let abstractProcessShapes: AbstractProcessShape[] = result.data.processes.map((process: Process) => {
 
           const filterEmpty = (label: string) => !!label;
 
@@ -326,7 +331,7 @@ export default defineComponent({
           this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
           this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-          return createAbstractProcessElement(process.name, process.id);
+          return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
         });
 
         this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
@@ -543,6 +548,80 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenElements();
       this.saveHiddenPorts();
+    },
+    async fetchSettings() {
+      try {
+        await axios.get("/api/settings").then(result => {
+          this.settings = result.data;
+        });
+      } catch (error) {
+        this.settings = {} as Settings;
+      }
+
+      this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+      this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
+      this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
+      this.settings.operateRegionId = this.settings.operateRegionId || import.meta.env.VITE_OPERATE_REGION_ID;
+      this.settings.operateClusterId = this.settings.operateClusterId || import.meta.env.VITE_OPERATE_CLUSTER_ID;
+    },
+    async handleFetchProcessInstances() {
+      await this.fetchSettings();
+      if (!this.settings.operateClientId || !this.settings.operateClientSecret) {
+        this.appStore.setOperateConnectionError("Camunda Operate Verbindung fehlt");
+        this.appStore.setAreSettingsOpened(true);
+        return;
+      }
+      if (!this.settings.operateRegionId || !this.settings.operateClusterId) {
+        this.appStore.setOperateClusterError("Region und/oder Cluster fehlen");
+        this.appStore.setAreSettingsOpened(true);
+        return;
+      }
+      try {
+        const result = await axios.post("/api/camunda-cloud/token", {
+          "client_id": this.settings.operateClientId,
+          "client_secret": this.settings.operateClientSecret,
+          "audience": "operate.camunda.io"
+        });
+        this.operateToken = result.data;
+        await this.fetchProcessInstances();
+      } catch (error) {
+        this.appStore.setAreSettingsOpened(true);
+        return;
+      }
+    },
+    async fetchProcessInstances() {
+      const promises = graph.getCells().filter(cell => cell instanceof AbstractProcessShape).map(cell => {
+        return axios.post("/api/camunda-cloud/process-instances", {
+          "token": this.operateToken,
+          "regionId": this.settings.operateRegionId,
+          "clusterId": this.settings.operateClusterId,
+          "bpmnProcessId": cell.attributes.bpmnProcessId
+        });
+      });
+
+      const results = await Promise.all(promises);
+      const items = results.flatMap(result => result.data.items);
+
+      const countByProcess = items.reduce((countByProcess: Map<string, number>, item: ProcessInstance) => {
+        if (countByProcess.get(item.bpmnProcessId) && item.state == 'ACTIVE') {
+          countByProcess.set(item.bpmnProcessId, countByProcess.get(item.bpmnProcessId)! + 1);
+        } else {
+          countByProcess.set(item.bpmnProcessId, 1);
+        }
+        return countByProcess;
+      }, new Map<string, number>());
+      for (const cell of graph.getCells()) {
+        if (cell instanceof AbstractProcessShape) {
+          const countForBpmnProcessId = countByProcess.get(cell.attributes.bpmnProcessId);
+          if (countForBpmnProcessId) {
+            cell.setActiveInstances(countForBpmnProcessId);
+          } else {
+            cell.hideActiveInstances();
+          }
+        }
+      }
     },
     fitToScreen() {
       this.navigationButtons.fitToScreen();

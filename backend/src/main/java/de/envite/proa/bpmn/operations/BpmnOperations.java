@@ -19,6 +19,8 @@ import org.camunda.bpm.model.bpmn.instance.Event;
 import org.camunda.bpm.model.bpmn.instance.IntermediateCatchEvent;
 import org.camunda.bpm.model.bpmn.instance.IntermediateThrowEvent;
 import org.camunda.bpm.model.bpmn.instance.StartEvent;
+import org.camunda.bpm.model.bpmn.instance.Process;
+import org.camunda.bpm.model.bpmn.instance.Documentation;
 
 import de.envite.proa.entities.DataAccess;
 import de.envite.proa.entities.EventType;
@@ -61,6 +63,29 @@ public class BpmnOperations implements ProcessOperations {
 				.stream()//
 				.map(activity -> new ProcessActivity(activity.getId(), activity.getName()))//
 				.collect(Collectors.toList());
+	}
+
+	@Override
+	public String getDescription(String processModel) {
+		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
+
+		Process process = processModelInstance.getModelElementsByType(Process.class).iterator().next();
+
+		Collection<Documentation> documentations = process.getDocumentations();
+		if (documentations.isEmpty()) {
+			return null;
+		}
+		Documentation documentation = documentations.iterator().next();
+
+		return documentation != null ? documentation.getTextContent() : null;
+	}
+
+	@Override
+	public String getBpmnProcessId(String processModel) {
+		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
+
+		Process process = processModelInstance.getModelElementsByType(Process.class).iterator().next();
+		return process.getId();
 	}
 
 	private <T extends Event> List<ProcessEvent> getEvents(String processModel, EventType eventType,

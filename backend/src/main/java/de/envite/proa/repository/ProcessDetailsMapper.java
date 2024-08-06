@@ -23,6 +23,7 @@ public class ProcessDetailsMapper {
 		details.setIntermediateThrowEvents(map(table.getEvents(), EventType.INTERMEDIATE_THROW));
 		details.setEndEvents(map(table.getEvents(), EventType.END));
 		details.setActivities(map(table.getCallActivites()));
+		details.setBpmnProcessId(table.getBpmnProcessId());
 		return details;
 	}
 	

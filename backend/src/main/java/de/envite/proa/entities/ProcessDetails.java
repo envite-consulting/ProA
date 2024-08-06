@@ -15,6 +15,8 @@ public class ProcessDetails {
 	private Long id;
 	
     private String name;
+
+    private String bpmnProcessId;
     
     private List<ProcessEvent> startEvents = new ArrayList<>();
     

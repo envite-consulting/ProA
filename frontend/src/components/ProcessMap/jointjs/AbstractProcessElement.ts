@@ -20,6 +20,15 @@ export class AbstractProcessShape extends dia.Element {
     this.hiddenPorts = [];
   }
 
+  hideActiveInstances() {
+    this.attr('activeInstancesGroup/display', 'none');
+  }
+
+  setActiveInstances(activeInstancesNum: number) {
+    this.attr('activeInstancesGroup/display', 'block');
+    this.attr('activeInstancesText/text', activeInstancesNum.toString());
+  }
+
   highlightPort(elementType: ProcessElementType) {
     const portId = getPortPrefix(elementType) + this.id;
     this.portProp(portId, 'attrs/portBody/stroke', "#0074FA");
@@ -53,8 +62,78 @@ export class AbstractProcessShape extends dia.Element {
           textVerticalAnchor: "top",
           fontSize: 17,
           fontFamily: "sans-serif"
+        },
+        activeInstancesIcon: {
+          x: "calc(w - 45)",
+          y: "-10",
+          width: "36",
+          height: "20",
+          rx: "10",
+          ry: "10",
+          fill: "#0074FA",
+          stroke: "#0074FA",
+          strokeWidth: 2
+        },
+        activeInstancesCircleInner: {
+          cx: "calc(w - 34)",
+          cy: "-0.4",
+          r: "2.5",
+          fill: "white",
+        },
+        activeInstancesCircleOuter: {
+          cx: "calc(w - 34)",
+          cy: "-0.4",
+          r: "5",
+          fill: "none",
+          stroke: "white",
+          strokeWidth: 1.5,
+        },
+        activeInstancesText: {
+          x: "calc(w - 20)",
+          y: "0.5",
+          textAnchor: "middle",
+          textVerticalAnchor: "middle",
+          fontSize: 13,
+          fontWeight: "bold",
+          fill: "white"
         }
       },
+      markup: [
+        {
+          tagName: "rect",
+          selector: "background"
+        },
+        {
+          tagName: "path",
+          selector: "body"
+        },
+        {
+          tagName: "text",
+          selector: "label"
+        },
+        {
+          tagName: "g",
+          selector: "activeInstancesGroup",
+          children: [
+            {
+              tagName: "rect",
+              selector: "activeInstancesIcon"
+            },
+            {
+              tagName: "text",
+              selector: "activeInstancesText"
+            },
+            {
+              tagName: "circle",
+              selector: "activeInstancesCircleInner"
+            },
+            {
+              tagName: "circle",
+              selector: "activeInstancesCircleOuter"
+            }
+          ]
+        }
+      ],
       portMarkup: [
         {
           tagName: "path",
@@ -144,12 +223,34 @@ export class AbstractProcessShape extends dia.Element {
       {
         tagName: "text",
         selector: "label"
+      },
+      {
+        tagName: "g",
+        selector: "activeInstancesGroup",
+        children: [
+          {
+            tagName: "rect",
+            selector: "activeInstancesIcon"
+          },
+          {
+            tagName: "text",
+            selector: "activeInstancesText"
+          },
+          {
+            tagName: "circle",
+            selector: "activeInstancesCircleInner"
+          },
+          {
+            tagName: "circle",
+            selector: "activeInstancesCircleOuter"
+          }
+        ]
       }
     ];
   }
 }
 
-const createAbstractProcessElement = (label: string, id: number) => {
+const createAbstractProcessElement = (label: string, id: number, bpmnProcessId: string) => {
 
   let wrapLabel = util.breakText(label, {
     width: 120
@@ -157,9 +258,13 @@ const createAbstractProcessElement = (label: string, id: number) => {
 
   return new AbstractProcessShape({
     id: id,
+    bpmnProcessId: bpmnProcessId,
     attrs: {
       label: {
         text: wrapLabel
+      },
+      activeInstancesGroup: {
+        display: "none"
       }
     },
     ports: {

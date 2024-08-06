@@ -50,12 +50,18 @@ export interface FilterGraphInput {
 
 export interface Process {
   activities: Activity[];
+  bpmnProcessId: string;
   endEvents: Event[];
   id: number;
   intermediateCatchEvents: Event[];
   intermediateThrowEvents: Event[];
   name: string;
   startEvents: Event[];
+}
+
+export interface ProcessInstance {
+  bpmnProcessId: string;
+  state: string;
 }
 
 export interface RouteObject {

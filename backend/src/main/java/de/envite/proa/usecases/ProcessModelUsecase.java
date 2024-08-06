@@ -40,13 +40,16 @@ public class ProcessModelUsecase {
 		).flatMap(Collection::stream).collect(Collectors.toList());
 		List<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
 		List<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
+		String newDescription = description.isBlank() ? processOperations.getDescription(xml) : description;
+		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 
 		ProcessModel processModel = new ProcessModel(name, //
 				xml, //
 				events, //
 				callActivities, //
 				dataStores, //
-				description//
+				newDescription, //
+				bpmnProcessId
 		);
 
 		return repository.saveProcessModel(projectId, processModel);

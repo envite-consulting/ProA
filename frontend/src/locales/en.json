@@ -9,12 +9,15 @@
     "importProcessModels": "Import Process Models",
     "loading": "Loading...",
     "retrieveProcessModels": "Retrieve Process Models",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+    "saveInformationQuestion": "Save information?"
   },
   "general": {
     "activity": "Activity",
     "callActivities": "Call Activities",
     "cancel": "Cancel",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret",
     "description": "Description",
     "end": "End",
     "english": "English",
@@ -23,7 +26,8 @@
     "intermediateEvent": "Intermediate Event",
     "intermediateThrowEvents": "Intermediate Throw Events",
     "processModel": "Process Model",
-    "save": "Save"
+    "save": "Save",
+    "settings": "Settings"
   },
   "navigation": {
     "c8Import": "C8 Import",
@@ -61,6 +65,7 @@
     "process": "Process",
     "processesWithoutConnections": "Processes without Connections",
     "resources": "Resources",
+    "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Start Event"
   },
   "projectOverview": {
@@ -77,5 +82,19 @@
     "projectVersionRequired": "Project Version is required",
     "versionNameExists": "Version Name already exists",
     "versionNameRequired": "Version Name is required"
+  },
+  "settingsDrawer": {
+    "apiKey": "API Key",
+    "apiKeyInvalidMsg": "API key invalid",
+    "camundaModelerConnection": "Camunda Modeler connection",
+    "camundaOperateConnection": "Camunda Operate connection",
+    "clusterId": "Cluster ID",
+    "geminiApiKey": "Gemini API key",
+    "modelerConnectionInvalidMsg": "Camunda Modeler connection invalid",
+    "operateClusterInvalidMsg": "Region and/or cluster invalid",
+    "operateConnectionInvalidMsg": "Camunda Operate connection invalid",
+    "regionId": "Region ID",
+    "reset": "Reset",
+    "resetToEnvVariables": "Reset to environment variables"
   }
 }
