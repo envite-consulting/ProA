@@ -17,4 +17,5 @@ public class ProcessConnection {
 	private ProcessElementType calledElementType;
 	
 	private String label;
+	private Boolean userCreated;
 }

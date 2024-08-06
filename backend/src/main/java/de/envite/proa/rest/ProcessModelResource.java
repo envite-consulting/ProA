@@ -32,9 +32,12 @@ public class ProcessModelResource {
 	 * 
 	 * Creates a new process model
 	 * 
-	 * @param projectId    the id of the project the process model belongs to
-	 * @param processModel the bpmn file
-	 * @param fileName     the file name of the bpmn file
+	 * @param projectId
+	 *            the id of the project the process model belongs to
+	 * @param processModel
+	 *            the bpmn file
+	 * @param fileName
+	 *            the file name of the bpmn file
 	 * @param description
 	 * @return id of saved process model
 	 */
@@ -42,17 +45,26 @@ public class ProcessModelResource {
 	@Path("/project/{projectId}/process-model")
 	public Long uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
 			@RestForm String description) {
-
 		String content = readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
 		return usecase.saveProcessModel(projectId, fileName, content, description);
+	}
+
+	@Path("project/{projectId}/process-model/{oldProcessId}")
+	@POST
+	public Long replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
+			@RestForm String fileName, @RestForm String description) {
+		String content = readFileToString(processModel);
+		fileName = fileName.replace(".bpmn", "");
+		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description);
 	}
 
 	/**
 	 * Gets the xml representations of the bpmn file the id corresponds to. This
 	 * method is called from the process model view that shows the bpmn via bpmn.io
 	 * 
-	 * @param id of the bpmn file
+	 * @param id
+	 *            of the bpmn file
 	 * @return bpmn file as string
 	 */
 	@Path("/process-model/{id}")
