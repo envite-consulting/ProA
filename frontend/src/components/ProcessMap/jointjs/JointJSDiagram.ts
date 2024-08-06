@@ -31,8 +31,16 @@ export const paper = new dia.Paper({
   },
   defaultConnectionPoint: { name: "anchor" },
   defaultConnector: {
-    name: "smooth",
-
+    name: "straight", args: {
+      cornerType: 'cubic',
+      cornerRadius: 8
+    }
+  },
+  defaultRouter: {
+    name: "manhattan",
+    args: {
+      padding: 10
+    }
   },
   validateMagnet: (sourceView, sourceMagnet) => {
     const sourceGroup = sourceView.findAttribute("port-group", sourceMagnet) || '';

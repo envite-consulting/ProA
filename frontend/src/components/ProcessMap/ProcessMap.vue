@@ -4,7 +4,7 @@
   <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
     <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
     <div id="graph-container" class="full-screen"></div>
-    <NavigationButtons :selectedProjectId="selectedProjectId"/>
+    <NavigationButtons ref="navigationButtons" :selectedProjectId="selectedProjectId"/>
   </v-card>
   <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
     <ul v-if="tooltipList.length > 0">
@@ -52,7 +52,7 @@ import {
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
 import ProcessMapToolbar from "@/components/ProcessMap/ProcessMapToolbar.vue";
-import NavigationButtons from "@/components/ProcessMap/Navigation.vue";
+import NavigationButtons from "@/components/ProcessMap/NavigationButtons.vue";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 import { useAppStore } from "@/store/app";
@@ -112,6 +112,9 @@ export default defineComponent({
   computed: {
     toolbar() {
       return this.$refs.toolbar as InstanceType<typeof ProcessMapToolbar>;
+    },
+    navigationButtons() {
+      return this.$refs.navigationButtons as InstanceType<typeof NavigationButtons>;
     }
   },
 
@@ -398,21 +401,19 @@ export default defineComponent({
 
         graph.addCell(dataStoreConnectionShapes);
 
-        paper.freeze();
+
 
         DirectedGraph.layout(graph, {
-          nodeSep: 150,
-          edgeSep: 80,
-          rankDir: "TB",
-          marginX: 10,
-          marginY: 10,
+          nodeSep: 80,
+          edgeSep: 100,
+          rankSep: 80,
+          rankDir: "LR",
         });
 
-        paper.transformToFitContent();
-        paper.unfreeze();
+        setTimeout(this.fitToScreen, 1);
 
         this.saveGraphState();
-      })
+      });
     },
     getProcessElementType(portId: string): ProcessElementType | null {
       const mappings: { [key: string]: ProcessElementType } = {
@@ -542,6 +543,9 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenElements();
       this.saveHiddenPorts();
+    },
+    fitToScreen() {
+      this.navigationButtons.fitToScreen();
     }
   }
 })
