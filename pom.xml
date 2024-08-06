@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.envite</groupId>
 	<artifactId>pro-a</artifactId>
-	<version>1.0.0-snapshot</version>
+	<version>1.1.0</version>
 	<packaging>pom</packaging>
 
 	<name>ProA</name>
@@ -25,7 +25,7 @@
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
         <url>${project.scm.url}</url>
-        <tag>v1.2</tag>
+        <tag>v1.1.0</tag>
     </scm>
 	
 	<build>
