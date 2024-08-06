@@ -32,9 +32,6 @@
       </v-list-item>
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
-    <v-btn prepend-icon="mdi-import" @click="importProcessModels" v-if="selectedProcessModels.length > 0">
-      {{ $t('c8Import.importProcessModels') }}
-    </v-btn>
   </v-list>
   <v-dialog v-model="camundaCloudDialog" persistent width="600">
     <v-card>
@@ -113,7 +110,7 @@
        style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px"
        v-if="selectedProcessModels.length > 0">
     <v-btn prepend-icon="mdi-import" @click="importProcessModels">
-      {{ $t('c8Import.import') }}
+      {{ $t('c8Import.importProcessModels') }}
     </v-btn>
   </div>
   <div class="ma-4" v-if="importedProcessModels.length > 0"

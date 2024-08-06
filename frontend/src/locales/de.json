@@ -5,7 +5,6 @@
     "creatorEmail": "Ersteller E-Mail",
     "creatorEmailHint": "Optional: Nur Prozessmodelle der angegebenen Ersteller E-Mail werden abgerufen",
     "errorMessage": "Ein Fehler ist aufgetreten!",
-    "import": "Importieren",
     "importFromC8": "Prozesse aus C8 importieren",
     "importProcessModels": "Prozessmodelle importieren",
     "loading": "Laden...",

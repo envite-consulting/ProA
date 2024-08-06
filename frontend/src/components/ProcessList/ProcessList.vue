@@ -118,7 +118,7 @@
         <v-btn v-if="uploadDialogMode === 'multiple'" color="blue-darken-1" variant="text" @click="uploadProcessModels">
           {{ $t('general.save') }}
         </v-btn>
-        <v-btn v-if="uploadDialogMode === 'single'" color="blue-darken-1" variant="text" @click="swapProcessModel">
+        <v-btn v-if="uploadDialogMode === 'single'" color="blue-darken-1" variant="text" @click="replaceProcessModel">
           {{ $t('general.save') }}
         </v-btn>
       </v-card-actions>
@@ -194,7 +194,7 @@ export default defineComponent({
     appStore: useAppStore(),
     uploadDialog: false as boolean,
     uploadDialogMode: UploadDialogMode.MULTIPLE as UploadDialogMode,
-    replaceProcessModel: null as number | null,
+    processModelToBeReplacedId: null as number | null,
     progressDialog: false,
     progress: 0,
     processModelFiles: [] as File[],
@@ -239,7 +239,7 @@ export default defineComponent({
     openSingleUploadDialog(modelId: number) {
       this.uploadDialog = true;
       this.uploadDialogMode = UploadDialogMode.SINGLE;
-      this.replaceProcessModel = modelId;
+      this.processModelToBeReplacedId = modelId;
     },
 
     openMultipleUploadDialog() {
@@ -300,14 +300,20 @@ export default defineComponent({
       }
     },
 
-    async uploadProcessModel(processModel: ProcessModelToUpload) {
+    async uploadProcessModel(processModel: ProcessModelToUpload): Promise<number> {
+      const formData = this.createProcessModelFormData(processModel);
+      const { data } = await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
+      return data;
+    },
+
+    createProcessModelFormData(processModel: ProcessModelToUpload): FormData {
       let formData = new FormData();
       const fileName = processModel.name || processModel.file.name.replace(this.fileExtensionMatcher, "");
       formData.append("processModel", processModel.file);
       formData.append("fileName", fileName);
       formData.append("description", processModel.description);
 
-      await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
+      return formData;
     },
 
     async uploadProcessModels() {
@@ -326,16 +332,20 @@ export default defineComponent({
       }
     },
 
-    async swapProcessModel() {
-      if (this.processModelsToUpload.length === 1) {
-        this.progressDialog = true;
-        const oldModelId = this.replaceProcessModel;
-        await this.deleteProcessModel(oldModelId!);
-        this.progress += 50;
-
-        await this.uploadProcessModel(this.processModelsToUpload[0]);
-        this.afterUploadActions();
+    async replaceProcessModel() {
+      if (this.processModelsToUpload.length !== 1) {
+        return;
       }
+
+      const processModel = this.processModelsToUpload[0];
+      const formData = this.createProcessModelFormData(processModel);
+
+      await axios.post(
+        "/api/project/" + this.selectedProjectId + "/process-model/" + this.processModelToBeReplacedId,
+        formData
+      );
+
+      this.afterUploadActions();
     },
 
     afterUploadActions() {
@@ -354,7 +364,7 @@ export default defineComponent({
       this.processModelFiles = [];
       this.processModelsToUpload = [];
       this.progressDialog = false;
-      this.replaceProcessModel = null;
+      this.processModelToBeReplacedId = null;
       this.progress = 0;
     },
 

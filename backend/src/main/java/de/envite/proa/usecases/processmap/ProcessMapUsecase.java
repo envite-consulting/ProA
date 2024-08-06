@@ -19,6 +19,10 @@ public class ProcessMapUsecase {
 		repository.addConnection(projectId, connection);
 	}
 
+	public void copyConnections(Long projectId ,Long oldProcessId, Long newProcessId) {
+		repository.copyConnections(projectId, oldProcessId, newProcessId);
+	}
+
 	public void deleteProcessConnection(Long connectionId) {
 		repository.deleteProcessConnection(connectionId);
 	}

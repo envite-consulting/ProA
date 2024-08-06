@@ -42,4 +42,6 @@ public class ProcessConnectionTable {
 
 	@ManyToOne
 	private ProjectTable project;
+
+	private Boolean userCreated;
 }

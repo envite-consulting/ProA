@@ -31,8 +31,16 @@ export const paper = new dia.Paper({
   },
   defaultConnectionPoint: { name: "anchor" },
   defaultConnector: {
-    name: "smooth",
-
+    name: "straight", args: {
+      cornerType: 'cubic',
+      cornerRadius: 8
+    }
+  },
+  defaultRouter: {
+    name: "manhattan",
+    args: {
+      padding: 10
+    }
   },
   validateMagnet: (sourceView, sourceMagnet) => {
     const sourceGroup = sourceView.findAttribute("port-group", sourceMagnet) || '';
@@ -41,12 +49,12 @@ export const paper = new dia.Paper({
   validateConnection: (sourceView, sourceMagnet, targetView, targetMagnet) => {
     const targetGroup = targetView.findAttribute("port-group", targetMagnet);
     const target = targetView.model;
-    return sourceView !== targetView && !target.isLink() && targetGroup == "start";
+    return sourceView !== targetView && !target.isLink() && (targetGroup == "start" || targetGroup == "i-catch-event");
   },
   clickThreshold: 10,
   magnetThreshold: "onleave",
   linkPinning: false,
-  snapLinks: { radius: 20 },
+  snapLinks: { radius: 10 },
   snapLabels: true,
   markAvailable: true,
   highlighting: {

@@ -32,6 +32,19 @@ public class ProcessConnectionDao {
 	}
 
 	@Transactional
+	public List<ProcessConnectionTable> getProcessConnections(ProjectTable projectTable,
+			ProcessModelTable processModel) {
+		return em //
+				.createQuery("SELECT pc " + //
+						"FROM ProcessConnectionTable pc " + //
+						"WHERE pc.project = :project " + //
+						"AND (pc.callingProcess = :processModel OR pc.calledProcess = :processModel)", //
+						ProcessConnectionTable.class) //
+				.setParameter("project", projectTable) //
+				.setParameter("processModel", processModel).getResultList();
+	}
+
+	@Transactional
 	public void deleteForProcessModel(Long id) {
 		ProcessModelTable processModel = em.find(ProcessModelTable.class, id);
 		em.createQuery(

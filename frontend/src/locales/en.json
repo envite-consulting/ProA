@@ -5,7 +5,6 @@
     "creatorEmail": "Creator Email",
     "creatorEmailHint": "Optional: Only process models of the specified creator email are retrieved",
     "errorMessage": "An error has occurred!",
-    "import": "Import",
     "importFromC8": "Import Processes from C8",
     "importProcessModels": "Import Process Models",
     "loading": "Loading...",

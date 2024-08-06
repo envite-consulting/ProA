@@ -11,6 +11,7 @@ import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessEvent;
 import de.envite.proa.entities.ProcessInformation;
 import de.envite.proa.entities.ProcessModel;
+import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -22,6 +23,9 @@ public class ProcessModelUsecase {
 
 	@Inject
 	private ProcessOperations processOperations;
+
+	@Inject
+	private ProcessMapRespository processMapRepository;
 
 	public Long saveProcessModel(Long projectId, String name, String xml, String description) {
 
@@ -65,5 +69,17 @@ public class ProcessModelUsecase {
 
 	public void deleteProcessModel(Long id) {
 		repository.deleteProcessModel(id);
+	}
+
+	public Long replaceProcessModel(Long projectId, Long oldProcessId, String fileName, String content,
+			String description) {
+		Long newProcessId = saveProcessModel(projectId, fileName, content, description);
+		copyConnections(projectId, oldProcessId, newProcessId);
+		deleteProcessModel(oldProcessId);
+		return newProcessId;
+	}
+
+	private void copyConnections(Long projectId, Long oldProcessId, Long newProcessId) {
+		processMapRepository.copyConnections(projectId, oldProcessId, newProcessId);
 	}
 }
