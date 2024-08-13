@@ -18,15 +18,15 @@
                       :type="showApiKey ? 'text' : 'password'"
                       :append-inner-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append-inner="showApiKey = !showApiKey"
-                      :error-messages="apiKeyError" @input="apiKeyError = ''" :loading="isValidating"
-                      :disabled="isValidating">
+                      :error-messages="apiKeyError" @input="resetMessagesApiKey" :loading="isValidating"
+                      :disabled="isValidating" :messages="apiKeySuccessMsg">
         </v-text-field>
       </div>
       <div class="mt-2">
         <p class="text-subtitle-1 text-grey-darken-2 mb-1">{{ $t('settingsDrawer.camundaModelerConnection') }}</p>
         <v-text-field :label="$t('general.clientId')" v-model="settings.modelerClientId" hide-details
                       class="mb-2"
-                      :error-messages="modelerError" @input="modelerError = ''" :loading="isValidating"
+                      :error-messages="modelerError" @input="resetMessagesModeler" :loading="isValidating"
                       :disabled="isValidating">
         </v-text-field>
         <v-text-field :loading="isValidating" :disabled="isValidating" :label="$t('general.clientSecret')"
@@ -34,33 +34,33 @@
                       :type="showModelerClientSecret ? 'text' : 'password'"
                       :append-inner-icon="showModelerClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append-inner="showModelerClientSecret = !showModelerClientSecret"
-                      :error-messages="modelerError" @input="modelerError = ''">
+                      :error-messages="modelerError" @input="resetMessagesModeler" :messages="modelerSuccessMsg">
         </v-text-field>
       </div>
       <div class="mt-2 mb-4">
         <p class="text-subtitle-1 text-grey-darken-2 mb-1">{{ $t('settingsDrawer.camundaOperateConnection') }}</p>
         <v-text-field :label="$t('general.clientId')" v-model="settings.operateClientId"
                       :error-messages="appStore.operateConnectionError" hide-details
-                      class="mb-2" @input="appStore.setOperateConnectionError('')" :loading="isValidating"
+                      class="mb-2" @input="resetMessagesOperateConnection" :loading="isValidating"
                       :disabled="isValidating">
         </v-text-field>
         <v-text-field :label="$t('general.clientSecret')" v-model="settings.operateClientSecret"
                       :type="showOperateClientSecret ? 'text' : 'password'"
                       :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
                       @click:append-inner="showOperateClientSecret = !showOperateClientSecret"
-                      :error-messages="appStore.operateConnectionError" @input="appStore.setOperateConnectionError('')"
+                      :error-messages="appStore.operateConnectionError" @input="resetMessagesOperateConnection"
                       :loading="isValidating"
-                      :disabled="isValidating">
+                      :disabled="isValidating" :messages="operateConnectionSuccessMsg">
         </v-text-field>
         <v-text-field :label="$t('settingsDrawer.regionId')" v-model="settings.operateRegionId"
-                      :error-messages="appStore.operateClusterError" @input="appStore.setOperateClusterError('')"
+                      :error-messages="appStore.operateClusterError" @input="resetMessagesOperateCluster"
                       :loading="isValidating"
                       :disabled="isValidating" hide-details class="mb-2">
         </v-text-field>
         <v-text-field :label="$t('settingsDrawer.clusterId')" v-model="settings.operateClusterId"
-                      :error-messages="appStore.operateClusterError" @input="appStore.setOperateClusterError('')"
+                      :error-messages="appStore.operateClusterError" @input="resetMessagesOperateCluster"
                       :loading="isValidating"
-                      :disabled="isValidating">
+                      :disabled="isValidating" :messages="operateClusterSuccessMsg">
         </v-text-field>
       </div>
       <div class="d-flex">
@@ -106,11 +106,16 @@ export default defineComponent({
   data: () => ({
     appStore: useAppStore(),
     settings: {} as Settings,
+    settingsToBeSaved: {} as Settings,
     showApiKey: false,
     showModelerClientSecret: false,
     showOperateClientSecret: false,
     apiKeyError: "",
     modelerError: "",
+    apiKeySuccessMsg: "",
+    modelerSuccessMsg: "",
+    operateConnectionSuccessMsg: "",
+    operateClusterSuccessMsg: "",
     isValidating: false
   }),
 
@@ -149,17 +154,21 @@ export default defineComponent({
       }
 
       const areSettingsValid = await this.validateSettings();
-      if (!areSettingsValid) {
-        return;
-      }
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
+        await axios.patch("/api/settings", this.settingsToBeSaved, { headers: { 'Content-Type': 'application/json' } });
       } else {
-        await axios.post("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
+        await axios.post("/api/settings", this.settingsToBeSaved, { headers: { 'Content-Type': 'application/json' } });
       }
 
-      this.closeSettingsDrawer();
+      if (areSettingsValid) {
+        this.closeSettingsDrawer();
+      } else {
+        if (this.settingsToBeSaved.geminiApiKey) this.apiKeySuccessMsg = this.$t('settingsDrawer.savedSuccessfully');
+        if (this.settingsToBeSaved.modelerClientSecret) this.modelerSuccessMsg = this.$t('settingsDrawer.savedSuccessfully');
+        if (this.settingsToBeSaved.operateClientSecret) this.operateConnectionSuccessMsg = this.$t('settingsDrawer.savedSuccessfully');
+        if (this.settingsToBeSaved.operateClusterId) this.operateClusterSuccessMsg = this.$t('settingsDrawer.savedSuccessfully');
+      }
     },
     async validateSettings(): Promise<boolean> {
       const languages = i18n.global.availableLocales;
@@ -191,14 +200,27 @@ export default defineComponent({
         this.appStore.setOperateClusterError(operateClusterError);
       }
 
+      this.settingsToBeSaved = { ...this.settings };
+
       if (!isAPIKeyValid || !isModelerConnectionValid || !isOperateConnectionValid || !isOperateClusterValid) {
-        if (!isAPIKeyValid) this.apiKeyError = this.$t('settingsDrawer.apiKeyInvalidMsg');
-        if (!isModelerConnectionValid) this.modelerError = this.$t('settingsDrawer.modelerConnectionInvalidMsg');
+        if (!isAPIKeyValid) {
+          this.apiKeyError = this.$t('settingsDrawer.apiKeyInvalidMsg');
+          this.settingsToBeSaved.geminiApiKey = "";
+        }
+        if (!isModelerConnectionValid) {
+          this.modelerError = this.$t('settingsDrawer.modelerConnectionInvalidMsg');
+          this.settingsToBeSaved.modelerClientId = "";
+          this.settingsToBeSaved.modelerClientSecret = "";
+        }
         if (!isOperateConnectionValid) {
           this.appStore.setOperateConnectionError(this.$t('settingsDrawer.operateConnectionInvalidMsg'));
+          this.settingsToBeSaved.operateClientId = "";
+          this.settingsToBeSaved.operateClientSecret = "";
         }
         if (!isOperateClusterValid) {
           this.appStore.setOperateClusterError(this.$t('settingsDrawer.operateClusterInvalidMsg'));
+          this.settingsToBeSaved.operateRegionId = "";
+          this.settingsToBeSaved.operateClusterId = "";
         }
         return false;
       }
@@ -295,6 +317,22 @@ export default defineComponent({
     },
     closeSettingsDrawer() {
       this.appStore.setAreSettingsOpened(false);
+    },
+    resetMessagesApiKey() {
+      this.apiKeyError = "";
+      this.apiKeySuccessMsg = "";
+    },
+    resetMessagesModeler() {
+      this.modelerError = "";
+      this.modelerSuccessMsg = "";
+    },
+    resetMessagesOperateConnection() {
+      this.appStore.setOperateConnectionError("");
+      this.operateConnectionSuccessMsg = "";
+    },
+    resetMessagesOperateCluster() {
+      this.appStore.setOperateClusterError("");
+      this.operateClusterSuccessMsg = "";
     }
   },
 

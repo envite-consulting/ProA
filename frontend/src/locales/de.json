@@ -95,6 +95,7 @@
     "operateConnectionInvalidMsg": "Camunda Operate Verbindung ungültig",
     "regionId": "Region ID",
     "reset": "Zurücksetzen",
-    "resetToEnvVariables": "Zurücksetzen auf Umgebungsvariablen"
+    "resetToEnvVariables": "Zurücksetzen auf Umgebungsvariablen",
+    "savedSuccessfully": "Erfolgreich gespeichert"
   }
 }
