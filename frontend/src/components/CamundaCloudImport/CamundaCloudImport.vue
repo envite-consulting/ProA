@@ -10,7 +10,7 @@
   <v-list lines="two" class="pa-6">
     <div v-if="importedProcessModels.length > 0">
       <v-list-item>
-        <v-checkbox hide-details @change="toggleSelectAll" v-model="selectAll">
+        <v-checkbox class="d-inline-block pe-3" hide-details @change="toggleSelectAll" v-model="selectAll">
           <template v-slot:label>
             <span class="ms-3">{{ $t('c8Import.selectAll') }}</span>
           </template>
