@@ -95,6 +95,7 @@
     "operateConnectionInvalidMsg": "Camunda Operate connection invalid",
     "regionId": "Region ID",
     "reset": "Reset",
-    "resetToEnvVariables": "Reset to environment variables"
+    "resetToEnvVariables": "Reset to environment variables",
+    "savedSuccessfully": "Saved successfully"
   }
 }
