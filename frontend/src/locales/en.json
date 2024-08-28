@@ -1,4 +1,37 @@
 {
+  "authentication": {
+    "accountCreationFailed": "Failed to create account",
+    "alreadyAccountQuestion": "Already have an account?",
+    "back": "Back",
+    "changePassword": "Change Password",
+    "continue": "Continue",
+    "createAnAccount": "Create an account",
+    "createAccountQuestion": "Create an account?",
+    "currentPassword": "Current Password",
+    "currentPwWrongError": "Current password not valid",
+    "edit": "Edit",
+    "editYourProfile": "Edit your profile",
+    "email": "Email",
+    "emailAlreadyRegistered": "This email is already registered",
+    "firstName": "First Name",
+    "forgotPwQuestion": "Forgot your password?",
+    "lastName": "Last Name",
+    "name": "Name",
+    "newPassword": "New Password",
+    "openProject": "Open project",
+    "password": "Password",
+    "passwordChangeErrorMsg": "Error while changing password",
+    "passwordSuccessfullyChanged": "Password successfully changed",
+    "profileEditFailed": "Failed to edit profile",
+    "profileSuccessfullyEdited": "Profile successfully edited",
+    "projects": "Projects",
+    "resetPwEmailSent": "If an account with that email exists, you'll receive a password reset link shortly.",
+    "samePasswordError": "New password needs to be different from current password.",
+    "signInFailed": "Sign in failed",
+    "successfullyCreatedAccount": "Successfully created account",
+    "version": "Version",
+    "welcomeBack": "Welcome back!"
+  },
   "c8Import": {
     "camundaConnectionSuccessMessage": "Connected to Camunda 8. You can call up process models.",
     "connect": "Connect",
@@ -16,6 +49,7 @@
     "activity": "Activity",
     "callActivities": "Call Activities",
     "cancel": "Cancel",
+    "createdOn": "Created on",
     "description": "Description",
     "end": "End",
     "english": "English",
@@ -23,16 +57,21 @@
     "intermediateCatchEvents": "Intermediate Catch Events",
     "intermediateEvent": "Intermediate Event",
     "intermediateThrowEvents": "Intermediate Throw Events",
+    "lastModifiedOn": "Last modified on",
+    "myProfile": "My Profile",
     "processModel": "Process Model",
-    "save": "Save"
+    "save": "Save",
+    "signOut": "Sign Out"
   },
   "navigation": {
     "c8Import": "C8 Import",
+    "createAccount": "Create Account",
     "camundaCloudImport": "C8 Import",
     "processList": "Process List",
     "processMap": "Process Map",
     "projectOverview": "Project Overview",
-    "processView": "Process View"
+    "processView": "Process View",
+    "signIn": "Sign In"
   },
   "processDetailSidebar": {
     "endEvents": "End Events",
@@ -68,8 +107,6 @@
     "active": "ACTIVE",
     "create": "Create",
     "createProject": "Create Project",
-    "createdOn": "Created on",
-    "lastModifiedOn": "Last modified on",
     "newProject": "New Project",
     "newVersion": "New Version",
     "newVersionFor": "New Version for",
@@ -77,6 +114,16 @@
     "projectNameRequired": "Project Name is required",
     "projectVersionRequired": "Project Version is required",
     "versionNameExists": "Version Name already exists",
-    "versionNameRequired": "Version Name is required"
+    "versionNameRequired": "Version Name is required",
+    "welcomeBack": "Welcome back, "
+  },
+  "validation": {
+    "isRequired": "is required",
+    "mustBeValid": "must be valid",
+    "max64Characters": "must be at most 64 characters",
+    "min8Characters": "must be at least 8 characters",
+    "atLeastOneLower": "must contain at least one lower case character",
+    "atLeastOneUpper": "must contain at least one upper case character",
+    "atLeastOneDigit": "must contain at least one number"
   }
 }

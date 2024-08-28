@@ -1,6 +1,21 @@
 <template>
 
   <v-container fluid style="margin: auto">
+    <v-banner
+      v-if="showLoggedInBanner && webVersion && isUserLoggedIn"
+      color="success"
+      icon="mdi-check"
+      lines="one"
+      :text="$t('projectOverview.welcomeBack') + store.getUser()?.firstName + '!'"
+      :stacked="false"
+      sticky
+    >
+      <template v-slot:actions>
+        <v-btn icon @click="showLoggedInBanner = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-banner>
 
     <v-card v-for="(group, index) in projectGroups" :key="index" width="300px" height="252px"
             style="float: left; margin: 16px"
@@ -28,11 +43,11 @@
           <v-icon icon="mdi-plus" size="large"></v-icon>
           {{ $t('projectOverview.newVersion') }}
         </v-btn>
-        <div>{{ $t('projectOverview.createdOn') }}: {{
+        <div class="text-dots">{{ $t('general.createdOn') }}: {{
             formatDate(activeProjectByGroup[group.name].createdAt)
           }}
         </div>
-        <div>{{ $t('projectOverview.lastModifiedOn') }}: {{
+        <div class="text-dots">{{ $t('general.lastModifiedOn') }}: {{
             formatDate(activeProjectByGroup[group.name].modifiedAt)
           }}
         </div>
@@ -55,7 +70,7 @@
       </v-card-title>
       <v-spacer></v-spacer>
       <v-card-actions>
-        <v-btn color="primary" :text="$t('projectOverview.create')" block @click="openNewProjectDialog"></v-btn>
+        <v-btn color="primary" :text="$t('projectOverview.create')" block @click="handleOpenNewProjectDialog"></v-btn>
       </v-card-actions>
     </v-card>
     <v-dialog v-model="projectDialog" persistent width="600">
@@ -130,11 +145,17 @@
   font-weight: 500;
   font-size: 0.875rem;
 }
+
+.text-dots {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { useAppStore } from "@/store/app";
+import { SelectedDialog, useAppStore } from "@/store/app";
 import { VTextField } from "vuetify/components";
 
 export interface Project {
@@ -163,10 +184,15 @@ export default defineComponent({
     newProjectName: "" as string,
     activeProjectByGroup: {} as ActiveProjectByGroup,
     newVersionName: "" as string,
-    newVersionInitialProject: {} as Project
+    newVersionInitialProject: {} as Project,
+    showLoggedInBanner: false as boolean,
+    webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB == 'web') as boolean,
   }),
 
   computed: {
+    isUserLoggedIn() {
+      return this.store.getUser() != null;
+    },
     versionRules() {
       return [
         (): boolean | string => !this.versionNameExists || this.$t('projectOverview.versionNameExists'),
@@ -205,6 +231,13 @@ export default defineComponent({
 
   watch: {},
   mounted: function () {
+    const currentState = window.history.state || {};
+
+    this.showLoggedInBanner = currentState.showLoggedInBanner;
+
+    const updatedState = { ...currentState, showLoggedInBanner: false };
+    window.history.replaceState(updatedState, document.title);
+
     this.fetchProjects();
   },
   methods: {
@@ -213,6 +246,13 @@ export default defineComponent({
       this.newProjectName = projectGroup.name;
       this.showNewVersionDialog = true;
       this.newVersionInitialProject = this.activeProjectByGroup[projectGroup.name];
+    },
+    handleOpenNewProjectDialog() {
+      if (this.webVersion && !this.isUserLoggedIn) {
+        this.store.setSelectedDialog(SelectedDialog.SIGN_IN);
+      } else {
+        this.openNewProjectDialog();
+      }
     },
     openNewProjectDialog() {
       this.newProjectName = "";

@@ -1,4 +1,37 @@
 {
+  "authentication": {
+    "accountCreationFailed": "Account konnte nicht erstellt werden",
+    "alreadyAccountQuestion": "Besteht bereits ein Account?",
+    "back": "Zurück",
+    "changePassword": "Passwort ändern",
+    "continue": "Fortfahren",
+    "createAnAccount": "Account erstellen",
+    "createAccountQuestion": "Account erstellen?",
+    "currentPassword": "Aktuelles Passwort",
+    "currentPwWrongError": "Aktuelles Passwort falsch",
+    "edit": "Bearbeiten",
+    "editYourProfile": "Profil bearbeiten",
+    "email": "E-Mail",
+    "emailAlreadyRegistered": "Diese E-Mail Adresse ist bereits registriert",
+    "firstName": "Vorname",
+    "forgotPwQuestion": "Passwort vergessen?",
+    "lastName": "Nachname",
+    "name": "Name",
+    "newPassword": "Neues Passwort",
+    "openProject": "Projekt öffnen",
+    "password": "Passwort",
+    "passwordChangeErrorMsg": "Fehler beim Ändern des Passworts",
+    "passwordSuccessfullyChanged": "Passwort erfolgreich geändert",
+    "profileEditFailed": "Profil konnte nicht bearbeitet werden",
+    "profileSuccessfullyEdited": "Profil erfolgreich bearbeitet",
+    "projects": "Projekte",
+    "resetPwEmailSent": "Falls ein Konto mit dieser E-Mail-Adresse existiert, erhalten Sie in Kürze einen Link zum Zurücksetzen des Passworts.",
+    "samePasswordError": "Das neue Passwort muss sich vom alten Passwort unterscheiden.",
+    "signInFailed": "Anmeldung fehlgeschlagen",
+    "successfullyCreatedAccount": "Account erfolgreich erstellt",
+    "version": "Version",
+    "welcomeBack": "Willkommen zurück!"
+  },
   "c8Import": {
     "camundaConnectionSuccessMessage": "Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.",
     "connect": "Verbinden",
@@ -16,6 +49,7 @@
     "activity": "Aktivität",
     "callActivities": "Aufrufaktivitäten",
     "cancel": "Abbrechen",
+    "createdOn": "Erstellt am",
     "description": "Beschreibung",
     "end": "Ende",
     "english": "Englisch",
@@ -23,16 +57,21 @@
     "intermediateCatchEvents": "Zwischenereignisse fangend",
     "intermediateEvent": "Zwischenereignis",
     "intermediateThrowEvents": "Zwischenereignisse werfend",
+    "lastModifiedOn": "Zuletzt geändert am",
+    "myProfile": "Mein Profil",
     "processModel": "Prozessmodell",
-    "save": "Speichern"
+    "save": "Speichern",
+    "signOut": "Abmelden"
   },
   "navigation": {
     "c8Import": "C8 Import",
+    "createAccount": "Account erstellen",
     "camundaCloudImport": "C8 Import",
     "processList": "Prozessliste",
     "processMap": "Prozesskarte",
     "projectOverview": "Projektübersicht",
-    "processView": "Prozessansicht"
+    "processView": "Prozessansicht",
+    "signIn": "Anmelden"
   },
   "processDetailSidebar": {
     "endEvents": "Endereignisse",
@@ -68,8 +107,6 @@
     "active": "AKTIV",
     "create": "Erstellen",
     "createProject": "Projekt erstellen",
-    "createdOn": "Erstellt am",
-    "lastModifiedOn": "Zuletzt geändert am",
     "newProject": "Neues Projekt",
     "newVersion": "Neue Version",
     "newVersionFor": "Neue Version für",
@@ -77,6 +114,16 @@
     "projectNameRequired": "Projektname ist erforderlich",
     "projectVersionRequired": "Projektversion ist erforderlich",
     "versionNameExists": "Versionsname existiert bereits",
-    "versionNameRequired": "Versionsname ist erforderlich"
+    "versionNameRequired": "Versionsname ist erforderlich",
+    "welcomeBack": "Wilkommen zurück, "
+  },
+  "validation": {
+    "isRequired": "ist erforderlich",
+    "mustBeValid": "muss gültig sein",
+    "max64Characters": "darf höchstens 64 Zeichen lang sein",
+    "min8Characters": "muss mindestens 8 Zeichen lang sein",
+    "atLeastOneLower": "muss mindestens einen Kleinbuchstaben enthalten",
+    "atLeastOneUpper": "muss mindestens einen Großbuchstaben enthalten",
+    "atLeastOneDigit": "muss mindestens eine Zahl enthalten"
   }
 }

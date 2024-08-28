@@ -12,6 +12,25 @@ export interface PaperLayout {
   ty: number
 }
 
+export interface UserData {
+  id: number
+  email: string,
+  firstName: string,
+  lastName: string,
+  createdAt: string,
+  modifiedAt: string,
+  token: string
+}
+
+export enum SelectedDialog {
+  NONE = -1,
+  PROFILE = 0,
+  EDIT_PROFILE = 1,
+  SIGN_IN = 2,
+  CREATE_ACCOUNT = 3,
+  CHANGE_PW = 4
+}
+
 export const useAppStore = defineStore('app', {
   state: () => {
     return {
@@ -27,7 +46,9 @@ export const useAppStore = defineStore('app', {
       hiddenPortsByProject: {} as { [key: number]: string },
       hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
       processModelsChangeFlag: false as boolean,
-      selectedLanguage: 'en' as LanguageCode
+      selectedLanguage: 'en' as LanguageCode,
+      user: null as UserData | null,
+      selectedDialog: SelectedDialog.NONE as SelectedDialog
     }
   },
   actions: {
@@ -101,6 +122,18 @@ export const useAppStore = defineStore('app', {
     },
     getSelectedLanguage(): LanguageCode {
       return this.selectedLanguage;
+    },
+    setUser(user: UserData | null) {
+      this.user = user;
+    },
+    getUser(): UserData | null {
+      return this.user;
+    },
+    setSelectedDialog(dialog: SelectedDialog) {
+      this.selectedDialog = dialog;
+    },
+    getSelectedDialog(): SelectedDialog {
+      return this.selectedDialog;
     }
   },
   persist: {
@@ -116,7 +149,9 @@ export const useAppStore = defineStore('app', {
       'portsInformationByProject',
       'hiddenLinksByProject',
       'processModelsChangeFlag',
-      'selectedLanguage'
+      'selectedLanguage',
+      'user',
+      'selectedDialog'
     ]
   },
 })
