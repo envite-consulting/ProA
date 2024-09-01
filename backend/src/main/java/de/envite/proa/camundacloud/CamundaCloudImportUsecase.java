@@ -36,7 +36,6 @@ public class CamundaCloudImportUsecase {
 
 	private String getProcessXml(CamundaProcessModelResponse processModel) {
 		String content = processModel.getContent();
-		System.out.println(content);
 		return content;
 	}
 

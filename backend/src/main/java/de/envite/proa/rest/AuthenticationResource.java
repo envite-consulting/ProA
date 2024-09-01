@@ -3,12 +3,16 @@ package de.envite.proa.rest;
 import de.envite.proa.entities.User;
 import de.envite.proa.service.TokenService;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestPath;
 
 import java.net.URI;
@@ -21,6 +25,12 @@ public class AuthenticationResource {
 
 	@Inject
 	TokenService tokenService;
+
+	@Inject
+	JsonWebToken jwt;
+
+	@Inject
+	SecurityContext securityContext;
 
 	@POST
 	@Path("/login")
@@ -51,7 +61,13 @@ public class AuthenticationResource {
 
 	@PATCH
 	@Path("/user/{id}")
+	@RolesAllowed({"User", "Admin"})
 	public Response patchUser(@RestPath Long id, User user) {
+
+		if (!securityContext.isUserInRole("Admin") && !id.toString().equals(jwt.getClaim("userId").toString())) {
+			throw new ForbiddenException("You can only patch your own profile.");
+		}
+
 		User patchedUser = usecase.patchUser(id, user);
 		return Response.ok().entity(patchedUser).build();
 	}

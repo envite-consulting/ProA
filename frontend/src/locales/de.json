@@ -25,7 +25,7 @@
     "profileEditFailed": "Profil konnte nicht bearbeitet werden",
     "profileSuccessfullyEdited": "Profil erfolgreich bearbeitet",
     "projects": "Projekte",
-    "resetPwEmailSent": "Falls ein Konto mit dieser E-Mail-Adresse existiert, erhalten Sie in Kürze einen Link zum Zurücksetzen des Passworts.",
+    "resetPwInfo": "Bitte kontaktieren Sie Ihren Administrator, um Ihr Passwort zu ändern.",
     "samePasswordError": "Das neue Passwort muss sich vom alten Passwort unterscheiden.",
     "signInFailed": "Anmeldung fehlgeschlagen",
     "successfullyCreatedAccount": "Account erfolgreich erstellt",

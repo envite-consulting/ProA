@@ -155,8 +155,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { SelectedDialog, useAppStore } from "@/store/app";
+import { SelectedDialog, useAppStore, UserData } from "@/store/app";
 import { VTextField } from "vuetify/components";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export interface Project {
   id: number
@@ -176,18 +177,22 @@ export interface ActiveProjectByGroup {
 }
 
 export default defineComponent({
-  data: () => ({
-    store: useAppStore(),
-    projects: [] as Project[],
-    projectDialog: false as boolean,
-    showNewVersionDialog: false as boolean,
-    newProjectName: "" as string,
-    activeProjectByGroup: {} as ActiveProjectByGroup,
-    newVersionName: "" as string,
-    newVersionInitialProject: {} as Project,
-    showLoggedInBanner: false as boolean,
-    webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB == 'web') as boolean,
-  }),
+  data: () => {
+    const store = useAppStore();
+    return {
+      store: store,
+      projects: [] as Project[],
+      projectDialog: false as boolean,
+      showNewVersionDialog: false as boolean,
+      newProjectName: "" as string,
+      activeProjectByGroup: {} as ActiveProjectByGroup,
+      newVersionName: "" as string,
+      newVersionInitialProject: {} as Project,
+      showLoggedInBanner: false as boolean,
+      webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB == 'web') as boolean,
+      user: store.getUser() as UserData
+    }
+  },
 
   computed: {
     isUserLoggedIn() {
@@ -229,7 +234,14 @@ export default defineComponent({
     }
   },
 
-  watch: {},
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        window.location.reload();
+      }
+    }
+  },
+
   mounted: function () {
     const currentState = window.history.state || {};
 
@@ -267,13 +279,36 @@ export default defineComponent({
       const locales = useAppStore().getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
       return new Date(dateString).toLocaleString(locales);
     },
-    fetchProjects() {
-      axios.get("/api/project").then((result: { data: Project[] }) => {
-        const sortProjectsByActiveFirst = (project: Project): number => {
-          return project.id == this.store.selectedProjectId ? -1 : 0;
-        };
-        this.projects = result.data.sort(sortProjectsByActiveFirst);
-      })
+    async fetchProjects() {
+      if (this.webVersion && !this.isUserLoggedIn) {
+        return;
+      }
+
+      if (this.webVersion && this.isUserLoggedIn) {
+        await axios.get(`/api/project/${this.user.id}`, { headers: authHeader() })
+          .then((result: { data: Project[] }) => {
+            const sortProjectsByActiveFirst = (project: Project): number => {
+              return project.id == this.store.selectedProjectId ? -1 : 0;
+            };
+            this.projects = result.data.sort(sortProjectsByActiveFirst);
+          })
+          .catch(error => {
+            console.error(error);
+            this.projects = [];
+          });
+        return;
+      }
+
+      axios.get("/api/project", { headers: authHeader() })
+        .then((result: { data: Project[] }) => {
+          const sortProjectsByActiveFirst = (project: Project): number => {
+            return project.id == this.store.selectedProjectId ? -1 : 0;
+          };
+          this.projects = result.data.sort(sortProjectsByActiveFirst);
+        })
+        .catch(error => {
+          console.error(error);
+        });
     },
     async createProject() {
       const newProjectNameInput = this.$refs.newProjectNameInput as VTextField;
@@ -298,12 +333,24 @@ export default defineComponent({
       formData.append("name", projectName);
       formData.append("version", projectVersion);
 
-      axios.post("/api/project", formData).then(result => {
-        this.projectDialog = false;
-        this.showNewVersionDialog = false;
-        this.setActiveProject(result.data.name, result.data.id);
-        this.projects.push(result.data);
-      });
+      if (this.webVersion) {
+        await axios.post(`/api/project/${this.user.id}`, formData, { headers: authHeader() })
+          .then(result => {
+            this.projectDialog = false;
+            this.showNewVersionDialog = false;
+            this.setActiveProject(result.data.name, result.data.id);
+            this.projects.push(result.data);
+          });
+        return;
+      }
+
+      axios.post("/api/project", formData, { headers: authHeader() })
+        .then(result => {
+          this.projectDialog = false;
+          this.showNewVersionDialog = false;
+          this.setActiveProject(result.data.name, result.data.id);
+          this.projects.push(result.data);
+        });
     },
     openProject(id: number) {
       this.store.setSelectedProjectId(id);

@@ -64,6 +64,7 @@ import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
 import { SelectedDialog, useAppStore, UserData } from "@/store/app";
 import { VForm } from "vuetify/components";
 import axios from "axios";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export default defineComponent({
   name: "ChangePassword",
@@ -133,7 +134,7 @@ export default defineComponent({
       try {
         await axios.patch(
           `/api/authentication/user/${id}`, { password: this.newPassword },
-          { headers: { 'Content-Type': 'application/json' } }
+          { headers: { ...authHeader(), 'Content-Type': 'application/json' } }
         );
 
         const message: Message = {

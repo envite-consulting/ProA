@@ -136,17 +136,9 @@ export default defineComponent({
       }
     },
     async handleForgotPw() {
-      (this.$refs.signInForm as VForm).resetValidation();
-
-      const valid = (await (this.$refs.emailTextField as VTextField).validate()).length === 0;
-
-      if (!valid) {
-        return;
-      }
-
       this.$emit('showMessage', {
         type: 'success',
-        message: this.$t('authentication.resetPwEmailSent') as string
+        message: this.$t('authentication.resetPwInfo') as string
       });
     }
   }

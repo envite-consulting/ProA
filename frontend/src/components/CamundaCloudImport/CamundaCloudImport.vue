@@ -12,7 +12,7 @@
       <v-list-item>
         <v-checkbox hide-details @change="toggleSelectAll" v-model="selectAll">
           <template v-slot:label>
-            <span class="ms-3">{{ $t('c8Import.selectAll')}}</span>
+            <span class="ms-3">{{ $t('c8Import.selectAll') }}</span>
           </template>
         </v-checkbox>
       </v-list-item>
@@ -147,6 +147,7 @@ import { defineComponent } from 'vue'
 import axios from 'axios';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 declare interface ProcessModel {
   id: string,
@@ -167,6 +168,7 @@ const maxStickyOffset = 136;
 
 export default defineComponent({
   data: () => ({
+    store: useAppStore(),
     camundaCloudDialog: false as boolean,
     loadingDialog: false as boolean,
     clientId: "" as string,
@@ -185,9 +187,22 @@ export default defineComponent({
     stickyButtonTop: Math.max(minStickyOffset, maxStickyOffset - scrollY),
   }),
 
-  watch: {},
+  computed: {
+    isUserLoggedIn(): boolean {
+      return this.store.getUser() != null;
+    }
+  },
+
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
+    }
+  },
+
   mounted: function () {
-    this.selectedProjectId = useAppStore().selectedProjectId;
+    this.selectedProjectId = this.store.getSelectedProjectId();
     if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
@@ -207,11 +222,12 @@ export default defineComponent({
       axios.post("/api/camunda-cloud/token", {
         "client_id": this.clientId,
         "client_secret": this.clientSecret,
-      }).then(result => {
-        this.token = result.data;
-        this.tokenError = false;
-        this.loadingDialog = false;
-      }).catch(error => {
+      }, { headers: authHeader() })
+        .then(result => {
+          this.token = result.data;
+          this.tokenError = false;
+          this.loadingDialog = false;
+        }).catch(error => {
         this.tokenError = true;
         this.loadingDialog = false;
       })
@@ -221,7 +237,7 @@ export default defineComponent({
       axios.post("/api/camunda-cloud", {
         "token": this.token,
         "email": this.isBlank(this.creatorEMail) ? null : this.creatorEMail
-      }).then(result => {
+      }, { headers: authHeader() }).then(result => {
         const processModels: ProcessModel[] = result.data.items;
         this.processModels = processModels;
         this.importedProcessModels = processModels;
@@ -249,7 +265,7 @@ export default defineComponent({
       axios.post("/api/camunda-cloud/project/" + this.selectedProjectId + "/import", {
         token: this.token,
         selectedProcessModelIds: selectedProcessModelIds,
-      }).then(() => {
+      }, { headers: authHeader() }).then(() => {
         this.processModels = this.processModels.filter(model => !selectedProcessModelIds.includes(model.id));
         this.selectedProcessModels = [];
         this.loadingDialog = false;
@@ -260,7 +276,7 @@ export default defineComponent({
       });
     },
     getLocaleDate(date: string): string {
-      const locales = useAppStore().getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      const locales = this.store.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
       return new Date(date).toLocaleString(locales);
     },
     toggleSelectAll() {

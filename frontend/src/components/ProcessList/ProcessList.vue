@@ -65,9 +65,11 @@
         <v-container>
           <v-row class="pb-5">
             <v-col cols="12" sm="12" md="12" class="pt-0">
-              <v-file-input v-if="uploadDialogMode === 'multiple'" :label="$t('processList.processModels')" v-model="processModelFiles"
+              <v-file-input v-if="uploadDialogMode === 'multiple'" :label="$t('processList.processModels')"
+                            v-model="processModelFiles"
                             chips multiple @change="handleFileSelection" hide-details></v-file-input>
-              <v-file-input v-if="uploadDialogMode === 'single'" :label="$t('general.processModel')" v-model="processModelFiles" chips
+              <v-file-input v-if="uploadDialogMode === 'single'" :label="$t('general.processModel')"
+                            v-model="processModelFiles" chips
                             @change="handleFileSelection" hide-details></v-file-input>
             </v-col>
           </v-row>
@@ -159,6 +161,7 @@ import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 interface BPMNContent {
   name: string,
@@ -217,23 +220,35 @@ export default defineComponent({
     })
     this.fetchProcessModels();
   },
-  watch: {},
+  computed: {
+    isUserLoggedIn(): boolean {
+      return this.appStore.getUser() != null;
+    }
+  },
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
+    }
+  },
   methods: {
     showProcessInfoDialog(processId: number) {
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
 
     async deleteProcessModel(processId: number) {
-      await axios.delete("/api/process-model/" + processId).then(() => {
+      await axios.delete("/api/process-model/" + processId, { headers: authHeader() }).then(() => {
         this.appStore.setProcessModelsChanged();
         this.fetchProcessModels();
       })
     },
 
     fetchProcessModels() {
-      axios.get("/api/project/" + this.selectedProjectId + "/process-model").then(result => {
-        this.processModels = result.data;
-      })
+      axios.get("/api/project/" + this.selectedProjectId + "/process-model", { headers: authHeader() })
+        .then(result => {
+          this.processModels = result.data;
+        })
     },
 
     openSingleUploadDialog(modelId: number) {
@@ -307,7 +322,11 @@ export default defineComponent({
       formData.append("fileName", fileName);
       formData.append("description", processModel.description);
 
-      await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData);
+      await axios.post(
+        "/api/project/" + this.selectedProjectId + "/process-model",
+        formData,
+        { headers: authHeader() }
+      );
     },
 
     async uploadProcessModels() {

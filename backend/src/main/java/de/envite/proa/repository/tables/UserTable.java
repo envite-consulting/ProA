@@ -1,10 +1,12 @@
 package de.envite.proa.repository.tables;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
 
 @Data
@@ -21,4 +23,7 @@ public class UserTable {
     private String password;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
+
+    @OneToMany
+    private List<ProjectTable> projects;
 }

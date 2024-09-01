@@ -1,5 +1,6 @@
 package de.envite.proa.rest;
 
+import de.envite.proa.security.RolesAllowedIfWebVersion;
 import org.jboss.resteasy.reactive.RestPath;
 
 import de.envite.proa.camundacloud.CamundaCloudFetchConfiguration;
@@ -18,12 +19,14 @@ public class CamundaCloudImportResource {
 
 	@POST
 	@Path("/token")
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Object getToken(CloudCredentials credentials) {
 
 		return usecase.getToken(credentials);
 	}
 
 	@POST
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Object uploadProcessModel(CamundaCloudFetchConfiguration configuration) {
 
 		return usecase.getProcessModels(configuration);
@@ -31,6 +34,7 @@ public class CamundaCloudImportResource {
 
 	@POST
 	@Path("/project/{projectId}/import")
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public void importProcessModels(@RestPath Long projectId, CamundaCloudImportConfiguration config) {
 
 		usecase.importProcessModels(projectId, config);

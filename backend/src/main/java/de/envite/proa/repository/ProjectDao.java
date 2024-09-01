@@ -3,6 +3,7 @@ package de.envite.proa.repository;
 import java.util.List;
 
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.UserTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -31,7 +32,24 @@ public class ProjectDao {
 	}
 
 	@Transactional
+	public List<ProjectTable> getProjectsForUser(UserTable user) {
+		return em//
+				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user", ProjectTable.class)//
+				.setParameter("user", user)//
+				.getResultList();
+	}
+
+	@Transactional
 	public ProjectTable findById(Long id) {
 		return em.find(ProjectTable.class, id);
+	}
+
+	@Transactional
+	public ProjectTable findByUserAndId(UserTable user, Long id) {
+		return em//
+				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user AND p.id = :id", ProjectTable.class)//
+				.setParameter("user", user)//
+				.setParameter("id", id)//
+				.getSingleResult();
 	}
 }

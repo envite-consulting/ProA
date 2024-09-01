@@ -25,7 +25,7 @@
     "profileEditFailed": "Failed to edit profile",
     "profileSuccessfullyEdited": "Profile successfully edited",
     "projects": "Projects",
-    "resetPwEmailSent": "If an account with that email exists, you'll receive a password reset link shortly.",
+    "resetPwInfo": "Please contact your administrator to reset your password.",
     "samePasswordError": "New password needs to be different from current password.",
     "signInFailed": "Sign in failed",
     "successfullyCreatedAccount": "Successfully created account",

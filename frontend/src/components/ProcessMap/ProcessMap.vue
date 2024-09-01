@@ -56,6 +56,7 @@ import NavigationButtons from "@/components/ProcessMap/Navigation.vue";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 import { useAppStore } from "@/store/app";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
@@ -112,6 +113,17 @@ export default defineComponent({
   computed: {
     toolbar() {
       return this.$refs.toolbar as InstanceType<typeof ProcessMapToolbar>;
+    },
+    isUserLoggedIn() {
+      return this.appStore.getUser() !== null;
+    }
+  },
+
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
     }
   },
 
@@ -223,6 +235,7 @@ export default defineComponent({
           calledElementType
         }, {
           headers: {
+            ...authHeader(),
             'Content-Type': 'application/json'
           }
         });
@@ -245,7 +258,7 @@ export default defineComponent({
 
     const removeProcessLink = async (connectionId: number): Promise<boolean> => {
       try {
-        await axios.delete(`/api/project/process-map/process-connection/${connectionId}`);
+        await axios.delete(`/api/project/process-map/process-connection/${connectionId}`, { headers: authHeader() });
         return true;
       } catch (error) {
         console.error("Error while removing process connection:", error);
@@ -255,7 +268,7 @@ export default defineComponent({
 
     const removeDataStoreLink = async (connectionId: number): Promise<boolean> => {
       try {
-        await axios.delete(`/api/project/process-map/datastore-connection/${connectionId}`);
+        await axios.delete(`/api/project/process-map/datastore-connection/${connectionId}`, { headers: authHeader() });
         return true;
       } catch (error) {
         console.error("Error while removing datastore connection:", error);
@@ -314,108 +327,109 @@ export default defineComponent({
     fetchProcessModels() {
       this.resetFilters();
       graph.clear();
-      axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
+      axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() })
+        .then(result => {
 
-        let abstractProcessShapes = result.data.processes.map((process: Process) => {
+          let abstractProcessShapes = result.data.processes.map((process: Process) => {
 
-          const filterEmpty = (label: string) => !!label;
+            const filterEmpty = (label: string) => !!label;
 
-          this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-          return createAbstractProcessElement(process.name, process.id);
-        });
+            return createAbstractProcessElement(process.name, process.id);
+          });
 
-        this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
+          this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
 
-        graph.addCell(abstractProcessShapes);
+          graph.addCell(abstractProcessShapes);
 
-        let connectionsShapes = result.data.connections.map((connection: Connection) => {
+          let connectionsShapes = result.data.connections.map((connection: Connection) => {
 
-          const link = new shapes.standard.Link();
+            const link = new shapes.standard.Link();
 
-          const callingPortPrefix = getPortPrefix(connection.callingElementType);
-          const calledPortPrefix = getPortPrefix(connection.calledElementType);
+            const callingPortPrefix = getPortPrefix(connection.callingElementType);
+            const calledPortPrefix = getPortPrefix(connection.calledElementType);
 
-          link.set({
-            connectionId: connection.id,
-            source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
-            target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
+            link.set({
+              connectionId: connection.id,
+              source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
+              target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
+            })
+
+            if (!!connection.label) {
+              link.appendLabel({
+                attrs: {
+                  text: {
+                    text: connection.label
+                  }
+                }
+              });
+            }
+
+            return link;
+          });
+
+          graph.addCell(connectionsShapes);
+
+          let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
+            return createAbstractDataStoreElement(dataStore.name, dataStore.id);
           })
 
-          if (!!connection.label) {
-            link.appendLabel({
-              attrs: {
-                text: {
-                  text: connection.label
+          graph.addCell(abstractDataStores);
+
+          let dataStoreConnectionShapes = result.data.dataStoreConnections.map((connection: DataStoreConnection) => {
+
+            const link = new shapes.standard.Link();
+            const source = { id: connection.processid, port: "call-" + connection.processid };
+            const target = { id: "ds-" + connection.dataStoreId, anchor: { name: 'midSide', args: { rotate: true, } } };
+
+            if (connection.access === "READ_WRITE") {
+              link.attr({
+                line: {
+                  sourceMarker: {
+                    'type': 'path',
+                    'stroke': 'black',
+                    'fill': 'black',
+                    'd': 'M 10 -5 0 0 10 5 Z'
+                  },
+                  targetMarker: {
+                    'type': 'path',
+                    'stroke': 'black',
+                  }
                 }
-              }
-            });
-          }
+              });
 
-          return link;
-        });
+              link.set({ connectionId: connection.id, source, target });
+            } else if (connection.access === "WRITE") {
+              link.set({ connectionId: connection.id, source, target });
+            } else if (connection.access === "READ") {
+              link.set({ connectionId: connection.id, source: target, target: source });
+            }
 
-        graph.addCell(connectionsShapes);
+            return link;
+          });
 
-        let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
-          return createAbstractDataStoreElement(dataStore.name, dataStore.id);
+          graph.addCell(dataStoreConnectionShapes);
+
+          paper.freeze();
+
+          DirectedGraph.layout(graph, {
+            nodeSep: 150,
+            edgeSep: 80,
+            rankDir: "TB",
+            marginX: 10,
+            marginY: 10,
+          });
+
+          paper.transformToFitContent();
+          paper.unfreeze();
+
+          this.saveGraphState();
         })
-
-        graph.addCell(abstractDataStores);
-
-        let dataStoreConnectionShapes = result.data.dataStoreConnections.map((connection: DataStoreConnection) => {
-
-          const link = new shapes.standard.Link();
-          const source = { id: connection.processid, port: "call-" + connection.processid };
-          const target = { id: "ds-" + connection.dataStoreId, anchor: { name: 'midSide', args: { rotate: true, } } };
-
-          if (connection.access === "READ_WRITE") {
-            link.attr({
-              line: {
-                sourceMarker: {
-                  'type': 'path',
-                  'stroke': 'black',
-                  'fill': 'black',
-                  'd': 'M 10 -5 0 0 10 5 Z'
-                },
-                targetMarker: {
-                  'type': 'path',
-                  'stroke': 'black',
-                }
-              }
-            });
-
-            link.set({ connectionId: connection.id, source, target });
-          } else if (connection.access === "WRITE") {
-            link.set({ connectionId: connection.id, source, target });
-          } else if (connection.access === "READ") {
-            link.set({ connectionId: connection.id, source: target, target: source });
-          }
-
-          return link;
-        });
-
-        graph.addCell(dataStoreConnectionShapes);
-
-        paper.freeze();
-
-        DirectedGraph.layout(graph, {
-          nodeSep: 150,
-          edgeSep: 80,
-          rankDir: "TB",
-          marginX: 10,
-          marginY: 10,
-        });
-
-        paper.transformToFitContent();
-        paper.unfreeze();
-
-        this.saveGraphState();
-      })
     },
     getProcessElementType(portId: string): ProcessElementType | null {
       const mappings: { [key: string]: ProcessElementType } = {

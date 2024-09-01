@@ -15,10 +15,10 @@ public class TokenService {
 		groups.add("User");
 
 		return Jwt //
-				.issuer("your-issuer") //
+				.issuer("proa-issuer") //
 				.upn(user.getEmail()) //
 				.groups(groups) //
-				.claim("email", user.getEmail()) //
+				.claim("userId", user.getId()) //
 				.sign();
 	}
 }

@@ -58,12 +58,15 @@ import NavigatedViewer from "bpmn-js/lib/NavigatedViewer";
 import ElementRegistry from 'diagram-js/lib/core/ElementRegistry';
 import axios from 'axios';
 import { Canvas } from "bpmn-js/lib/features/context-pad/ContextPadProvider";
+import { useAppStore } from "@/store/app";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 const scrollStep = 20;
 
 export default defineComponent({
   data: () => ({
-    canvas: null as Canvas | null
+    canvas: null as Canvas | null,
+    store: useAppStore()
   }),
 
   async mounted() {
@@ -76,7 +79,7 @@ export default defineComponent({
 
     const url = '/api/process-model/' + this.$route.params.id;
     try {
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: authHeader() });
       const xmlText = response.data;
       await viewer.importXML(xmlText);
     } catch (error) {
@@ -92,6 +95,20 @@ export default defineComponent({
         this.translateToCenter(port);
       }
       this.removeQueryParams();
+    }
+  },
+
+  computed: {
+    isUserLoggedIn() {
+      return this.store.getUser() != null;
+    }
+  },
+
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
     }
   },
 

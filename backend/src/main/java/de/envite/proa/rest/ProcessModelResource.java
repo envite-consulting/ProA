@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
+import de.envite.proa.security.RolesAllowedIfWebVersion;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -40,6 +41,7 @@ public class ProcessModelResource {
 	 */
 	@POST
 	@Path("/project/{projectId}/process-model")
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Long uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
 			@RestForm String description) {
 
@@ -57,12 +59,14 @@ public class ProcessModelResource {
 	 */
 	@Path("/process-model/{id}")
 	@GET
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public String getProcessModel(@RestPath Long id) {
 		return usecase.getProcessModel(id);
 	}
 
 	@Path("/process-model/{id}")
 	@DELETE
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public RestResponse<?> deleteProcessModel(@RestPath Long id) {
 		usecase.deleteProcessModel(id);
 		return ResponseBuilder.ok().build();
@@ -75,6 +79,7 @@ public class ProcessModelResource {
 	@GET
 	@Path("/project/{projectId}/process-model")
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public List<ProcessInformation> getProcessInformation(@RestPath Long projectId) {
 		return usecase.getProcessInformation(projectId);
 	}
@@ -82,6 +87,7 @@ public class ProcessModelResource {
 	@GET
 	@Path("/process-model/{id}/details")
 	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public ProcessDetails getProcessDetails(@RestPath Long id) {
 		return usecase.getProcessDetails(id);
 	}

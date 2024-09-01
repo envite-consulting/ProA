@@ -15,11 +15,6 @@ public class AuthenticationDao {
 	private EntityManager em;
 
 	@Transactional
-	public Response login() {
-		return Response.ok().build();
-	}
-
-	@Transactional
 	public UserTable register(UserTable user) {
 		em.persist(user);
 		em.flush();

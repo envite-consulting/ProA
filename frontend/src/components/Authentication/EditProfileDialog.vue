@@ -67,6 +67,7 @@ import { emailRules, firstNameRules, lastNameRules } from "@/components/Authenti
 import { VForm } from "vuetify/components";
 import axios from "axios";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export default defineComponent({
   name: "EditProfileDialog",
@@ -115,7 +116,7 @@ export default defineComponent({
         await axios.patch(
           `/api/authentication/user/${id}`,
           this.newUserData,
-          { headers: { 'Content-Type': 'application/json' } }
+          { headers: { ...authHeader(), 'Content-Type': 'application/json' } }
         );
 
         const message: Message = {

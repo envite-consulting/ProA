@@ -105,6 +105,7 @@ import { Project } from "@/components/Home/ProjectOverview.vue";
 import axios from "axios";
 import { SelectedDialog } from "@/store/app";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export default defineComponent({
   name: "ProfileDialog",
@@ -151,16 +152,17 @@ export default defineComponent({
       this.$router.push("/ProcessList").then(() => window.location.reload());
     },
     fetchProjects() {
-      axios.get("/api/project").then((result: { data: Project[] }) => {
-        const sortProjectsByActiveFirstThenAlphabetically = (project1: Project, project2: Project): number => {
-          if (project1.id === this.store.selectedProjectId) return -1;
-          if (project2.id === this.store.selectedProjectId) return 1;
+      axios.get(`/api/project/${this.userData.id}`, { headers: authHeader() })
+        .then((result: { data: Project[] }) => {
+          const sortProjectsByActiveFirstThenAlphabetically = (project1: Project, project2: Project): number => {
+            if (project1.id === this.store.selectedProjectId) return -1;
+            if (project2.id === this.store.selectedProjectId) return 1;
 
-          return project1.name.localeCompare(project2.name);
-        };
+            return project1.name.localeCompare(project2.name);
+          };
 
-        this.projects = result.data.sort(sortProjectsByActiveFirstThenAlphabetically);
-      });
+          this.projects = result.data.sort(sortProjectsByActiveFirstThenAlphabetically);
+        });
     }
   },
 
