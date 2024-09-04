@@ -32,6 +32,7 @@ public class CamundaCloudImportResource {
 
 	@POST
 	@Path("/process-instances")
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
 		return usecase.getProcessInstances(configuration);
 	}

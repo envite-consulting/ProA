@@ -51,6 +51,7 @@ public class ProcessModelResource {
 
 	@Path("project/{projectId}/process-model/{oldProcessId}")
 	@POST
+	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Long replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
 			@RestForm String fileName, @RestForm String description) {
 		String content = readFileToString(processModel);

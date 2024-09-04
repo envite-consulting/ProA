@@ -89,6 +89,7 @@ import { useAppStore } from "@/store/app";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import i18n from "@/i18n";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export interface Settings {
   geminiApiKey: string;
@@ -146,7 +147,7 @@ export default defineComponent({
     async saveSettings() {
       const doSettingsExist = async () => {
         try {
-          await axios.get("/api/settings");
+          await axios.get("/api/settings", { headers: authHeader() });
           return true;
         } catch (error) {
           return false;
@@ -156,9 +157,19 @@ export default defineComponent({
       const areSettingsValid = await this.validateSettings();
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settingsToBeSaved, { headers: { 'Content-Type': 'application/json' } });
+        await axios.patch("/api/settings", this.settingsToBeSaved, {
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json'
+          }
+        });
       } else {
-        await axios.post("/api/settings", this.settingsToBeSaved, { headers: { 'Content-Type': 'application/json' } });
+        await axios.post("/api/settings", this.settingsToBeSaved, {
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json'
+          }
+        });
       }
 
       if (areSettingsValid) {
@@ -249,7 +260,7 @@ export default defineComponent({
         await axios.post("/api/camunda-cloud/token", {
           "client_id": modelerClientId,
           "client_secret": modelerClientSecret,
-        });
+        }, { headers: authHeader() });
         return true;
       } catch (error) {
         return false;
@@ -264,7 +275,7 @@ export default defineComponent({
           "client_id": operateClientId,
           "client_secret": operateClientSecret,
           "audience": "operate.camunda.io"
-        });
+        }, { headers: authHeader() });
         return { valid: true, token: result.data };
       } catch (error) {
         return { valid: false, token: null };
@@ -279,7 +290,7 @@ export default defineComponent({
           "token": operateToken,
           "regionId": this.settings.operateRegionId,
           "clusterId": this.settings.operateClusterId
-        });
+        }, { headers: authHeader() });
         return true;
       } catch (error) {
         return false;
@@ -300,7 +311,7 @@ export default defineComponent({
     },
     async fetchSettings() {
       try {
-        await axios.get("/api/settings").then(result => {
+        await axios.get("/api/settings", { headers: authHeader() }).then(result => {
           this.settings = result.data;
         });
       } catch (error) {

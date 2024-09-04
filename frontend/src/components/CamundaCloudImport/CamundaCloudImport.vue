@@ -317,9 +317,19 @@ export default defineComponent({
       }
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settings, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+        await axios.patch("/api/settings", this.settings, {
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json'
+          }
+        });
       } else {
-        await axios.post("/api/settings", this.settings, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+        await axios.post("/api/settings", this.settings, {
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json'
+          }
+        });
       }
     },
     getLocaleDate(date: string): string {

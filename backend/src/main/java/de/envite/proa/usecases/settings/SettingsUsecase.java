@@ -14,11 +14,23 @@ public class SettingsUsecase {
         return repository.getSettings();
     }
 
+    public Settings getSettings(Long userId) {
+        return repository.getSettings(userId);
+    }
+
     public Settings createSettings(Settings settings) {
         return repository.createSettings(settings);
     }
 
+    public Settings createSettings(Long userId, Settings settings) {
+        return repository.createSettings(userId, settings);
+    }
+
     public Settings updateSettings(Settings settings) {
         return repository.updateSettings(settings);
+    }
+
+    public Settings updateSettings(Long userId, Settings settings) {
+        return repository.updateSettings(userId, settings);
     }
 }

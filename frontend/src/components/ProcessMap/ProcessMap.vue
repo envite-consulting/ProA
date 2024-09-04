@@ -562,7 +562,7 @@ export default defineComponent({
     },
     async fetchSettings() {
       try {
-        await axios.get("/api/settings").then(result => {
+        await axios.get("/api/settings", { headers: authHeader() }).then(result => {
           this.settings = result.data;
         });
       } catch (error) {
@@ -594,7 +594,7 @@ export default defineComponent({
           "client_id": this.settings.operateClientId,
           "client_secret": this.settings.operateClientSecret,
           "audience": "operate.camunda.io"
-        });
+        }, { headers: authHeader() });
         this.operateToken = result.data;
         await this.fetchProcessInstances();
       } catch (error) {
@@ -609,7 +609,7 @@ export default defineComponent({
           "regionId": this.settings.operateRegionId,
           "clusterId": this.settings.operateClusterId,
           "bpmnProcessId": cell.attributes.bpmnProcessId
-        });
+        }, { headers: authHeader() });
       });
 
       const results = await Promise.all(promises);
