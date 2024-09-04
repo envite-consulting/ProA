@@ -18,11 +18,13 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
 
 ### Setting up environment variables
-
-- Duplicate the `.env-sample` in the backend folder and rename the file to `.env`
+> The Gemini API Key for creating process model descriptions as well as the connections to Camunda Cloud can be set up via environment variables in the file `frontend/.env`. However, the values can also be specified from within the app in the settings.
+- Duplicate the `.env-sample` in the frontend folder and rename the file to `.env`
 - Set up a [Google AI Studio](https://aistudio.google.com/app) account and create an API key
 - Set up a billing account (the Gemini API is free of charge for 1 million tokens per minute/15 requests per minute/15,000 requests per day)
 - Copy the API key into the `.env` file variable `VITE_GEMINI_API_KEY`
+- Add the credentials from the Camunda Web Modeler API to the variables `VITE_MODELER_CLIENT_ID` and `VITE_MODELER_CLIENT_ID`
+- Add the credentials from the Camunda Operate API to the variables `VITE_OPERATE_CLIENT_ID` and `VITE_OPERATE_CLIENT_SECRET`
 
 ### Running the application in dev mode
 

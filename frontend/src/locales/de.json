@@ -38,17 +38,19 @@
     "creatorEmail": "Ersteller E-Mail",
     "creatorEmailHint": "Optional: Nur Prozessmodelle der angegebenen Ersteller E-Mail werden abgerufen",
     "errorMessage": "Ein Fehler ist aufgetreten!",
-    "import": "Importieren",
     "importFromC8": "Prozesse aus C8 importieren",
     "importProcessModels": "Prozessmodelle importieren",
     "loading": "Laden...",
     "retrieveProcessModels": "Prozessmodelle abrufen",
-    "selectAll": "Alle auswählen"
+    "selectAll": "Alle auswählen",
+    "saveInformationQuestion": "Informationen speichern?"
   },
   "general": {
     "activity": "Aktivität",
     "callActivities": "Aufrufaktivitäten",
     "cancel": "Abbrechen",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret",
     "createdOn": "Erstellt am",
     "description": "Beschreibung",
     "end": "Ende",
@@ -61,6 +63,7 @@
     "myProfile": "Mein Profil",
     "processModel": "Prozessmodell",
     "save": "Speichern",
+    "settings": "Einstellungen",
     "signOut": "Abmelden"
   },
   "navigation": {
@@ -85,7 +88,8 @@
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
     "uploadProcessModels": "Prozessmodelle hochladen",
-    "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
+    "uploadingProcessModels": "Prozessmodelle werden hochgeladen...",
+    "generateDescriptionWithAI": "Beschreibung mit AI generieren"
   },
   "processMap": {
     "callActivity": "Aufrufaktivität",
@@ -101,6 +105,7 @@
     "process": "Prozess",
     "processesWithoutConnections": "Prozesse ohne Verbindungen",
     "resources": "Ressourcen",
+    "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Startereignis"
   },
   "projectOverview": {
@@ -115,7 +120,22 @@
     "projectVersionRequired": "Projektversion ist erforderlich",
     "versionNameExists": "Versionsname existiert bereits",
     "versionNameRequired": "Versionsname ist erforderlich",
-    "welcomeBack": "Wilkommen zurück, "
+    "welcomeBack": "Willkommen zurück, "
+  },
+  "settingsDrawer": {
+    "apiKey": "API Key",
+    "apiKeyInvalidMsg": "API Key ungültig",
+    "camundaModelerConnection": "Camunda Modeler Verbindung",
+    "camundaOperateConnection": "Camunda Operate Verbindung",
+    "clusterId": "Cluster ID",
+    "geminiApiKey": "Gemini API Key",
+    "modelerConnectionInvalidMsg": "Camunda Modeler Verbindung ungültig",
+    "operateClusterInvalidMsg": "Region und/oder Cluster ungültig",
+    "operateConnectionInvalidMsg": "Camunda Operate Verbindung ungültig",
+    "regionId": "Region ID",
+    "reset": "Zurücksetzen",
+    "resetToEnvVariables": "Zurücksetzen auf Umgebungsvariablen",
+    "savedSuccessfully": "Erfolgreich gespeichert"
   },
   "validation": {
     "isRequired": "ist erforderlich",

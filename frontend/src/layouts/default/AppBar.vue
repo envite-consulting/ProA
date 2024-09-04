@@ -63,6 +63,14 @@
         </v-list-item>
       </v-list>
     </v-menu>
+
+    <v-tooltip :text="$t('general.settings')" location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn icon v-bind="props" @click="toggleSettings">
+          <v-icon>mdi-cog</v-icon>
+        </v-btn>
+      </template>
+    </v-tooltip>
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" location="left" temporary>
@@ -82,13 +90,19 @@
     </v-list>
   </v-navigation-drawer>
 
+  <SettingsDrawer/>
+
   <AuthenticationDialog v-if="webVersion"/>
 
 </template>
 
+<style scoped>
+</style>
+
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
+import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import i18n from "@/i18n";
 import ProfileDialog from "@/components/Authentication/ProfileDialog.vue";
 import EditProfileDialog from "@/components/Authentication/EditProfileDialog.vue";
@@ -103,7 +117,7 @@ interface Language {
 }
 
 export default defineComponent({
-  components: { AuthenticationDialog, EditProfileDialog, ProfileDialog },
+  components: { AuthenticationDialog, EditProfileDialog, ProfileDialog, SettingsDrawer },
   methods: {
     changeLanguage(language: LanguageCode) {
       this.selectedLanguage = language;
@@ -115,6 +129,9 @@ export default defineComponent({
         return '';
       }
       return s.charAt(0).toLowerCase() + s.slice(1);
+    },
+    toggleSettings() {
+      this.store.setAreSettingsOpened(!this.store.getAreSettingsOpened());
     },
     signOut() {
       this.store.setUser(null);
@@ -128,11 +145,11 @@ export default defineComponent({
     const store = useAppStore();
 
     return {
+      store,
       drawer: false as boolean,
       group: null,
       selectedLanguage: store.getSelectedLanguage() as LanguageCode,
       webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB == 'web') as boolean,
-      store: store,
       showEditDialog: false as boolean,
       showProfileDialog: false as boolean,
       showProfileSuccessMessage: false as boolean,

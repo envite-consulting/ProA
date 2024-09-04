@@ -19,4 +19,8 @@ public interface ProcessOperations {
 	public List<ProcessEvent> getIntermediateCatchEvents(String xml);
 
 	public List<ProcessDataStore> getDataStores(String xml);
+
+	public String getDescription(String xml);
+
+	public String getBpmnProcessId(String xml);
 }

@@ -38,17 +38,19 @@
     "creatorEmail": "Creator Email",
     "creatorEmailHint": "Optional: Only process models of the specified creator email are retrieved",
     "errorMessage": "An error has occurred!",
-    "import": "Import",
     "importFromC8": "Import Processes from C8",
     "importProcessModels": "Import Process Models",
     "loading": "Loading...",
     "retrieveProcessModels": "Retrieve Process Models",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+    "saveInformationQuestion": "Save information?"
   },
   "general": {
     "activity": "Activity",
     "callActivities": "Call Activities",
     "cancel": "Cancel",
+    "clientId": "Client ID",
+    "clientSecret": "Client Secret",
     "createdOn": "Created on",
     "description": "Description",
     "end": "End",
@@ -61,6 +63,7 @@
     "myProfile": "My Profile",
     "processModel": "Process Model",
     "save": "Save",
+    "settings": "Settings",
     "signOut": "Sign Out"
   },
   "navigation": {
@@ -85,7 +88,8 @@
     "replaceProcessModel": "Replace Process Model",
     "toTheProcessMap": "To the Process Map",
     "uploadProcessModels": "Upload Process Models",
-    "uploadingProcessModels": "Uploading Process Models..."
+    "uploadingProcessModels": "Uploading Process Models...",
+    "generateDescriptionWithAI": "Generate description with AI"
   },
   "processMap": {
     "callActivity": "Call Activity",
@@ -101,6 +105,7 @@
     "process": "Process",
     "processesWithoutConnections": "Processes without Connections",
     "resources": "Resources",
+    "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Start Event"
   },
   "projectOverview": {
@@ -116,6 +121,21 @@
     "versionNameExists": "Version Name already exists",
     "versionNameRequired": "Version Name is required",
     "welcomeBack": "Welcome back, "
+  },
+  "settingsDrawer": {
+    "apiKey": "API Key",
+    "apiKeyInvalidMsg": "API key invalid",
+    "camundaModelerConnection": "Camunda Modeler connection",
+    "camundaOperateConnection": "Camunda Operate connection",
+    "clusterId": "Cluster ID",
+    "geminiApiKey": "Gemini API key",
+    "modelerConnectionInvalidMsg": "Camunda Modeler connection invalid",
+    "operateClusterInvalidMsg": "Region and/or cluster invalid",
+    "operateConnectionInvalidMsg": "Camunda Operate connection invalid",
+    "regionId": "Region ID",
+    "reset": "Reset",
+    "resetToEnvVariables": "Reset to environment variables",
+    "savedSuccessfully": "Saved successfully"
   },
   "validation": {
     "isRequired": "is required",

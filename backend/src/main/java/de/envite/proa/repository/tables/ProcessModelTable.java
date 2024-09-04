@@ -24,8 +24,10 @@ public class ProcessModelTable {
 
 	private String name;
 
+	private String bpmnProcessId;
+
 	@Lob
-	@Column
+	@Column(columnDefinition = "TEXT")
 	private String bpmnXml;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")

@@ -10,7 +10,7 @@
   <v-list lines="two" class="pa-6">
     <div v-if="importedProcessModels.length > 0">
       <v-list-item>
-        <v-checkbox hide-details @change="toggleSelectAll" v-model="selectAll">
+        <v-checkbox class="d-inline-block pe-3" hide-details @change="toggleSelectAll" v-model="selectAll">
           <template v-slot:label>
             <span class="ms-3">{{ $t('c8Import.selectAll') }}</span>
           </template>
@@ -32,9 +32,6 @@
       </v-list-item>
       <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
-    <v-btn prepend-icon="mdi-import" @click="importProcessModels" v-if="selectedProcessModels.length > 0">
-      {{ $t('c8Import.importProcessModels') }}
-    </v-btn>
   </v-list>
   <v-dialog v-model="camundaCloudDialog" persistent width="600">
     <v-card>
@@ -49,12 +46,20 @@
               {{ $t('c8Import.camundaConnectionSuccessMessage') }}
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
-              <v-text-field v-model="clientId" class="text-field__styled" dense color="#26376B"
-                            placeholder="Client ID"></v-text-field>
+              <v-text-field v-model="settings.modelerClientId" class="text-field__styled" dense color="#26376B"
+                            :placeholder="$t('general.clientId')"></v-text-field>
             </v-col>
             <v-col v-if="!token" cols="12" sm="12" md="12">
-              <v-text-field v-model="clientSecret" class="text-field__styled" dense color="#26376B"
-                            placeholder="Client Secret" type="password"></v-text-field>
+              <v-text-field v-model="settings.modelerClientSecret" class="text-field__styled" dense color="#26376B"
+                            :placeholder="$t('general.clientSecret')"
+                            :type="showOperateClientSecret ? 'text' : 'password'"
+                            :append-inner-icon="showOperateClientSecret ? 'mdi-eye' : 'mdi-eye-off'"
+                            @click:append-inner="showOperateClientSecret = !showOperateClientSecret"></v-text-field>
+            </v-col>
+            <v-col v-if="!token" cols="12" sm="12" md="12">
+              <v-checkbox v-model="saveClientInformation" :label="$t('c8Import.saveInformationQuestion')"
+                          color="primary"
+                          hide-details></v-checkbox>
             </v-col>
             <v-col v-if="tokenError">
               {{ $t('c8Import.errorMessage') }}
@@ -65,7 +70,7 @@
               </v-btn>
             </v-col>
             <v-col cols="12" sm="12" md="12">
-              <v-text-field :disabled="!token" v-model="creatorEMail" class="text-field__styled"
+              <v-text-field :disabled="!token" v-model="creatorEmail" class="text-field__styled"
                             dense color="#26376B" :placeholder="$t('c8Import.creatorEmail')"
                             :hint="$t('c8Import.creatorEmailHint')">
               </v-text-field>
@@ -98,14 +103,14 @@
   <div class="ma-4" style="position: fixed; z-index: 1; right: 8px; bottom: 8px">
     <v-fab-transition>
       <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-cloud-search"
-             @click="camundaCloudDialog = true" size="large"/>
+             @click="openDialog" size="large"/>
     </v-fab-transition>
   </div>
   <div class="ma-4 d-flex align-center justify-center"
        style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px"
        v-if="selectedProcessModels.length > 0">
     <v-btn prepend-icon="mdi-import" @click="importProcessModels">
-      {{ $t('c8Import.import') }}
+      {{ $t('c8Import.importProcessModels') }}
     </v-btn>
   </div>
   <div class="ma-4" v-if="importedProcessModels.length > 0"
@@ -125,7 +130,7 @@
         </v-fab-transition>
       </template>
       <v-list density="compact" class="pa-2">
-        <v-list-subheader>Ersteller E-Mail</v-list-subheader>
+        <v-list-subheader>{{ $t('c8Import.creatorEmail') }}</v-list-subheader>
         <v-list-item
           v-for="(emailSelection, index) in emailSelections"
           :key="'imported-email-' + index"
@@ -147,6 +152,7 @@ import { defineComponent } from 'vue'
 import axios from 'axios';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
+import { Settings } from "../SettingsDrawer.vue"
 import { authHeader } from "@/components/Authentication/authHeader";
 
 declare interface ProcessModel {
@@ -169,11 +175,14 @@ const maxStickyOffset = 136;
 export default defineComponent({
   data: () => ({
     store: useAppStore(),
+    showOperateClientSecret: false as boolean,
     camundaCloudDialog: false as boolean,
     loadingDialog: false as boolean,
+    settings: {} as Settings,
+    saveClientInformation: true as boolean,
+    creatorEmail: null as string | null,
     clientId: "" as string,
     clientSecret: "" as string,
-    creatorEMail: null as string | null,
     importedProcessModels: [] as ProcessModel[],
     processModels: [] as ProcessModel[],
     selectedProcessModels: [] as ProcessModel[],
@@ -212,32 +221,42 @@ export default defineComponent({
       this.selectedVersionName = result.data.version;
     });
     window.addEventListener('scroll', this.updateStickyButton);
+    this.fetchSettings();
   },
   beforeUnmount() {
     window.removeEventListener('scroll', this.updateStickyButton);
   },
   methods: {
+    async openDialog() {
+      this.showOperateClientSecret = false;
+      await this.fetchSettings();
+      this.camundaCloudDialog = true;
+    },
     fetchToken() {
       this.loadingDialog = true;
       axios.post("/api/camunda-cloud/token", {
-        "client_id": this.clientId,
-        "client_secret": this.clientSecret,
-      }, { headers: authHeader() })
-        .then(result => {
-          this.token = result.data;
-          this.tokenError = false;
-          this.loadingDialog = false;
-        }).catch(error => {
+        "client_id": this.settings.modelerClientId,
+        "client_secret": this.settings.modelerClientSecret,
+      }, { headers: authHeader() }).then(result => {
+        this.token = result.data;
+        this.tokenError = false;
+        this.loadingDialog = false;
+      }).catch(error => {
         this.tokenError = true;
         this.loadingDialog = false;
       })
     },
-    fetchProcessModels() {
+    async fetchProcessModels() {
       this.loadingDialog = true;
       axios.post("/api/camunda-cloud", {
         "token": this.token,
-        "email": this.isBlank(this.creatorEMail) ? null : this.creatorEMail
-      }, { headers: authHeader() }).then(result => {
+        "email": this.isBlank(this.creatorEmail) ? null : this.creatorEmail,
+        "regionId": null,
+        "clusterId": null
+      }, { headers: authHeader() }).then(async result => {
+        if (this.saveClientInformation) {
+          await this.saveSettings();
+        }
         const processModels: ProcessModel[] = result.data.items;
         this.processModels = processModels;
         this.importedProcessModels = processModels;
@@ -274,6 +293,34 @@ export default defineComponent({
         console.log(error);
         this.loadingDialog = false;
       });
+    },
+    async fetchSettings() {
+      try {
+        await axios.get("/api/settings", { headers: authHeader() }).then(result => {
+          this.settings = result.data;
+        });
+      } catch (error) {
+        this.settings = {} as Settings;
+      }
+
+      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+    },
+    async saveSettings() {
+      const doSettingsExist = async () => {
+        try {
+          await axios.get("/api/settings", { headers: authHeader() });
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      if (await doSettingsExist()) {
+        await axios.patch("/api/settings", this.settings, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+      } else {
+        await axios.post("/api/settings", this.settings, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+      }
     },
     getLocaleDate(date: string): string {
       const locales = this.store.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';

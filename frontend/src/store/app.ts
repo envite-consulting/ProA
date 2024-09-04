@@ -47,6 +47,9 @@ export const useAppStore = defineStore('app', {
       hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
       processModelsChangeFlag: false as boolean,
       selectedLanguage: 'en' as LanguageCode,
+      areSettingsOpened: false as boolean,
+      operateConnectionError: '' as string,
+      operateClusterError: '' as string,
       user: null as UserData | null,
       selectedDialog: SelectedDialog.NONE as SelectedDialog
     }
@@ -123,6 +126,24 @@ export const useAppStore = defineStore('app', {
     getSelectedLanguage(): LanguageCode {
       return this.selectedLanguage;
     },
+    setAreSettingsOpened(opened: boolean) {
+      this.areSettingsOpened = opened;
+    },
+    getAreSettingsOpened() {
+      return this.areSettingsOpened
+    },
+    setOperateConnectionError(error: string) {
+      this.operateConnectionError = error
+    },
+    getOperateConnectionError() {
+      return this.operateConnectionError
+    },
+    setOperateClusterError(error: string) {
+      this.operateClusterError = error
+    },
+    getOperateClusterError() {
+      return this.operateClusterError
+    },
     setUser(user: UserData | null) {
       this.user = user;
     },
@@ -150,6 +171,9 @@ export const useAppStore = defineStore('app', {
       'hiddenLinksByProject',
       'processModelsChangeFlag',
       'selectedLanguage',
+      'areSettingsOpened',
+      'operateConnectionError',
+      'operateClusterError',
       'user',
       'selectedDialog'
     ]

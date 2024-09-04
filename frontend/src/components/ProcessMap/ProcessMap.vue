@@ -1,10 +1,11 @@
 <template>
   <ProcessMapToolbar ref="toolbar" :selectedProjectId="selectedProjectId"
-                     @fetchProcessModels="fetchProcessModels" @filterGraph="filterGraph"/>
+                     @fetchProcessModels="fetchProcessModels" @filterGraph="filterGraph"
+                     @handleFetchProcessInstances="handleFetchProcessInstances"/>
   <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
     <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
     <div id="graph-container" class="full-screen"></div>
-    <NavigationButtons :selectedProjectId="selectedProjectId"/>
+    <NavigationButtons ref="navigationButtons" :selectedProjectId="selectedProjectId"/>
   </v-card>
   <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
     <ul v-if="tooltipList.length > 0">
@@ -46,16 +47,18 @@ import {
   HiddenPorts,
   PortsInformation,
   Process,
-  ProcessElementType
+  ProcessElementType,
+  ProcessInstance
 } from "./types";
 
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
 import ProcessMapToolbar from "@/components/ProcessMap/ProcessMapToolbar.vue";
-import NavigationButtons from "@/components/ProcessMap/Navigation.vue";
+import NavigationButtons from "@/components/ProcessMap/NavigationButtons.vue";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 import { useAppStore } from "@/store/app";
+import { Settings } from "@/components/SettingsDrawer.vue";
 import { authHeader } from "@/components/Authentication/authHeader";
 
 export const getPortPrefix = (elementType: ProcessElementType): string => {
@@ -99,8 +102,10 @@ export default defineComponent({
     return {
       mouseX: '' as string,
       mouseY: '' as string,
+      operateToken: '' as string,
       tooltipList: [] as string[],
       tooltipVisible: false as boolean,
+      settings: {} as Settings,
       appStore,
       hiddenCells,
       hiddenLinks,
@@ -113,6 +118,9 @@ export default defineComponent({
   computed: {
     toolbar() {
       return this.$refs.toolbar as InstanceType<typeof ProcessMapToolbar>;
+    },
+    navigationButtons() {
+      return this.$refs.navigationButtons as InstanceType<typeof NavigationButtons>;
     },
     isUserLoggedIn() {
       return this.appStore.getUser() !== null;
@@ -223,16 +231,13 @@ export default defineComponent({
       const callingElementType = this.getProcessElementType(link.source().port || '');
       const calledElementType = this.getProcessElementType(link.target().port || '');
 
-      if (!callingElementType || !calledElementType) {
-        return;
-      }
-
       try {
         await axios.post(`/api/project/${this.selectedProjectId}/process-map/connection`, {
           callingProcessid,
           calledProcessid,
           callingElementType,
-          calledElementType
+          calledElementType,
+          userCreated: true
         }, {
           headers: {
             ...authHeader(),
@@ -327,109 +332,104 @@ export default defineComponent({
     fetchProcessModels() {
       this.resetFilters();
       graph.clear();
-      axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() })
-        .then(result => {
+      axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() }).then(result => {
 
-          let abstractProcessShapes = result.data.processes.map((process: Process) => {
+        let abstractProcessShapes: AbstractProcessShape[] = result.data.processes.map((process: Process) => {
 
-            const filterEmpty = (label: string) => !!label;
+          const filterEmpty = (label: string) => !!label;
 
-            this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-            this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-            this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-            this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-            this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+          this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-            return createAbstractProcessElement(process.name, process.id);
-          });
+          return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
+        });
 
-          this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
+        this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
 
-          graph.addCell(abstractProcessShapes);
+        graph.addCell(abstractProcessShapes);
 
-          let connectionsShapes = result.data.connections.map((connection: Connection) => {
+        let connectionsShapes = result.data.connections.map((connection: Connection) => {
 
-            const link = new shapes.standard.Link();
+          const link = new shapes.standard.Link();
 
-            const callingPortPrefix = getPortPrefix(connection.callingElementType);
-            const calledPortPrefix = getPortPrefix(connection.calledElementType);
+          const callingPortPrefix = getPortPrefix(connection.callingElementType);
+          const calledPortPrefix = getPortPrefix(connection.calledElementType);
 
-            link.set({
-              connectionId: connection.id,
-              source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
-              target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
-            })
-
-            if (!!connection.label) {
-              link.appendLabel({
-                attrs: {
-                  text: {
-                    text: connection.label
-                  }
-                }
-              });
-            }
-
-            return link;
-          });
-
-          graph.addCell(connectionsShapes);
-
-          let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
-            return createAbstractDataStoreElement(dataStore.name, dataStore.id);
+          link.set({
+            connectionId: connection.id,
+            source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
+            target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
 
-          graph.addCell(abstractDataStores);
-
-          let dataStoreConnectionShapes = result.data.dataStoreConnections.map((connection: DataStoreConnection) => {
-
-            const link = new shapes.standard.Link();
-            const source = { id: connection.processid, port: "call-" + connection.processid };
-            const target = { id: "ds-" + connection.dataStoreId, anchor: { name: 'midSide', args: { rotate: true, } } };
-
-            if (connection.access === "READ_WRITE") {
-              link.attr({
-                line: {
-                  sourceMarker: {
-                    'type': 'path',
-                    'stroke': 'black',
-                    'fill': 'black',
-                    'd': 'M 10 -5 0 0 10 5 Z'
-                  },
-                  targetMarker: {
-                    'type': 'path',
-                    'stroke': 'black',
-                  }
+          if (!!connection.label) {
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: connection.label
                 }
-              });
+              }
+            });
+          }
 
-              link.set({ connectionId: connection.id, source, target });
-            } else if (connection.access === "WRITE") {
-              link.set({ connectionId: connection.id, source, target });
-            } else if (connection.access === "READ") {
-              link.set({ connectionId: connection.id, source: target, target: source });
-            }
+          return link;
+        });
 
-            return link;
-          });
+        graph.addCell(connectionsShapes);
 
-          graph.addCell(dataStoreConnectionShapes);
-
-          paper.freeze();
-
-          DirectedGraph.layout(graph, {
-            nodeSep: 150,
-            edgeSep: 80,
-            rankDir: "TB",
-            marginX: 10,
-            marginY: 10,
-          });
-
-          paper.transformToFitContent();
-          paper.unfreeze();
-
-          this.saveGraphState();
+        let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
+          return createAbstractDataStoreElement(dataStore.name, dataStore.id);
         })
+
+        graph.addCell(abstractDataStores);
+
+        let dataStoreConnectionShapes = result.data.dataStoreConnections.map((connection: DataStoreConnection) => {
+
+          const link = new shapes.standard.Link();
+          const source = { id: connection.processid, port: "call-" + connection.processid };
+          const target = { id: "ds-" + connection.dataStoreId, anchor: { name: 'midSide', args: { rotate: true, } } };
+
+          if (connection.access === "READ_WRITE") {
+            link.attr({
+              line: {
+                sourceMarker: {
+                  'type': 'path',
+                  'stroke': 'black',
+                  'fill': 'black',
+                  'd': 'M 10 -5 0 0 10 5 Z'
+                },
+                targetMarker: {
+                  'type': 'path',
+                  'stroke': 'black',
+                }
+              }
+            });
+
+            link.set({ connectionId: connection.id, source, target });
+          } else if (connection.access === "WRITE") {
+            link.set({ connectionId: connection.id, source, target });
+          } else if (connection.access === "READ") {
+            link.set({ connectionId: connection.id, source: target, target: source });
+          }
+
+          return link;
+        });
+
+        graph.addCell(dataStoreConnectionShapes);
+
+        DirectedGraph.layout(graph, {
+          nodeSep: 80,
+          edgeSep: 100,
+          rankSep: 80,
+          rankDir: "LR",
+        });
+
+        setTimeout(this.fitToScreen, 1);
+
+        this.saveGraphState();
+      });
     },
     getProcessElementType(portId: string): ProcessElementType | null {
       const mappings: { [key: string]: ProcessElementType } = {
@@ -559,6 +559,83 @@ export default defineComponent({
       this.saveFilters();
       this.saveHiddenElements();
       this.saveHiddenPorts();
+    },
+    async fetchSettings() {
+      try {
+        await axios.get("/api/settings").then(result => {
+          this.settings = result.data;
+        });
+      } catch (error) {
+        this.settings = {} as Settings;
+      }
+
+      this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+      this.settings.operateClientId = this.settings.operateClientId || import.meta.env.VITE_OPERATE_CLIENT_ID;
+      this.settings.operateClientSecret = this.settings.operateClientSecret || import.meta.env.VITE_OPERATE_CLIENT_SECRET;
+      this.settings.operateRegionId = this.settings.operateRegionId || import.meta.env.VITE_OPERATE_REGION_ID;
+      this.settings.operateClusterId = this.settings.operateClusterId || import.meta.env.VITE_OPERATE_CLUSTER_ID;
+    },
+    async handleFetchProcessInstances() {
+      await this.fetchSettings();
+      if (!this.settings.operateClientId || !this.settings.operateClientSecret) {
+        this.appStore.setOperateConnectionError("Camunda Operate Verbindung fehlt");
+        this.appStore.setAreSettingsOpened(true);
+        return;
+      }
+      if (!this.settings.operateRegionId || !this.settings.operateClusterId) {
+        this.appStore.setOperateClusterError("Region und/oder Cluster fehlen");
+        this.appStore.setAreSettingsOpened(true);
+        return;
+      }
+      try {
+        const result = await axios.post("/api/camunda-cloud/token", {
+          "client_id": this.settings.operateClientId,
+          "client_secret": this.settings.operateClientSecret,
+          "audience": "operate.camunda.io"
+        });
+        this.operateToken = result.data;
+        await this.fetchProcessInstances();
+      } catch (error) {
+        this.appStore.setAreSettingsOpened(true);
+        return;
+      }
+    },
+    async fetchProcessInstances() {
+      const promises = graph.getCells().filter(cell => cell instanceof AbstractProcessShape).map(cell => {
+        return axios.post("/api/camunda-cloud/process-instances", {
+          "token": this.operateToken,
+          "regionId": this.settings.operateRegionId,
+          "clusterId": this.settings.operateClusterId,
+          "bpmnProcessId": cell.attributes.bpmnProcessId
+        });
+      });
+
+      const results = await Promise.all(promises);
+      const items = results.flatMap(result => result.data.items);
+
+      const countByProcess = items.reduce((countByProcess: Map<string, number>, item: ProcessInstance) => {
+        if (countByProcess.get(item.bpmnProcessId) && item.state == 'ACTIVE') {
+          countByProcess.set(item.bpmnProcessId, countByProcess.get(item.bpmnProcessId)! + 1);
+        } else {
+          countByProcess.set(item.bpmnProcessId, 1);
+        }
+        return countByProcess;
+      }, new Map<string, number>());
+      for (const cell of graph.getCells()) {
+        if (cell instanceof AbstractProcessShape) {
+          const countForBpmnProcessId = countByProcess.get(cell.attributes.bpmnProcessId);
+          if (countForBpmnProcessId) {
+            cell.setActiveInstances(countForBpmnProcessId);
+          } else {
+            cell.hideActiveInstances();
+          }
+        }
+      }
+    },
+    fitToScreen() {
+      this.navigationButtons.fitToScreen();
     }
   }
 })

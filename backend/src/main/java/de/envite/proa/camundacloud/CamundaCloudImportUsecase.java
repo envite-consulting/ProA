@@ -1,10 +1,13 @@
 package de.envite.proa.camundacloud;
 
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import de.envite.proa.usecases.ProcessModelUsecase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.net.URI;
 
 @ApplicationScoped
 public class CamundaCloudImportUsecase {
@@ -25,8 +28,27 @@ public class CamundaCloudImportUsecase {
 		return camundaModelerService.getProcessModels("Bearer " + configuration.getToken(), search);
 	}
 
-	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config) {
+	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
+		String operateUri = "https://" + //
+				configuration.getRegionId() + //
+				".operate.camunda.io/" + //
+				configuration.getClusterId();
 
+		CamundaOperateService camundaOperateService = RestClientBuilder //
+				.newBuilder() //
+				.baseUri(URI.create(operateUri)) //
+				.build(CamundaOperateService.class);
+
+		String bpmnProcessId = configuration.getBpmnProcessId();
+
+		ProcessInstancesFilter filter = bpmnProcessId != null
+				? new ProcessInstancesFilter(bpmnProcessId)
+				: new ProcessInstancesFilter();
+
+		return camundaOperateService.getProcessInstances("Bearer " + configuration.getToken(), filter);
+	}
+
+	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config) {
 		for (String id : config.getSelectedProcessModelIds()) {
 			CamundaProcessModelResponse processModel = camundaModelerService
 					.getProcessModel("Bearer " + config.getToken(), id);
@@ -35,8 +57,7 @@ public class CamundaCloudImportUsecase {
 	}
 
 	private String getProcessXml(CamundaProcessModelResponse processModel) {
-		String content = processModel.getContent();
-		return content;
+		return processModel.getContent();
 	}
 
 	public String getToken(CloudCredentials credentials) {

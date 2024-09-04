@@ -21,22 +21,25 @@ public class CamundaCloudImportResource {
 	@Path("/token")
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Object getToken(CloudCredentials credentials) {
-
 		return usecase.getToken(credentials);
 	}
 
 	@POST
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Object uploadProcessModel(CamundaCloudFetchConfiguration configuration) {
-
 		return usecase.getProcessModels(configuration);
+	}
+
+	@POST
+	@Path("/process-instances")
+	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
+		return usecase.getProcessInstances(configuration);
 	}
 
 	@POST
 	@Path("/project/{projectId}/import")
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public void importProcessModels(@RestPath Long projectId, CamundaCloudImportConfiguration config) {
-
 		usecase.importProcessModels(projectId, config);
 	}
 }

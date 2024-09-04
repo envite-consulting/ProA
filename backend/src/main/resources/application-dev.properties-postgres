@@ -1,0 +1,12 @@
+quarkus.resteasy-reactive.path=/api/
+
+quarkus.datasource.db-kind=postgresql
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/postgres
+quarkus.datasource.username=postgres
+quarkus.datasource.jdbc.driver=org.postgresql.Driver
+
+quarkus.hibernate-orm.dialect=org.hibernate.dialect.PostgreSQLDialect
+quarkus.hibernate-orm.database.generation=drop-and-create
+quarkus.hibernate-orm.log.sql=true
+
+quarkus.test.continuous-testing=disabled

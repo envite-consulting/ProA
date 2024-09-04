@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.envite</groupId>
 	<artifactId>pro-a</artifactId>
-	<version>1.0.0-snapshot</version>
+	<version>1.3.0-snapshot</version>
 	<packaging>pom</packaging>
 
 	<name>ProA</name>
