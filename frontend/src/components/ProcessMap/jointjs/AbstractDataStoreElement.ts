@@ -50,7 +50,7 @@ export class AbstractDataStoreShape extends dia.Element {
 
 const createAbstractDataStoreElement = (label: string, id: number) => {
 
-    var wrapLabel = util.breakText(label, {
+    const wrapLabel = util.breakText(label, {
         width: 60
     });
 

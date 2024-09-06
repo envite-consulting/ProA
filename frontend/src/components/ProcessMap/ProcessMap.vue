@@ -94,7 +94,7 @@ export default defineComponent({
     const persistedHiddenLinks = appStore.getHiddenLinksForProject(selectedProjectId);
     const persistedHiddenPorts = appStore.getHiddenPortsForProject(selectedProjectId);
 
-    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+    const hiddenCells: dia.Cell[] = persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
     const hiddenLinks: HiddenLinks = persistedHiddenLinks ?? {};
     const hiddenPorts: HiddenPorts = persistedHiddenPorts ? JSON.parse(persistedHiddenPorts) : {};
     const portsInformation: PortsInformation = {};
@@ -182,7 +182,7 @@ export default defineComponent({
     }
 
     const persistedGraph = this.appStore.getGraphForProject(this.selectedProjectId);
-    if (!!persistedGraph) {
+    if (persistedGraph) {
       Object.assign(this.portsInformation, this.appStore.getPortsInformationByProject(this.selectedProjectId));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
@@ -190,7 +190,7 @@ export default defineComponent({
       return;
     }
     const persistedLayout = this.appStore.getPaperLayoutForProject(this.selectedProjectId);
-    if (!!persistedLayout) {
+    if (persistedLayout) {
       const { sx, tx, ty } = JSON.parse(persistedLayout);
       paper.scale(sx);
       paper.translate(tx, ty);
@@ -364,7 +364,7 @@ export default defineComponent({
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
           })
 
-          if (!!connection.label) {
+          if (connection.label) {
             link.appendLabel({
               attrs: {
                 text: {
@@ -460,7 +460,7 @@ export default defineComponent({
       if (!hideConnectionLabels) {
         for (const link of graph.getLinks()) {
           const label = this.hiddenLinks[link.id];
-          if (!!label) {
+          if (label) {
             link.appendLabel({
               attrs: {
                 text: {
@@ -548,7 +548,7 @@ export default defineComponent({
       if (hideConnectionLabels) {
         for (const link of graph.getLinks()) {
           const labelText = link.labels()[0]?.attrs!.text!.text;
-          if (!!labelText) {
+          if (labelText) {
             this.hiddenLinks[link.id] = labelText;
           }
           link.removeLabel();

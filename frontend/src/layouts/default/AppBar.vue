@@ -117,7 +117,7 @@ interface Language {
 }
 
 export default defineComponent({
-  components: { AuthenticationDialog, EditProfileDialog, ProfileDialog, SettingsDrawer },
+  components: { AuthenticationDialog, SettingsDrawer },
   methods: {
     changeLanguage(language: LanguageCode) {
       this.selectedLanguage = language;

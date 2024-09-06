@@ -107,7 +107,7 @@ export default defineComponent({
 
     let filterGraphInput = { ...defaultFilterGraphInput };
 
-    if (!!persistedFilterGraphInput) {
+    if (persistedFilterGraphInput) {
       filterGraphInput = JSON.parse(persistedFilterGraphInput);
     }
 
