@@ -60,6 +60,25 @@
     <v-btn icon @click="fetchProcessModels">
       <v-icon>mdi-refresh</v-icon>
     </v-btn>
+
+    <v-menu location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" icon class="me-5px">
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+      </template>
+
+      <v-list>
+        <v-list-item>
+          <v-list-item-title class="font-weight-bold d-flex align-center justify-space-between">
+            {{ $t('processMap.exportAs') }}
+          </v-list-item-title>
+        </v-list-item>
+        <v-list-item v-for="exportOption in exportOptions" :key="exportOption" @click="exportProcessMap(exportOption)">
+          {{ exportOption }}
+        </v-list-item>
+      </v-list>
+    </v-menu>
   </v-toolbar>
 </template>
 
@@ -80,6 +99,7 @@ import getProject from "@/components/projectService";
 import Legend from "@/components/ProcessMap/Legend.vue";
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 import { useAppStore } from "@/store/app";
+import { graph, paper } from "@/components/ProcessMap/jointjs/JointJSDiagram";
 
 export default defineComponent({
   name: "ProcessMapToolbar",
@@ -116,7 +136,10 @@ export default defineComponent({
       selectedVersionName: '' as string,
       defaultFilterGraphInput,
       filterGraphInput,
-      store
+      store,
+      exportOptions: ['JPG', 'PNG', 'SVG'],
+      graph,
+      paper
     }
   },
 
@@ -144,6 +167,34 @@ export default defineComponent({
   },
 
   methods: {
+    exportProcessMap(exportOption: string) {
+      if (exportOption === 'SVG') {
+        const graphContainer = document.getElementById('graph-container')!;
+        const svgElement = graphContainer.querySelector('svg')!;
+        const svgEl = this.paper.svg;
+        const { x, y } = this.paper.getArea();
+        const { width, height } = this.paper.getContentArea();
+        this.paper.getContentArea();
+        console.log("contentarea", this.paper.getContentArea());
+        console.log("bbox", this.graph.getBBox());
+        const bbox = this.graph.getBBox()!;
+        // const width = (bbox.width + bbox.x);
+        // const height = (bbox.height + bbox.y);
+
+        const clonedSvgElement = svgElement.cloneNode(true) as SVGSVGElement;
+        clonedSvgElement.setAttribute('width', width.toString());
+        clonedSvgElement.setAttribute('height', height.toString());
+        clonedSvgElement.setAttribute('viewBox', `${x * -1} ${y * -1 - 10} ${width + 10} ${height + 10}`);
+
+        const svgData = new XMLSerializer().serializeToString(clonedSvgElement);
+        const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'graph.svg';
+        link.click();
+      }
+    },
     clearFilters() {
       this.filterGraphInput = { ...this.defaultFilterGraphInput };
       this.$emit('filterGraph', this.filterGraphInput);

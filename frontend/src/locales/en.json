@@ -58,6 +58,7 @@
     "database": "Database",
     "endEvent": "End Event",
     "endToStartConnections": "End to Start Connections",
+    "exportAs": "Export as",
     "hide": "Hide",
     "intermediateEvents": "Intermediate Events",
     "legend": "Legend",

@@ -58,6 +58,7 @@
     "database": "Datenbank",
     "endEvent": "Endereignis",
     "endToStartConnections": "Ende-zu-Start-Verbindungen",
+    "exportAs": "Exportieren als",
     "hide": "Ausblenden",
     "intermediateEvents": "Zwischenereignisse",
     "legend": "Legende",
