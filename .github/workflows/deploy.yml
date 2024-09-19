@@ -3,10 +3,10 @@ name: Build and Deploy to Azure
 on:
   push:
     branches:
-      - jonaw1/docker
+      - main
   pull_request:
     branches:
-      - jonaw1/docker
+      - main
 
 jobs:
   build:
