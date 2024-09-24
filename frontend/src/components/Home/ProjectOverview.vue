@@ -1,6 +1,6 @@
 <template>
 
-  <v-container fluid style="margin: auto; background-color: black">
+  <v-container fluid style="margin: auto">
     <v-banner
       v-if="showLoggedInBanner && webVersion && isUserLoggedIn"
       color="success"
@@ -189,7 +189,7 @@ export default defineComponent({
       newVersionName: "" as string,
       newVersionInitialProject: {} as Project,
       showLoggedInBanner: false as boolean,
-      webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB == 'web') as boolean,
+      webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB != 'desktop') as boolean,
       user: store.getUser() as UserData
     }
   },

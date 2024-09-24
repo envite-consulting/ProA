@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAppStore } from "@/store/app";
 import { authHeader } from "@/components/Authentication/authHeader";
 
-const webVersion = import.meta.env.VITE_DESKTOP_OR_WEB == 'web';
+const webVersion = import.meta.env.VITE_DESKTOP_OR_WEB != 'desktop';
 const userId = useAppStore().getUser()?.id;
 
 const getProject = (projectId: number) => {
