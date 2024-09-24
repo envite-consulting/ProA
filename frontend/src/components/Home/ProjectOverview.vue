@@ -1,6 +1,6 @@
 <template>
 
-  <v-container fluid style="margin: auto">
+  <v-container fluid style="margin: auto; background-color: black">
     <v-banner
       v-if="showLoggedInBanner && webVersion && isUserLoggedIn"
       color="success"
