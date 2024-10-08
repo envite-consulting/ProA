@@ -134,7 +134,7 @@ public class BpmnOperations implements ProcessOperations {
 		return participants //
 				.stream() //
 				.map(participant -> new ParticipantDetails( //
-						participant.getName(), //
+						participant.getName() != null ? participant.getName() : participant.getId(), //
 						getParticipantDescription(participant), //
 						extractParticipantXml(updatedXml, participant.getAttributeValue("processRef")) //
 				)) //
