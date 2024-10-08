@@ -417,7 +417,9 @@ export default defineComponent({
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
-      const participants = xmlDoc.getElementsByTagName("bpmn:participant");
+      const semanticParticipants = xmlDoc.getElementsByTagName("participant");
+      const bpmnParticipants = xmlDoc.getElementsByTagName("bpmn:participant");
+      const isCollaboration = (semanticParticipants.length > 1) || (bpmnParticipants.length > 1);
 
       const name =
         xmlDoc.querySelector("bpmn\\:process")?.getAttribute("name")
@@ -429,7 +431,7 @@ export default defineComponent({
       return {
         name: name || "",
         description: documentation || "",
-        isCollaboration: participants.length > 1
+        isCollaboration
       };
     },
 
