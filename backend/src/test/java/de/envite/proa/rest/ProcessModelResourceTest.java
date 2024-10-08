@@ -1,6 +1,7 @@
 package de.envite.proa.rest;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
@@ -30,6 +31,8 @@ public class ProcessModelResourceTest {
 	private static final Long PROJECT_ID = 1L;
 	private static final Long PROCESS_ID = 54321L;
 	private static final int PROCESS_ID_AS_INT = Math.toIntExact(PROCESS_ID);
+	private static final String IS_COLLABORATION = "false";
+	private static final String PARENT_BPMN_PROCESS_ID = null;
 
 	@InjectMock
 	private ProcessModelUsecase usecase;
@@ -47,6 +50,7 @@ public class ProcessModelResourceTest {
 				.multiPart("processModel", processModel)//
 				.multiPart("fileName", FILE_NAME)//
 				.multiPart(DESCRIPTION, DESCRIPTION)//
+				.multiPart("isCollaboration", IS_COLLABORATION)//
 				.when()//
 				.post("/api/project/" + PROJECT_ID + "/process-model")//
 				.then()//
@@ -57,13 +61,16 @@ public class ProcessModelResourceTest {
 		ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> isCollaborationCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<String> parentBpmnProcessIdCaptor = ArgumentCaptor.forClass(String.class);
 		verify(usecase).saveProcessModel(projectIdCaptor.capture(), fileNameCaptor.capture(), contentCaptor.capture(),
-				descriptionCaptor.capture());
+				descriptionCaptor.capture(), isCollaborationCaptor.capture(), parentBpmnProcessIdCaptor.capture());
 
 		assertThat(projectIdCaptor.getValue()).isEqualTo(PROJECT_ID);
 		assertThat(fileNameCaptor.getValue()).isEqualTo(FILE_NAME.replace(".bpmn", ""));
 		assertThat(contentCaptor.getValue()).isEqualTo(bpmnXml);
 		assertThat(descriptionCaptor.getValue()).isEqualTo(DESCRIPTION);
+		assertThat(isCollaborationCaptor.getValue()).isEqualTo(IS_COLLABORATION);
 	}
 
 	@Test

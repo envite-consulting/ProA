@@ -1,7 +1,7 @@
+
 package de.envite.proa.rest;
 
 import de.envite.proa.entities.Settings;
-import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.settings.SettingsUsecase;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;

@@ -154,6 +154,8 @@ import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { Settings } from "../SettingsDrawer.vue"
 import { authHeader } from "@/components/Authentication/authHeader";
+import { util } from "@joint/core";
+import result = util.result;
 
 declare interface ProcessModel {
   id: string,
@@ -269,7 +271,6 @@ export default defineComponent({
         this.camundaCloudDialog = false;
         this.loadingDialog = false;
       }).catch(error => {
-        console.log(error);
         this.tokenError = true;
         this.token = null;
         this.loadingDialog = false;
@@ -303,14 +304,16 @@ export default defineComponent({
         this.settings = {} as Settings;
       }
 
-      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
-      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+      this.settings = this.settings || {} as Settings;
+
+      this.settings.modelerClientId = this.settings?.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings?.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
     },
     async saveSettings() {
       const doSettingsExist = async () => {
         try {
-          await axios.get("/api/settings", { headers: authHeader() });
-          return true;
+          const result = await axios.get("/api/settings", { headers: authHeader() });
+          return !!result?.data;
         } catch (error) {
           return false;
         }

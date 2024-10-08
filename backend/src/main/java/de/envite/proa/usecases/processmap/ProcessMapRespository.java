@@ -14,4 +14,6 @@ public interface ProcessMapRespository {
 	public void deleteProcessConnection(Long connectionId);
 
 	public void deleteDataStoreConnection(Long connectionId);
+
+	public void copyMessageFlowsAndRelations(Long projectId, Long oldProcessId, Long newProcessId);
 }

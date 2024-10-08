@@ -21,13 +21,21 @@ public class SettingsRepositoryImpl implements SettingsRepository {
 
 	@Override
 	public Settings getSettings() {
-		return map(dao.getSettings());
+		SettingsTable settings = dao.getSettings();
+		if (settings == null) {
+			return null;
+		}
+		return map(settings);
 	}
 
 	@Override
 	public Settings getSettings(Long userId) {
 		UserTable userTable = authenticationDao.findById(userId);
-		return map(dao.getSettingsForUser(userTable));
+		SettingsTable settings = dao.getSettingsForUser(userTable);
+		if (settings == null) {
+			return null;
+		}
+		return map(settings);
 	}
 
 	@Override

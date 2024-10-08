@@ -4,9 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.envite.proa.security.RolesAllowedIfWebVersion;
+import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -33,20 +37,44 @@ public class ProcessModelResource {
 	 * 
 	 * Creates a new process model
 	 * 
-	 * @param projectId    the id of the project the process model belongs to
-	 * @param processModel the bpmn file
-	 * @param fileName     the file name of the bpmn file
-	 * @param description  the description of the process
+	 * @param projectId
+	 *            the id of the project the process model belongs to
+	 * @param processModel
+	 *            the bpmn file
+	 * @param fileName
+	 *            the file name of the bpmn file
+	 * @param description
+	 *            the description of the process
 	 * @return id of saved process model
 	 */
 	@POST
 	@Path("/project/{projectId}/process-model")
 	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public Long uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
-			@RestForm String description) {
-		String content = readFileToString(processModel);
-		fileName = fileName.replace(".bpmn", "");
-		return usecase.saveProcessModel(projectId, fileName, content, description);
+	public Response uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
+			@RestForm String description, @RestForm String isCollaboration) {
+		try {
+			String content = readFileToString(processModel);
+			fileName = fileName.replace(".bpmn", "");
+			return Response //
+					.ok(usecase.saveProcessModel( //
+							projectId, //
+							fileName, //
+							content, //
+							description, //
+							isCollaboration, //
+							null //
+					)) //
+					.build();
+		} catch (IllegalArgumentException e) {
+			Map<String, String> errorResponse = new HashMap<>();
+			String errorMessage = e.getMessage();
+			String[] splitMessage = errorMessage.split(" ");
+			errorResponse.put("error", errorMessage);
+			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
+			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
 	}
 
 	@Path("project/{projectId}/process-model/{oldProcessId}")
@@ -56,7 +84,7 @@ public class ProcessModelResource {
 			@RestForm String fileName, @RestForm String description) {
 		String content = readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
-		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description);
+		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description, null);
 	}
 
 	/**

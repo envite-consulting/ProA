@@ -22,6 +22,18 @@ export interface Connection {
   label: string;
 }
 
+export interface MessageFlow {
+  bpmnId: string;
+  name: string;
+  description: string;
+
+  callingProcessId: number;
+  calledProcessId: number;
+
+  callingElementType: ProcessElementType;
+  calledElementType: ProcessElementType;
+}
+
 export interface DataStore {
   id: number;
   name: string;

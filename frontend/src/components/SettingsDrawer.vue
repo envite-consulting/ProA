@@ -117,7 +117,8 @@ export default defineComponent({
     modelerSuccessMsg: "",
     operateConnectionSuccessMsg: "",
     operateClusterSuccessMsg: "",
-    isValidating: false
+    isValidating: false,
+    userId: useAppStore().getUser()?.id
   }),
 
   mounted() {
@@ -146,30 +147,35 @@ export default defineComponent({
     },
     async saveSettings() {
       const doSettingsExist = async () => {
-        try {
-          await axios.get("/api/settings", { headers: authHeader() });
-          return true;
-        } catch (error) {
-          return false;
-        }
+        const result = await axios.get(
+          `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+          { headers: authHeader() }
+        );
+        return !!result.data;
       }
 
       const areSettingsValid = await this.validateSettings();
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settingsToBeSaved, {
-          headers: {
-            ...authHeader(),
-            'Content-Type': 'application/json'
-          }
-        });
+        await axios.patch(
+          `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+          this.settingsToBeSaved,
+          {
+            headers: {
+              ...authHeader(),
+              'Content-Type': 'application/json'
+            }
+          });
       } else {
-        await axios.post("/api/settings", this.settingsToBeSaved, {
-          headers: {
-            ...authHeader(),
-            'Content-Type': 'application/json'
-          }
-        });
+        await axios.post(
+          `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+          this.settingsToBeSaved,
+          {
+            headers: {
+              ...authHeader(),
+              'Content-Type': 'application/json'
+            }
+          });
       }
 
       if (areSettingsValid) {
@@ -310,13 +316,12 @@ export default defineComponent({
       this.appStore.setOperateConnectionError("");
     },
     async fetchSettings() {
-      try {
-        await axios.get("/api/settings", { headers: authHeader() }).then(result => {
-          this.settings = result.data;
-        });
-      } catch (error) {
-        this.settings = {} as Settings;
-      }
+      await axios.get(
+        `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+        { headers: authHeader() }
+      ).then(result => {
+        this.settings = result.data || {} as Settings;
+      });
 
       this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;

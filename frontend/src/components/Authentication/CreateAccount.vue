@@ -55,7 +55,7 @@
           :rules="passwordRules"
         ></v-text-field>
         <v-btn type="button" @click="createAccount" color="primary" block height="50">
-          {{ $t('authentication.continue') }}
+          {{ $t('general.continue') }}
         </v-btn>
         <p class="my-1 pa-1 clickable-link d-inline-block" @click="clearMessageAndOpenDialog(SelectedDialog.SIGN_IN)">
           {{ $t('authentication.alreadyAccountQuestion') }}</p>

@@ -333,18 +333,7 @@ export default defineComponent({
       formData.append("name", projectName);
       formData.append("version", projectVersion);
 
-      if (this.webVersion) {
-        await axios.post(`/api/project/${this.user.id}`, formData, { headers: authHeader() })
-          .then(result => {
-            this.projectDialog = false;
-            this.showNewVersionDialog = false;
-            this.setActiveProject(result.data.name, result.data.id);
-            this.projects.push(result.data);
-          });
-        return;
-      }
-
-      axios.post("/api/project", formData, { headers: authHeader() })
+      await axios.post(`/api/project${this.user?.id ? ("/" + this.user.id) : ""}`, formData, { headers: authHeader() })
         .then(result => {
           this.projectDialog = false;
           this.showNewVersionDialog = false;

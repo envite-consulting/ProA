@@ -4,7 +4,6 @@
     "alreadyAccountQuestion": "Besteht bereits ein Account?",
     "back": "Zurück",
     "changePassword": "Passwort ändern",
-    "continue": "Fortfahren",
     "createAnAccount": "Account erstellen",
     "createAccountQuestion": "Account erstellen?",
     "currentPassword": "Aktuelles Passwort",
@@ -51,6 +50,8 @@
     "cancel": "Abbrechen",
     "clientId": "Client ID",
     "clientSecret": "Client Secret",
+    "close": "Schließen",
+    "continue": "Fortfahren",
     "createdOn": "Erstellt am",
     "description": "Beschreibung",
     "end": "Ende",
@@ -82,14 +83,30 @@
     "startEvents": "Startereignisse"
   },
   "processList": {
+    "alreadyExistsErrorMsg1": {
+      "singular": "Kollaboration mit der ID ",
+      "plural": "Kollaborationen mit den IDs "
+    },
+    "alreadyExistsErrorMsg2": {
+      "singular": " existiert bereits.",
+      "plural": " existieren bereits."
+    },
+    "cantReplaceWithCollaborationErrorMsg": "Es ist nicht möglich einen Prozess mit einer Kollaboration zu ersetzen.",
+    "collaboration": "Kollaboration",
+    "confirm": "Bestätigen",
+    "confirmDeletion": "Löschen Bestätigen",
+    "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
+    "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
+    "error": "Fehler",
+    "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
+    "participant": "Teilnehmer",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
     "uploadProcessModels": "Prozessmodelle hochladen",
-    "uploadingProcessModels": "Prozessmodelle werden hochgeladen...",
-    "generateDescriptionWithAI": "Beschreibung mit AI generieren"
+    "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
   },
   "processMap": {
     "callActivity": "Aufrufaktivität",

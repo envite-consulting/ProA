@@ -45,6 +45,7 @@ import {
   FilterGraphInput,
   HiddenLinks,
   HiddenPorts,
+  MessageFlow,
   PortsInformation,
   Process,
   ProcessElementType,
@@ -206,6 +207,9 @@ export default defineComponent({
       if (linkView.model.get("source").id.toString().startsWith('ds')) {
         return;
       }
+      if (linkView.model.get("isMessageFlow")) {
+        return;
+      }
       clearTimeout(timer);
       clearTools();
       lastView = linkView;
@@ -334,25 +338,25 @@ export default defineComponent({
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() }).then(result => {
 
-        let abstractProcessShapes: AbstractProcessShape[] = result.data.processes.map((process: Process) => {
+        let abstractProcessShapes: AbstractProcessShape[] = result.data.processes
+          .map((process: Process) => {
 
-          const filterEmpty = (label: string) => !!label;
+            const filterEmpty = (label: string) => !!label;
 
-          this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-          return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
-        });
+            return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
+          });
 
         this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
 
         graph.addCell(abstractProcessShapes);
 
         let connectionsShapes = result.data.connections.map((connection: Connection) => {
-
           const link = new shapes.standard.Link();
 
           const callingPortPrefix = getPortPrefix(connection.callingElementType);
@@ -362,7 +366,7 @@ export default defineComponent({
             connectionId: connection.id,
             source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
-          })
+          });
 
           if (connection.label) {
             link.appendLabel({
@@ -378,6 +382,41 @@ export default defineComponent({
         });
 
         graph.addCell(connectionsShapes);
+
+        let messageFlowShapes = result.data.messageFlows.map((messageFlow: MessageFlow) => {
+          const link = new shapes.standard.Link();
+
+          const callingPortPrefix = getPortPrefix(messageFlow.callingElementType);
+          const calledPortPrefix = getPortPrefix(messageFlow.calledElementType);
+
+          link.set({
+            connectionId: messageFlow.bpmnId,
+            source: { id: messageFlow.callingProcessId, port: callingPortPrefix + messageFlow.callingProcessId },
+            target: { id: messageFlow.calledProcessId, port: calledPortPrefix + messageFlow.calledProcessId },
+            isMessageFlow: true
+          });
+
+          link.attr({
+              line: {
+                strokeDasharray: '5,5'
+              }
+            }
+          );
+
+          if (messageFlow.name) {
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: messageFlow.name
+                }
+              }
+            });
+          }
+
+          return link;
+        });
+
+        graph.addCell(messageFlowShapes);
 
         let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
           return createAbstractDataStoreElement(dataStore.name, dataStore.id);

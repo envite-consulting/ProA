@@ -4,7 +4,6 @@
     "alreadyAccountQuestion": "Already have an account?",
     "back": "Back",
     "changePassword": "Change Password",
-    "continue": "Continue",
     "createAnAccount": "Create an account",
     "createAccountQuestion": "Create an account?",
     "currentPassword": "Current Password",
@@ -51,6 +50,8 @@
     "cancel": "Cancel",
     "clientId": "Client ID",
     "clientSecret": "Client Secret",
+    "close": "Close",
+    "continue": "Continue",
     "createdOn": "Created on",
     "description": "Description",
     "end": "End",
@@ -82,14 +83,30 @@
     "startEvents": "Start Events"
   },
   "processList": {
+    "alreadyExistsErrorMsg1": {
+      "singular": "Collaboration with the ID ",
+      "plural": "Collaborations with the IDs "
+    },
+    "alreadyExistsErrorMsg2": {
+      "singular": " already exists.",
+      "plural": " already exist."
+    },
+    "cantReplaceWithCollaborationErrorMsg": "It is not possible to replace processes with collaborations.",
+    "collaboration": "Collaboration",
+    "confirm": "Confirm",
+    "confirmDeletion": "Confirm deletion",
+    "confirmDeletionText1": "Are you sure you want to delete ",
+    "confirmDeletionText2": "? This action will delete all process models associated with the collaboration.",
+    "error": "Error",
+    "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",
+    "participant": "Participant",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
     "toTheProcessMap": "To the Process Map",
     "uploadProcessModels": "Upload Process Models",
-    "uploadingProcessModels": "Uploading Process Models...",
-    "generateDescriptionWithAI": "Generate description with AI"
+    "uploadingProcessModels": "Uploading Process Models..."
   },
   "processMap": {
     "callActivity": "Call Activity",

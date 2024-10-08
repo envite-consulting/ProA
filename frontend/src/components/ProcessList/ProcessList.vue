@@ -9,26 +9,15 @@
   </v-toolbar>
   <ProcessDetailDialog ref="processDetailDialog"/>
   <v-list lines="two" class="pa-6">
-    <template v-for="(model, index) in processModels" :key="'process-'+model.id">
-      <v-list-item>
-        <v-list-item-title>{{ model.processName }}</v-list-item-title>
-
-        <v-list-item-subtitle>
-          {{ getLocaleDate(model.createdAt) }} {{ !!model.description ? '-' : '' }} {{
-            model.description
-          }}
-        </v-list-item-subtitle>
-        <template v-slot:append>
-          <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
-                 @click="async () => await deleteProcessModel(model.id)"></v-btn>
-          <v-btn color="grey-lighten-1" icon="mdi-upload" variant="text"
-                 @click="openSingleUploadDialog(model.id)"></v-btn>
-          <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + model.id"></v-btn>
-          <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
-                 @click="() => showProcessInfoDialog(model.id)"></v-btn>
-        </template>
-      </v-list-item>
-      <v-divider v-if="index < processModels.length - 1" :key="`${index}-divider`"></v-divider>
+    <template v-for="(model, index) in rootProcessModels" :key="'process-'+ model.id">
+      <ProcessTreeNode
+        :model="model"
+        :index="index"
+        @delete-process="deleteProcessModel"
+        @upload-process="openSingleUploadDialog"
+        @more-info="showProcessInfoDialog"
+      />
+      <v-divider v-if="index < rootProcessModels.length - 1" :key="`${index}-divider`"></v-divider>
     </template>
   </v-list>
   <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px; z-index: 1;">
@@ -47,7 +36,7 @@
              @click="openMultipleUploadDialog" size="large"/>
     </v-fab-transition>
   </div>
-  <div v-if="processModels.length > 0" class="d-flex align-center justify-center ma-4"
+  <div v-if="rootProcessModels.length > 0" class="d-flex align-center justify-center ma-4"
        style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px;">
     <v-btn prepend-icon="mdi-map"
            @click="goToProcessMap">
@@ -74,7 +63,12 @@
             </v-col>
           </v-row>
           <v-row v-for="(file, index) in processModelsToUpload" :key="'file-' + index" class="py-5 mt-0">
-            <p class="px-3">{{ file.file.name }}</p>
+            <div class="d-flex align-center">
+              <p class="px-3">{{ file.file.name }}</p>
+              <span v-if="file.isCollaboration" class="text-grey-darken-1 text-body-2">{{
+                  $t('processList.collaboration')
+                }}</span>
+            </div>
             <v-col cols="12" sm="12" md="12" class="py-1">
               <v-text-field hide-details label="Name" v-model="file.name"></v-text-field>
             </v-col>
@@ -98,7 +92,7 @@
                   </v-overlay>
                 </v-col>
                 <v-col class="d-flex justify-end" cols="auto">
-                  <v-tooltip :text="$t('processList.generateDescriptionWithAI)')" location="bottom">
+                  <v-tooltip :text="$t('processList.generateDescriptionWithAI')" location="bottom">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" color="grey" class="ms-2 hover-icon"
                               @click="generateDescription(file)">
@@ -142,6 +136,71 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog
+    v-model="confirmDeleteDialog"
+    width="auto"
+  >
+    <v-card
+      max-width="400"
+      prepend-icon="mdi-delete"
+      :title="$t('processList.confirmDeletion')"
+    >
+      <template v-slot:text>
+        {{ $t('processList.confirmDeletionText1') }}<strong>{{
+          processModelToBeDeleted?.processName
+        }}</strong>{{ $t('processList.confirmDeletionText2') }}
+      </template>
+      <template v-slot:actions>
+        <div class="ms-auto">
+          <v-btn
+            :text="$t('general.cancel')"
+            @click="confirmDeleteDialog = false"
+          ></v-btn>
+          <v-btn
+            :text="$t('processList.confirm')"
+            @click="deleteProcessModel(processModelToBeDeleted!, true)"
+          ></v-btn>
+        </div>
+      </template>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
+    v-model="errorDialog"
+    width="auto"
+  >
+    <v-card
+      max-width="400"
+      prepend-icon="mdi-alert-circle-outline"
+      :title="$t('processList.error')"
+    >
+      <template v-slot:text v-if="errorType === ErrorType.ALREADY_EXISTING">
+        <span>
+          {{
+            $t('processList.alreadyExistsErrorMsg1.'
+              + (alreadyExistingBpmnProcessIds.length > 1 ? 'plural' : 'singular'))
+          }}
+          <strong>{{ alreadyExistingBpmnProcessIds.join(", ") }}</strong>
+          {{
+            $t('processList.alreadyExistsErrorMsg2.'
+              + (alreadyExistingBpmnProcessIds.length > 1 ? 'plural' : 'singular'))
+          }}
+        </span>
+      </template>
+      <template v-slot:text v-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
+        {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
+      </template>
+      <template v-slot:actions>
+        <div class="ms-auto">
+          <v-btn
+            :text="$t('general.close')"
+            @click="errorDialog = false"
+          ></v-btn>
+        </div>
+      </template>
+    </v-card>
+  </v-dialog>
+
 </template>
 
 <style scoped>
@@ -163,17 +222,33 @@ import getProject from "../projectService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { authHeader } from "@/components/Authentication/authHeader";
 import i18n from "@/i18n";
+import ProcessTreeNode from "@/components/ProcessList/ProcessTreeNode.vue";
 
 interface BPMNContent {
   name: string,
-  description: string
+  description: string,
+  isCollaboration: boolean
 }
 
-declare interface ProcessModel {
+export interface ProcessModelNode {
   id: number,
+  bpmnProcessId: string,
   processName: string,
   description: string,
-  createdAt: string
+  createdAt: string,
+  parentsBpmnProcessIds: string[],
+  childrenBpmnProcessIds: string[],
+  children: ProcessModelNode[]
+}
+
+interface RawProcessModel {
+  id: number,
+  bpmnProcessId: string,
+  processName: string,
+  description: string,
+  createdAt: string,
+  parentsBpmnProcessIds: string[],
+  childrenBpmnProcessIds: string[]
 }
 
 enum UploadDialogMode {
@@ -186,24 +261,46 @@ interface ProcessModelToUpload {
   name: string,
   description: string,
   content: string,
-  aiLoading: boolean
+  aiLoading: boolean,
+  isCollaboration: boolean
+}
+
+interface HttpError {
+  response: {
+    data: {
+      data: string;
+      message: string;
+    }
+  }
+}
+
+enum ErrorType {
+  ALREADY_EXISTING = "ALREADY_EXISTING",
+  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION"
 }
 
 export default defineComponent({
 
   components: {
+    ProcessTreeNode,
     ProcessDetailDialog
   },
   data: () => ({
     appStore: useAppStore(),
+    confirmDeleteDialog: false as boolean,
+    errorDialog: false as boolean,
+    errorType: ErrorType.ALREADY_EXISTING as ErrorType,
+    ErrorType: ErrorType,
+    alreadyExistingBpmnProcessIds: [] as string[],
     uploadDialog: false as boolean,
     uploadDialogMode: UploadDialogMode.MULTIPLE as UploadDialogMode,
     processModelToBeReplacedId: null as number | null,
+    processModelToBeDeleted: null as ProcessModelNode | null,
     progressDialog: false,
     progress: 0,
     processModelFiles: [] as File[],
     processModelsToUpload: [] as ProcessModelToUpload[],
-    processModels: [] as ProcessModel[],
+    rootProcessModels: [] as ProcessModelNode[],
     selectedProjectId: null as number | null,
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
@@ -238,18 +335,50 @@ export default defineComponent({
       (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
     },
 
-    async deleteProcessModel(processId: number) {
+    async deleteProcessModel(processModelNode: ProcessModelNode, skipConfirm: boolean = false) {
+      const isPartOfCollaboration = processModelNode.parentsBpmnProcessIds.length > 0
+        || processModelNode.childrenBpmnProcessIds.length > 0;
+      if (!skipConfirm && isPartOfCollaboration) {
+        this.processModelToBeDeleted = processModelNode;
+        this.confirmDeleteDialog = true;
+        return;
+      }
+      const processId = processModelNode.id;
       await axios.delete("/api/process-model/" + processId, { headers: authHeader() }).then(() => {
+        this.confirmDeleteDialog = false;
+        this.processModelToBeDeleted = null;
         this.appStore.setProcessModelsChanged();
         this.fetchProcessModels();
-      })
+      });
     },
 
     fetchProcessModels() {
       axios.get("/api/project/" + this.selectedProjectId + "/process-model", { headers: authHeader() })
         .then(result => {
-          this.processModels = result.data;
-        })
+          this.rootProcessModels = this.collectRoots(result.data);
+        });
+    },
+
+    collectRoots(rawProcessModels: RawProcessModel[]): ProcessModelNode[] {
+      const modelMap = new Map<string, ProcessModelNode>();
+      rawProcessModels.forEach(model => modelMap.set(model.bpmnProcessId, { ...model, children: [] }));
+
+      const roots = [] as ProcessModelNode[];
+
+      rawProcessModels.forEach(model => {
+        if (model.parentsBpmnProcessIds.length === 0) {
+          roots.push(modelMap.get(model.bpmnProcessId)!);
+        } else {
+          model.parentsBpmnProcessIds.forEach(parentId => {
+            const parent = modelMap.get(parentId);
+            if (parent) {
+              parent.children.push(modelMap.get(model.bpmnProcessId)!);
+            }
+          });
+        }
+      });
+
+      return roots;
     },
 
     openSingleUploadDialog(modelId: number) {
@@ -263,62 +392,80 @@ export default defineComponent({
       this.uploadDialogMode = UploadDialogMode.MULTIPLE;
     },
 
+    async readFileContent(file: File): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const result = reader.result;
+          if (typeof result === "string") {
+            resolve(result);
+          } else {
+            reject(new Error("File content is not a string"));
+          }
+        };
+
+        reader.onerror = () => {
+          reject(new Error("Error reading file"));
+        };
+
+        reader.readAsText(file);
+      });
+    },
+
+    parseBPMNContent(content: string): BPMNContent {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(content, "text/xml");
+
+      const participants = xmlDoc.getElementsByTagName("bpmn:participant");
+
+      const name =
+        xmlDoc.querySelector("bpmn\\:process")?.getAttribute("name")
+        || xmlDoc.querySelector("process")?.getAttribute("name");
+      const documentation =
+        xmlDoc.querySelector("bpmn\\:documentation")?.getAttribute("textContent")
+        || xmlDoc.querySelector("documentation")?.getAttribute("textContent");
+
+      return {
+        name: name || "",
+        description: documentation || "",
+        isCollaboration: participants.length > 1
+      };
+    },
+
     async handleFileSelection() {
       this.processModelsToUpload = [];
 
-      const readFileContent = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-
-          reader.onload = () => {
-            const result = reader.result;
-            if (typeof result === "string") {
-              resolve(result);
-            } else {
-              reject(new Error("File content is not a string"));
-            }
-          };
-
-          reader.onerror = () => {
-            reject(new Error("Error reading file"));
-          };
-
-          reader.readAsText(file);
-        });
-      };
-
-      const parseBPMNContent = (content: string): BPMNContent => {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(content, "text/xml");
-        const nameElement = xmlDoc.querySelector("bpmn\\:process") || xmlDoc.querySelector("process");
-        const documentationElement = xmlDoc.querySelector("bpmn\\:documentation") || xmlDoc.querySelector("documentation");
-
-        return {
-          name: nameElement ? nameElement.getAttribute("name") || '' : '',
-          description: documentationElement ? documentationElement.textContent || '' : '',
-        };
-      };
-
       for (const file of this.processModelFiles) {
         try {
-          const content = await readFileContent(file);
-          const { name, description } = parseBPMNContent(content);
-          this.processModelsToUpload.push({
-            file,
-            name: name || file.name.replace(this.fileExtensionMatcher, ""),
-            description,
-            content,
-            aiLoading: false
-          });
+          this.processModelsToUpload.push(await this.getProcessModelToUpload(file));
         } catch (error) {
           console.error("Error reading file content: ", error);
         }
       }
     },
 
-    async uploadProcessModel(processModel: ProcessModelToUpload): Promise<number> {
+    async getProcessModelToUpload(file: File): Promise<ProcessModelToUpload> {
+      const content = await this.readFileContent(file);
+
+      const { name, description, isCollaboration } = this.parseBPMNContent(content);
+      return {
+        file,
+        name: name || file.name.replace(this.fileExtensionMatcher, ""),
+        description,
+        content,
+        aiLoading: false,
+        isCollaboration
+      };
+    },
+
+    async uploadProcessModel(processModel: ProcessModelToUpload): Promise<number | string> {
       const formData = this.createProcessModelFormData(processModel);
-      const { data } = await axios.post("/api/project/" + this.selectedProjectId + "/process-model", formData, { headers: authHeader() });
+      const { data } = await axios.post(
+        "/api/project/" + this.selectedProjectId + "/process-model",
+        formData,
+        { headers: authHeader() }
+      );
       return data;
     },
 
@@ -328,6 +475,7 @@ export default defineComponent({
       formData.append("processModel", processModel.file);
       formData.append("fileName", fileName);
       formData.append("description", processModel.description);
+      formData.append("isCollaboration", processModel.isCollaboration ? "true" : "false");
 
       return formData;
     },
@@ -337,14 +485,25 @@ export default defineComponent({
         this.progressDialog = true;
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
+        let error = false;
+        this.alreadyExistingBpmnProcessIds = [];
         for (const processModel of this.processModelsToUpload) {
           this.progress += progressSteps;
 
-          await this.uploadProcessModel(processModel);
+          try {
+            await this.uploadProcessModel(processModel);
+          } catch (e) {
+            error = true;
+            this.alreadyExistingBpmnProcessIds.push((e as HttpError).response.data.data);
+          }
 
           this.progress += progressSteps;
         }
         this.afterUploadActions();
+        if (error) {
+          this.errorType = ErrorType.ALREADY_EXISTING;
+          this.errorDialog = true;
+        }
       }
     },
 
@@ -353,15 +512,19 @@ export default defineComponent({
         return;
       }
 
-      const processModel = this.processModelsToUpload[0];
-      const formData = this.createProcessModelFormData(processModel);
+      const formData = this.createProcessModelFormData(this.processModelsToUpload[0]);
 
-      await axios.post(
-        "/api/project/" + this.selectedProjectId + "/process-model/" + this.processModelToBeReplacedId,
-        formData, { headers: authHeader() }
-      );
-
-      this.afterUploadActions();
+      try {
+        await axios.post(
+          "/api/project/" + this.selectedProjectId + "/process-model/" + this.processModelToBeReplacedId,
+          formData, { headers: authHeader() }
+        );
+        this.afterUploadActions();
+      } catch (e) {
+        this.afterUploadActions();
+        this.errorType = ErrorType.CANT_REPLACE_WITH_COLLABORATION;
+        this.errorDialog = true;
+      }
     },
 
     afterUploadActions() {
