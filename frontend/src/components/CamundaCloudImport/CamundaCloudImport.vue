@@ -154,8 +154,6 @@ import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { Settings } from "../SettingsDrawer.vue"
 import { authHeader } from "@/components/Authentication/authHeader";
-import { util } from "@joint/core";
-import result = util.result;
 
 declare interface ProcessModel {
   id: string,
@@ -201,6 +199,12 @@ export default defineComponent({
   computed: {
     isUserLoggedIn(): boolean {
       return this.store.getUser() != null;
+    },
+    settingsUrl(): string {
+      if (import.meta.env.VITE_DESKTOP_OR_WEB == "web") {
+        return `/api/settings/${this.store.getUser()?.id}`
+      }
+      return this.settingsUrl
     }
   },
 
@@ -297,7 +301,7 @@ export default defineComponent({
     },
     async fetchSettings() {
       try {
-        await axios.get("/api/settings", { headers: authHeader() }).then(result => {
+        await axios.get(this.settingsUrl, { headers: authHeader() }).then(result => {
           this.settings = result.data;
         });
       } catch (error) {
@@ -312,7 +316,7 @@ export default defineComponent({
     async saveSettings() {
       const doSettingsExist = async () => {
         try {
-          const result = await axios.get("/api/settings", { headers: authHeader() });
+          const result = await axios.get(this.settingsUrl, { headers: authHeader() });
           return !!result?.data;
         } catch (error) {
           return false;
@@ -320,14 +324,14 @@ export default defineComponent({
       }
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settings, {
+        await axios.patch(this.settingsUrl, this.settings, {
           headers: {
             ...authHeader(),
             'Content-Type': 'application/json'
           }
         });
       } else {
-        await axios.post("/api/settings", this.settings, {
+        await axios.post(this.settingsUrl, this.settings, {
           headers: {
             ...authHeader(),
             'Content-Type': 'application/json'
