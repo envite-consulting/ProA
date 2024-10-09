@@ -72,8 +72,6 @@ public class ProcessModelResource {
 			errorResponse.put("error", errorMessage);
 			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
 			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
-		} catch (Exception e) {
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}
 

@@ -121,4 +121,15 @@ public class ProcessModelDao {
 	public void delete(List<Long> processModelIds) {
 		processModelIds.forEach(this::delete);
 	}
+
+	@Transactional
+	public ProcessModelTable findByName(String name, ProjectTable projectTable) {
+		List<ProcessModelTable> processModels = em //
+				.createQuery("SELECT p FROM ProcessModelTable p " + //
+						"WHERE p.name = :name AND p.project = :project", ProcessModelTable.class)
+				.setParameter("name", name) //
+				.setParameter("project", projectTable) //
+				.getResultList();
+		return processModels.isEmpty() ? null : processModels.getFirst();
+	}
 }

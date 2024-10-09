@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.envite.proa.entities.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -52,4 +53,6 @@ public class ProcessModelTable {
 
 	@ManyToMany(mappedBy = "children", fetch = FetchType.EAGER)
 	private List<ProcessModelTable> parents = new ArrayList<>();
+
+	private ProcessType processType;
 }

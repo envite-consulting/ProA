@@ -137,7 +137,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return processModelDao//
 				.getProcessModels(projectTable)//
 				.stream()//
-				.filter(pm -> pm.getChildren().isEmpty())//
+				.filter(pm -> pm.getProcessType() != ProcessType.COLLABORATION)//
 				.map(ProcessDetailsMapper::map)//
 				.collect(Collectors.toList());
 	}
@@ -146,8 +146,8 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return processConnectionDao//
 				.getProcessConnections(projectTable)//
 				.stream()//
-				.filter(pc -> pc.getCallingProcess().getChildren().isEmpty()//
-						&& pc.getCalledProcess().getChildren().isEmpty())//
+				.filter(pc -> pc.getCallingProcess().getProcessType() != ProcessType.COLLABORATION//
+						&& pc.getCalledProcess().getProcessType() != ProcessType.COLLABORATION)//
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}
@@ -172,7 +172,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		return dataStoreConnectionDao//
 				.getDataStoreConnections(projectTable)//
 				.stream()//
-				.filter(dsc -> dsc.getProcess().getChildren().isEmpty())//
+				.filter(dsc -> dsc.getProcess().getProcessType() != ProcessType.COLLABORATION)//
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}

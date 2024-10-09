@@ -22,5 +22,5 @@ public interface ProcessModelRepository {
 
 	void saveMessageFlows(List<MessageFlowDetails> messageFlows, Long projectId);
 
-	ProcessModelTable findByBpmnProcessId(String bpmnProcessId, Long projectId);
+	ProcessModelTable findByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId);
 }

@@ -323,8 +323,12 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	@Override
-	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, Long projectId) {
+	public ProcessModelTable findByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId) {
 		ProjectTable project = projectDao.findById(projectId);
+		ProcessModelTable processModel = processModelDao.findByName(name, project);
+		if (processModel != null) {
+			return processModel;
+		}
 		return processModelDao.findByBpmnProcessId(bpmnProcessId, project);
 	}
 }

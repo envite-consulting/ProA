@@ -27,4 +27,6 @@ public class ProcessModel {
     private String bpmnProcessId;
 
     private String parentBpmnProcessId;
+
+    private ProcessType processType;
 }
