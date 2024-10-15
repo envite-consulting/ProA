@@ -88,3 +88,8 @@ export type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
 export type HiddenLinks = { [key: string]: string };
 export type HiddenPorts = { [key: string]: dia.Element.Port[] };
 export type PortsInformation = { [key: string]: string[] };
+
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User"
+}

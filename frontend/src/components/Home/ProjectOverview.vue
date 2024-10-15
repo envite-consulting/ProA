@@ -260,11 +260,7 @@ export default defineComponent({
       this.newVersionInitialProject = this.activeProjectByGroup[projectGroup.name];
     },
     handleOpenNewProjectDialog() {
-      if (this.webVersion && !this.isUserLoggedIn) {
-        this.store.setSelectedDialog(SelectedDialog.SIGN_IN);
-      } else {
-        this.openNewProjectDialog();
-      }
+      this.openNewProjectDialog();
     },
     openNewProjectDialog() {
       this.newProjectName = "";

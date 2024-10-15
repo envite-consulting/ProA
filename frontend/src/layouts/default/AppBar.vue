@@ -15,6 +15,15 @@
       {{ $t('general.myProfile') }}
     </v-tooltip>
 
+    <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn && isUserAdmin">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" @click="openDialog(SelectedDialog.CREATE_ACCOUNT)">
+          <v-icon icon="mdi-account-plus"></v-icon>
+        </v-btn>
+      </template>
+      {{ $t('navigation.createAccount') }}
+    </v-tooltip>
+
     <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn">
       <template v-slot:activator="{ props }">
         <v-btn v-bind="props" @click="signOut">
@@ -22,24 +31,6 @@
         </v-btn>
       </template>
       {{ $t('general.signOut') }}
-    </v-tooltip>
-
-    <v-tooltip location="bottom" v-if="webVersion && !isUserLoggedIn">
-      <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" @click="openDialog(SelectedDialog.SIGN_IN)">
-          <v-icon icon="mdi-login"></v-icon>
-        </v-btn>
-      </template>
-      {{ $t('navigation.signIn') }}
-    </v-tooltip>
-
-    <v-tooltip location="bottom" v-if="webVersion && !isUserLoggedIn">
-      <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" @click="openDialog(SelectedDialog.CREATE_ACCOUNT)">
-          <v-icon icon="mdi-account-plus"></v-icon>
-        </v-btn>
-      </template>
-      {{ $t('navigation.createAccount') }}
     </v-tooltip>
 
     <v-menu>
@@ -104,10 +95,9 @@ import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import i18n from "@/i18n";
-import ProfileDialog from "@/components/Authentication/ProfileDialog.vue";
-import EditProfileDialog from "@/components/Authentication/EditProfileDialog.vue";
 import AuthenticationDialog from "@/components/Authentication/AuthenticationDialog.vue";
 import { SelectedDialog } from "@/store/app";
+import { Role } from "@/components/ProcessMap/types";
 
 export type LanguageCode = 'en' | 'de';
 
@@ -203,6 +193,9 @@ export default defineComponent({
     },
     isUserLoggedIn() {
       return this.store.getUser() != null;
+    },
+    isUserAdmin() {
+      return this.store.getUser()?.role === Role.ADMIN;
     }
   },
 

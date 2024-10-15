@@ -54,11 +54,16 @@
           variant="outlined"
           :rules="passwordRules"
         ></v-text-field>
+        <v-select
+          v-model="roleSelect"
+          :label="$t('authentication.role')"
+          :items="roleOptions"
+          variant="outlined"
+          class="my-2"
+        ></v-select>
         <v-btn type="button" @click="createAccount" color="primary" block height="50">
           {{ $t('general.continue') }}
         </v-btn>
-        <p class="my-1 pa-1 clickable-link d-inline-block" @click="clearMessageAndOpenDialog(SelectedDialog.SIGN_IN)">
-          {{ $t('authentication.alreadyAccountQuestion') }}</p>
       </v-form>
     </v-card-text>
   </v-card>
@@ -80,6 +85,8 @@ import { VForm } from "vuetify/components";
 import axios, { AxiosError } from "axios";
 import { SelectedDialog, useAppStore } from "@/store/app";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
+import { authHeader } from "@/components/Authentication/authHeader";
+import { Role } from "@/components/ProcessMap/types";
 
 export default defineComponent({
   name: "CreateAccount",
@@ -102,7 +109,9 @@ export default defineComponent({
       lastNameRules: lastNameRules,
       passwordRules: newPasswordRules,
       SelectedDialog: SelectedDialog,
-      store: useAppStore()
+      store: useAppStore(),
+      roleSelect: Role.USER,
+      roleOptions: Object.values(Role)
     }
   },
 
@@ -121,14 +130,14 @@ export default defineComponent({
           email: this.email,
           password: this.password,
           firstName: this.firstName,
-          lastName: this.lastName
-        }, { headers: { 'Content-Type': 'application/json' } });
+          lastName: this.lastName,
+          role: this.roleSelect
+        }, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
 
         this.$emit('showMessage', {
           type: 'success',
           message: this.$t('authentication.successfullyCreatedAccount') as string
-        })
-        this.openDialog(SelectedDialog.SIGN_IN);
+        });
       } catch (e) {
         if ((e as AxiosError).response?.status === 409) {
           this.$emit('showMessage', {
@@ -146,16 +155,6 @@ export default defineComponent({
     },
     closeDialog() {
       this.store.setSelectedDialog(SelectedDialog.NONE);
-    },
-    openDialog(dialog: SelectedDialog) {
-      this.store.setSelectedDialog(dialog);
-    },
-    clearMessageAndOpenDialog(dialog: SelectedDialog) {
-      this.$emit('showMessage', {
-        type: 'error',
-        message: '' as string
-      });
-      this.openDialog(dialog);
     }
   }
 });

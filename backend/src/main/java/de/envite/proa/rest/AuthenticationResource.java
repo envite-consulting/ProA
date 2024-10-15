@@ -40,13 +40,14 @@ public class AuthenticationResource {
 			return Response.status(Response.Status.UNAUTHORIZED).build();
 		}
 
-		String token = tokenService.generateToken(loggedInUser);
+		String token = tokenService.generateToken(loggedInUser, loggedInUser.getRole());
 		loggedInUser.setToken(token);
 		return Response.ok().entity(loggedInUser).build();
 	}
 
 	@POST
 	@Path("/register")
+	@RolesAllowed({"Admin"})
 	public Response register(User user) {
 		User registeredUser = usecase.register(user);
 		if (registeredUser == null) {

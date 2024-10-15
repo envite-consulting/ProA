@@ -1,12 +1,12 @@
 package de.envite.proa.repository;
 
+import de.envite.proa.entities.Role;
 import de.envite.proa.entities.User;
 import de.envite.proa.repository.tables.UserTable;
 import de.envite.proa.usecases.authentication.AuthenticationRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDateTime;
 
@@ -64,6 +64,16 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		table.setFirstName(user.getFirstName());
 		table.setLastName(user.getLastName());
 		table.setPassword(user.getPassword());
+		switch (user.getRole()) {
+			case "Admin":
+				table.setRole(Role.Admin);
+				break;
+			case "User":
+				table.setRole(Role.User);
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown role: " + user.getRole());
+		}
 		return table;
 	}
 
@@ -76,6 +86,14 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		user.setPassword(table.getPassword());
 		user.setCreatedAt(table.getCreatedAt());
 		user.setModifiedAt(table.getModifiedAt());
+		switch (table.getRole()) {
+			case Admin:
+				user.setRole("Admin");
+				break;
+			case User:
+				user.setRole("User");
+				break;
+		}
 		return user;
 	}
 
@@ -88,5 +106,14 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		userTable.setFirstName(user.getFirstName() != null ? user.getFirstName() : userTable.getFirstName());
 		userTable.setLastName(user.getLastName( ) != null ? user.getLastName() : userTable.getLastName());
 		userTable.setPassword(user.getPassword() != null ? hashPassword(user.getPassword()) : userTable.getPassword());
+	}
+
+	@Override
+	public User findByEmail(String email) {
+		UserTable userTable = authenticationDao.findByEmail(email);
+		if (userTable == null) {
+			return null;
+		}
+		return map(authenticationDao.findByEmail(email));
 	}
 }

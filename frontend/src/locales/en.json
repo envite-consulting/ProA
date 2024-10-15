@@ -25,6 +25,7 @@
     "profileSuccessfullyEdited": "Profile successfully edited",
     "projects": "Projects",
     "resetPwInfo": "Please contact your administrator to reset your password.",
+    "role": "Role",
     "samePasswordError": "New password needs to be different from current password.",
     "signInFailed": "Sign in failed",
     "successfullyCreatedAccount": "Successfully created account",

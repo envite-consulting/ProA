@@ -22,4 +22,8 @@ public class AuthenticationUsecase {
 	public User patchUser(Long userId, User user) {
 		return repository.patchUser(userId, user);
 	}
+
+	public User findByEmail(String email) {
+		return repository.findByEmail(email);
+	}
 }

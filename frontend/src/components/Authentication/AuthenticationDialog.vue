@@ -3,8 +3,6 @@
     <ProfileDialog v-if="selectedDialog === SelectedDialog.PROFILE" :message="message" @showMessage="showMessage"/>
     <EditProfileDialog v-if="selectedDialog === SelectedDialog.EDIT_PROFILE" @showMessage="showMessage"
                        :message="message"/>
-    <SignIn v-if="selectedDialog === SelectedDialog.SIGN_IN" :message="message" @showMessage="showMessage"/>
-
     <CreateAccount v-if="selectedDialog === SelectedDialog.CREATE_ACCOUNT" :message="message"
                    @showMessage="showMessage"/>
     <ChangePassword v-if="selectedDialog === SelectedDialog.CHANGE_PW" @showMessage="showMessage" :message="message"/>
@@ -19,7 +17,6 @@
 import { defineComponent } from 'vue'
 import EditProfileDialog from "@/components/Authentication/EditProfileDialog.vue";
 import ProfileDialog from "@/components/Authentication/ProfileDialog.vue";
-import SignIn from "@/components/Authentication/SignIn.vue";
 import CreateAccount from "@/components/Authentication/CreateAccount.vue";
 import ChangePassword from "@/components/Authentication/ChangePassword.vue";
 import { useAppStore } from "@/store/app";
@@ -32,7 +29,7 @@ export interface Message {
 
 export default defineComponent({
   name: "AuthenticationDialog",
-  components: { ChangePassword, CreateAccount, SignIn, ProfileDialog, EditProfileDialog },
+  components: { ChangePassword, CreateAccount, ProfileDialog, EditProfileDialog },
 
   data() {
     return {

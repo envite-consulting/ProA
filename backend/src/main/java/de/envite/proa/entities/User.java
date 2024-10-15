@@ -15,4 +15,5 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private String token;
+    private String role;
 }

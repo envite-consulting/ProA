@@ -9,4 +9,6 @@ public interface AuthenticationRepository {
 	User register(User user);
 
 	User patchUser(Long userId, User user);
+
+	User findByEmail(String email);
 }

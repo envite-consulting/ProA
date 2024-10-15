@@ -118,8 +118,15 @@ export default defineComponent({
     operateConnectionSuccessMsg: "",
     operateClusterSuccessMsg: "",
     isValidating: false,
-    userId: useAppStore().getUser()?.id
+    userId: useAppStore().getUser()?.id,
+    isWebVersion: import.meta.env.VITE_DESKTOP_OR_WEB === "web"
   }),
+
+  computed: {
+    isUserLoggedIn() {
+      return this.appStore.getUser() !== null;
+    }
+  },
 
   mounted() {
     if (Object.keys(this.settings).length === 0) this.handleAfterToggle()
@@ -316,6 +323,9 @@ export default defineComponent({
       this.appStore.setOperateConnectionError("");
     },
     async fetchSettings() {
+      if (this.isWebVersion && !this.isUserLoggedIn) {
+        return;
+      }
       await axios.get(
         `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
         { headers: authHeader() }

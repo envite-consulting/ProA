@@ -19,14 +19,14 @@ export interface UserData {
   lastName: string,
   createdAt: string,
   modifiedAt: string,
-  token: string
+  token: string,
+  role: string
 }
 
 export enum SelectedDialog {
   NONE = -1,
   PROFILE = 0,
   EDIT_PROFILE = 1,
-  SIGN_IN = 2,
   CREATE_ACCOUNT = 3,
   CHANGE_PW = 4
 }

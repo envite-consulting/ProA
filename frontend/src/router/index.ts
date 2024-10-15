@@ -1,5 +1,6 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAppStore } from "@/store/app";
 
 const routes = [
   {
@@ -33,6 +34,11 @@ const routes = [
         path: 'ProcessMap',
         name: 'ProcessMap',
         component: () => import('@/views/ProcessMapView.vue'),
+      },
+      {
+        path: 'SignIn',
+        name: 'SignIn',
+        component: () => import('@/views/SignInView.vue'),
       }
     ]
   },
@@ -41,6 +47,22 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const store = useAppStore();
+  const isLoggedIn = store.getUser() != null;
+
+  if (to.name === 'SignIn') {
+    next();
+    return;
+  }
+
+  if (!isLoggedIn && to.name && routes[0].children.map(r => r.name).includes(to.name.toString())) {
+    next({ name: 'SignIn' });
+  } else {
+    next();
+  }
 });
 
 export default router
