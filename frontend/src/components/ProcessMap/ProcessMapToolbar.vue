@@ -102,7 +102,8 @@ export default defineComponent({
       hideConnectionLabels: false,
       hideIntermediateEvents: false,
       hideProcessesWithoutConnections: false,
-      hideStartEndEvents: false
+      hideStartEndEvents: false,
+      hideMessageFlows: false
     }
 
     let filterGraphInput = { ...defaultFilterGraphInput };
@@ -128,7 +129,8 @@ export default defineComponent({
         hideConnectionLabels: this.$t('processMap.connectionLabels'),
         hideIntermediateEvents: this.$t('processMap.intermediateEvents'),
         hideProcessesWithoutConnections: this.$t('processMap.processesWithoutConnections'),
-        hideStartEndEvents: this.$t('processMap.endToStartConnections')
+        hideStartEndEvents: this.$t('processMap.endToStartConnections'),
+        hideMessageFlows: this.$t('processMap.messageFlows')
       }
     },
     filtersCount(): number {

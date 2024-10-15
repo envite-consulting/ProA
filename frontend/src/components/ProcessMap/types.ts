@@ -58,6 +58,7 @@ export interface FilterGraphInput {
   hideIntermediateEvents: boolean;
   hideProcessesWithoutConnections: boolean;
   hideStartEndEvents: boolean;
+  hideMessageFlows: boolean;
 }
 
 export interface Process {

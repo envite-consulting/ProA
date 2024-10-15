@@ -118,6 +118,7 @@
     "hide": "Hide",
     "intermediateEvents": "Intermediate Events",
     "legend": "Legend",
+    "messageFlows": "Message Flows",
     "noInformationAvailable": "No information available",
     "process": "Process",
     "processesWithoutConnections": "Processes without Connections",

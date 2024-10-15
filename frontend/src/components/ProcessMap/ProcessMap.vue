@@ -493,7 +493,8 @@ export default defineComponent({
                   hideIntermediateEvents,
                   hideStartEndEvents,
                   hideProcessesWithoutConnections,
-                  hideConnectionLabels
+                  hideConnectionLabels,
+                  hideMessageFlows
                 }: FilterGraphInput) {
 
       if (!hideConnectionLabels) {
@@ -549,6 +550,8 @@ export default defineComponent({
           cellsToHide.push(link);
 
         } else if (hideStartEndEvents && sourcePort?.startsWith('end') && targetPort?.startsWith('start')) {
+          cellsToHide.push(link);
+        } else if (hideMessageFlows && link.get('isMessageFlow')) {
           cellsToHide.push(link);
         }
       }
