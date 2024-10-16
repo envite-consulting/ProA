@@ -58,6 +58,9 @@
           v-model="roleSelect"
           :label="$t('authentication.role')"
           :items="roleOptions"
+          item-title="name"
+          item-value="value"
+          required
           variant="outlined"
           class="my-2"
         ></v-select>
@@ -110,8 +113,14 @@ export default defineComponent({
       passwordRules: newPasswordRules,
       SelectedDialog: SelectedDialog,
       store: useAppStore(),
-      roleSelect: Role.USER,
-      roleOptions: Object.values(Role)
+      roleSelect: {
+        name: this.$t(`authentication.${Role.USER.toLowerCase()}`) as string,
+        value: Role.USER
+      } as { name: string, value: Role },
+      roleOptions: Object.values(Role).map(role => ({
+        name: this.$t(`authentication.${role.toLowerCase()}`) as string,
+        value: role
+      } as { name: string, value: Role })),
     }
   },
 

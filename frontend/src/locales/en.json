@@ -1,6 +1,7 @@
 {
   "authentication": {
     "accountCreationFailed": "Failed to create account",
+    "admin": "Admin",
     "alreadyAccountQuestion": "Already have an account?",
     "back": "Back",
     "changePassword": "Change Password",
@@ -29,6 +30,7 @@
     "samePasswordError": "New password needs to be different from current password.",
     "signInFailed": "Sign in failed",
     "successfullyCreatedAccount": "Successfully created account",
+    "user": "User",
     "version": "Version",
     "welcomeBack": "Welcome back!"
   },
@@ -72,6 +74,7 @@
     "c8Import": "C8 Import",
     "createAccount": "Create Account",
     "camundaCloudImport": "C8 Import",
+    "pageNotFound": "Page Not Found",
     "processList": "Process List",
     "processMap": "Process Map",
     "projectOverview": "Project Overview",

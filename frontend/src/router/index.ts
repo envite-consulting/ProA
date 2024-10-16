@@ -39,6 +39,11 @@ const routes = [
         path: 'SignIn',
         name: 'SignIn',
         component: () => import('@/views/SignInView.vue'),
+      },
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'PageNotFound',
+        component: () => import('@/views/PageNotFoundView.vue'),
       }
     ]
   },
@@ -52,13 +57,18 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const store = useAppStore();
   const isLoggedIn = store.getUser() != null;
+  const isWebVersion = import.meta.env.VITE_DESKTOP_OR_WEB === "web";
 
   if (to.name === 'SignIn') {
+    if (!isWebVersion) {
+      window.history.back();
+      return;
+    }
     next();
     return;
   }
 
-  if (!isLoggedIn && to.name && routes[0].children.map(r => r.name).includes(to.name.toString())) {
+  if (isWebVersion && !isLoggedIn) {
     next({ name: 'SignIn' });
   } else {
     next();
