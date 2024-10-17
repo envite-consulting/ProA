@@ -26,6 +26,11 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Create .env file
+        run: |
+          touch .env
+          echo "VITE_APP_MODE=${{ varss.VITE_APP_MODE }}" >> .env
+
       - name: Build with Maven
         run: mvn clean package
 
