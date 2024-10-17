@@ -28,8 +28,8 @@ jobs:
 
       - name: Create .env file
         run: |
-          touch .env
-          echo "VITE_APP_MODE=${{ vars.VITE_APP_MODE }}" >> .env
+          touch frontend/.env
+          echo "VITE_APP_MODE=${{ vars.VITE_APP_MODE }}" >> frontend/.env
 
       - name: Build with Maven
         run: mvn clean package
