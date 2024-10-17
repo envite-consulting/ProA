@@ -37,7 +37,8 @@ nb-configuration.xml
 *.rej
 
 # Local environment
-.env
+.gh-secrets
+.gh-vars
 
 # Plugin directory
 /.quarkus/cli/plugins/
