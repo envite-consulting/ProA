@@ -15,7 +15,7 @@ if (!fs.existsSync(envPath)) {
   process.exit(1);
 }
 
-const propFiles = ["application.properties", "application-dev.properties", "application-test.properties"]
+const propFiles = ["application.properties", "application-dev.properties"]
 const propPaths = propFiles.map(file => path.join(__dirname, "..", "backend", "src", "main", "resources", file));
 
 propPaths.forEach(propPath => {
