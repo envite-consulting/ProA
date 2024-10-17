@@ -189,7 +189,7 @@ export default defineComponent({
       newVersionName: "" as string,
       newVersionInitialProject: {} as Project,
       showLoggedInBanner: false as boolean,
-      webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB != 'desktop') as boolean,
+      webVersion: (import.meta.env.VITE_APP_MODE === 'web') as boolean,
       user: store.getUser() as UserData
     }
   },

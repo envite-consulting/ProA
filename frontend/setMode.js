@@ -15,20 +15,18 @@ if (!fs.existsSync(envPath)) {
   process.exit(1);
 }
 
-const propFiles = ["application.properties", "application-dev.properties"]
-const propPaths = propFiles.map(file => path.join(__dirname, "..", "backend", "src", "main", "resources", file));
+const propFile = "application-dev.properties";
+const propPath = path.join(__dirname, "..", "backend", "src", "main", "resources", propFile);
 
-propPaths.forEach(propPath => {
-  if (!fs.existsSync(propPath)) {
-    console.error(`${propPath} file not found!`);
-    process.exit(1);
-  }
-});
+if (!fs.existsSync(propPath)) {
+  console.error(`${propPath} file not found!`);
+  process.exit(1);
+}
 
 let envContent = fs.readFileSync(envPath, "utf8");
 
-const envSearchValue = /VITE_DESKTOP_OR_WEB=.*/g;
-const envReplaceValue = `VITE_DESKTOP_OR_WEB="${mode}"`;
+const envSearchValue = /VITE_APP_MODE=.*/g;
+const envReplaceValue = `VITE_APP_MODE="${mode}"`;
 
 const updatedContent = envContent.match(envSearchValue)
   ? envContent.replace(envSearchValue, envReplaceValue)
@@ -39,13 +37,11 @@ fs.writeFileSync(envPath, updatedContent);
 const propSearchValue = /app.mode=.*/g;
 const propReplaceValue = `app.mode=${mode}`;
 
-propPaths.forEach(propPath => {
-  const propContent = fs.readFileSync(propPath, "utf8");
-  const updatedContent = propContent.match(propSearchValue)
-    ? propContent.replace(propSearchValue, propReplaceValue)
-    : propContent.trim() + `\n\n${propReplaceValue}\n`;
+const propContent = fs.readFileSync(propPath, "utf8");
+const updatedPropContent = propContent.match(propSearchValue)
+  ? propContent.replace(propSearchValue, propReplaceValue)
+  : propContent.trim() + `\n\n${propReplaceValue}\n`;
 
-  fs.writeFileSync(propPath, updatedContent);
-});
+fs.writeFileSync(propPath, updatedPropContent);
 
-console.log(`Successfully set mode to ${mode}`);
+console.log(`Successfully set development mode to ${mode}`);

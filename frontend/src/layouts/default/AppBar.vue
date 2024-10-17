@@ -139,7 +139,7 @@ export default defineComponent({
       drawer: false as boolean,
       group: null,
       selectedLanguage: store.getSelectedLanguage() as LanguageCode,
-      webVersion: (import.meta.env.VITE_DESKTOP_OR_WEB != 'desktop') as boolean,
+      webVersion: (import.meta.env.VITE_APP_MODE === 'web') as boolean,
       showEditDialog: false as boolean,
       showProfileDialog: false as boolean,
       showProfileSuccessMessage: false as boolean,

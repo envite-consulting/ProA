@@ -57,7 +57,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const store = useAppStore();
   const isLoggedIn = store.getUser() != null;
-  const isWebVersion = import.meta.env.VITE_DESKTOP_OR_WEB === "web";
+  const isWebVersion = import.meta.env.VITE_APP_MODE === "web";
 
   if (to.name === 'SignIn') {
     if (!isWebVersion) {

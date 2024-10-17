@@ -201,7 +201,7 @@ export default defineComponent({
       return this.store.getUser() != null;
     },
     settingsUrl(): string {
-      if (import.meta.env.VITE_DESKTOP_OR_WEB == "web") {
+      if (import.meta.env.VITE_APP_MODE === "web") {
         return `/api/settings/${this.store.getUser()?.id}`
       }
       return this.settingsUrl

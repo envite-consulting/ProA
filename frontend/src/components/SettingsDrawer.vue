@@ -119,7 +119,7 @@ export default defineComponent({
     operateClusterSuccessMsg: "",
     isValidating: false,
     userId: useAppStore().getUser()?.id,
-    isWebVersion: import.meta.env.VITE_DESKTOP_OR_WEB === "web"
+    isWebVersion: import.meta.env.VITE_APP_MODE === "web"
   }),
 
   computed: {
