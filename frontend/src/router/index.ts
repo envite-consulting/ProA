@@ -60,7 +60,7 @@ router.beforeEach((to, from, next) => {
   const isWebVersion = import.meta.env.VITE_APP_MODE === "web";
 
   if (to.name === 'SignIn') {
-    if (!isWebVersion) {
+    if (!isWebVersion || isLoggedIn) {
       window.history.back();
       return;
     }
