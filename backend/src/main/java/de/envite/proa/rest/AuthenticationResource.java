@@ -17,7 +17,7 @@ import org.jboss.resteasy.reactive.RestPath;
 
 import java.net.URI;
 
-@Path("/authentication")
+@Path("/api/authentication")
 public class AuthenticationResource {
 
 	@Inject

@@ -13,7 +13,7 @@ import de.envite.proa.usecases.project.ProjectUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
-@Path("")
+@Path("/api")
 public class ProjectResource {
 
     @Inject

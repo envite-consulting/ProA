@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
-@Path("")
+@Path("/api")
 public class ProcessMapResource {
 
 	@Inject

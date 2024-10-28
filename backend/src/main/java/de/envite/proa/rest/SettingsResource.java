@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.resteasy.reactive.RestPath;
 
-@Path("/settings")
+@Path("/api/settings")
 public class SettingsResource {
 
 	@Inject
