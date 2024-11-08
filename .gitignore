@@ -37,6 +37,8 @@ nb-configuration.xml
 *.rej
 
 # Local environment
+.env
+**/.env
 .gh-secrets
 .gh-vars
 
