@@ -36,7 +36,7 @@ public class UserInitializer {
 				user.setFirstName(firstName.substring(0, 1).toUpperCase() + firstName.substring(1));
 				user.setLastName(lastName.substring(0, 1).toUpperCase() + lastName.substring(1));
 
-				String password = dotenv.get(firstName.toUpperCase() + "_PW");
+				String password = dotenv.get(firstName.toUpperCase() + "_PW", null);
 				if (password == null) {
 					return;
 				}
