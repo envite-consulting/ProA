@@ -2,6 +2,7 @@ package de.envite.proa.startup;
 
 import de.envite.proa.entities.User;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
+import io.github.cdimascio.dotenv.DotenvException;
 import io.quarkus.runtime.Startup;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -23,7 +24,12 @@ public class UserInitializer {
 
 	@PostConstruct
 	public void init() {
-		Dotenv dotenv = Dotenv.load();
+		Dotenv dotenv;
+		try {
+			dotenv = Dotenv.load();
+		} catch (DotenvException e) {
+			return;
+		}
 
 		admins.forEach(email -> {
 			if (usecase.findByEmail(email) == null) {
