@@ -7,32 +7,43 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.List;
+
+import io.github.cdimascio.dotenv.Dotenv;
+
 @Startup
 @ApplicationScoped
 public class UserInitializer {
 
-    @Inject
-    AuthenticationUsecase usecase;
+	@Inject
+	AuthenticationUsecase usecase;
 
-    @PostConstruct
-    public void init() {
-        if (usecase.findByEmail("philipp.hehnle@envite.de") == null) {
-            User philipp = new User();
-            philipp.setEmail("philipp.hehnle@envite.de");
-            philipp.setFirstName("Philipp");
-            philipp.setLastName("Hehnle");
-            philipp.setPassword("philipp_password");
-            philipp.setRole("Admin");
-            usecase.register(philipp);
-        }
-        if (usecase.findByEmail("jonathan.wagner@envite.de") == null) {
-            User jonathan = new User();
-            jonathan.setEmail("jonathan.wagner@envite.de");
-            jonathan.setFirstName("Jonathan");
-            jonathan.setLastName("Wagner");
-            jonathan.setPassword("jonathan_password");
-            jonathan.setRole("Admin");
-            usecase.register(jonathan);
-        }
-    }
+	private final List<String> admins = List.of("philipp.hehnle@envite.de", "jonathan.wagner@envite.de",
+			"roberto.cortini@envite.de", "fabian.naether@envite.de");
+
+	@PostConstruct
+	public void init() {
+		Dotenv dotenv = Dotenv.load();
+
+		admins.forEach(email -> {
+			if (usecase.findByEmail(email) == null) {
+				User user = new User();
+				user.setEmail(email);
+
+				String[] name = email.split("@")[0].split("\\.");
+				String firstName = name[0];
+				String lastName = name[1];
+				user.setFirstName(firstName.substring(0, 1).toUpperCase() + firstName.substring(1));
+				user.setLastName(lastName.substring(0, 1).toUpperCase() + lastName.substring(1));
+
+				String password = dotenv.get(firstName.toUpperCase() + "_PW");
+				if (password == null) {
+					return;
+				}
+				user.setPassword(password);
+				user.setRole("Admin");
+				usecase.register(user);
+			}
+		});
+	}
 }
