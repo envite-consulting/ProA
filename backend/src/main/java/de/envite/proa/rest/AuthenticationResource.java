@@ -1,6 +1,9 @@
 package de.envite.proa.rest;
 
 import de.envite.proa.entities.User;
+import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
+import de.envite.proa.exceptions.EmailNotFoundException;
+import de.envite.proa.exceptions.InvalidPasswordException;
 import de.envite.proa.service.TokenService;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
 import jakarta.annotation.security.RolesAllowed;
@@ -35,9 +38,14 @@ public class AuthenticationResource {
 	@POST
 	@Path("/login")
 	public Response login(User user) {
-		User loggedInUser = usecase.login(user);
-		if (loggedInUser == null) {
+		User loggedInUser;
+
+		try {
+			loggedInUser = usecase.login(user);
+		} catch (EmailNotFoundException | InvalidPasswordException e) {
 			return Response.status(Response.Status.UNAUTHORIZED).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 
 		String token = tokenService.generateToken(loggedInUser, loggedInUser.getRole());
@@ -49,9 +57,14 @@ public class AuthenticationResource {
 	@Path("/register")
 	@RolesAllowed({"Admin"})
 	public Response register(User user) {
-		User registeredUser = usecase.register(user);
-		if (registeredUser == null) {
+		User registeredUser;
+
+		try {
+			registeredUser = usecase.register(user);
+		} catch (EmailAlreadyRegisteredException e) {
 			return Response.status(Response.Status.CONFLICT).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 
 		URI location = UriBuilder.fromResource(AuthenticationResource.class).path("/{id}")
