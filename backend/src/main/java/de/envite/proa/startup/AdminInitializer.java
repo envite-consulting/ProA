@@ -2,6 +2,7 @@ package de.envite.proa.startup;
 
 import de.envite.proa.entities.User;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
+import de.envite.proa.usecases.user.UserUsecase;
 import io.quarkus.runtime.Startup;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,7 +15,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class AdminInitializer {
 
 	@Inject
-	AuthenticationUsecase usecase;
+	UserUsecase userUsecase;
+
+	@Inject
+	AuthenticationUsecase authenticationUsecase;
 
 	@Inject
 	@ConfigProperty(name = "admin.email")
@@ -26,13 +30,13 @@ public class AdminInitializer {
 
 	@PostConstruct
 	public void init() {
-		if (usecase.findByEmail(adminEmail) != null) {
+		if (userUsecase.findByEmail(adminEmail) != null) {
 			return;
 		}
 		User user = new User();
 		user.setEmail(adminEmail);
 		user.setPassword(adminPassword);
 		user.setRole("Admin");
-		usecase.register(user);
+		authenticationUsecase.register(user);
 	}
 }

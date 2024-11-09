@@ -111,10 +111,9 @@ export default defineComponent({
         this.openDialog(SelectedDialog.PROFILE)
         return;
       }
-      const id = this.newUserData.id;
       try {
         await axios.patch(
-          `/api/authentication/user/${id}`,
+          '/api/user',
           this.newUserData,
           { headers: { ...authHeader(), 'Content-Type': 'application/json' } }
         );

@@ -110,7 +110,7 @@ export default defineComponent({
       }
 
       const currPassword = this.currentPassword;
-      const { id, email } = this.user;
+      const { email } = this.user;
 
       const isPasswordValid = await this.testSignIn(email, currPassword);
       if (!isPasswordValid) {
@@ -133,7 +133,7 @@ export default defineComponent({
 
       try {
         await axios.patch(
-          `/api/authentication/user/${id}`, { password: this.newPassword },
+          '/api/user', { password: this.newPassword },
           { headers: { ...authHeader(), 'Content-Type': 'application/json' } }
         );
 
