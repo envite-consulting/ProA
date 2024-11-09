@@ -1,15 +1,8 @@
-import axios from 'axios';
-import { useAppStore } from "@/store/app";
-import { authHeader } from "@/components/Authentication/authHeader";
-
-const webVersion = import.meta.env.VITE_APP_MODE === 'web';
-const userId = useAppStore().getUser()?.id;
+import axios from "axios";
+import { authHeader } from "./Authentication/authHeader";
 
 const getProject = (projectId: number) => {
-  if (webVersion) {
-    return axios.get(`/api/project/${userId}/${projectId}`, { headers: authHeader() })
-  }
-  return axios.get(`/api/project/project-id/${projectId}`)
+    return axios.get(`/api/project/${projectId}`, { headers: authHeader() })
 }
 
 export default getProject;

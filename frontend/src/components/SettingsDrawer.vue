@@ -155,7 +155,7 @@ export default defineComponent({
     async saveSettings() {
       const doSettingsExist = async () => {
         const result = await axios.get(
-          `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+          '/api/settings',
           { headers: authHeader() }
         );
         return !!result.data;
@@ -165,7 +165,7 @@ export default defineComponent({
 
       if (await doSettingsExist()) {
         await axios.patch(
-          `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+          '/api/settings',
           this.settingsToBeSaved,
           {
             headers: {
@@ -175,7 +175,7 @@ export default defineComponent({
           });
       } else {
         await axios.post(
-          `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+          '/api/settings',
           this.settingsToBeSaved,
           {
             headers: {
@@ -327,7 +327,7 @@ export default defineComponent({
         return;
       }
       await axios.get(
-        `/api/settings${this.userId ? ("/" + this.userId) : ""}`,
+        '/api/settings',
         { headers: authHeader() }
       ).then(result => {
         this.settings = result.data || {} as Settings;

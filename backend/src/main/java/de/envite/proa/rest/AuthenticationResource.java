@@ -56,8 +56,7 @@ public class AuthenticationResource {
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 
-		URI location = UriBuilder.fromResource(AuthenticationResource.class).path("/{id}")
-				.resolveTemplate("id", registeredUser.getId()).build();
+		URI location = UriBuilder.fromResource(UserResource.class).build();
 
 		return Response.created(location).entity(registeredUser).build();
 	}

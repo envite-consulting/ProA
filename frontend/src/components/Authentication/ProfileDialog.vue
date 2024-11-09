@@ -152,7 +152,7 @@ export default defineComponent({
       this.$router.push("/ProcessList").then(() => window.location.reload());
     },
     fetchProjects() {
-      axios.get(`/api/project/${this.userData.id}`, { headers: authHeader() })
+      axios.get('/api/project', { headers: authHeader() })
         .then((result: { data: Project[] }) => {
           const sortProjectsByActiveFirstThenAlphabetically = (project1: Project, project2: Project): number => {
             if (project1.id === this.store.selectedProjectId) return -1;

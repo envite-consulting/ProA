@@ -281,7 +281,7 @@ export default defineComponent({
       }
 
       if (this.webVersion && this.isUserLoggedIn) {
-        await axios.get(`/api/project/${this.user.id}`, { headers: authHeader() })
+        await axios.get('/api/project', { headers: authHeader() })
           .then((result: { data: Project[] }) => {
             const sortProjectsByActiveFirst = (project: Project): number => {
               return project.id == this.store.selectedProjectId ? -1 : 0;
@@ -329,7 +329,7 @@ export default defineComponent({
       formData.append("name", projectName);
       formData.append("version", projectVersion);
 
-      await axios.post(`/api/project${this.user?.id ? ("/" + this.user.id) : ""}`, formData, { headers: authHeader() })
+      await axios.post('/api/project', formData, { headers: authHeader() })
         .then(result => {
           this.projectDialog = false;
           this.showNewVersionDialog = false;

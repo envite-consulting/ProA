@@ -199,12 +199,6 @@ export default defineComponent({
   computed: {
     isUserLoggedIn(): boolean {
       return this.store.getUser() != null;
-    },
-    settingsUrl(): string {
-      if (import.meta.env.VITE_APP_MODE === "web") {
-        return `/api/settings/${this.store.getUser()?.id}`
-      }
-      return this.settingsUrl
     }
   },
 
@@ -247,7 +241,7 @@ export default defineComponent({
         this.token = result.data;
         this.tokenError = false;
         this.loadingDialog = false;
-      }).catch(error => {
+      }).catch(() => {
         this.tokenError = true;
         this.loadingDialog = false;
       })
@@ -274,7 +268,7 @@ export default defineComponent({
           }));
         this.camundaCloudDialog = false;
         this.loadingDialog = false;
-      }).catch(error => {
+      }).catch(() => {
         this.tokenError = true;
         this.token = null;
         this.loadingDialog = false;
@@ -301,7 +295,7 @@ export default defineComponent({
     },
     async fetchSettings() {
       try {
-        await axios.get(this.settingsUrl, { headers: authHeader() }).then(result => {
+        await axios.get('/api/settings', { headers: authHeader() }).then(result => {
           this.settings = result.data;
         });
       } catch (error) {
@@ -316,7 +310,7 @@ export default defineComponent({
     async saveSettings() {
       const doSettingsExist = async () => {
         try {
-          const result = await axios.get(this.settingsUrl, { headers: authHeader() });
+          const result = await axios.get('api/settings', { headers: authHeader() });
           return !!result?.data;
         } catch (error) {
           return false;
@@ -324,14 +318,14 @@ export default defineComponent({
       }
 
       if (await doSettingsExist()) {
-        await axios.patch(this.settingsUrl, this.settings, {
+        await axios.patch('api/settings', this.settings, {
           headers: {
             ...authHeader(),
             'Content-Type': 'application/json'
           }
         });
       } else {
-        await axios.post(this.settingsUrl, this.settings, {
+        await axios.post('api/settings', this.settings, {
           headers: {
             ...authHeader(),
             'Content-Type': 'application/json'
