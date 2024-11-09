@@ -55,10 +55,10 @@
           :rules="passwordRules"
         ></v-text-field>
         <v-select
-          v-model="roleSelect"
+          v-model="selectedRole"
           :label="$t('authentication.role')"
-          :items="roleOptions"
-          item-title="name"
+          :items="localizedRoleOptions"
+          item-title="label"
           item-value="value"
           required
           variant="outlined"
@@ -113,14 +113,17 @@ export default defineComponent({
       passwordRules: newPasswordRules,
       SelectedDialog: SelectedDialog,
       store: useAppStore(),
-      roleSelect: {
-        name: this.$t(`authentication.${Role.USER.toLowerCase()}`) as string,
-        value: Role.USER
-      } as { name: string, value: Role },
-      roleOptions: Object.values(Role).map(role => ({
-        name: this.$t(`authentication.${role.toLowerCase()}`) as string,
-        value: role
-      } as { name: string, value: Role })),
+      selectedRole: Role.USER
+    }
+  },
+
+  computed: {
+    localizedRoleOptions() {
+      const roles = Object.values(Role);
+      return roles.map(role => ({
+        value: role,
+        label: this.$t(`authentication.${role.toLowerCase()}`)
+      }));
     }
   },
 
@@ -140,7 +143,7 @@ export default defineComponent({
           password: this.password,
           firstName: this.firstName,
           lastName: this.lastName,
-          role: this.roleSelect
+          role: this.selectedRole
         }, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
 
         this.$emit('showMessage', {
