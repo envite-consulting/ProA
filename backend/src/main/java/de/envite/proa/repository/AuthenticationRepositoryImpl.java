@@ -17,17 +17,19 @@ import java.time.LocalDateTime;
 public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 
 	private final AuthenticationDao authenticationDao;
+	private final UserDao userDao;
 
 	@Inject
-	public AuthenticationRepositoryImpl(AuthenticationDao authenticationDao) {
+	public AuthenticationRepositoryImpl(AuthenticationDao authenticationDao, UserDao userDao) {
 		this.authenticationDao = authenticationDao;
+		this.userDao = userDao;
 	}
 
 	@Override
 	public User login(User user) {
 		String email = user.getEmail();
 
-		UserTable userTable = authenticationDao.findByEmail(email);
+		UserTable userTable = userDao.findByEmail(email);
 		if (userTable == null) throw new EmailNotFoundException(email);
 
 		boolean doesPasswordMatch = BcryptUtil.matches(user.getPassword(), userTable.getPassword());
@@ -40,7 +42,7 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 	public User register(User user) {
 		String email = user.getEmail();
 
-		boolean emailAlreadyRegistered = authenticationDao.findByEmail(email) != null;
+		boolean emailAlreadyRegistered = userDao.findByEmail(email) != null;
 		if (emailAlreadyRegistered) throw new EmailAlreadyRegisteredException(email);
 
 		user.setPassword(hashPassword(user.getPassword()));
@@ -53,10 +55,10 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 
 	@Override
 	public User patchUser(Long userId, User user) {
-		UserTable userTable = authenticationDao.findById(userId);
+		UserTable userTable = userDao.findById(userId);
 		mergeIntoUserTableIfNotNull(userTable, user);
 		userTable.setModifiedAt(LocalDateTime.now());
-		return map(authenticationDao.patchUser(userTable));
+		return map(userDao.patchUser(userTable));
 	}
 
 	private UserTable map(User user) {
@@ -111,10 +113,10 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 
 	@Override
 	public User findByEmail(String email) {
-		UserTable userTable = authenticationDao.findByEmail(email);
+		UserTable userTable = userDao.findByEmail(email);
 		if (userTable == null) {
 			return null;
 		}
-		return map(authenticationDao.findByEmail(email));
+		return map(userDao.findByEmail(email));
 	}
 }

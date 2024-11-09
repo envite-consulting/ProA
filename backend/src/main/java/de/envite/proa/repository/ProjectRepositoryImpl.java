@@ -19,7 +19,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	private ProjectDao projectDao;
 
 	@Inject
-	private AuthenticationDao authenticationDao;
+	private UserDao userDao;
 
 	@Inject
 	public ProjectRepositoryImpl(ProjectDao dao) {
@@ -38,7 +38,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	@Override
 	public Project createProject(Long userId, String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
-		UserTable user = authenticationDao.findById(userId);
+		UserTable user = userDao.findById(userId);
 		table.setUser(user);
 		projectDao.persist(table);
 		return map(table);
@@ -66,7 +66,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	@Transactional
 	@Override
 	public List<Project> getProjects(Long userId) {
-		UserTable user = authenticationDao.findById(userId);
+		UserTable user =userDao.findById(userId);
 		return projectDao//
 				.getProjectsForUser(user)//
 				.stream()//
@@ -81,7 +81,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 
 	@Override
 	public Project getProject(Long userId, Long projectId) {
-		UserTable user = authenticationDao.findById(userId);
+		UserTable user = userDao.findById(userId);
 		return map(projectDao.findByUserAndId(user, projectId));
 	}
 
