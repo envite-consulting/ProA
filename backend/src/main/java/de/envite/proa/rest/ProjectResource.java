@@ -71,4 +71,12 @@ public class ProjectResource {
         }
         return usecase.getProject(projectId);
     }
+
+    @DELETE
+    @Path("/project/{projectId}")
+    @RolesAllowedIfWebVersion({"User", "Admin"})
+    @Produces(MediaType.APPLICATION_JSON)
+    public void deleteProject(@RestPath Long projectId) {
+        usecase.deleteProject(projectId);
+    }
 }

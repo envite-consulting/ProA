@@ -17,7 +17,25 @@
       </template>
     </v-banner>
 
-    <v-card v-for="(group, index) in projectGroups" :key="index" width="300px" height="252px"
+    <v-snackbar
+      v-model="snackbar.visible"
+      :color="snackbar.type === 'success' ? '#43a047' : '#e53935'"
+      timeout="3000"
+      left
+      class="custom-snackbar"
+    >
+      <v-icon left large class="snackbar-icon">
+        {{ snackbar.type === "success" ? "mdi-emoticon-happy-outline" : "mdi-emoticon-sad-outline" }}
+      </v-icon>
+      <span class="snackbar-text">{{ snackbar.message }}</span>
+      <template v-slot:actions>
+        <v-btn icon @click="snackbar.visible = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+
+    <v-card v-for="(group, index) in projectGroups" :key="index" width="310px" height="310px"
             style="float: left; margin: 16px"
             :class="{ 'active-card': activeProjectByGroup[group.name]?.id === store.selectedProjectId }">
 
@@ -43,22 +61,42 @@
           <v-icon icon="mdi-plus" size="large"></v-icon>
           {{ $t('projectOverview.newVersion') }}
         </v-btn>
-        <div class="text-dots">{{ $t('general.createdOn') }}: {{
-            formatDate(activeProjectByGroup[group.name].createdAt)
-          }}
+        <div class="text-dots">{{ $t('general.createdOn') }}: 
+          {{ formatDate(activeProjectByGroup[group.name]?.createdAt || "") }}
         </div>
-        <div class="text-dots">{{ $t('general.lastModifiedOn') }}: {{
-            formatDate(activeProjectByGroup[group.name].modifiedAt)
-          }}
+        <div class="text-dots">{{ $t('general.lastModifiedOn') }}: 
+          {{ formatDate(activeProjectByGroup[group.name]?.modifiedAt || "") }}
         </div>
       </v-card-text>
       <v-divider></v-divider>
       <v-list-item append-icon="mdi-chevron-right" lines="two" :subtitle="$t('projectOverview.open')" link
-                   @click="() => openProject(activeProjectByGroup[group.name].id)"></v-list-item>
+                   @click="() => openProject(activeProjectByGroup[group.name]!.id)"></v-list-item>
+      <v-card-actions class="justify-end">
+        <v-btn icon color="grey" @click="openDeleteDialog(activeProjectByGroup[group.name]!)">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+      </v-card-actions>
     </v-card>
 
-    <v-card width="300px" height="252px" style="float: left; margin: 16px" class="d-flex flex-column">
+    <v-dialog v-model="confirmDeleteDialog" max-width="400">
+      <v-card prepend-icon="mdi-delete" :title="$t('projectOverview.confirmDeletion')">
+        <template v-slot:text>
+          {{ $t("projectOverview.confirmDeletionText1")
+          }}<strong>{{ projectToBeDeleted?.name }}</strong
+          >{{ $t("projectOverview.confirmDeletionText2")
+          }}<strong>{{ projectToBeDeleted?.version }}</strong
+          >{{ $t("projectOverview.confirmDeletionText3") }}
+        </template>
+        <template v-slot:actions>
+          <div class="ms-auto">
+            <v-btn :text="$t('general.cancel')" @click="confirmDeleteDialog = false"></v-btn>
+            <v-btn :text="$t('projectOverview.confirm')" @click="confirmDelete"></v-btn>
+          </div>
+        </template>
+      </v-card>
+    </v-dialog>
 
+    <v-card width="310px" height="310px" style="float: left; margin: 16px" class="d-flex flex-column">
       <v-card-title>
         <div style="text-align: center; margin-top: 25px">
           <v-icon icon="mdi-plus" size="x-large">
@@ -151,6 +189,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.custom-snackbar {
+  max-width: 400px;
+  font-size: 1.2rem;
+  padding: 16px;
+  align-items: center;
+}
+
+.snackbar-icon {
+  margin-right: 10px;
+  font-size: 1.5rem;
+  color: white;
+}
 </style>
 <script lang="ts">
 import { defineComponent } from 'vue'
@@ -173,7 +224,7 @@ interface ProjectGroup {
 }
 
 export interface ActiveProjectByGroup {
-  [key: string]: Project
+  [key: string]: Project | null
 }
 
 export default defineComponent({
@@ -183,6 +234,13 @@ export default defineComponent({
       store: store,
       projects: [] as Project[],
       projectDialog: false as boolean,
+      confirmDeleteDialog: false,
+      projectToBeDeleted: null as Project | null,
+      snackbar: {
+        visible: false,
+        message: "",
+        type: "" as "error" | "success",
+      },
       showNewVersionDialog: false as boolean,
       newProjectName: "" as string,
       activeProjectByGroup: {} as ActiveProjectByGroup,
@@ -239,6 +297,17 @@ export default defineComponent({
       if (!newValue) {
         window.location.reload();
       }
+    },
+    projectGroups: {
+      handler(newProjectGroups) {
+        newProjectGroups.forEach((group: ProjectGroup) => {
+          const activeProject = this.activeProjectByGroup[group.name];
+
+          if (activeProject && !group.projects.some((p) => p.id === activeProject.id)) {
+            this.activeProjectByGroup[group.name] = group.projects.length > 0 ? group.projects[0] : null;
+          }
+        })
+      }
     }
   },
 
@@ -257,7 +326,9 @@ export default defineComponent({
       this.newVersionName = "";
       this.newProjectName = projectGroup.name;
       this.showNewVersionDialog = true;
-      this.newVersionInitialProject = this.activeProjectByGroup[projectGroup.name];
+      if (this.activeProjectByGroup[projectGroup.name]) {
+        this.newVersionInitialProject;
+      }
     },
     handleOpenNewProjectDialog() {
       this.openNewProjectDialog();
@@ -295,7 +366,7 @@ export default defineComponent({
         return;
       }
 
-      axios.get("/api/project", { headers: authHeader() })
+      axios.get('/api/project', { headers: authHeader() })
         .then((result: { data: Project[] }) => {
           const sortProjectsByActiveFirst = (project: Project): number => {
             return project.id == this.store.selectedProjectId ? -1 : 0;
@@ -328,14 +399,42 @@ export default defineComponent({
       let formData = new FormData();
       formData.append("name", projectName);
       formData.append("version", projectVersion);
+      
+      try {
+        const result = await axios.post('api/project', formData, { headers: authHeader() });
 
-      await axios.post('/api/project', formData, { headers: authHeader() })
-        .then(result => {
-          this.projectDialog = false;
-          this.showNewVersionDialog = false;
-          this.setActiveProject(result.data.name, result.data.id);
-          this.projects.push(result.data);
-        });
+        this.projectDialog = false;
+        this.showNewVersionDialog = false;
+        this.setActiveProject(result.data.name, result.data.id);
+        this.projects.push(result.data);
+
+        this.showSnackbar(this.$t("projectOverview.projectSuccessfullyCreated"), "success");
+      } catch (error) {
+        this.showSnackbar(this.$t("projectOverview.errorMessage"), "error");
+      }
+    },
+    openDeleteDialog(project: Project) {
+      this.projectToBeDeleted = project;
+      this.confirmDeleteDialog = true;
+    },
+    async confirmDelete() {
+      if (this.projectToBeDeleted) {
+        try {
+          await this.deleteProject(this.projectToBeDeleted.id);
+          
+          this.confirmDeleteDialog = false;
+          this.projectToBeDeleted = null;
+          
+          this.showSnackbar(this.$t("projectOverview.projectSuccessfullyDeleted"), "success");
+        } catch (error) {
+          this.showSnackbar(this.$t("projectOverview.errorMessage"), "error");
+        }
+      }
+    },
+    async deleteProject(projectId: number) {
+      await axios.delete(`/api/project/${projectId}`, { headers: authHeader() });
+      
+      this.fetchProjects();
     },
     openProject(id: number) {
       this.store.setSelectedProjectId(id);
@@ -344,6 +443,11 @@ export default defineComponent({
     closeNewProjectOrVersionDialog() {
       this.projectDialog = false;
       this.showNewVersionDialog = false;
+    },
+    showSnackbar(message: string, type: "error" | "success") {
+      this.snackbar.visible = true;
+      this.snackbar.message = message;
+      this.snackbar.type = type;
     }
   }
 });

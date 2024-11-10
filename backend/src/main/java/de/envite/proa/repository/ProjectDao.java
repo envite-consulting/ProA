@@ -52,4 +52,10 @@ public class ProjectDao {
 				.setParameter("id", id)//
 				.getSingleResult();
 	}
+
+	@Transactional
+	public void deleteProject(Long id) {
+		ProjectTable table = em.find(ProjectTable.class, id);
+		em.remove(table);
+	}
 }

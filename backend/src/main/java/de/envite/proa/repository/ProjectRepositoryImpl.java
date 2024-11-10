@@ -85,6 +85,11 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return map(projectDao.findByUserAndId(user, projectId));
 	}
 
+	@Override
+	public void deleteProject(Long projectId) {
+		projectDao.deleteProject(projectId);
+	}
+
 	private Project map(ProjectTable table) {
 
 		Project project = new Project();

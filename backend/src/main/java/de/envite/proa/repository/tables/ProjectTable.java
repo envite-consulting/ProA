@@ -1,11 +1,9 @@
 package de.envite.proa.repository.tables;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -23,4 +21,7 @@ public class ProjectTable {
 
 	@ManyToOne
 	private UserTable user;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<ProcessModelTable> processModels;
 }
