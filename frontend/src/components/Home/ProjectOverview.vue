@@ -339,8 +339,12 @@ export default defineComponent({
       this.projectDialog = true;
     },
     setActiveProject(groupName: string, projectId: number) {
-      this.activeProjectByGroup[groupName] = this.projects.find(project => project.id === projectId)!;
-      this.store.setActiveProjectForGroup(groupName, this.activeProjectByGroup[groupName]);
+      const project = this.projects.find(project => project.id === projectId);
+
+      if (project) {
+        this.activeProjectByGroup[groupName] = project;
+        this.store.setActiveProjectForGroup(groupName, project);
+      }
     },
     formatDate(dateString: string) {
       const locales = useAppStore().getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';

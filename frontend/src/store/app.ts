@@ -64,7 +64,7 @@ export const useAppStore = defineStore('app', {
     setActiveProjectForGroup(projectGroupName: string, project: Project) {
       this.activeProjectByGroup[projectGroupName] = project;
     },
-    getActiveProjectForGroup(projectGroupName: string): Project {
+    getActiveProjectForGroup(projectGroupName: string): Project | null {
       return this.activeProjectByGroup[projectGroupName];
     },
     setGraphForProject(id: number, graph: string) {
