@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Set paths for the private and public key files
-PRIVATE_KEY_PATH="src/main/resources/privateKey.pem"
-PUBLIC_KEY_PATH="src/main/resources/publicKey.pem"
+PRIVATE_KEY_PATH="backend/src/main/resources/privateKey.pem"
+PUBLIC_KEY_PATH="backend/src/main/resources/publicKey.pem"
 
 # Check if the private and public key files exist, and generate if they do not
 if [[ ! -f "$PRIVATE_KEY_PATH" ]] || [[ ! -f "$PUBLIC_KEY_PATH" ]]; then
