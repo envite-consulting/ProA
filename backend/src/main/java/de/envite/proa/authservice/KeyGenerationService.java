@@ -1,4 +1,4 @@
-package de.envite.proa.service;
+package de.envite.proa.authservice;
 
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;

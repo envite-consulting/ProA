@@ -5,7 +5,7 @@ import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.exceptions.EmailNotFoundException;
 import de.envite.proa.exceptions.InvalidPasswordException;
 import de.envite.proa.repository.tables.UserTable;
-import de.envite.proa.service.TokenService;
+import de.envite.proa.authservice.TokenService;
 import de.envite.proa.usecases.authentication.AuthenticationRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
