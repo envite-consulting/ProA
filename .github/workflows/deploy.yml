@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - jonaw1/docker
-  pull_request:
-    branches:
-      - jonaw1/docker
 
 permissions:
   id-token: write
