@@ -28,6 +28,11 @@ jobs:
           touch frontend/.env
           echo "VITE_APP_MODE=${{ vars.VITE_APP_MODE }}" >> frontend/.env
 
+      - name: Run key generation script
+        run: |
+          chmod +x ./backend/generate-keys.sh
+          ./backend/generate-keys.sh
+
       - name: Build with Maven
         run: mvn clean package
 
