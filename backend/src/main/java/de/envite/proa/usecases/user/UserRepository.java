@@ -6,4 +6,6 @@ public interface UserRepository {
     User findByEmail(String email);
 
     User patchUser(Long userId, User user);
+
+    User findById(Long id);
 }

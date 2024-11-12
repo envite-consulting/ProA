@@ -13,9 +13,8 @@ public class AuthenticationDao {
 	private EntityManager em;
 
 	@Transactional
-	public UserTable register(UserTable user) {
+	public void register(UserTable user) {
 		em.persist(user);
 		em.flush();
-		return user;
 	}
 }

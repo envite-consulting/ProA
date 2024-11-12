@@ -118,18 +118,17 @@ export default defineComponent({
     operateConnectionSuccessMsg: "",
     operateClusterSuccessMsg: "",
     isValidating: false,
-    userId: useAppStore().getUser()?.id,
     isWebVersion: import.meta.env.VITE_APP_MODE === "web"
   }),
 
   computed: {
     isUserLoggedIn() {
-      return this.appStore.getUser() !== null;
+      return this.appStore.getUserToken() !== null;
     }
   },
 
-  mounted() {
-    if (Object.keys(this.settings).length === 0) this.handleAfterToggle()
+  async mounted() {
+    if (Object.keys(this.settings).length === 0) await this.handleAfterToggle();
   },
 
   methods: {

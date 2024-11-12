@@ -17,4 +17,8 @@ public class UserUsecase {
     public User patchUser(Long userId, User user) {
         return repository.patchUser(userId, user);
     }
+
+    public User findById(Long id) {
+        return repository.findById(id);
+    }
 }

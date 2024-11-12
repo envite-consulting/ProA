@@ -5,6 +5,7 @@ import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.exceptions.EmailNotFoundException;
 import de.envite.proa.exceptions.InvalidPasswordException;
 import de.envite.proa.repository.tables.UserTable;
+import de.envite.proa.service.TokenService;
 import de.envite.proa.usecases.authentication.AuthenticationRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -24,8 +25,11 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		this.userDao = userDao;
 	}
 
+	@Inject
+	TokenService tokenService;
+
 	@Override
-	public User login(User user) {
+	public String login(User user) {
 		String email = user.getEmail();
 
 		UserTable userTable = userDao.findByEmail(email);
@@ -34,11 +38,12 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		boolean doesPasswordMatch = BcryptUtil.matches(user.getPassword(), userTable.getPassword());
 		if (!doesPasswordMatch) throw new InvalidPasswordException();
 
-		return UserMapper.map(userTable);
+		User loggedInUser = UserMapper.map(userTable);
+		return tokenService.generateToken(loggedInUser, loggedInUser.getRole());
 	}
 
 	@Override
-	public User register(User user) {
+	public void register(User user) {
 		String email = user.getEmail();
 
 		boolean emailAlreadyRegistered = userDao.findByEmail(email) != null;
@@ -46,10 +51,8 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 
 		user.setPassword(hashPassword(user.getPassword()));
 
-		UserTable userTable = UserMapper.map(user);
-		userTable.setCreatedAt(LocalDateTime.now());
-		userTable.setModifiedAt(LocalDateTime.now());
-		return UserMapper.map(authenticationDao.register(userTable));
+		user.setModifiedAt(LocalDateTime.now());
+		authenticationDao.register(UserMapper.map(user));
 	}
 
 	private String hashPassword(String plainPassword) {

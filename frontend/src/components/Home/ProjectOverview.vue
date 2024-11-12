@@ -6,7 +6,7 @@
       color="success"
       icon="mdi-check"
       lines="one"
-      :text="$t('projectOverview.welcomeBack') + store.getUser()?.firstName + '!'"
+      :text="$t('projectOverview.welcomeBack') + user.firstName + '!'"
       :stacked="false"
       sticky
     >
@@ -155,9 +155,10 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import axios from 'axios';
-import { SelectedDialog, useAppStore, UserData } from "@/store/app";
+import { useAppStore } from "@/store/app";
 import { VTextField } from "vuetify/components";
 import { authHeader } from "@/components/Authentication/authHeader";
+import getUser from "@/components/userService";
 
 export interface Project {
   id: number
@@ -176,6 +177,16 @@ export interface ActiveProjectByGroup {
   [key: string]: Project
 }
 
+export interface UserData {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  modifiedAt: string;
+}
+
 export default defineComponent({
   data: () => {
     const store = useAppStore();
@@ -190,13 +201,13 @@ export default defineComponent({
       newVersionInitialProject: {} as Project,
       showLoggedInBanner: false as boolean,
       webVersion: (import.meta.env.VITE_APP_MODE === 'web') as boolean,
-      user: store.getUser() as UserData
+      user: {} as UserData
     }
   },
 
   computed: {
     isUserLoggedIn() {
-      return this.store.getUser() != null;
+      return this.store.getUserToken() != null;
     },
     versionRules() {
       return [
@@ -242,7 +253,9 @@ export default defineComponent({
     }
   },
 
-  mounted: function () {
+  mounted: async function () {
+    if (this.store.getUserToken() != null) this.user = await getUser();
+
     const currentState = window.history.state || {};
 
     this.showLoggedInBanner = currentState.showLoggedInBanner;
@@ -250,7 +263,7 @@ export default defineComponent({
     const updatedState = { ...currentState, showLoggedInBanner: false };
     window.history.replaceState(updatedState, document.title);
 
-    this.fetchProjects();
+    await this.fetchProjects();
   },
   methods: {
     openNewVersionDialog(projectGroup: ProjectGroup) {

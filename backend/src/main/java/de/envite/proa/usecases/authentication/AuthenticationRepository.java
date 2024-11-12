@@ -4,7 +4,7 @@ import de.envite.proa.entities.User;
 
 public interface AuthenticationRepository {
 
-	User login(User user);
+	String login(User user);
 
-	User register(User user);
+	void register(User user);
 }

@@ -10,11 +10,11 @@ public class AuthenticationUsecase {
 	@Inject
 	AuthenticationRepository repository;
 
-	public User login(User user) {
+	public String login(User user) {
 		return repository.login(user);
 	}
 
-	public User register(User user) {
-		return repository.register(user);
+	public void register(User user) {
+		repository.register(user);
 	}
 }

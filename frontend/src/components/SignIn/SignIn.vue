@@ -89,8 +89,8 @@ export default defineComponent({
           password: this.password
         }, { headers: { 'Content-Type': 'application/json' } });
 
-        const { password, ...user } = response.data;
-        this.store.setUser(user);
+        const { data } = response;
+        this.store.setUserToken(data);
 
         this.$router.push({ path: "/", state: { showLoggedInBanner: true } });
       } catch

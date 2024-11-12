@@ -56,7 +56,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const store = useAppStore();
-  const isLoggedIn = store.getUser() != null;
+  const isLoggedIn = store.getUserToken() != null;
   const isWebVersion = import.meta.env.VITE_APP_MODE === "web";
 
   if (to.name === 'SignIn') {

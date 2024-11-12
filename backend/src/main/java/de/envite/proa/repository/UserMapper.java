@@ -30,7 +30,6 @@ public class UserMapper {
         user.setEmail(table.getEmail());
         user.setFirstName(table.getFirstName());
         user.setLastName(table.getLastName());
-        user.setPassword(table.getPassword());
         user.setCreatedAt(table.getCreatedAt());
         user.setModifiedAt(table.getModifiedAt());
         switch (table.getRole()) {
