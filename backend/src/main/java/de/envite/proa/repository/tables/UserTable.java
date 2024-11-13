@@ -28,4 +28,6 @@ public class UserTable {
 
     @OneToOne
     private SettingsTable settings;
+
+    private Integer failedLoginAttempts = 0;
 }

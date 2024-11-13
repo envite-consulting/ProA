@@ -1,6 +1,7 @@
 package de.envite.proa.repository;
 
 import de.envite.proa.entities.User;
+import de.envite.proa.exceptions.AccountLockedException;
 import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.exceptions.EmailNotFoundException;
 import de.envite.proa.exceptions.InvalidPasswordException;
@@ -35,8 +36,18 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		UserTable userTable = userDao.findByEmail(email);
 		if (userTable == null) throw new EmailNotFoundException(email);
 
+		if (userTable.getFailedLoginAttempts() == 3) throw new AccountLockedException();
+
 		boolean doesPasswordMatch = BcryptUtil.matches(user.getPassword(), userTable.getPassword());
-		if (!doesPasswordMatch) throw new InvalidPasswordException();
+		if (!doesPasswordMatch) {
+			userTable.setFailedLoginAttempts(userTable.getFailedLoginAttempts() + 1);
+			userDao.patchUser(userTable);
+			if (userTable.getFailedLoginAttempts() == 3) throw new AccountLockedException();
+			throw new InvalidPasswordException();
+		}
+
+		userTable.setFailedLoginAttempts(0);
+		userDao.patchUser(userTable);
 
 		User loggedInUser = UserMapper.map(userTable);
 		return tokenService.generateToken(loggedInUser, loggedInUser.getRole());

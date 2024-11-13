@@ -1,6 +1,7 @@
 package de.envite.proa.rest;
 
 import de.envite.proa.entities.User;
+import de.envite.proa.exceptions.AccountLockedException;
 import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.exceptions.EmailNotFoundException;
 import de.envite.proa.exceptions.InvalidPasswordException;
@@ -25,6 +26,8 @@ public class AuthenticationResource {
 			return Response.ok().entity(token).build();
 		} catch (EmailNotFoundException | InvalidPasswordException e) {
 			return Response.status(Response.Status.UNAUTHORIZED).build();
+		} catch (AccountLockedException e) {
+			return Response.status(Response.Status.FORBIDDEN).build();
 		} catch (Exception e) {
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}

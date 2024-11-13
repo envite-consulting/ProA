@@ -1,6 +1,7 @@
 {
   "authentication": {
     "accountCreationFailed": "Account konnte nicht erstellt werden",
+    "accountLocked": "Account ist gesperrt. Bitte kontaktieren Sie Ihren Administrator.",
     "admin": "Admin",
     "alreadyAccountQuestion": "Besteht bereits ein Account?",
     "back": "Zurück",
