@@ -2,6 +2,7 @@ package de.envite.proa.rest;
 
 import de.envite.proa.entities.User;
 import de.envite.proa.usecases.user.UserUsecase;
+import io.quarkiverse.bucket4j.runtime.RateLimited;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -33,6 +34,7 @@ public class UserResource {
 	@PATCH
 	@Path("")
 	@RolesAllowed({"User", "Admin"})
+	@RateLimited(bucket = "login")
 	public Response patchUser(User user) {
 
 		Long id = Long.parseLong(jwt.getClaim("userId").toString());

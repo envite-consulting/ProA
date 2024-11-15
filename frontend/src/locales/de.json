@@ -31,6 +31,7 @@
     "samePasswordError": "Das neue Passwort muss sich vom alten Passwort unterscheiden.",
     "signInFailed": "Anmeldung fehlgeschlagen",
     "successfullyCreatedAccount": "Account erfolgreich erstellt",
+    "tooManyRequests": "Zu viele Anfragen. Versuchen Sie es bitte später erneut.",
     "user": "Nutzer",
     "version": "Version",
     "welcomeBack": "Willkommen zurück!"

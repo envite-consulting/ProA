@@ -31,6 +31,7 @@
     "samePasswordError": "New password needs to be different from current password.",
     "signInFailed": "Sign in failed",
     "successfullyCreatedAccount": "Successfully created account",
+    "tooManyRequests": "Too many requests. Please try again later.",
     "user": "User",
     "version": "Version",
     "welcomeBack": "Welcome back!"

@@ -159,6 +159,14 @@ export default defineComponent({
           return;
         }
 
+        if ((e as AxiosError).response?.status === 429) {
+          this.$emit('showMessage', {
+            type: 'error',
+            message: this.$t('authentication.tooManyRequests') as string
+          });
+          return;
+        }
+
         this.$emit('showMessage', {
           type: 'error',
           message: this.$t('authentication.accountCreationFailed') as string
