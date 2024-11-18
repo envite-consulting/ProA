@@ -58,4 +58,14 @@ public class ProjectDao {
 		ProjectTable table = em.find(ProjectTable.class, id);
 		em.remove(table);
 	}
+
+	@Transactional
+	public void deleteProject(UserTable user, Long id) {
+		ProjectTable table = em//
+				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user AND p.id = :id", ProjectTable.class)//
+				.setParameter("user", user)//
+				.setParameter("id", id)//
+				.getSingleResult();
+		em.remove(table);
+	}
 }

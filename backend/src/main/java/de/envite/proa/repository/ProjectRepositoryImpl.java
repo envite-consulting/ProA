@@ -66,7 +66,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	@Transactional
 	@Override
 	public List<Project> getProjects(Long userId) {
-		UserTable user =userDao.findById(userId);
+		UserTable user = userDao.findById(userId);
 		return projectDao//
 				.getProjectsForUser(user)//
 				.stream()//
@@ -88,6 +88,13 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	@Override
 	public void deleteProject(Long projectId) {
 		projectDao.deleteProject(projectId);
+	}
+
+	@Override
+	public void deleteProject(Long userId, Long projectId) {
+		UserTable user = userDao.findById(userId);
+		projectDao.findByUserAndId(user, projectId);
+		projectDao.deleteProject(user, projectId);
 	}
 
 	private Project map(ProjectTable table) {

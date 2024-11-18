@@ -19,4 +19,6 @@ public interface ProjectRepository {
 	Project getProject(Long userId, Long projectId);
 
 	void deleteProject(Long projectId);
+
+	void deleteProject(Long userId, Long projectId);
 }

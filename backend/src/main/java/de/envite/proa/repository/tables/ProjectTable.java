@@ -1,6 +1,7 @@
 package de.envite.proa.repository.tables;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -23,5 +24,11 @@ public class ProjectTable {
 	private UserTable user;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
-	private List<ProcessModelTable> processModels;
+	private List<DataStoreConnectionTable> dataStoreConnections = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<DataStoreTable> dataStores = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<ProcessModelTable> processModels = new ArrayList<>();
 }
