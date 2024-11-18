@@ -320,7 +320,7 @@ export default defineComponent({
   },
   computed: {
     isUserLoggedIn(): boolean {
-      return this.appStore.getUser() != null;
+      return this.appStore.getUserToken() != null;
     }
   },
   watch: {

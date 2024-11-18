@@ -6,23 +6,6 @@ import {
 } from "@/components/Home/ProjectOverview.vue";
 import { LanguageCode } from "@/layouts/default/AppBar.vue";
 
-export interface PaperLayout {
-  sx: number,
-  tx: number,
-  ty: number
-}
-
-export interface UserData {
-  id: number
-  email: string,
-  firstName: string,
-  lastName: string,
-  createdAt: string,
-  modifiedAt: string,
-  token: string,
-  role: string
-}
-
 export enum SelectedDialog {
   NONE = -1,
   PROFILE = 0,
@@ -50,7 +33,7 @@ export const useAppStore = defineStore('app', {
       areSettingsOpened: false as boolean,
       operateConnectionError: '' as string,
       operateClusterError: '' as string,
-      user: null as UserData | null,
+      userToken: null as string | null,
       selectedDialog: SelectedDialog.NONE as SelectedDialog
     }
   },
@@ -144,11 +127,11 @@ export const useAppStore = defineStore('app', {
     getOperateClusterError() {
       return this.operateClusterError
     },
-    setUser(user: UserData | null) {
-      this.user = user;
+    setUserToken(userToken: string | null) {
+      this.userToken = userToken;
     },
-    getUser(): UserData | null {
-      return this.user;
+    getUserToken(): string | null {
+      return this.userToken;
     },
     setSelectedDialog(dialog: SelectedDialog) {
       this.selectedDialog = dialog;
@@ -174,7 +157,7 @@ export const useAppStore = defineStore('app', {
       'areSettingsOpened',
       'operateConnectionError',
       'operateClusterError',
-      'user',
+      'userToken',
       'selectedDialog'
     ]
   },

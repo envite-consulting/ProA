@@ -1,6 +1,7 @@
 {
   "authentication": {
     "accountCreationFailed": "Failed to create account",
+    "accountLocked": "Account is locked. Please contact your administrator.",
     "admin": "Admin",
     "alreadyAccountQuestion": "Already have an account?",
     "back": "Back",

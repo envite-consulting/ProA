@@ -124,7 +124,7 @@ export default defineComponent({
       return this.$refs.navigationButtons as InstanceType<typeof NavigationButtons>;
     },
     isUserLoggedIn() {
-      return this.appStore.getUser() !== null;
+      return this.appStore.getUserToken() !== null;
     }
   },
 

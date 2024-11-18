@@ -107,7 +107,7 @@ export default defineComponent({
 
   computed: {
     isUserLoggedIn() {
-      return this.store.getUser() != null;
+      return this.store.getUserToken() != null;
     }
   },
 

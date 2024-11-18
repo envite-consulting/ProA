@@ -52,7 +52,7 @@
 import { defineComponent } from 'vue'
 import { currentPasswordRules, emailRules } from "@/components/Authentication/formValidation";
 import { VForm } from "vuetify/components";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { SelectedDialog, useAppStore } from "@/store/app";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
 
@@ -89,12 +89,19 @@ export default defineComponent({
           password: this.password
         }, { headers: { 'Content-Type': 'application/json' } });
 
-        const { password, ...user } = response.data;
-        this.store.setUser(user);
+        const { data } = response;
+        this.store.setUserToken(data);
 
         this.$router.push({ path: "/", state: { showLoggedInBanner: true } });
       } catch
         (e) {
+        if ((e as AxiosError).response?.status === 403) {
+          this.message = {
+            type: 'error',
+            message: this.$t('authentication.accountLocked') as string
+          }
+          return;
+        }
         this.message = {
           type: 'error',
           message: this.$t('authentication.signInFailed') as string

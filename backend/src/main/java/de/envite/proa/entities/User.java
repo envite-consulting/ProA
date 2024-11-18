@@ -14,6 +14,5 @@ public class User {
     private String password;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
-    private String token;
     private String role;
 }

@@ -1,6 +1,5 @@
-package de.envite.proa.service;
+package de.envite.proa.authservice;
 
-import de.envite.proa.entities.Role;
 import de.envite.proa.entities.User;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;

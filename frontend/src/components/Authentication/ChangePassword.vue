@@ -61,10 +61,12 @@ import { defineComponent } from 'vue'
 
 import { currentPasswordRules, newPasswordRules } from "@/components/Authentication/formValidation";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
-import { SelectedDialog, useAppStore, UserData } from "@/store/app";
+import { SelectedDialog, useAppStore } from "@/store/app";
 import { VForm } from "vuetify/components";
 import axios from "axios";
 import { authHeader } from "@/components/Authentication/authHeader";
+import { UserData } from "@/components/Home/ProjectOverview.vue";
+import getUser from "@/components/userService";
 
 export default defineComponent({
   name: "ChangePassword",
@@ -83,9 +85,13 @@ export default defineComponent({
       currentPassword: '' as string,
       newPassword: '' as string,
       SelectedDialog: SelectedDialog,
-      user: useAppStore().getUser() as UserData,
+      user: {} as UserData,
       store: useAppStore()
     }
+  },
+
+  async mounted() {
+    if (this.store.getUserToken() != null) this.user = await getUser();
   },
 
   methods: {

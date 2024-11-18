@@ -15,7 +15,7 @@
              icon="mdi-check-circle-outline" :text="message.message" @click:close="message.message = ''"></v-alert>
     <v-card-title class="px-0">
       <div class="d-flex align-center">
-        <span>{{ userData.firstName }} {{ userData.lastName }}</span>
+        <span>{{ user.firstName }} {{ user.lastName }}</span>
         <v-btn variant="text" class="ms-auto" color="primary"
                @click="resetMessageAndOpenDialog(SelectedDialog.EDIT_PROFILE)">
           {{ $t('authentication.edit') }}
@@ -28,7 +28,7 @@
         <v-icon icon="mdi-email" class="me-2"></v-icon>
         <div class="d-flex flex-column">
           <span class="text-caption">{{ $t('authentication.email') }}</span>
-          <span>{{ userData.email }}</span>
+          <span>{{ user.email }}</span>
         </div>
       </div>
       <div class="d-flex align-center justify-space-between">
@@ -48,10 +48,10 @@
     </v-card-text>
 
     <v-card-subtitle class="px-0 mb-1">
-      {{ $t('general.createdOn') }}: {{ getLocaleDate(userData.createdAt) }}
+      {{ $t('general.createdOn') }}: {{ getLocaleDate(user.createdAt) }}
     </v-card-subtitle>
     <v-card-subtitle class="px-0 mb-1">
-      {{ $t('general.lastModifiedOn') }}: {{ getLocaleDate(userData.modifiedAt) }}
+      {{ $t('general.lastModifiedOn') }}: {{ getLocaleDate(user.modifiedAt) }}
     </v-card-subtitle>
 
     <div v-if="projects.length > 0">
@@ -101,11 +101,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
-import { Project } from "@/components/Home/ProjectOverview.vue";
+import { Project, UserData } from "@/components/Home/ProjectOverview.vue";
 import axios from "axios";
 import { SelectedDialog } from "@/store/app";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
 import { authHeader } from "@/components/Authentication/authHeader";
+import getUser from "@/components/userService";
 
 export default defineComponent({
   name: "ProfileDialog",
@@ -121,13 +122,8 @@ export default defineComponent({
     return {
       store: useAppStore(),
       projects: [] as Project[],
-      SelectedDialog: SelectedDialog
-    }
-  },
-
-  computed: {
-    userData() {
-      return this.store.getUser()!;
+      SelectedDialog: SelectedDialog,
+      user: {} as UserData
     }
   },
 
@@ -166,8 +162,9 @@ export default defineComponent({
     }
   },
 
-  mounted() {
+  async mounted() {
     this.fetchProjects();
+    if (this.store.getUserToken() != null) this.user = await getUser();
   },
 });
 </script>

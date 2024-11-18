@@ -1,10 +1,12 @@
 package de.envite.proa.repository;
 
 import de.envite.proa.entities.User;
+import de.envite.proa.exceptions.AccountLockedException;
 import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.exceptions.EmailNotFoundException;
 import de.envite.proa.exceptions.InvalidPasswordException;
 import de.envite.proa.repository.tables.UserTable;
+import de.envite.proa.authservice.TokenService;
 import de.envite.proa.usecases.authentication.AuthenticationRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -24,21 +26,35 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		this.userDao = userDao;
 	}
 
+	@Inject
+	TokenService tokenService;
+
 	@Override
-	public User login(User user) {
+	public String login(User user) {
 		String email = user.getEmail();
 
 		UserTable userTable = userDao.findByEmail(email);
 		if (userTable == null) throw new EmailNotFoundException(email);
 
-		boolean doesPasswordMatch = BcryptUtil.matches(user.getPassword(), userTable.getPassword());
-		if (!doesPasswordMatch) throw new InvalidPasswordException();
+		if (userTable.getFailedLoginAttempts() == 3) throw new AccountLockedException();
 
-		return UserMapper.map(userTable);
+		boolean doesPasswordMatch = BcryptUtil.matches(user.getPassword(), userTable.getPassword());
+		if (!doesPasswordMatch) {
+			userTable.setFailedLoginAttempts(userTable.getFailedLoginAttempts() + 1);
+			userDao.patchUser(userTable);
+			if (userTable.getFailedLoginAttempts() == 3) throw new AccountLockedException();
+			throw new InvalidPasswordException();
+		}
+
+		userTable.setFailedLoginAttempts(0);
+		userDao.patchUser(userTable);
+
+		User loggedInUser = UserMapper.map(userTable);
+		return tokenService.generateToken(loggedInUser, loggedInUser.getRole());
 	}
 
 	@Override
-	public User register(User user) {
+	public void register(User user) {
 		String email = user.getEmail();
 
 		boolean emailAlreadyRegistered = userDao.findByEmail(email) != null;
@@ -46,10 +62,8 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 
 		user.setPassword(hashPassword(user.getPassword()));
 
-		UserTable userTable = UserMapper.map(user);
-		userTable.setCreatedAt(LocalDateTime.now());
-		userTable.setModifiedAt(LocalDateTime.now());
-		return UserMapper.map(authenticationDao.register(userTable));
+		user.setModifiedAt(LocalDateTime.now());
+		authenticationDao.register(UserMapper.map(user));
 	}
 
 	private String hashPassword(String plainPassword) {

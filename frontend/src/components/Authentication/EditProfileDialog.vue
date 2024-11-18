@@ -62,19 +62,21 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { SelectedDialog, useAppStore, UserData } from "@/store/app";
+import { SelectedDialog, useAppStore } from "@/store/app";
 import { emailRules, firstNameRules, lastNameRules } from "@/components/Authentication/formValidation";
 import { VForm } from "vuetify/components";
 import axios from "axios";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
 import { authHeader } from "@/components/Authentication/authHeader";
+import getUser from "@/components/userService";
+import { UserData } from "@/components/Home/ProjectOverview.vue";
 
 export default defineComponent({
   name: "EditProfileDialog",
 
   data() {
     const store = useAppStore();
-    const newUserData = { ...store.getUser()! } as UserData;
+    const newUserData = {} as UserData;
     return {
       store,
       newUserData,
@@ -92,6 +94,10 @@ export default defineComponent({
     }
   },
 
+  async mounted() {
+    this.newUserData = await getUser();
+  },
+
   methods: {
     closeDialog() {
       this.store.setSelectedDialog(SelectedDialog.NONE);
@@ -107,7 +113,8 @@ export default defineComponent({
       if (!valid) {
         return;
       }
-      if (JSON.stringify(this.newUserData) === JSON.stringify(this.store.getUser())) {
+      const currUserData = await getUser();
+      if (JSON.stringify(this.newUserData) === JSON.stringify(currUserData)) {
         this.openDialog(SelectedDialog.PROFILE)
         return;
       }
@@ -123,7 +130,6 @@ export default defineComponent({
           message: this.$t('authentication.profileSuccessfullyEdited') as string
         }
         this.$emit('showMessage', message);
-        this.store.setUser(this.newUserData);
         this.openDialog(SelectedDialog.PROFILE);
       } catch (e) {
         const message: Message = {

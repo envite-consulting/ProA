@@ -98,6 +98,8 @@ import i18n from "@/i18n";
 import AuthenticationDialog from "@/components/Authentication/AuthenticationDialog.vue";
 import { SelectedDialog } from "@/store/app";
 import { Role } from "@/components/ProcessMap/types";
+import { UserData } from "@/components/Home/ProjectOverview.vue";
+import getUser from "@/components/userService";
 
 export type LanguageCode = 'en' | 'de';
 
@@ -124,7 +126,7 @@ export default defineComponent({
       this.store.setAreSettingsOpened(!this.store.getAreSettingsOpened());
     },
     signOut() {
-      this.store.setUser(null);
+      this.store.setUserToken(null);
     },
     openDialog(dialog: SelectedDialog) {
       this.store.setSelectedDialog(dialog);
@@ -143,11 +145,14 @@ export default defineComponent({
       showEditDialog: false as boolean,
       showProfileDialog: false as boolean,
       showProfileSuccessMessage: false as boolean,
-      SelectedDialog: SelectedDialog
+      SelectedDialog: SelectedDialog,
+      user: {} as UserData
     }
   },
 
-  mounted() {
+  async mounted() {
+    if (this.store.getUserToken() != null) this.user = await getUser();
+
     i18n.global.locale = this.selectedLanguage;
   },
 
@@ -192,16 +197,19 @@ export default defineComponent({
       return this.$t('navigation.' + this.lowerFirstLetter(this.$route.name?.toString()));
     },
     isUserLoggedIn() {
-      return this.store.getUser() != null;
+      return this.store.getUserToken() != null;
     },
     isUserAdmin() {
-      return this.store.getUser()?.role === Role.ADMIN;
+      return this.user.role === Role.ADMIN;
     }
   },
 
   watch: {
     group() {
       this.drawer = false
+    },
+    async isUserLoggedIn() {
+      this.user = await getUser();
     }
   }
 })

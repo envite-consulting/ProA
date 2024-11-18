@@ -6,6 +6,7 @@ import de.envite.proa.usecases.user.UserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +20,13 @@ public class UserRepositoryImpl implements UserRepository {
     public User findByEmail(String email) {
         UserTable userTable = userDao.findByEmail(email);
         return userTable == null ? null : UserMapper.map(userTable);
+    }
+
+    @Override
+    public User findById(Long id) {
+        UserTable userTable = userDao.findById(id);
+        if (userTable == null) throw new NotFoundException("User not found");
+        return UserMapper.map(userTable);
     }
 
     public User patchUser(Long userId, User user) {
