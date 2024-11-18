@@ -366,7 +366,7 @@ export default defineComponent({
           this.projects = result.data.sort((project: Project) => {
             return project.id === this.store.selectedProjectId ? -1 : 0;
           });
-
+          
           this.projectGroups.forEach((group) => {
             const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
             if (persistedActiveProject) {
@@ -389,7 +389,7 @@ export default defineComponent({
         this.projects = result.data.sort((project: Project) => {
             return project.id === this.store.selectedProjectId ? -1 : 0;
         });
-
+        
         this.projectGroups.forEach((group) => {
           const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
           if (persistedActiveProject) {
@@ -450,6 +450,20 @@ export default defineComponent({
         try {
           await this.deleteProject(this.projectToBeDeleted.id);
 
+          this.projects = this.projects.filter(project => project.id !== this.projectToBeDeleted?.id);
+          
+          this.projectGroups.forEach((group) => {
+            const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
+            if (persistedActiveProject) {
+              const project = group.projects.find((project) => project.id === persistedActiveProject.id);
+              if (project) {
+                this.activeProjectByGroup[group.name] = project;
+              } else {
+                this.activeProjectByGroup[group.name] = group.projects[0];
+              }
+            }
+          });
+
           this.confirmDeleteDialog = false;
           this.projectToBeDeleted = null;
       
@@ -461,7 +475,6 @@ export default defineComponent({
     },
     async deleteProject(projectId: number) {
       await axios.delete(`/api/project/${projectId}`, { headers: authHeader() });
-      await this.fetchProjects();
     },
     openProject(id: number) {
       this.store.setSelectedProjectId(id);
