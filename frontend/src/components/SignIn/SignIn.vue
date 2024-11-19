@@ -102,6 +102,15 @@ export default defineComponent({
           }
           return;
         }
+
+        if ((e as AxiosError).response?.status === 429) {
+          this.message = {
+            type: 'error',
+            message: this.$t('authentication.tooManyRequests') as string
+          }
+          return;
+        }
+
         this.message = {
           type: 'error',
           message: this.$t('authentication.signInFailed') as string

@@ -65,7 +65,7 @@ import { defineComponent } from 'vue'
 import { SelectedDialog, useAppStore } from "@/store/app";
 import { emailRules, firstNameRules, lastNameRules } from "@/components/Authentication/formValidation";
 import { VForm } from "vuetify/components";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
 import { authHeader } from "@/components/Authentication/authHeader";
 import getUser from "@/components/userService";
@@ -132,6 +132,16 @@ export default defineComponent({
         this.$emit('showMessage', message);
         this.openDialog(SelectedDialog.PROFILE);
       } catch (e) {
+
+        if ((e as AxiosError).response?.status === 429) {
+          const message: Message = {
+            type: 'error',
+            message: this.$t('authentication.tooManyRequests') as string
+          }
+          this.$emit('showMessage', message);
+          return;
+        }
+
         const message: Message = {
           type: 'error',
           message: this.$t('authentication.profileEditFailed') as string
