@@ -21,7 +21,6 @@
       :color="snackbar.color"
       timeout="3000"
       centered
-      class="custom-snackbar"
     >
       <v-icon left large class="snackbar-icon">
         {{ snackbar.icon }}
@@ -184,13 +183,8 @@
   white-space: nowrap;
 }
 
-.custom-snackbar {
-  font-size: 1.2rem;
-  padding: 16px;
-  align-items: center;
-}
-
 .snackbar-icon {
+  font-size: 1.5rem;
   margin-right: 10px;
 }
 </style>
@@ -367,17 +361,7 @@ export default defineComponent({
             return project.id === this.store.selectedProjectId ? -1 : 0;
           });
           
-          this.projectGroups.forEach((group) => {
-            const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
-            if (persistedActiveProject) {
-              const project = group.projects.find((project) => project.id === persistedActiveProject.id);
-              if (project) {
-                this.activeProjectByGroup[group.name] = project;
-              } else {
-                this.activeProjectByGroup[group.name] = group.projects[0];
-              }
-            }
-          });
+          this.updateActiveProjects();
         } catch (error) {
           this.projects = [];
         }
@@ -390,17 +374,7 @@ export default defineComponent({
             return project.id === this.store.selectedProjectId ? -1 : 0;
         });
         
-        this.projectGroups.forEach((group) => {
-          const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
-          if (persistedActiveProject) {
-            const project = group.projects.find((project) => project.id === persistedActiveProject.id);
-            if (project) {
-            this.activeProjectByGroup[group.name] = project;
-            } else {
-            this.activeProjectByGroup[group.name] = group.projects[0];
-            }
-          }
-        });
+        this.updateActiveProjects();
       } catch (error) {
         this.projects = [];
       }
@@ -449,24 +423,17 @@ export default defineComponent({
       if (this.projectToBeDeleted) {
         try {
           await this.deleteProject(this.projectToBeDeleted.id);
-
-          this.projects = this.projects.filter(project => project.id !== this.projectToBeDeleted?.id);
           
-          this.projectGroups.forEach((group) => {
-            const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
-            if (persistedActiveProject) {
-              const project = group.projects.find((project) => project.id === persistedActiveProject.id);
-              if (project) {
-                this.activeProjectByGroup[group.name] = project;
-              } else {
-                this.activeProjectByGroup[group.name] = group.projects[0];
-              }
-            }
-          });
-
+          this.projects = this.projects.filter(project => project.id !== this.projectToBeDeleted?.id);
+          this.updateActiveProjects();
+          this.handleSelectedProjectAfterDelete();
           this.confirmDeleteDialog = false;
           this.projectToBeDeleted = null;
-      
+
+          this.projects = this.projects.sort((project: Project) => {
+            return project.id === this.store.selectedProjectId ? -1 : 0;
+          });
+
           this.showSnackbar(this.$t("projectOverview.projectSuccessfullyDeleted"), SnackbarType.SUCCESS);
         } catch (error) {
           this.showSnackbar(this.$t("projectOverview.errorMessage"), SnackbarType.ERROR);
@@ -494,6 +461,39 @@ export default defineComponent({
         this.snackbar.color = SnackbarConfig[type].color;
         this.snackbar.icon = SnackbarConfig[type].icon;
       })
+    },
+    updateActiveProjects() {
+      this.projectGroups.forEach((group) => {
+        const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
+        if (persistedActiveProject) {
+          const project = group.projects.find((project) => project.id === persistedActiveProject.id);
+          if (project) {
+            this.activeProjectByGroup[group.name] = project;
+          } else {
+            this.activeProjectByGroup[group.name] = group.projects[0];
+          }
+        }
+      })
+    },
+    handleSelectedProjectAfterDelete() {
+      if (this.projectToBeDeleted) {
+        const groupName = this.projectToBeDeleted.name;
+        const remainingProjects = this.projects
+          .filter(project => project.name === groupName)
+          .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+        const nextActiveProject = remainingProjects.length > 0 ? remainingProjects[0] : null;
+        const currentSelectedProjectId = this.store.getSelectedProjectId();
+        const belongsToGroup = this.projectToBeDeleted && this.projectToBeDeleted.id === currentSelectedProjectId;
+          
+        if (currentSelectedProjectId && nextActiveProject && belongsToGroup) {
+          this.setActiveProject(groupName, nextActiveProject.id);
+          this.store.setSelectedProjectId(nextActiveProject.id);
+        } else if (currentSelectedProjectId && !belongsToGroup) {
+          this.store.setSelectedProjectId(currentSelectedProjectId);
+        } else {
+          this.store.setSelectedProjectId(null);
+        }
+      }
     }
   }
 });

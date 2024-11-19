@@ -76,7 +76,6 @@ public class ProjectResource {
 
     @DELETE
     @Path("/project/{projectId}")
-    @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowedIfWebVersion({"User", "Admin"})
     public void deleteProject(@RestPath Long projectId) {
         if (appMode.equals("web")) {
