@@ -64,15 +64,16 @@
         </v-text-field>
       </div>
       <div class="d-flex">
-        <div class="mt-3 me-3">
+        <div class="mt-3 me-5">
           <v-btn color="primary" @click="saveSettings">{{ $t('general.save') }}</v-btn>
         </div>
         <div class="mt-3">
-          <v-tooltip :text="$t('settingsDrawer.resetToEnvVariables')" location="bottom">
+          <v-tooltip v-if="!isWebVersion" :text="$t('settingsDrawer.resetToEnvVariables')" location="bottom">
             <template v-slot:activator="{ props }">
               <v-btn v-bind="props" color="grey" @click="resetSettings">{{ $t('settingsDrawer.reset') }}</v-btn>
             </template>
           </v-tooltip>
+          <v-btn v-else color="grey" @click="resetSettings">{{ $t('settingsDrawer.reset') }}</v-btn>
         </div>
       </div>
     </div>
