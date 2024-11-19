@@ -58,15 +58,21 @@ import NavigatedViewer from "bpmn-js/lib/NavigatedViewer";
 import ElementRegistry from 'diagram-js/lib/core/ElementRegistry';
 import axios from 'axios';
 import { Canvas } from "bpmn-js/lib/features/context-pad/ContextPadProvider";
-
-const scrollStep = 20;
+import { useAppStore } from "@/store/app";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export default defineComponent({
   data: () => ({
-    canvas: null as Canvas | null
+    canvas: null as Canvas | null,
+    store: useAppStore(),
+    scrollStep: 20,
+    zoomInMultiplier: 1.1,
+    zoomOutMultiplier: 0.9
   }),
 
   async mounted() {
+    this.addKeydownListener();
+
     const container = document.querySelector('#process-modelling') as HTMLElement;
     const viewer = new NavigatedViewer({
       container
@@ -76,7 +82,7 @@ export default defineComponent({
 
     const url = '/api/process-model/' + this.$route.params.id;
     try {
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: authHeader() });
       const xmlText = response.data;
       await viewer.importXML(xmlText);
     } catch (error) {
@@ -92,6 +98,24 @@ export default defineComponent({
         this.translateToCenter(port);
       }
       this.removeQueryParams();
+    }
+  },
+
+  beforeUnmount() {
+    this.removeKeydownListener();
+  },
+
+  computed: {
+    isUserLoggedIn() {
+      return this.store.getUserToken() != null;
+    }
+  },
+
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
     }
   },
 
@@ -113,30 +137,30 @@ export default defineComponent({
     },
     zoomIn() {
       const currScale = this.canvas.viewbox().scale;
-      this.canvas.zoom(currScale * 1.1, 'auto');
+      this.canvas.zoom(currScale * this.zoomInMultiplier, 'auto');
     },
     zoomOut() {
       const currScale = this.canvas.viewbox().scale;
-      this.canvas.zoom(currScale / 1.1, 'auto');
+      this.canvas.zoom(currScale * this.zoomOutMultiplier, 'auto');
     },
     fitToScreen() {
       this.canvas.zoom('fit-viewport', 'auto');
     },
     goRight() {
       const { x, y, width, height } = this.canvas.viewbox();
-      this.canvas.viewbox({ x: x + scrollStep, y, width, height });
+      this.canvas.viewbox({ x: x - this.scrollStep, y, width, height });
     },
     goLeft() {
       const { x, y, width, height } = this.canvas.viewbox();
-      this.canvas.viewbox({ x: x - scrollStep, y, width, height });
+      this.canvas.viewbox({ x: x + this.scrollStep, y, width, height });
     },
     goUp() {
       const { x, y, width, height } = this.canvas.viewbox();
-      this.canvas.viewbox({ x, y: y - scrollStep, width, height });
+      this.canvas.viewbox({ x, y: y + this.scrollStep, width, height });
     },
     goDown() {
       const { x, y, width, height } = this.canvas.viewbox();
-      this.canvas.viewbox({ x, y: y + scrollStep, width, height });
+      this.canvas.viewbox({ x, y: y - this.scrollStep, width, height });
     },
     removeQueryParams() {
       const url = new URL(window.location.href);
@@ -146,6 +170,37 @@ export default defineComponent({
     goBack() {
       this.removeQueryParams();
       this.$router.go(-1);
+    },
+    addKeydownListener() {
+      window.addEventListener('keydown', this.onKeyDown);
+    },
+    removeKeydownListener() {
+      window.removeEventListener('keydown', this.onKeyDown);
+    },
+    onKeyDown(evt: KeyboardEvent) {
+      switch (evt.key) {
+        case 'ArrowLeft':
+          this.goLeft();
+          break;
+        case 'ArrowRight':
+          this.goRight();
+          break;
+        case 'ArrowUp':
+          this.goUp();
+          break;
+        case 'ArrowDown':
+          this.goDown();
+          break;
+        case '+':
+          this.zoomIn();
+          break;
+        case '-':
+          this.zoomOut();
+          break;
+        case 'f':
+          this.fitToScreen();
+          break;
+      }
     }
   }
 })

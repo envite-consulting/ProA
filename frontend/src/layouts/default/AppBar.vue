@@ -6,6 +6,33 @@
 
     <v-spacer></v-spacer>
 
+    <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" @click="openDialog(SelectedDialog.PROFILE)">
+          <v-icon icon="mdi-account-circle"></v-icon>
+        </v-btn>
+      </template>
+      {{ $t('general.myProfile') }}
+    </v-tooltip>
+
+    <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn && isUserAdmin">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" @click="openDialog(SelectedDialog.CREATE_ACCOUNT)">
+          <v-icon icon="mdi-account-plus"></v-icon>
+        </v-btn>
+      </template>
+      {{ $t('navigation.createAccount') }}
+    </v-tooltip>
+
+    <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" @click="signOut">
+          <v-icon icon="mdi-logout"></v-icon>
+        </v-btn>
+      </template>
+      {{ $t('general.signOut') }}
+    </v-tooltip>
+
     <v-menu>
       <template v-slot:activator="{ props }">
         <v-btn
@@ -46,7 +73,7 @@
         v-for="item in items"
         :key="item.title"
         dense
-        :disabled="!appStore.selectedProjectId && item.title !== $t('navigation.projectOverview')"
+        :disabled="!store.getSelectedProjectId() && item.title !== $t('navigation.projectOverview')"
         class="px-2"
       >
         <v-list-item-title class="text-body-1 font-weight-regular">{{ item.title }}</v-list-item-title>
@@ -54,7 +81,10 @@
     </v-list>
   </v-navigation-drawer>
 
-  <SettingsDrawer />
+  <SettingsDrawer/>
+
+  <AuthenticationDialog v-if="webVersion"/>
+
 </template>
 
 <style scoped>
@@ -65,6 +95,11 @@ import { defineComponent } from 'vue'
 import { useAppStore } from "@/store/app";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import i18n from "@/i18n";
+import AuthenticationDialog from "@/components/Authentication/AuthenticationDialog.vue";
+import { SelectedDialog } from "@/store/app";
+import { Role } from "@/components/ProcessMap/types";
+import { UserData } from "@/components/Home/ProjectOverview.vue";
+import getUser from "@/components/userService";
 
 export type LanguageCode = 'en' | 'de';
 
@@ -74,12 +109,11 @@ interface Language {
 }
 
 export default defineComponent({
-  components: { SettingsDrawer },
+  components: { AuthenticationDialog, SettingsDrawer },
   methods: {
-    useAppStore,
     changeLanguage(language: LanguageCode) {
       this.selectedLanguage = language;
-      useAppStore().setSelectedLanguage(language);
+      this.store.setSelectedLanguage(language);
       i18n.global.locale = language;
     },
     lowerFirstLetter(s: string | undefined) {
@@ -89,22 +123,43 @@ export default defineComponent({
       return s.charAt(0).toLowerCase() + s.slice(1);
     },
     toggleSettings() {
-      this.appStore.setAreSettingsOpened(!this.appStore.getAreSettingsOpened());
+      this.store.setAreSettingsOpened(!this.store.getAreSettingsOpened());
+    },
+    signOut() {
+      this.store.setUserToken(null);
+    },
+    openDialog(dialog: SelectedDialog) {
+      this.store.setSelectedDialog(dialog);
     }
   },
 
-  data: () => ({
-    appStore: useAppStore(),
-    drawer: false as boolean,
-    group: null,
-    selectedLanguage: useAppStore().getSelectedLanguage() as LanguageCode,
-  }),
+  data: () => {
+    const store = useAppStore();
 
-  mounted() {
+    return {
+      store,
+      drawer: false as boolean,
+      group: null,
+      selectedLanguage: store.getSelectedLanguage() as LanguageCode,
+      webVersion: (import.meta.env.VITE_APP_MODE === 'web') as boolean,
+      showEditDialog: false as boolean,
+      showProfileDialog: false as boolean,
+      showProfileSuccessMessage: false as boolean,
+      SelectedDialog: SelectedDialog,
+      user: {} as UserData
+    }
+  },
+
+  async mounted() {
+    if (this.store.getUserToken() != null) this.user = await getUser();
+
     i18n.global.locale = this.selectedLanguage;
   },
 
   computed: {
+    selectedDialog() {
+      return this.store.getSelectedDialog();
+    },
     availableLanguages(): Language[] {
       const availableLanguages: Language[] = [
         {
@@ -135,17 +190,26 @@ export default defineComponent({
         {
           title: this.$t('navigation.processMap'),
           route: '/ProcessMap'
-        },
+        }
       ];
     },
     currentRouteName() {
       return this.$t('navigation.' + this.lowerFirstLetter(this.$route.name?.toString()));
+    },
+    isUserLoggedIn() {
+      return this.store.getUserToken() != null;
+    },
+    isUserAdmin() {
+      return this.user.role === Role.ADMIN;
     }
   },
 
   watch: {
     group() {
-      this.drawer = false;
+      this.drawer = false
+    },
+    async isUserLoggedIn() {
+      this.user = await getUser();
     }
   }
 })

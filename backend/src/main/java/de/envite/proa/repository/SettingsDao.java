@@ -1,10 +1,11 @@
 package de.envite.proa.repository;
 
 import de.envite.proa.repository.tables.SettingsTable;
+import de.envite.proa.repository.tables.UserTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
@@ -19,8 +20,23 @@ public class SettingsDao {
 
 	@Transactional
 	public SettingsTable getSettings() {
-		TypedQuery<SettingsTable> query = em.createQuery("SELECT s FROM SettingsTable s", SettingsTable.class);
-		return query.getSingleResult();
+		try {
+			return em.createQuery("SELECT s FROM SettingsTable s", SettingsTable.class).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
+	@Transactional
+	public SettingsTable getSettingsForUser(UserTable user) {
+		try {
+			return em //
+					.createQuery("SELECT s FROM SettingsTable s WHERE s.user = :user", SettingsTable.class) //
+					.setParameter("user", user) //
+					.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
 	}
 
 	@Transactional

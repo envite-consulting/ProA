@@ -4,14 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import de.envite.proa.entities.ProcessType;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -27,7 +21,7 @@ public class ProcessModelTable {
 	private String bpmnProcessId;
 
 	@Lob
-	@Column(columnDefinition = "TEXT")
+	@Column(columnDefinition = "CLOB")
 	private String bpmnXml;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
@@ -35,17 +29,30 @@ public class ProcessModelTable {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<CallActivityTable> callActivites = new ArrayList<>();
-	
+
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<ProcessDataStoreTable> dataStores = new ArrayList<>();
 
 	@Lob
 	@Column
 	private String description;
-	
+
 	@Column
 	private LocalDateTime createdAt;
-	
+
 	@ManyToOne
 	private ProjectTable project;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable( //
+			name = "processmodelrelations", //
+			joinColumns = @JoinColumn(name = "parent_id"), //
+			inverseJoinColumns = @JoinColumn(name = "child_id") //
+	)
+	private List<ProcessModelTable> children = new ArrayList<>();
+
+	@ManyToMany(mappedBy = "children", fetch = FetchType.EAGER)
+	private List<ProcessModelTable> parents = new ArrayList<>();
+
+	private ProcessType processType;
 }

@@ -1,5 +1,6 @@
 package de.envite.proa.repository;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	private final DataStoreConnectionDao dataStoreConnectionDao;
 	private final CallActivityDao callActivityDao;
 	private final ProcessEventDao processEventDao;
+	private final MessageFlowDao messageFlowDao;
 
 	@Inject
 	public ProcessMapRepositoryImpl(ProjectDao projectDao, //
@@ -29,8 +31,8 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 			DataStoreDao dataStoreDao, //
 			DataStoreConnectionDao dataStoreConnectionDao, //
 			CallActivityDao callActivityDao, //
-			ProcessEventDao processEventDao //
-	) {
+			ProcessEventDao processEventDao, //
+			MessageFlowDao messageFlowDao) {
 		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.processConnectionDao = processConnectionDao;
@@ -38,19 +40,22 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		this.dataStoreConnectionDao = dataStoreConnectionDao;
 		this.callActivityDao = callActivityDao;
 		this.processEventDao = processEventDao;
+		this.messageFlowDao = messageFlowDao;
 	}
 
 	@Override
 	public ProcessMap getProcessMap(Long projectId) {
 
 		ProjectTable projectTable = projectDao.findById(projectId);
-		List<ProcessDetails> processModelInformation = getProcessDetails(projectTable);
-		List<ProcessConnection> processConnections = getProcessConnections(projectTable);
+		List<ProcessDetails> processModelInformation = getProcessDetailsWithoutCollaborations(projectTable);
+		List<ProcessConnection> processConnections = getProcessConnectionsWithoutCollaborations(projectTable);
+		List<MessageFlowDetails> messageFlows = getMessageFlows(projectTable);
 		List<DataStore> dataStores = getDataStores(projectTable);
-		List<DataStoreConnection> dataStoreConnections = getDataStoreConnections(projectTable);
+		List<DataStoreConnection> dataStoreConnections = getDataStoreConnectionsWithoutCollaborations(projectTable);
 
 		ProcessMap map = new ProcessMap();
 		map.setConnections(processConnections);
+		map.setMessageFlows(messageFlows);
 		map.setProcesses(processModelInformation);
 		map.setDataStores(dataStores);
 		map.setDataStoreConnections(dataStoreConnections);
@@ -127,20 +132,31 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		dataStoreConnectionDao.deleteConnection(connectionId);
 	}
 
-	private List<ProcessDetails> getProcessDetails(ProjectTable projectTable) {
+	private List<ProcessDetails> getProcessDetailsWithoutCollaborations(ProjectTable projectTable) {
 
 		return processModelDao//
 				.getProcessModels(projectTable)//
 				.stream()//
+				.filter(pm -> pm.getProcessType() != ProcessType.COLLABORATION)//
 				.map(ProcessDetailsMapper::map)//
 				.collect(Collectors.toList());
 	}
 
-	private List<ProcessConnection> getProcessConnections(ProjectTable projectTable) {
+	private List<ProcessConnection> getProcessConnectionsWithoutCollaborations(ProjectTable projectTable) {
 		return processConnectionDao//
 				.getProcessConnections(projectTable)//
 				.stream()//
+				.filter(pc -> pc.getCallingProcess().getProcessType() != ProcessType.COLLABORATION//
+						&& pc.getCalledProcess().getProcessType() != ProcessType.COLLABORATION)//
 				.map(this::map)//
+				.collect(Collectors.toList());
+	}
+
+	private List<MessageFlowDetails> getMessageFlows(ProjectTable projectTable) {
+		return messageFlowDao//
+				.getMessageFlows(projectTable)//
+				.stream()//
+				.map(MessageFlowMapper::map)//
 				.collect(Collectors.toList());
 	}
 
@@ -152,10 +168,11 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				.collect(Collectors.toList());
 	}
 
-	private List<DataStoreConnection> getDataStoreConnections(ProjectTable projectTable) {
+	private List<DataStoreConnection> getDataStoreConnectionsWithoutCollaborations(ProjectTable projectTable) {
 		return dataStoreConnectionDao//
 				.getDataStoreConnections(projectTable)//
 				.stream()//
+				.filter(dsc -> dsc.getProcess().getProcessType() != ProcessType.COLLABORATION)//
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}
@@ -234,5 +251,51 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 			case ProcessElementType.END_EVENT -> EventType.END;
 			default -> null;
 		};
+	}
+
+	@Override
+	public void copyMessageFlowsAndRelations(Long projectId, Long oldProcessId, Long newProcessId) {
+		ProjectTable project = projectDao.findById(projectId);
+		ProcessModelTable oldProcess = processModelDao.find(oldProcessId);
+		ProcessModelTable newProcess = processModelDao.find(newProcessId);
+		List<MessageFlowTable> messageFlows = messageFlowDao.getMessageFlows(project, oldProcess);
+		for (MessageFlowTable messageFlow : messageFlows) {
+			if (messageFlow.getCalledProcess().getId().equals(oldProcessId)) {
+				messageFlow.setCalledProcess(newProcess);
+			}
+			if (messageFlow.getCallingProcess().getId().equals(oldProcessId)) {
+				messageFlow.setCallingProcess(newProcess);
+			}
+			messageFlowDao.merge(messageFlow);
+		}
+
+		List<ProcessModelTable> oldParents = new ArrayList<>(oldProcess.getParents());
+		for (ProcessModelTable oldParent : oldParents) {
+			if (!newProcess.getParents().contains(oldParent)) {
+				newProcess.getParents().add(oldParent);
+				oldParent.getChildren().add(newProcess);
+			}
+
+			oldProcess.getParents().remove(oldParent);
+			oldParent.getChildren().remove(oldProcess);
+
+			processModelDao.merge(oldParent);
+		}
+
+		List<ProcessModelTable> oldChildren = new ArrayList<>(newProcess.getChildren());
+		for (ProcessModelTable oldChild : oldChildren) {
+			if (!newProcess.getChildren().contains(oldChild)) {
+				newProcess.getChildren().add(oldChild);
+				oldChild.getParents().add(newProcess);
+			}
+
+			oldProcess.getChildren().remove(oldChild);
+			oldChild.getParents().remove(newProcess);
+
+			processModelDao.merge(oldChild);
+		}
+
+		processModelDao.merge(newProcess);
+		processModelDao.merge(oldProcess);
 	}
 }

@@ -22,6 +22,18 @@ export interface Connection {
   label: string;
 }
 
+export interface MessageFlow {
+  bpmnId: string;
+  name: string;
+  description: string;
+
+  callingProcessId: number;
+  calledProcessId: number;
+
+  callingElementType: ProcessElementType;
+  calledElementType: ProcessElementType;
+}
+
 export interface DataStore {
   id: number;
   name: string;
@@ -46,6 +58,7 @@ export interface FilterGraphInput {
   hideIntermediateEvents: boolean;
   hideProcessesWithoutConnections: boolean;
   hideStartEndEvents: boolean;
+  hideMessageFlows: boolean;
 }
 
 export interface Process {
@@ -75,3 +88,8 @@ export type DataAccess = "READ" | "WRITE" | "READ_WRITE" | "NONE;";
 export type HiddenLinks = { [key: string]: string };
 export type HiddenPorts = { [key: string]: dia.Element.Port[] };
 export type PortsInformation = { [key: string]: string[] };
+
+export enum Role {
+  ADMIN = "Admin",
+  USER = "User"
+}

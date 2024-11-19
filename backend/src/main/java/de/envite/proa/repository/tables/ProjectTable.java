@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 @Data
@@ -19,4 +20,7 @@ public class ProjectTable {
 	private String version;
 	private LocalDateTime createdAt;
 	private LocalDateTime modifiedAt;
+
+	@ManyToOne
+	private UserTable user;
 }

@@ -1,4 +1,41 @@
 {
+  "authentication": {
+    "accountCreationFailed": "Failed to create account",
+    "accountLocked": "Account is locked. Please contact your administrator.",
+    "admin": "Admin",
+    "alreadyAccountQuestion": "Already have an account?",
+    "back": "Back",
+    "changePassword": "Change Password",
+    "createAnAccount": "Create an account",
+    "createAccountQuestion": "Create an account?",
+    "currentPassword": "Current Password",
+    "currentPwWrongError": "Current password not valid",
+    "edit": "Edit",
+    "editYourProfile": "Edit your profile",
+    "email": "Email",
+    "emailAlreadyRegistered": "This email is already registered",
+    "firstName": "First Name",
+    "forgotPwQuestion": "Forgot your password?",
+    "lastName": "Last Name",
+    "name": "Name",
+    "newPassword": "New Password",
+    "openProject": "Open project",
+    "password": "Password",
+    "passwordChangeErrorMsg": "Error while changing password",
+    "passwordSuccessfullyChanged": "Password successfully changed",
+    "profileEditFailed": "Failed to edit profile",
+    "profileSuccessfullyEdited": "Profile successfully edited",
+    "projects": "Projects",
+    "resetPwInfo": "Please contact your administrator to reset your password.",
+    "role": "Role",
+    "samePasswordError": "New password needs to be different from current password.",
+    "signInFailed": "Sign in failed",
+    "successfullyCreatedAccount": "Successfully created account",
+    "tooManyRequests": "Too many requests. Please try again later.",
+    "user": "User",
+    "version": "Version",
+    "welcomeBack": "Welcome back!"
+  },
   "c8Import": {
     "camundaConnectionSuccessMessage": "Connected to Camunda 8. You can call up process models.",
     "connect": "Connect",
@@ -18,6 +55,9 @@
     "cancel": "Cancel",
     "clientId": "Client ID",
     "clientSecret": "Client Secret",
+    "close": "Close",
+    "continue": "Continue",
+    "createdOn": "Created on",
     "description": "Description",
     "end": "End",
     "english": "English",
@@ -25,17 +65,23 @@
     "intermediateCatchEvents": "Intermediate Catch Events",
     "intermediateEvent": "Intermediate Event",
     "intermediateThrowEvents": "Intermediate Throw Events",
+    "lastModifiedOn": "Last modified on",
+    "myProfile": "My Profile",
     "processModel": "Process Model",
     "save": "Save",
-    "settings": "Settings"
+    "settings": "Settings",
+    "signOut": "Sign Out"
   },
   "navigation": {
     "c8Import": "C8 Import",
+    "createAccount": "Create Account",
     "camundaCloudImport": "C8 Import",
+    "pageNotFound": "Page Not Found",
     "processList": "Process List",
     "processMap": "Process Map",
     "projectOverview": "Project Overview",
-    "processView": "Process View"
+    "processView": "Process View",
+    "signIn": "Sign In"
   },
   "processDetailSidebar": {
     "endEvents": "End Events",
@@ -43,8 +89,25 @@
     "startEvents": "Start Events"
   },
   "processList": {
+    "alreadyExistsErrorMsg1": {
+      "singular": "Collaboration with the ID ",
+      "plural": "Collaborations with the IDs "
+    },
+    "alreadyExistsErrorMsg2": {
+      "singular": " already exists.",
+      "plural": " already exist."
+    },
+    "cantReplaceWithCollaborationErrorMsg": "It is not possible to replace processes with collaborations.",
+    "collaboration": "Collaboration",
+    "confirm": "Confirm",
+    "confirmDeletion": "Confirm deletion",
+    "confirmDeletionText1": "Are you sure you want to delete ",
+    "confirmDeletionText2": "? This action will delete all process models associated with the collaboration.",
+    "error": "Error",
+    "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",
+    "participant": "Participant",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
     "toTheProcessMap": "To the Process Map",
@@ -61,6 +124,7 @@
     "hide": "Hide",
     "intermediateEvents": "Intermediate Events",
     "legend": "Legend",
+    "messageFlows": "Message Flows",
     "noInformationAvailable": "No information available",
     "process": "Process",
     "processesWithoutConnections": "Processes without Connections",
@@ -72,8 +136,6 @@
     "active": "ACTIVE",
     "create": "Create",
     "createProject": "Create Project",
-    "createdOn": "Created on",
-    "lastModifiedOn": "Last modified on",
     "newProject": "New Project",
     "newVersion": "New Version",
     "newVersionFor": "New Version for",
@@ -81,7 +143,8 @@
     "projectNameRequired": "Project Name is required",
     "projectVersionRequired": "Project Version is required",
     "versionNameExists": "Version Name already exists",
-    "versionNameRequired": "Version Name is required"
+    "versionNameRequired": "Version Name is required",
+    "welcomeBack": "Welcome back, "
   },
   "settingsDrawer": {
     "apiKey": "API Key",
@@ -97,5 +160,14 @@
     "reset": "Reset",
     "resetToEnvVariables": "Reset to environment variables",
     "savedSuccessfully": "Saved successfully"
+  },
+  "validation": {
+    "isRequired": "is required",
+    "mustBeValid": "must be valid",
+    "max64Characters": "must be at most 64 characters",
+    "min8Characters": "must be at least 8 characters",
+    "atLeastOneLower": "must contain at least one lower case character",
+    "atLeastOneUpper": "must contain at least one upper case character",
+    "atLeastOneDigit": "must contain at least one number"
   }
 }

@@ -12,7 +12,7 @@ import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 
 public class ProcessDetailsMapper {
-	
+
 	public static ProcessDetails map(ProcessModelTable table) {
 		ProcessDetails details = new ProcessDetails();
 		details.setId(table.getId());
@@ -26,7 +26,7 @@ public class ProcessDetailsMapper {
 		details.setBpmnProcessId(table.getBpmnProcessId());
 		return details;
 	}
-	
+
 	private static List<ProcessActivity> map(List<CallActivityTable> callActivites) {
 		return callActivites//
 				.stream()//

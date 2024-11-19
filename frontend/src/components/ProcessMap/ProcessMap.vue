@@ -45,6 +45,7 @@ import {
   FilterGraphInput,
   HiddenLinks,
   HiddenPorts,
+  MessageFlow,
   PortsInformation,
   Process,
   ProcessElementType,
@@ -59,6 +60,7 @@ import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 import { useAppStore } from "@/store/app";
 import { Settings } from "@/components/SettingsDrawer.vue";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export const getPortPrefix = (elementType: ProcessElementType): string => {
   switch (elementType) {
@@ -93,7 +95,7 @@ export default defineComponent({
     const persistedHiddenLinks = appStore.getHiddenLinksForProject(selectedProjectId);
     const persistedHiddenPorts = appStore.getHiddenPortsForProject(selectedProjectId);
 
-    const hiddenCells: dia.Cell[] = !!persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
+    const hiddenCells: dia.Cell[] = persistedHiddenCells ? JSON.parse(persistedHiddenCells!) : [];
     const hiddenLinks: HiddenLinks = persistedHiddenLinks ?? {};
     const hiddenPorts: HiddenPorts = persistedHiddenPorts ? JSON.parse(persistedHiddenPorts) : {};
     const portsInformation: PortsInformation = {};
@@ -120,6 +122,17 @@ export default defineComponent({
     },
     navigationButtons() {
       return this.$refs.navigationButtons as InstanceType<typeof NavigationButtons>;
+    },
+    isUserLoggedIn() {
+      return this.appStore.getUserToken() !== null;
+    }
+  },
+
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
     }
   },
 
@@ -170,7 +183,7 @@ export default defineComponent({
     }
 
     const persistedGraph = this.appStore.getGraphForProject(this.selectedProjectId);
-    if (!!persistedGraph) {
+    if (persistedGraph) {
       Object.assign(this.portsInformation, this.appStore.getPortsInformationByProject(this.selectedProjectId));
       graph.fromJSON(JSON.parse(persistedGraph));
     } else {
@@ -178,7 +191,7 @@ export default defineComponent({
       return;
     }
     const persistedLayout = this.appStore.getPaperLayoutForProject(this.selectedProjectId);
-    if (!!persistedLayout) {
+    if (persistedLayout) {
       const { sx, tx, ty } = JSON.parse(persistedLayout);
       paper.scale(sx);
       paper.translate(tx, ty);
@@ -192,6 +205,9 @@ export default defineComponent({
     let lastView: dia.LinkView;
     paper.on("link:mouseenter", (linkView) => {
       if (linkView.model.get("source").id.toString().startsWith('ds')) {
+        return;
+      }
+      if (linkView.model.get("isMessageFlow")) {
         return;
       }
       clearTimeout(timer);
@@ -228,6 +244,7 @@ export default defineComponent({
           userCreated: true
         }, {
           headers: {
+            ...authHeader(),
             'Content-Type': 'application/json'
           }
         });
@@ -250,7 +267,7 @@ export default defineComponent({
 
     const removeProcessLink = async (connectionId: number): Promise<boolean> => {
       try {
-        await axios.delete(`/api/project/process-map/process-connection/${connectionId}`);
+        await axios.delete(`/api/project/process-map/process-connection/${connectionId}`, { headers: authHeader() });
         return true;
       } catch (error) {
         console.error("Error while removing process connection:", error);
@@ -260,7 +277,7 @@ export default defineComponent({
 
     const removeDataStoreLink = async (connectionId: number): Promise<boolean> => {
       try {
-        await axios.delete(`/api/project/process-map/datastore-connection/${connectionId}`);
+        await axios.delete(`/api/project/process-map/datastore-connection/${connectionId}`, { headers: authHeader() });
         return true;
       } catch (error) {
         console.error("Error while removing datastore connection:", error);
@@ -319,27 +336,27 @@ export default defineComponent({
     fetchProcessModels() {
       this.resetFilters();
       graph.clear();
-      axios.get("/api/project/" + this.selectedProjectId + "/process-map").then(result => {
+      axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() }).then(result => {
 
-        let abstractProcessShapes: AbstractProcessShape[] = result.data.processes.map((process: Process) => {
+        let abstractProcessShapes: AbstractProcessShape[] = result.data.processes
+          .map((process: Process) => {
 
-          const filterEmpty = (label: string) => !!label;
+            const filterEmpty = (label: string) => !!label;
 
-          this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
-          this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['start-' + process.id] = process.startEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['i-catch-event-' + process.id] = process.intermediateCatchEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['i-throw-event-' + process.id] = process.intermediateThrowEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['end-' + process.id] = process.endEvents.filter(event => filterEmpty(event.label)).map(e => e.label);
+            this.portsInformation['call-' + process.id] = process.activities.filter(event => filterEmpty(event.label)).map(e => e.label);
 
-          return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
-        });
+            return createAbstractProcessElement(process.name, process.id, process.bpmnProcessId);
+          });
 
         this.appStore.setPortsInformationByProject(this.selectedProjectId, this.portsInformation);
 
         graph.addCell(abstractProcessShapes);
 
         let connectionsShapes = result.data.connections.map((connection: Connection) => {
-
           const link = new shapes.standard.Link();
 
           const callingPortPrefix = getPortPrefix(connection.callingElementType);
@@ -349,9 +366,9 @@ export default defineComponent({
             connectionId: connection.id,
             source: { id: connection.callingProcessid, port: callingPortPrefix + connection.callingProcessid },
             target: { id: connection.calledProcessid, port: calledPortPrefix + connection.calledProcessid }
-          })
+          });
 
-          if (!!connection.label) {
+          if (connection.label) {
             link.appendLabel({
               attrs: {
                 text: {
@@ -365,6 +382,41 @@ export default defineComponent({
         });
 
         graph.addCell(connectionsShapes);
+
+        let messageFlowShapes = result.data.messageFlows.map((messageFlow: MessageFlow) => {
+          const link = new shapes.standard.Link();
+
+          const callingPortPrefix = getPortPrefix(messageFlow.callingElementType);
+          const calledPortPrefix = getPortPrefix(messageFlow.calledElementType);
+
+          link.set({
+            connectionId: messageFlow.bpmnId,
+            source: { id: messageFlow.callingProcessId, port: callingPortPrefix + messageFlow.callingProcessId },
+            target: { id: messageFlow.calledProcessId, port: calledPortPrefix + messageFlow.calledProcessId },
+            isMessageFlow: true
+          });
+
+          link.attr({
+              line: {
+                strokeDasharray: '5,5'
+              }
+            }
+          );
+
+          if (messageFlow.name) {
+            link.appendLabel({
+              attrs: {
+                text: {
+                  text: messageFlow.name
+                }
+              }
+            });
+          }
+
+          return link;
+        });
+
+        graph.addCell(messageFlowShapes);
 
         let abstractDataStores = result.data.dataStores.map((dataStore: DataStore) => {
           return createAbstractDataStoreElement(dataStore.name, dataStore.id);
@@ -406,8 +458,6 @@ export default defineComponent({
 
         graph.addCell(dataStoreConnectionShapes);
 
-
-
         DirectedGraph.layout(graph, {
           nodeSep: 80,
           edgeSep: 100,
@@ -443,13 +493,14 @@ export default defineComponent({
                   hideIntermediateEvents,
                   hideStartEndEvents,
                   hideProcessesWithoutConnections,
-                  hideConnectionLabels
+                  hideConnectionLabels,
+                  hideMessageFlows
                 }: FilterGraphInput) {
 
       if (!hideConnectionLabels) {
         for (const link of graph.getLinks()) {
           const label = this.hiddenLinks[link.id];
-          if (!!label) {
+          if (label) {
             link.appendLabel({
               attrs: {
                 text: {
@@ -500,6 +551,8 @@ export default defineComponent({
 
         } else if (hideStartEndEvents && sourcePort?.startsWith('end') && targetPort?.startsWith('start')) {
           cellsToHide.push(link);
+        } else if (hideMessageFlows && link.get('isMessageFlow')) {
+          cellsToHide.push(link);
         }
       }
 
@@ -537,7 +590,7 @@ export default defineComponent({
       if (hideConnectionLabels) {
         for (const link of graph.getLinks()) {
           const labelText = link.labels()[0]?.attrs!.text!.text;
-          if (!!labelText) {
+          if (labelText) {
             this.hiddenLinks[link.id] = labelText;
           }
           link.removeLabel();
@@ -551,7 +604,7 @@ export default defineComponent({
     },
     async fetchSettings() {
       try {
-        await axios.get("/api/settings").then(result => {
+        await axios.get("/api/settings", { headers: authHeader() }).then(result => {
           this.settings = result.data;
         });
       } catch (error) {
@@ -583,7 +636,7 @@ export default defineComponent({
           "client_id": this.settings.operateClientId,
           "client_secret": this.settings.operateClientSecret,
           "audience": "operate.camunda.io"
-        });
+        }, { headers: authHeader() });
         this.operateToken = result.data;
         await this.fetchProcessInstances();
       } catch (error) {
@@ -598,7 +651,7 @@ export default defineComponent({
           "regionId": this.settings.operateRegionId,
           "clusterId": this.settings.operateClusterId,
           "bpmnProcessId": cell.attributes.bpmnProcessId
-        });
+        }, { headers: authHeader() });
       });
 
       const results = await Promise.all(promises);

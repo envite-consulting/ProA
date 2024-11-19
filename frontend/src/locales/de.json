@@ -1,4 +1,41 @@
 {
+  "authentication": {
+    "accountCreationFailed": "Account konnte nicht erstellt werden",
+    "accountLocked": "Account ist gesperrt. Bitte kontaktieren Sie Ihren Administrator.",
+    "admin": "Admin",
+    "alreadyAccountQuestion": "Besteht bereits ein Account?",
+    "back": "Zurück",
+    "changePassword": "Passwort ändern",
+    "createAnAccount": "Account erstellen",
+    "createAccountQuestion": "Account erstellen?",
+    "currentPassword": "Aktuelles Passwort",
+    "currentPwWrongError": "Aktuelles Passwort falsch",
+    "edit": "Bearbeiten",
+    "editYourProfile": "Profil bearbeiten",
+    "email": "E-Mail",
+    "emailAlreadyRegistered": "Diese E-Mail Adresse ist bereits registriert",
+    "firstName": "Vorname",
+    "forgotPwQuestion": "Passwort vergessen?",
+    "lastName": "Nachname",
+    "name": "Name",
+    "newPassword": "Neues Passwort",
+    "openProject": "Projekt öffnen",
+    "password": "Passwort",
+    "passwordChangeErrorMsg": "Fehler beim Ändern des Passworts",
+    "passwordSuccessfullyChanged": "Passwort erfolgreich geändert",
+    "profileEditFailed": "Profil konnte nicht bearbeitet werden",
+    "profileSuccessfullyEdited": "Profil erfolgreich bearbeitet",
+    "projects": "Projekte",
+    "resetPwInfo": "Bitte kontaktieren Sie Ihren Administrator, um Ihr Passwort zu ändern.",
+    "role": "Rolle",
+    "samePasswordError": "Das neue Passwort muss sich vom alten Passwort unterscheiden.",
+    "signInFailed": "Anmeldung fehlgeschlagen",
+    "successfullyCreatedAccount": "Account erfolgreich erstellt",
+    "tooManyRequests": "Zu viele Anfragen. Versuchen Sie es bitte später erneut.",
+    "user": "Nutzer",
+    "version": "Version",
+    "welcomeBack": "Willkommen zurück!"
+  },
   "c8Import": {
     "camundaConnectionSuccessMessage": "Mit Camunda 8 verbunden. Sie können Prozessmodelle abrufen.",
     "connect": "Verbinden",
@@ -18,6 +55,9 @@
     "cancel": "Abbrechen",
     "clientId": "Client ID",
     "clientSecret": "Client Secret",
+    "close": "Schließen",
+    "continue": "Fortfahren",
+    "createdOn": "Erstellt am",
     "description": "Beschreibung",
     "end": "Ende",
     "english": "Englisch",
@@ -25,17 +65,23 @@
     "intermediateCatchEvents": "Zwischenereignisse fangend",
     "intermediateEvent": "Zwischenereignis",
     "intermediateThrowEvents": "Zwischenereignisse werfend",
+    "lastModifiedOn": "Zuletzt geändert am",
+    "myProfile": "Mein Profil",
     "processModel": "Prozessmodell",
     "save": "Speichern",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "signOut": "Abmelden"
   },
   "navigation": {
     "c8Import": "C8 Import",
+    "createAccount": "Account erstellen",
     "camundaCloudImport": "C8 Import",
+    "pageNotFound": "Seite nicht gefunden",
     "processList": "Prozessliste",
     "processMap": "Prozesskarte",
     "projectOverview": "Projektübersicht",
-    "processView": "Prozessansicht"
+    "processView": "Prozessansicht",
+    "signIn": "Anmelden"
   },
   "processDetailSidebar": {
     "endEvents": "Endereignisse",
@@ -43,8 +89,25 @@
     "startEvents": "Startereignisse"
   },
   "processList": {
+    "alreadyExistsErrorMsg1": {
+      "singular": "Kollaboration mit der ID ",
+      "plural": "Kollaborationen mit den IDs "
+    },
+    "alreadyExistsErrorMsg2": {
+      "singular": " existiert bereits.",
+      "plural": " existieren bereits."
+    },
+    "cantReplaceWithCollaborationErrorMsg": "Es ist nicht möglich einen Prozess mit einer Kollaboration zu ersetzen.",
+    "collaboration": "Kollaboration",
+    "confirm": "Bestätigen",
+    "confirmDeletion": "Löschen Bestätigen",
+    "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
+    "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
+    "error": "Fehler",
+    "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
+    "participant": "Teilnehmer",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
@@ -61,6 +124,7 @@
     "hide": "Ausblenden",
     "intermediateEvents": "Zwischenereignisse",
     "legend": "Legende",
+    "messageFlows": "Nachrichtenflüsse",
     "noInformationAvailable": "Keine Informationen verfügbar",
     "process": "Prozess",
     "processesWithoutConnections": "Prozesse ohne Verbindungen",
@@ -72,8 +136,6 @@
     "active": "AKTIV",
     "create": "Erstellen",
     "createProject": "Projekt erstellen",
-    "createdOn": "Erstellt am",
-    "lastModifiedOn": "Zuletzt geändert am",
     "newProject": "Neues Projekt",
     "newVersion": "Neue Version",
     "newVersionFor": "Neue Version für",
@@ -81,7 +143,8 @@
     "projectNameRequired": "Projektname ist erforderlich",
     "projectVersionRequired": "Projektversion ist erforderlich",
     "versionNameExists": "Versionsname existiert bereits",
-    "versionNameRequired": "Versionsname ist erforderlich"
+    "versionNameRequired": "Versionsname ist erforderlich",
+    "welcomeBack": "Willkommen zurück, "
   },
   "settingsDrawer": {
     "apiKey": "API Key",
@@ -97,5 +160,14 @@
     "reset": "Zurücksetzen",
     "resetToEnvVariables": "Zurücksetzen auf Umgebungsvariablen",
     "savedSuccessfully": "Erfolgreich gespeichert"
+  },
+  "validation": {
+    "isRequired": "ist erforderlich",
+    "mustBeValid": "muss gültig sein",
+    "max64Characters": "darf höchstens 64 Zeichen lang sein",
+    "min8Characters": "muss mindestens 8 Zeichen lang sein",
+    "atLeastOneLower": "muss mindestens einen Kleinbuchstaben enthalten",
+    "atLeastOneUpper": "muss mindestens einen Großbuchstaben enthalten",
+    "atLeastOneDigit": "muss mindestens eine Zahl enthalten"
   }
 }

@@ -16,11 +16,23 @@ public class ProjectUsecase {
 		return repository.createProject(name, version);
 	}
 
+	public Project createProject(Long userId, String name, String version) {
+		return repository.createProject(userId, name, version);
+	}
+
 	public List<Project> getProjects() {
 		return repository.getProjects();
 	}
 
+	public List<Project> getProjects(Long userId) {
+		return repository.getProjects(userId);
+	}
+
 	public Project getProject(Long projectId) {
 		return repository.getProject(projectId);
+	}
+
+	public Project getProject(Long userId, Long projectId) {
+		return repository.getProject(userId, projectId);
 	}
 }

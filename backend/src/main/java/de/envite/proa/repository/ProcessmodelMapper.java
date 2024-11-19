@@ -26,6 +26,7 @@ public class ProcessmodelMapper {
 		table.setDescription(processModel.getDescription());
 		table.setProject(projectTable);
 		table.setBpmnProcessId(processModel.getBpmnProcessId());
+		table.setProcessType(processModel.getProcessType());
 		return table;
 	}
 

@@ -1,5 +1,6 @@
 package de.envite.proa.repository;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +61,8 @@ public class ProcessModelDao {
 
 		processModels = em//
 				.createQuery("""
-						SELECT DISTINCT pm FROM ProcessModelTable pm 
-						LEFT JOIN FETCH pm.callActivites 
+						SELECT DISTINCT pm FROM ProcessModelTable pm
+						LEFT JOIN FETCH pm.callActivites
 						WHERE pm in :processModels
 						""", ProcessModelTable.class)//
 				.setParameter("processModels", processModels)//
@@ -73,6 +74,11 @@ public class ProcessModelDao {
 	@Transactional
 	public void persist(ProcessModelTable table) {
 		em.persist(table);
+	}
+
+	@Transactional
+	public void merge(ProcessModelTable table) {
+		em.merge(table);
 	}
 
 	@Transactional
@@ -94,8 +100,36 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
+	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, ProjectTable projectTable) {
+		List<ProcessModelTable> processModels = em //
+				.createQuery("SELECT p FROM ProcessModelTable p " + //
+						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
+				.setParameter("bpmnProcessId", bpmnProcessId) //
+				.setParameter("project", projectTable) //
+				.getResultList();
+
+		return !processModels.isEmpty() ? processModels.getFirst() : null;
+	}
+
+	@Transactional
 	public void delete(Long id) {
 		ProcessModelTable table = em.find(ProcessModelTable.class, id);
 		em.remove(table);
+	}
+
+	@Transactional
+	public void delete(List<Long> processModelIds) {
+		processModelIds.forEach(this::delete);
+	}
+
+	@Transactional
+	public ProcessModelTable findByName(String name, ProjectTable projectTable) {
+		List<ProcessModelTable> processModels = em //
+				.createQuery("SELECT p FROM ProcessModelTable p " + //
+						"WHERE p.name = :name AND p.project = :project", ProcessModelTable.class)
+				.setParameter("name", name) //
+				.setParameter("project", projectTable) //
+				.getResultList();
+		return processModels.isEmpty() ? null : processModels.getFirst();
 	}
 }

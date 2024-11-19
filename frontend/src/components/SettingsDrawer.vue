@@ -89,6 +89,7 @@ import { useAppStore } from "@/store/app";
 import axios from "axios";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import i18n from "@/i18n";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export interface Settings {
   geminiApiKey: string;
@@ -116,11 +117,18 @@ export default defineComponent({
     modelerSuccessMsg: "",
     operateConnectionSuccessMsg: "",
     operateClusterSuccessMsg: "",
-    isValidating: false
+    isValidating: false,
+    isWebVersion: import.meta.env.VITE_APP_MODE === "web"
   }),
 
-  mounted() {
-    if (Object.keys(this.settings).length === 0) this.handleAfterToggle()
+  computed: {
+    isUserLoggedIn() {
+      return this.appStore.getUserToken() !== null;
+    }
+  },
+
+  async mounted() {
+    if (Object.keys(this.settings).length === 0) await this.handleAfterToggle();
   },
 
   methods: {
@@ -145,20 +153,35 @@ export default defineComponent({
     },
     async saveSettings() {
       const doSettingsExist = async () => {
-        try {
-          await axios.get("/api/settings");
-          return true;
-        } catch (error) {
-          return false;
-        }
+        const result = await axios.get(
+          '/api/settings',
+          { headers: authHeader() }
+        );
+        return !!result.data;
       }
 
       const areSettingsValid = await this.validateSettings();
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settingsToBeSaved, { headers: { 'Content-Type': 'application/json' } });
+        await axios.patch(
+          '/api/settings',
+          this.settingsToBeSaved,
+          {
+            headers: {
+              ...authHeader(),
+              'Content-Type': 'application/json'
+            }
+          });
       } else {
-        await axios.post("/api/settings", this.settingsToBeSaved, { headers: { 'Content-Type': 'application/json' } });
+        await axios.post(
+          '/api/settings',
+          this.settingsToBeSaved,
+          {
+            headers: {
+              ...authHeader(),
+              'Content-Type': 'application/json'
+            }
+          });
       }
 
       if (areSettingsValid) {
@@ -249,7 +272,7 @@ export default defineComponent({
         await axios.post("/api/camunda-cloud/token", {
           "client_id": modelerClientId,
           "client_secret": modelerClientSecret,
-        });
+        }, { headers: authHeader() });
         return true;
       } catch (error) {
         return false;
@@ -264,7 +287,7 @@ export default defineComponent({
           "client_id": operateClientId,
           "client_secret": operateClientSecret,
           "audience": "operate.camunda.io"
-        });
+        }, { headers: authHeader() });
         return { valid: true, token: result.data };
       } catch (error) {
         return { valid: false, token: null };
@@ -279,7 +302,7 @@ export default defineComponent({
           "token": operateToken,
           "regionId": this.settings.operateRegionId,
           "clusterId": this.settings.operateClusterId
-        });
+        }, { headers: authHeader() });
         return true;
       } catch (error) {
         return false;
@@ -299,13 +322,15 @@ export default defineComponent({
       this.appStore.setOperateConnectionError("");
     },
     async fetchSettings() {
-      try {
-        await axios.get("/api/settings").then(result => {
-          this.settings = result.data;
-        });
-      } catch (error) {
-        this.settings = {} as Settings;
+      if (this.isWebVersion && !this.isUserLoggedIn) {
+        return;
       }
+      await axios.get(
+        '/api/settings',
+        { headers: authHeader() }
+      ).then(result => {
+        this.settings = result.data || {} as Settings;
+      });
 
       this.settings.geminiApiKey = this.settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;

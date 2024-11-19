@@ -124,6 +124,7 @@ import axios from 'axios';
 import BpmnViewer from 'bpmn-js/lib/Viewer';
 import { AbstractProcessShape } from "@/components/ProcessMap/jointjs/AbstractProcessElement";
 import { ProcessElementType, RouteObject } from "./types";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export default defineComponent({
   name: 'ProcessDetailSidebar',
@@ -146,7 +147,7 @@ export default defineComponent({
       const modelId = model.id.toString();
       this.resetProcessModel();
       await this.fetchProcessModel(modelId);
-      axios.get("/api/process-model/" + modelId + "/details").then(result => {
+      axios.get("/api/process-model/" + modelId + "/details", { headers: authHeader() }).then(result => {
         this.details = result.data;
       })
     },
@@ -169,7 +170,7 @@ export default defineComponent({
       });
 
       const url = '/api/process-model/' + modelId;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: authHeader() });
       const xmlText = response.data;
       await viewer.importXML(xmlText);
       (viewer as any).get('canvas').zoom('fit-viewport', 'auto');

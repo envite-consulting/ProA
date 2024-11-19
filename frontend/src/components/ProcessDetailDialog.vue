@@ -105,6 +105,7 @@ import { defineComponent } from 'vue';
 import axios from 'axios';
 import { dia } from "@joint/core";
 import BpmnViewer from "bpmn-js";
+import { authHeader } from "@/components/Authentication/authHeader";
 
 export interface Process {
   id: number;
@@ -141,7 +142,7 @@ export default defineComponent({
       await this.$nextTick();
       this.resetProcessModel();
       await this.fetchProcessModel(processId);
-      axios.get("/api/process-model/" + processId + "/details").then(result => {
+      axios.get("/api/process-model/" + processId + "/details", { headers: authHeader() }).then(result => {
         this.details = result.data;
       })
     },
@@ -158,7 +159,7 @@ export default defineComponent({
       });
 
       const url = '/api/process-model/' + modelId;
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers: authHeader() });
       const xmlText = response.data;
       await viewer.importXML(xmlText);
       (viewer.get('canvas') as any).zoom('fit-viewport', 'auto');

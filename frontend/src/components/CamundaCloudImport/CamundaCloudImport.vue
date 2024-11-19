@@ -153,6 +153,7 @@ import axios from 'axios';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { Settings } from "../SettingsDrawer.vue"
+import { authHeader } from "@/components/Authentication/authHeader";
 
 declare interface ProcessModel {
   id: string,
@@ -171,10 +172,9 @@ interface EmailSelection {
 const minStickyOffset = 72;
 const maxStickyOffset = 136;
 
-const appStore = useAppStore();
-
 export default defineComponent({
   data: () => ({
+    store: useAppStore(),
     showOperateClientSecret: false as boolean,
     camundaCloudDialog: false as boolean,
     loadingDialog: false as boolean,
@@ -196,9 +196,22 @@ export default defineComponent({
     stickyButtonTop: Math.max(minStickyOffset, maxStickyOffset - scrollY),
   }),
 
-  watch: {},
+  computed: {
+    isUserLoggedIn(): boolean {
+      return this.store.getUserToken() != null;
+    }
+  },
+
+  watch: {
+    isUserLoggedIn(newValue) {
+      if (!newValue) {
+        this.$router.push("/");
+      }
+    }
+  },
+
   mounted: function () {
-    this.selectedProjectId = appStore.selectedProjectId;
+    this.selectedProjectId = this.store.getSelectedProjectId();
     if (!this.selectedProjectId) {
       this.$router.push("/");
       return;
@@ -224,11 +237,11 @@ export default defineComponent({
       axios.post("/api/camunda-cloud/token", {
         "client_id": this.settings.modelerClientId,
         "client_secret": this.settings.modelerClientSecret,
-      }).then(result => {
+      }, { headers: authHeader() }).then(result => {
         this.token = result.data;
         this.tokenError = false;
         this.loadingDialog = false;
-      }).catch(error => {
+      }).catch(() => {
         this.tokenError = true;
         this.loadingDialog = false;
       })
@@ -240,7 +253,7 @@ export default defineComponent({
         "email": this.isBlank(this.creatorEmail) ? null : this.creatorEmail,
         "regionId": null,
         "clusterId": null
-      }).then(async result => {
+      }, { headers: authHeader() }).then(async result => {
         if (this.saveClientInformation) {
           await this.saveSettings();
         }
@@ -255,8 +268,7 @@ export default defineComponent({
           }));
         this.camundaCloudDialog = false;
         this.loadingDialog = false;
-      }).catch(error => {
-        console.log(error);
+      }).catch(() => {
         this.tokenError = true;
         this.token = null;
         this.loadingDialog = false;
@@ -271,7 +283,7 @@ export default defineComponent({
       axios.post("/api/camunda-cloud/project/" + this.selectedProjectId + "/import", {
         token: this.token,
         selectedProcessModelIds: selectedProcessModelIds,
-      }).then(() => {
+      }, { headers: authHeader() }).then(() => {
         this.processModels = this.processModels.filter(model => !selectedProcessModelIds.includes(model.id));
         this.selectedProcessModels = [];
         this.loadingDialog = false;
@@ -283,34 +295,46 @@ export default defineComponent({
     },
     async fetchSettings() {
       try {
-        await axios.get("/api/settings").then(result => {
+        await axios.get('/api/settings', { headers: authHeader() }).then(result => {
           this.settings = result.data;
         });
       } catch (error) {
         this.settings = {} as Settings;
       }
 
-      this.settings.modelerClientId = this.settings.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
-      this.settings.modelerClientSecret = this.settings.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
+      this.settings = this.settings || {} as Settings;
+
+      this.settings.modelerClientId = this.settings?.modelerClientId || import.meta.env.VITE_MODELER_CLIENT_ID;
+      this.settings.modelerClientSecret = this.settings?.modelerClientSecret || import.meta.env.VITE_MODELER_CLIENT_SECRET;
     },
     async saveSettings() {
       const doSettingsExist = async () => {
         try {
-          await axios.get("/api/settings");
-          return true;
+          const result = await axios.get('api/settings', { headers: authHeader() });
+          return !!result?.data;
         } catch (error) {
           return false;
         }
       }
 
       if (await doSettingsExist()) {
-        await axios.patch("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
+        await axios.patch('api/settings', this.settings, {
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json'
+          }
+        });
       } else {
-        await axios.post("/api/settings", this.settings, { headers: { 'Content-Type': 'application/json' } });
+        await axios.post('api/settings', this.settings, {
+          headers: {
+            ...authHeader(),
+            'Content-Type': 'application/json'
+          }
+        });
       }
     },
     getLocaleDate(date: string): string {
-      const locales = useAppStore().getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      const locales = this.store.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
       return new Date(date).toLocaleString(locales);
     },
     toggleSelectAll() {

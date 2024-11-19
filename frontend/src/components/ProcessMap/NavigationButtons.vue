@@ -69,13 +69,14 @@ export default defineComponent({
   data() {
     return {
       scrollStep: 20,
-      zoomInMultiplier: 1.3,
-      zoomOutMultiplier: 0.7
+      zoomInMultiplier: 1.1,
+      zoomOutMultiplier: 0.9
     }
   },
 
   mounted() {
     const savePaperLayout = this.savePaperLayout;
+    this.addKeydownListener();
 
     paper.on('paper:pinch', function (evt, x, y, sx) {
       evt.preventDefault();
@@ -93,25 +94,29 @@ export default defineComponent({
     });
   },
 
+  beforeUnmount() {
+    this.removeKeydownListener();
+  },
+
   methods: {
     goLeft() {
-      const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0 + this.scrollStep, ty0);
-      this.savePaperLayout();
-    },
-    goRight() {
       const { tx: tx0, ty: ty0 } = paper.translate();
       paper.translate(tx0 - this.scrollStep, ty0);
       this.savePaperLayout();
     },
+    goRight() {
+      const { tx: tx0, ty: ty0 } = paper.translate();
+      paper.translate(tx0 + this.scrollStep, ty0);
+      this.savePaperLayout();
+    },
     goUp() {
       const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0, ty0 + this.scrollStep);
+      paper.translate(tx0, ty0 - this.scrollStep);
       this.savePaperLayout();
     },
     goDown() {
       const { tx: tx0, ty: ty0 } = paper.translate();
-      paper.translate(tx0, ty0 - this.scrollStep);
+      paper.translate(tx0, ty0 + this.scrollStep);
       this.savePaperLayout();
     },
     zoomIn() {
@@ -135,6 +140,37 @@ export default defineComponent({
         ty: paper.translate().ty
       }));
     },
+    addKeydownListener() {
+      window.addEventListener('keydown', this.onKeyDown);
+    },
+    removeKeydownListener() {
+      window.removeEventListener('keydown', this.onKeyDown);
+    },
+    onKeyDown(evt: KeyboardEvent) {
+      switch (evt.key) {
+        case 'ArrowLeft':
+          this.goLeft();
+          break;
+        case 'ArrowRight':
+          this.goRight();
+          break;
+        case 'ArrowUp':
+          this.goUp();
+          break;
+        case 'ArrowDown':
+          this.goDown();
+          break;
+        case '+':
+          this.zoomIn();
+          break;
+        case '-':
+          this.zoomOut();
+          break;
+        case 'f':
+          this.fitToScreen();
+          break;
+      }
+    }
   }
 });
 </script>

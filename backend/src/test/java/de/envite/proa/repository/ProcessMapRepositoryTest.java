@@ -54,6 +54,8 @@ public class ProcessMapRepositoryTest {
 	private CallActivityDao callActivityDao;
 	@Mock
 	private ProcessEventDao processEventDao;
+	@Mock
+	private MessageFlowDao messageFlowDao;
 
 	@BeforeEach
 	public void setup() {
@@ -71,7 +73,8 @@ public class ProcessMapRepositoryTest {
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
-				processEventDao);
+				processEventDao, //
+ 				messageFlowDao);
 
 		ProcessModelTable processModel1 = new ProcessModelTable();
 		processModel1.setId(PROCESS_MODEL_ID_1);

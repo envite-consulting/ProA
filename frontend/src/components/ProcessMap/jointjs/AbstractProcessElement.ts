@@ -252,7 +252,7 @@ export class AbstractProcessShape extends dia.Element {
 
 const createAbstractProcessElement = (label: string, id: number, bpmnProcessId: string) => {
 
-  let wrapLabel = util.breakText(label, {
+  const wrapLabel = util.breakText(label, {
     width: 120
   });
 

@@ -1,5 +1,6 @@
 package de.envite.proa.camundacloud;
 
+import de.envite.proa.usecases.ProcessOperations;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
@@ -20,6 +21,9 @@ public class CamundaCloudImportUsecase {
 
 	@Inject
 	private ProcessModelUsecase usecase;
+
+	@Inject
+	private ProcessOperations processOperations;
 
 	public Object getProcessModels(CamundaCloudFetchConfiguration configuration) {
 
@@ -52,7 +56,12 @@ public class CamundaCloudImportUsecase {
 		for (String id : config.getSelectedProcessModelIds()) {
 			CamundaProcessModelResponse processModel = camundaModelerService
 					.getProcessModel("Bearer " + config.getToken(), id);
-			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), getProcessXml(processModel), "");
+			String xml = getProcessXml(processModel);
+			String description = processOperations.getDescription(xml);
+			String isCollaboration = processOperations.getIsCollaboration(xml) ? "true" : "false";
+
+			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), xml, description, isCollaboration,
+					null);
 		}
 	}
 

@@ -1,16 +1,11 @@
 package de.envite.proa.repository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessActivity;
-import de.envite.proa.entities.ProcessDetails;
-import de.envite.proa.entities.ProcessElementType;
-import de.envite.proa.entities.ProcessEvent;
-import de.envite.proa.entities.ProcessInformation;
-import de.envite.proa.entities.ProcessModel;
+import de.envite.proa.entities.*;
 import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
@@ -34,6 +29,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	private CallActivityDao callActivityDao;
 	private ProcessConnectionDao processConnectionDao;
 	private ProcessEventDao processEventDao;
+	private MessageFlowDao messageFlowDao;
 
 	@Inject
 	public ProcessmodelRepositoryImpl(ProjectDao projectDao, //
@@ -42,7 +38,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			DataStoreConnectionDao dataStoreConnectionDao, //
 			CallActivityDao callActivityDao, //
 			ProcessConnectionDao processConnectionDao, //
-			ProcessEventDao processEventDao) {
+			ProcessEventDao processEventDao, //
+			MessageFlowDao messageFlowDao) {
 		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.dataStoreDao = dataStoreDao;
@@ -50,17 +47,27 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		this.callActivityDao = callActivityDao;
 		this.processConnectionDao = processConnectionDao;
 		this.processEventDao = processEventDao;
+		this.messageFlowDao = messageFlowDao;
 	}
 
 	@Override
 	public Long saveProcessModel(Long projectId, ProcessModel processModel) {
-		
+
 		ProjectTable projectTable = projectDao.findById(projectId);
 
 		ProcessModelTable table = ProcessmodelMapper.map(processModel, projectTable);
 		table.setCreatedAt(LocalDateTime.now());
 		table.setProject(projectTable);
+
+		String parentBpmnProcessId = processModel.getParentBpmnProcessId();
 		processModelDao.persist(table);
+		if (parentBpmnProcessId != null) {
+			ProcessModelTable parent = processModelDao.findByBpmnProcessId(parentBpmnProcessId, projectTable);
+			parent.getChildren().add(table);
+			processModelDao.merge(parent);
+			table.getParents().add(parent);
+			processModelDao.merge(table);
+		}
 
 		connectEvents(processModel, table, projectTable);
 
@@ -73,16 +80,21 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public List<ProcessInformation> getProcessInformation(Long projectId) {
-		
+
 		ProjectTable projectTable = projectDao.findById(projectId);
-		return processModelDao//
-				.getProcessModels(projectTable)//
-				.stream()//
-				.map(model -> new ProcessInformation(//
+		return processModelDao //
+				.getProcessModels(projectTable) //
+				.stream() //
+				.map(model -> new ProcessInformation( //
 						model.getId(), //
+						model.getBpmnProcessId(), //
 						model.getName(), //
 						model.getDescription(), //
-						model.getCreatedAt()))//
+						model.getCreatedAt(), //
+						model.getParents().stream().map(ProcessModelTable::getBpmnProcessId) //
+								.collect(Collectors.toList()), //
+						model.getChildren().stream().map(ProcessModelTable::getBpmnProcessId) //
+								.collect(Collectors.toList()))) //
 				.collect(Collectors.toList());
 	}
 
@@ -90,13 +102,19 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	public ProcessDetails getProcessDetails(Long id) {
 
 		ProcessModelTable table = processModelDao.findWithChildren(id);
-		ProcessDetails details = ProcessDetailsMapper.map(table);
 
-		return details;
+		return ProcessDetailsMapper.map(table);
+	}
+
+	@Override
+	public void saveMessageFlows(List<MessageFlowDetails> messageFlows, Long projectId) {
+		ProjectTable projectTable = projectDao.findById(projectId);
+		messageFlows.forEach(messageFlow -> {
+			messageFlowDao.persist(MessageFlowMapper.map(messageFlow, projectTable, processModelDao));
+		});
 	}
 
 	private void connectDataStores(ProcessModelTable table, ProjectTable projectTable) {
-
 		table//
 				.getDataStores()//
 				.stream()//
@@ -106,7 +124,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	}
 
-	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table, ProjectTable projectTable) {
+	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table,
+			ProjectTable projectTable) {
 		DataStoreTable dataStoreTable;
 		try {
 
@@ -138,7 +157,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	private void connectProcessWithCallActivity(ProcessModelTable table, ProjectTable projectTable) {
-		List<CallActivityTable> callActivityTables = callActivityDao.getCallActivitiesForName(table.getName(), projectTable);
+		List<CallActivityTable> callActivityTables = callActivityDao.getCallActivitiesForName(table.getName(),
+				projectTable);
 
 		callActivityTables.forEach(callActivityTable -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -156,8 +176,10 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		});
 	}
 
-	private void connectCallActivityWithProcess(ProcessModelTable table, ProcessActivity activity, ProjectTable projectTable) {
-		List<ProcessModelTable> processModelTable = processModelDao.getProcessModelsForName(activity.getLabel(), projectTable);
+	private void connectCallActivityWithProcess(ProcessModelTable table, ProcessActivity activity,
+			ProjectTable projectTable) {
+		List<ProcessModelTable> processModelTable = processModelDao.getProcessModelsForName(activity.getLabel(),
+				projectTable);
 
 		processModelTable.forEach(process -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -186,16 +208,16 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	private void connectEvents(ProcessModelTable table, ProcessEvent event, ProjectTable projectTable) {
 		switch (event.getEventType()) {
-		case START:
-		case INTERMEDIATE_CATCH:
-			connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectTable);
-			connectWithThrowEvents(table, event, EventType.END, projectTable);
-			break;
-		case INTERMEDIATE_THROW:
-		case END:
-			connectWithCatchEvents(table, event, EventType.START, projectTable);
-			connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
-			break;
+			case START :
+			case INTERMEDIATE_CATCH :
+				connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectTable);
+				connectWithThrowEvents(table, event, EventType.END, projectTable);
+				break;
+			case INTERMEDIATE_THROW :
+			case END :
+				connectWithCatchEvents(table, event, EventType.START, projectTable);
+				connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
+				break;
 		}
 	}
 
@@ -267,8 +289,46 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public void deleteProcessModel(Long id) {
-		dataStoreConnectionDao.deleteForProcessModel(id);
-		processConnectionDao.deleteForProcessModel(id);
-		processModelDao.delete(id);
+		List<Long> relatedProcessModelIdsToDelete = getRelatedProcessModelsToDelete(id, new ArrayList<>());
+		relatedProcessModelIdsToDelete.forEach(processModelId -> {
+			dataStoreConnectionDao.deleteForProcessModel(processModelId);
+			processConnectionDao.deleteForProcessModel(processModelId);
+		});
+
+		processModelDao.delete(relatedProcessModelIdsToDelete);
+	}
+
+	private List<Long> getRelatedProcessModelsToDelete(Long id, List<Long> processModelIdsToDelete) {
+		if (processModelIdsToDelete.contains(id)) {
+			return processModelIdsToDelete;
+		}
+
+		processModelIdsToDelete.add(id);
+		ProcessModelTable table = processModelDao.find(id);
+
+		List<ProcessModelTable> children = table.getChildren();
+		for (ProcessModelTable child : children) {
+			boolean hasOtherParent = child.getParents().size() > 1;
+			if (!hasOtherParent) {
+				processModelIdsToDelete = getRelatedProcessModelsToDelete(child.getId(), processModelIdsToDelete);
+			}
+		}
+
+		List<ProcessModelTable> parents = table.getParents();
+		for (ProcessModelTable parent : parents) {
+			processModelIdsToDelete = getRelatedProcessModelsToDelete(parent.getId(), processModelIdsToDelete);
+		}
+
+		return processModelIdsToDelete;
+	}
+
+	@Override
+	public ProcessModelTable findByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId) {
+		ProjectTable project = projectDao.findById(projectId);
+		ProcessModelTable processModel = processModelDao.findByName(name, project);
+		if (processModel != null) {
+			return processModel;
+		}
+		return processModelDao.findByBpmnProcessId(bpmnProcessId, project);
 	}
 }

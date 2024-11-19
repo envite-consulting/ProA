@@ -1,5 +1,6 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAppStore } from "@/store/app";
 
 const routes = [
   {
@@ -20,7 +21,7 @@ const routes = [
         component: () => import('@/views/CamundaCloudImportView.vue'),
       },
       {
-        path: '/ProcessView/:id',
+        path: 'ProcessView/:id',
         name: 'ProcessView',
         component: () => import('@/views/ProcessView.vue'),
       },
@@ -34,13 +35,44 @@ const routes = [
         name: 'ProcessMap',
         component: () => import('@/views/ProcessMapView.vue'),
       },
-    ],
+      {
+        path: 'SignIn',
+        name: 'SignIn',
+        component: () => import('@/views/SignInView.vue'),
+      },
+      {
+        path: ':pathMatch(.*)*',
+        name: 'PageNotFound',
+        component: () => import('@/views/PageNotFoundView.vue'),
+      }
+    ]
   },
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes,
-})
+});
+
+router.beforeEach((to, from, next) => {
+  const store = useAppStore();
+  const isLoggedIn = store.getUserToken() != null;
+  const isWebVersion = import.meta.env.VITE_APP_MODE === "web";
+
+  if (to.name === 'SignIn') {
+    if (!isWebVersion || isLoggedIn) {
+      window.history.back();
+      return;
+    }
+    next();
+    return;
+  }
+
+  if (isWebVersion && !isLoggedIn) {
+    next({ name: 'SignIn' });
+  } else {
+    next();
+  }
+});
 
 export default router
