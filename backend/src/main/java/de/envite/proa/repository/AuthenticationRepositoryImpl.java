@@ -61,8 +61,10 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 		if (emailAlreadyRegistered) throw new EmailAlreadyRegisteredException(email);
 
 		user.setPassword(hashPassword(user.getPassword()));
+		LocalDateTime now = LocalDateTime.now();
+		user.setCreatedAt(now);
+		user.setModifiedAt(now);
 
-		user.setModifiedAt(LocalDateTime.now());
 		authenticationDao.register(UserMapper.map(user));
 	}
 

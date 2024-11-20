@@ -16,6 +16,7 @@
     "emailAlreadyRegistered": "Diese E-Mail Adresse ist bereits registriert",
     "firstName": "Vorname",
     "forgotPwQuestion": "Passwort vergessen?",
+    "id": "ID",
     "lastName": "Nachname",
     "name": "Name",
     "newPassword": "Neues Passwort",
@@ -68,6 +69,7 @@
     "myProfile": "Mein Profil",
     "processModel": "Prozessmodell",
     "save": "Speichern",
+    "search": "Suchen",
     "settings": "Einstellungen",
     "signOut": "Abmelden"
   },
@@ -75,6 +77,7 @@
     "c8Import": "C8 Import",
     "createAccount": "Account erstellen",
     "camundaCloudImport": "C8 Import",
+    "manageUsers": "Nutzer verwalten",
     "pageNotFound": "Seite nicht gefunden",
     "processList": "Prozessliste",
     "processMap": "Prozesskarte",

@@ -7,6 +7,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 
+import java.util.List;
+
 @ApplicationScoped
 public class UserDao {
 
@@ -31,5 +33,16 @@ public class UserDao {
     @Transactional
     public UserTable patchUser(UserTable user) {
         return em.merge(user);
+    }
+
+    @Transactional
+    public List<UserTable> getAllUsers() {
+        return em.createQuery("SELECT u FROM UserTable u", UserTable.class).getResultList();
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+		UserTable user = findById(id);
+		em.remove(user);
     }
 }

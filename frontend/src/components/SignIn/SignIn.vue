@@ -55,6 +55,8 @@ import { VForm } from "vuetify/components";
 import axios, { AxiosError } from "axios";
 import { SelectedDialog, useAppStore } from "@/store/app";
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
+import { authHeader } from "@/components/Authentication/authHeader";
+import { Role } from "@/components/ProcessMap/types";
 
 
 export default defineComponent({
@@ -91,6 +93,11 @@ export default defineComponent({
 
         const { data } = response;
         this.store.setUserToken(data);
+
+        const userResponse = await axios.get('/api/user', { headers: authHeader() });
+
+        const role: Role = userResponse.data.role;
+        this.store.setUserRole(role);
 
         this.$router.push({ path: "/", state: { showLoggedInBanner: true } });
       } catch

@@ -129,6 +129,11 @@ export default defineComponent({
           type: 'success',
           message: this.$t('authentication.profileSuccessfullyEdited') as string
         }
+        if (this.$route.name === 'ManageUsers') {
+          window.location.reload();
+          this.closeDialog();
+          return;
+        }
         this.$emit('showMessage', message);
         this.openDialog(SelectedDialog.PROFILE);
       } catch (e) {
