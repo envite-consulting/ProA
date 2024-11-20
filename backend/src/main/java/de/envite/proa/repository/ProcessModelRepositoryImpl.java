@@ -20,7 +20,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
 
 @ApplicationScoped
-public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
+public class ProcessModelRepositoryImpl implements ProcessModelRepository {
 
 	private ProjectDao projectDao;
 	private ProcessModelDao processModelDao;
@@ -32,14 +32,14 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	private MessageFlowDao messageFlowDao;
 
 	@Inject
-	public ProcessmodelRepositoryImpl(ProjectDao projectDao, //
-			ProcessModelDao processModelDao, //
-			DataStoreDao dataStoreDao, //
-			DataStoreConnectionDao dataStoreConnectionDao, //
-			CallActivityDao callActivityDao, //
-			ProcessConnectionDao processConnectionDao, //
-			ProcessEventDao processEventDao, //
-			MessageFlowDao messageFlowDao) {
+	public ProcessModelRepositoryImpl(ProjectDao projectDao, //
+									  ProcessModelDao processModelDao, //
+									  DataStoreDao dataStoreDao, //
+									  DataStoreConnectionDao dataStoreConnectionDao, //
+									  CallActivityDao callActivityDao, //
+									  ProcessConnectionDao processConnectionDao, //
+									  ProcessEventDao processEventDao, //
+									  MessageFlowDao messageFlowDao) {
 		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
 		this.dataStoreDao = dataStoreDao;
@@ -55,7 +55,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 		ProjectTable projectTable = projectDao.findById(projectId);
 
-		ProcessModelTable table = ProcessmodelMapper.map(processModel, projectTable);
+		ProcessModelTable table = ProcessModelMapper.map(processModel, projectTable);
 		table.setCreatedAt(LocalDateTime.now());
 		table.setProject(projectTable);
 

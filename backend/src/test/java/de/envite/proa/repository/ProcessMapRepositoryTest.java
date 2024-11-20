@@ -22,7 +22,7 @@ import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 
-public class ProcessMapRepositoryTest {
+class ProcessMapRepositoryTest {
 
 	private static final Long PROCESS_MODEL_ID_1 = 1L;
 	private static final String PROCESS_MODEL_NAME_1 = "processModelName_1";
@@ -63,7 +63,7 @@ public class ProcessMapRepositoryTest {
 	}
 
 	@Test
-	public void testGetProcessMap() {
+	void testGetProcessMap() {
 		// Arrange
 
 		ProcessMapRepositoryImpl repository = new ProcessMapRepositoryImpl(//

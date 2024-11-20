@@ -14,7 +14,7 @@ import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 
-public class ProcessmodelMapper {
+public class ProcessModelMapper {
 
 	public static ProcessModelTable map(ProcessModel processModel, ProjectTable projectTable) {
 		ProcessModelTable table = new ProcessModelTable();

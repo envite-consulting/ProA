@@ -16,7 +16,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @QuarkusTest
-public class RepositoryIntegrationTest {
+class RepositoryIntegrationTest {
 
 	private static final String DATA_STORE_LABEL = "DataStore Label";
 	private static final String DATA_STORE_ID = "dataStoreId";
@@ -35,7 +35,7 @@ public class RepositoryIntegrationTest {
 	private EntityManager entityManager;
 
 	@Inject
-	private ProcessmodelRepositoryImpl processModelrepository;
+	private ProcessModelRepositoryImpl processModelRepository;
 
 	@Inject
 	private ProcessMapRepositoryImpl processMapRepository;
@@ -44,7 +44,7 @@ public class RepositoryIntegrationTest {
 	private ProjectRepositoryImpl projectRepository;
 
 	@Test
-	public void testSaveAndGetProcessModel() {
+	void testSaveAndGetProcessModel() {
 
 		// Arrange
 		ProcessModel model = new ProcessModel();
@@ -54,19 +54,17 @@ public class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-
 		model.setEvents(Arrays.asList(startEvent));
 
 		ProcessActivity activity = new ProcessActivity();
 		activity.setElementId(ACTIVITY_ID);
 		activity.setLabel(ACTIVITY_LABEL);
-
 		model.setCallActivities(Arrays.asList(activity));
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
-		Long processId = processModelrepository.saveProcessModel(project.getId(), model);
-		ProcessDetails processDetails = processModelrepository.getProcessDetails(processId);
+		Long processId = processModelRepository.saveProcessModel(project.getId(), model);
+		ProcessDetails processDetails = processModelRepository.getProcessDetails(processId);
 
 		// Assert
 		assertThat(processDetails.getName()).isEqualTo(PROCESS_MODEL_NAME);
@@ -78,7 +76,7 @@ public class RepositoryIntegrationTest {
 
 	@Test
 	@Transactional
-	public void testGetProcessMap() {
+	void testGetProcessMap() {
 
 		// Arrange
 		ProcessModel model1 = new ProcessModel();
@@ -107,8 +105,8 @@ public class RepositoryIntegrationTest {
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
-		Long processId1 = processModelrepository.saveProcessModel(project.getId(), model1);
-		Long processId2 = processModelrepository.saveProcessModel(project.getId(), model2);
+		Long processId1 = processModelRepository.saveProcessModel(project.getId(), model1);
+		Long processId2 = processModelRepository.saveProcessModel(project.getId(), model2);
 
 		ProcessMap processMap = processMapRepository.getProcessMap(project.getId());
 
@@ -138,7 +136,7 @@ public class RepositoryIntegrationTest {
 
 	@Test
 	@Transactional
-	public void testDeleteProcess() {
+	void testDeleteProcess() {
 
 		// Arrange
 		ProcessModel model1 = new ProcessModel();
@@ -167,10 +165,10 @@ public class RepositoryIntegrationTest {
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
-		Long processId1 = processModelrepository.saveProcessModel(project.getId(), model1);
-		Long processId2 = processModelrepository.saveProcessModel(project.getId(), model2);
+		Long processId1 = processModelRepository.saveProcessModel(project.getId(), model1);
+		Long processId2 = processModelRepository.saveProcessModel(project.getId(), model2);
 
-		processModelrepository.deleteProcessModel(processId2);
+		processModelRepository.deleteProcessModel(processId2);
 
 		ProcessMap processMap = processMapRepository.getProcessMap(project.getId());
 
@@ -180,17 +178,17 @@ public class RepositoryIntegrationTest {
 				.extracting("id", "name")//
 				.contains(tuple(processId1, PROCESS_MODEL_NAME));
 
-		assertThat(processMap.getConnections()).hasSize(0);
+		assertThat(processMap.getConnections()).isEmpty();
 
 		assertThat(processMap.getDataStores())//
-				.hasSize(0);
+				.isEmpty();
 
-		assertThat(processMap.getDataStoreConnections()).hasSize(0);
+		assertThat(processMap.getDataStoreConnections()).isEmpty();
 	}
 
 	@Test
 	@Transactional
-	public void testGetProjects() {
+	void testGetProjects() {
 
 		// Arange
 		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
@@ -209,7 +207,7 @@ public class RepositoryIntegrationTest {
 
 	@Test
 	@Transactional
-	public void testGetProject() {
+	void testGetProject() {
 
 		// Arange
 		Long projectId = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
@@ -224,7 +222,7 @@ public class RepositoryIntegrationTest {
 	}
 
 	@Test
-	public void testDeleteProjects() {
+	void testDeleteProjects() {
 
 		// Arange
 		ProcessModel model = new ProcessModel();
@@ -239,14 +237,14 @@ public class RepositoryIntegrationTest {
 		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
 		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2).getId();
 
-		processModelrepository.saveProcessModel(projectId1, model);
+		processModelRepository.saveProcessModel(projectId1, model);
 
 		// Act
 		projectRepository.deleteProject(projectId1);
 		projectRepository.deleteProject(projectId2);
 
 		// Assert
-		assertThat(projectRepository.getProjects()).hasSize(0);
+		assertThat(projectRepository.getProjects()).isEmpty();
 	}
 
 	/**
@@ -256,7 +254,7 @@ public class RepositoryIntegrationTest {
 	 */
 	@BeforeEach
 	@Transactional
-	public void cleanupDatabase() {
+	void cleanupDatabase() {
 		entityManager.createNativeQuery("DELETE FROM ProcessEventTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM CallActivityTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessConnectionTable").executeUpdate();

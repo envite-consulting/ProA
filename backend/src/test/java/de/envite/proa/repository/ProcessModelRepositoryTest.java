@@ -31,7 +31,7 @@ import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 
-public class ProcessmodelRepositoryTest {
+class ProcessModelRepositoryTest {
 
 	private static final String PROCESS_DESCRIPTION = "Description";
 	private static final String COMMON_EVENT_LABEL = "common event label";
@@ -63,12 +63,12 @@ public class ProcessmodelRepositoryTest {
 	private MessageFlowDao messageFlowDao;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testEndEvent() {
+	void testEndEvent() {
 
 		// Arrange
 		ProjectTable projectTable = new ProjectTable();
@@ -87,7 +87,7 @@ public class ProcessmodelRepositoryTest {
 		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.START, projectTable))
 				.thenReturn(startEventTables);
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -125,11 +125,11 @@ public class ProcessmodelRepositoryTest {
 
 		assertThat(connection.getLabel()).isEqualTo(COMMON_EVENT_LABEL);
 
-		assertThat(connection.getUserCreated()).isEqualTo(false);
+		assertThat(connection.getUserCreated()).isFalse();
 	}
 
 	@Test
-	public void testStartEvent() {
+	void testStartEvent() {
 
 		// Arrange
 		ProjectTable projectTable = new ProjectTable();
@@ -148,7 +148,7 @@ public class ProcessmodelRepositoryTest {
 		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.END, projectTable))
 				.thenReturn(endEventTables);
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -185,11 +185,11 @@ public class ProcessmodelRepositoryTest {
 
 		assertThat(connection.getLabel()).isEqualTo(COMMON_EVENT_LABEL);
 
-		assertThat(connection.getUserCreated()).isEqualTo(false);
+		assertThat(connection.getUserCreated()).isFalse();
 	}
 
 	@Test
-	public void testCallActivity() {
+	void testCallActivity() {
 
 		// Arrange
 		ProjectTable projectTable = new ProjectTable();
@@ -202,7 +202,7 @@ public class ProcessmodelRepositoryTest {
 		when(processModelDao.getProcessModelsForName(EXISTING_PROCESS_MODEL_NAME, projectTable))
 				.thenReturn(Arrays.asList(processModelTable));
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -239,11 +239,11 @@ public class ProcessmodelRepositoryTest {
 
 		assertThat(connection.getLabel()).isEqualTo(EXISTING_PROCESS_MODEL_NAME);
 
-		assertThat(connection.getUserCreated()).isEqualTo(false);
+		assertThat(connection.getUserCreated()).isFalse();
 	}
 
 	@Test
-	public void testProcessCalledByActivity() {
+	void testProcessCalledByActivity() {
 
 		// Arrange
 		ProjectTable projectTable = new ProjectTable();
@@ -262,7 +262,7 @@ public class ProcessmodelRepositoryTest {
 		when(callActivityDao.getCallActivitiesForName(NEW_PROCESS_MODEL_NAME, projectTable))
 				.thenReturn(Arrays.asList(callActivityTable));
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -293,11 +293,11 @@ public class ProcessmodelRepositoryTest {
 
 		assertThat(connection.getLabel()).isEqualTo(NEW_PROCESS_MODEL_NAME);
 
-		assertThat(connection.getUserCreated()).isEqualTo(false);
+		assertThat(connection.getUserCreated()).isFalse();
 	}
 
 	@Test
-	public void testDataStore() {
+	void testDataStore() {
 		// Arrange
 		ProjectTable projectTable = new ProjectTable();
 		projectTable.setId(PROJECT_ID);
@@ -309,7 +309,7 @@ public class ProcessmodelRepositoryTest {
 
 		when(dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL, projectTable)).thenReturn(dataStoreTable);
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -343,7 +343,7 @@ public class ProcessmodelRepositoryTest {
 	}
 
 	@Test
-	public void testGetProcessInformation() {
+	void testGetProcessInformation() {
 
 		// Arrange
 		ProjectTable projectTable = new ProjectTable();
@@ -361,7 +361,7 @@ public class ProcessmodelRepositoryTest {
 
 		when(processModelDao.getProcessModels(projectTable)).thenReturn(Arrays.asList(processModel));
 
-		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
