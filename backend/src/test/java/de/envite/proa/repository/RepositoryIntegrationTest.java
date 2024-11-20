@@ -74,7 +74,6 @@ public class RepositoryIntegrationTest {
 				.hasSize(1)//
 				.extracting("elementId", "label", "eventType")//
 				.contains(tuple(EVENT_ID, EVENT_LABEL, EventType.START));
-
 	}
 
 	@Test
@@ -89,7 +88,6 @@ public class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-
 		model1.setEvents(Arrays.asList(startEvent));
 
 		ProcessModel model2 = new ProcessModel();
@@ -99,8 +97,8 @@ public class RepositoryIntegrationTest {
 		endEvent.setElementId(EVENT_ID);
 		endEvent.setLabel(EVENT_LABEL);
 		endEvent.setEventType(EventType.END);
-
 		model2.setEvents(Arrays.asList(endEvent));
+
 		ProcessDataStore dataStore = new ProcessDataStore();
 		dataStore.setAccess(DataAccess.READ);
 		dataStore.setElementId(DATA_STORE_ID);
@@ -150,7 +148,6 @@ public class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-
 		model1.setEvents(Arrays.asList(startEvent));
 
 		ProcessModel model2 = new ProcessModel();
@@ -160,8 +157,8 @@ public class RepositoryIntegrationTest {
 		endEvent.setElementId(EVENT_ID);
 		endEvent.setLabel(EVENT_LABEL);
 		endEvent.setEventType(EventType.END);
-
 		model2.setEvents(Arrays.asList(endEvent));
+
 		ProcessDataStore dataStore = new ProcessDataStore();
 		dataStore.setAccess(DataAccess.READ);
 		dataStore.setElementId(DATA_STORE_ID);
@@ -208,7 +205,6 @@ public class RepositoryIntegrationTest {
 				.extracting("id", "name", "version")//
 				.contains(tuple(projectId1, PROJECT_NAME, PROJECT_VERSION),
 						tuple(projectId2, PROJECT_NAME_2, PROJECT_VERSION_2));
-
 	}
 
 	@Test
@@ -225,6 +221,32 @@ public class RepositoryIntegrationTest {
 		assertThat(project.getId()).isEqualTo(projectId);
 		assertThat(project.getName()).isEqualTo(PROJECT_NAME);
 		assertThat(project.getVersion()).isEqualTo(PROJECT_VERSION);
+	}
+
+	@Test
+	public void testDeleteProjects() {
+
+		// Arange
+		ProcessModel model = new ProcessModel();
+		model.setName(PROCESS_MODEL_NAME);
+
+		ProcessDataStore dataStore = new ProcessDataStore();
+		dataStore.setAccess(DataAccess.READ);
+		dataStore.setElementId(DATA_STORE_ID);
+		dataStore.setLabel(DATA_STORE_LABEL);
+		model.setDataStores(Arrays.asList(dataStore));
+
+		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
+		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2).getId();
+
+		processModelrepository.saveProcessModel(projectId1, model);
+
+		// Act
+		projectRepository.deleteProject(projectId1);
+		projectRepository.deleteProject(projectId2);
+
+		// Assert
+		assertThat(projectRepository.getProjects()).hasSize(0);
 	}
 
 	/**
