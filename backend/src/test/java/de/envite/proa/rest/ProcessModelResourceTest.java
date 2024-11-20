@@ -1,7 +1,6 @@
 package de.envite.proa.rest;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
@@ -18,7 +17,7 @@ import org.mockito.ArgumentCaptor;
 
 import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessInformation;
-import de.envite.proa.usecases.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 
