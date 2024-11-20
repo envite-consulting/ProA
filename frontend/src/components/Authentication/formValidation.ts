@@ -2,11 +2,18 @@ import i18n from "@/i18n";
 
 const t = i18n.global.t;
 
-export const emailRules = [
+export const baseEmailRules = [
   (email: string) => !!email || `${t('authentication.email')} ${t('validation.isRequired')}`,
-  (email: string) => /.+@.+\..+/.test(email) || `${t('authentication.email')} ${t('validation.mustBeValid')}`,
   (email: string) => email.length <= 64 || `${t('authentication.email')} ${t('validation.max64Characters')}`
 ]
+
+export const emailRules = baseEmailRules.concat([
+  (email: string) => /.+@.+\..+/.test(email) || `${t('authentication.email')} ${t('validation.mustBeValid')}`,
+]);
+
+export const emailRulesSignIn = baseEmailRules.concat([
+  (email: string) => email === 'admin' || /.+@.+\..+/.test(email) || `${t('authentication.email')} ${t('validation.mustBeValid')}`,
+]);
 
 export const newPasswordRules = [
   (password: string) => !!password || `${t('authentication.password')} ${t('validation.isRequired')}`,
