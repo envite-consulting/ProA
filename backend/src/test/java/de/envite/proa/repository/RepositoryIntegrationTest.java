@@ -244,6 +244,8 @@ class RepositoryIntegrationTest {
 		projectRepository.deleteProject(projectId2);
 
 		// Assert
+		assertThat(processMapRepository.getProcessMap(projectId1).getDataStores()).isEmpty();
+		assertThat(processMapRepository.getProcessMap(projectId1).getProcesses()).isEmpty();
 		assertThat(projectRepository.getProjects()).isEmpty();
 	}
 
