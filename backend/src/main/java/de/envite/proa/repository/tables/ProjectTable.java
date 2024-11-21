@@ -10,7 +10,7 @@ import lombok.Data;
 public class ProjectTable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long id;
 
 	private String name;

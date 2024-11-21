@@ -9,7 +9,7 @@ import lombok.Data;
 public class MessageFlowTable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	private String bpmnId;

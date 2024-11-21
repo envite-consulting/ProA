@@ -12,7 +12,7 @@ import lombok.Data;
 public class UserTable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
     private String email;

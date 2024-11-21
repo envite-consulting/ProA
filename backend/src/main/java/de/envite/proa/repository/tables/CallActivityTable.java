@@ -8,7 +8,7 @@ import lombok.Data;
 public class CallActivityTable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long id;
 	
     private String elementId;
