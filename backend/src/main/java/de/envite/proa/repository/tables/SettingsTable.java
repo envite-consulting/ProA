@@ -1,9 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -11,7 +8,7 @@ import lombok.Data;
 public class SettingsTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long id;
 
 	private String geminiApiKey;

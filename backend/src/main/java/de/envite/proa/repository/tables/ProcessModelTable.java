@@ -13,7 +13,7 @@ import lombok.Data;
 public class ProcessModelTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public Long id;
 
 	private String name;

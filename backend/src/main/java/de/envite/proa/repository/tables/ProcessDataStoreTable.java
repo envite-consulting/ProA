@@ -1,13 +1,7 @@
 package de.envite.proa.repository.tables;
 
 import de.envite.proa.entities.DataAccess;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -15,7 +9,7 @@ import lombok.Data;
 public class ProcessDataStoreTable {
 
 	@Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
     private String elementId;
