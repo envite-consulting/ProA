@@ -8,7 +8,7 @@ import lombok.Data;
 public class SettingsTable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue
 	public Long id;
 
 	private String geminiApiKey;
