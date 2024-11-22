@@ -9,7 +9,7 @@ import lombok.Data;
 public class DataStoreConnectionTable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.EAGER)

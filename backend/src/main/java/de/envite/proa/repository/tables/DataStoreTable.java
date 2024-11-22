@@ -8,7 +8,7 @@ import lombok.Data;
 public class DataStoreTable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue
 	private Long id;
 
 	private String label;
