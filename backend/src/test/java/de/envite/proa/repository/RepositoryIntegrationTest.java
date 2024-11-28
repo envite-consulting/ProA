@@ -2,10 +2,12 @@ package de.envite.proa.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -190,7 +192,7 @@ class RepositoryIntegrationTest {
 	@Transactional
 	void testGetProjects() {
 
-		// Arange
+		// Arrange
 		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
 		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2).getId();
 
@@ -209,7 +211,7 @@ class RepositoryIntegrationTest {
 	@Transactional
 	void testGetProject() {
 
-		// Arange
+		// Arrange
 		Long projectId = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act
@@ -222,9 +224,9 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	void testDeleteProjects() {
+	void testDeleteProjectsWithoutUser() {
 
-		// Arange
+		// Arrange
 		ProcessModel model = new ProcessModel();
 		model.setName(PROCESS_MODEL_NAME);
 
@@ -247,6 +249,68 @@ class RepositoryIntegrationTest {
 		assertThat(processMapRepository.getProcessMap(projectId1).getDataStores()).isEmpty();
 		assertThat(processMapRepository.getProcessMap(projectId1).getProcesses()).isEmpty();
 		assertThat(projectRepository.getProjects()).isEmpty();
+	}
+
+	@Test
+	void testDeleteProjectWithoutUserNonExistentProject() {
+
+		// Arrange
+		Long nonExistentProjectId = 1L;
+
+		// Act & Assert
+		assertThatThrownBy(() -> projectRepository.deleteProject(nonExistentProjectId))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void testDeleteProjectWithUser() {
+
+		// Arrange
+		ProcessModel model = new ProcessModel();
+		model.setName(PROCESS_MODEL_NAME);
+
+		ProcessDataStore dataStore = new ProcessDataStore();
+		dataStore.setAccess(DataAccess.READ);
+		dataStore.setElementId(DATA_STORE_ID);
+		dataStore.setLabel(DATA_STORE_LABEL);
+		model.setDataStores(Arrays.asList(dataStore));
+
+		Long userId = 1L;
+		Long projectId = projectRepository.createProject(userId, PROJECT_NAME, PROJECT_VERSION).getId();
+
+		// Act
+		projectRepository.deleteProject(userId, projectId);
+
+		// Assert
+		assertThat(processMapRepository.getProcessMap(projectId).getDataStores()).isEmpty();
+		assertThat(processMapRepository.getProcessMap(projectId).getProcesses()).isEmpty();
+		assertThat(projectRepository.getProjects(userId)).isEmpty();
+	}
+
+	@Test
+	void testDeleteProjectWithUserNonExistentProject() {
+
+		// Arrange
+		Long userId = 1L;
+		Long nonExistentProjectId = 1L;
+
+		// Act & Assert
+		assertThatThrownBy(() -> projectRepository.deleteProject(userId, nonExistentProjectId))
+				.isInstanceOf(NoResultException.class);
+	}
+
+	@Test
+	void testDeleteProjectWithUserNotBelongingToUser() {
+
+		// Arrange
+		Long userId1 = 1L;
+		Long userId2 = 2L;
+		Long projectId = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION).getId();
+
+		// Act & Assert
+		assertThatThrownBy(() -> projectRepository.deleteProject(userId2, projectId))
+				.isInstanceOf(NoResultException.class);
+		assertThat(projectRepository.getProjects(userId1)).hasSize(1);
 	}
 
 	/**
