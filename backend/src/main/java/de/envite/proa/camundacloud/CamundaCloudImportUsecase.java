@@ -32,16 +32,17 @@ public class CamundaCloudImportUsecase {
 		return camundaModelerService.getProcessModels("Bearer " + configuration.getToken(), search);
 	}
 
+	protected CamundaOperateService createOperateService(String baseUri) {
+		return RestClientBuilder.newBuilder().baseUri(URI.create(baseUri)).build(CamundaOperateService.class);
+	}
+
 	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
 		String operateUri = "https://" + //
 				configuration.getRegionId() + //
 				".operate.camunda.io/" + //
 				configuration.getClusterId();
 
-		CamundaOperateService camundaOperateService = RestClientBuilder //
-				.newBuilder() //
-				.baseUri(URI.create(operateUri)) //
-				.build(CamundaOperateService.class);
+		CamundaOperateService camundaOperateService = createOperateService(operateUri);
 
 		String bpmnProcessId = configuration.getBpmnProcessId();
 
