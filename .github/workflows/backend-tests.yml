@@ -1,12 +1,8 @@
-name: Backend - Continuous Integration
+name: Backend Tests
 
 on:
-  push:
-    branches: [ main, develop, jonaw1/test-coverage ]
-    paths:
-      - 'backend/**'
   pull_request:
-    branches: [ main, develop, jonaw1/test-coverage ]
+    branches: [ main, develop ]
     paths:
       - 'backend/**'
   workflow_dispatch:
