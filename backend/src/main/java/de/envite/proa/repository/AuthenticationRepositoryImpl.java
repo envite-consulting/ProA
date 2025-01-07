@@ -19,15 +19,14 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepository {
 
 	private final AuthenticationDao authenticationDao;
 	private final UserDao userDao;
+	private final TokenService tokenService;
 
 	@Inject
-	public AuthenticationRepositoryImpl(AuthenticationDao authenticationDao, UserDao userDao) {
+	public AuthenticationRepositoryImpl(AuthenticationDao authenticationDao, UserDao userDao, TokenService tokenService) {
 		this.authenticationDao = authenticationDao;
 		this.userDao = userDao;
+		this.tokenService = tokenService;
 	}
-
-	@Inject
-	TokenService tokenService;
 
 	@Override
 	public String login(User user) {
