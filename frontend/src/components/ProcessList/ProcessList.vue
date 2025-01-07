@@ -174,8 +174,8 @@
       prepend-icon="mdi-alert-circle-outline"
       :title="$t('processList.error')"
     >
-      <template v-slot:text v-if="errorType === ErrorType.ALREADY_EXISTING">
-        <span>
+      <template v-slot:text>
+        <span v-if="errorType = ErrorType.ALREADY_EXISTING">
           {{
             $t('processList.alreadyExistsErrorMsg1.'
               + (alreadyExistingBpmnProcessIds.length > 1 ? 'plural' : 'singular'))
@@ -186,9 +186,9 @@
               + (alreadyExistingBpmnProcessIds.length > 1 ? 'plural' : 'singular'))
           }}
         </span>
-      </template>
-      <template v-slot:text v-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
-        {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
+        <span v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
+          {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
+        </span>
       </template>
       <template v-slot:actions>
         <div class="ms-auto">

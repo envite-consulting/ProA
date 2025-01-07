@@ -1,11 +1,13 @@
 <template>
   <v-dialog v-model="showDialog" max-width="500" @click:outside="closeDialog" persistent no-click-animation>
-    <ProfileDialog v-if="selectedDialog === SelectedDialog.PROFILE" :message="message" @showMessage="showMessage"/>
+    <ProfileDialog v-if="selectedDialog === SelectedDialog.PROFILE" :message="message" @showMessage="showMessage"
+                   @removeMessage="removeMessage"/>
     <EditProfileDialog v-if="selectedDialog === SelectedDialog.EDIT_PROFILE" @showMessage="showMessage"
-                       :message="message"/>
+                       :message="message" @removeMessage="removeMessage"/>
     <CreateAccount v-if="selectedDialog === SelectedDialog.CREATE_ACCOUNT" :message="message"
-                   @showMessage="showMessage"/>
-    <ChangePassword v-if="selectedDialog === SelectedDialog.CHANGE_PW" @showMessage="showMessage" :message="message"/>
+                   @showMessage="showMessage" @removeMessage="removeMessage"/>
+    <ChangePassword v-if="selectedDialog === SelectedDialog.CHANGE_PW" @showMessage="showMessage" :message="message"
+                    @removeMessage="removeMessage"/>
   </v-dialog>
 </template>
 
@@ -51,6 +53,9 @@ export default defineComponent({
   methods: {
     showMessage(message: Message) {
       this.message = message;
+    },
+    removeMessage() {
+      this.message.message = '';
     },
     resetMessage() {
       this.message = { message: '', type: 'error' };

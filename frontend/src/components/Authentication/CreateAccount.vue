@@ -18,7 +18,7 @@
                  :text="message.message"
                  :type="message.type"
                  class="mb-5"
-                 @click:close="message.message = ''"
+                 @click:close="removeMessage"
         ></v-alert>
         <v-text-field
           type="email"
@@ -175,6 +175,9 @@ export default defineComponent({
     },
     closeDialog() {
       this.store.setSelectedDialog(SelectedDialog.NONE);
+    },
+    removeMessage() {
+      this.$emit('removeMessage');
     }
   }
 });

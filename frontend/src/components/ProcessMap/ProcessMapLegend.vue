@@ -35,7 +35,7 @@ import { defineComponent } from 'vue'
 import LegendItem from "@/components/ProcessMap/LegendItem.vue";
 
 export default defineComponent({
-  name: "Legend",
+  name: "ProcessMapLegend",
   components: { LegendItem }
 })
 </script>
