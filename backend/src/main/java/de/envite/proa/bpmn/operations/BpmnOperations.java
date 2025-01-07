@@ -97,7 +97,7 @@ public class BpmnOperations implements ProcessOperations {
 		}
 		Documentation documentation = documentations.iterator().next();
 
-		return documentation != null ? documentation.getTextContent() : null;
+		return documentation.getTextContent();
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class BpmnOperations implements ProcessOperations {
 		if (!collaborations.isEmpty() && participants.size() > 1) {
 			Collaboration collaboration = collaborations.iterator().next();
 
-			if (collaboration.getId() != null && !collaboration.getId().isEmpty()) {
+			if (collaboration.getId() != null) {
 				return collaboration.getId();
 			}
 
@@ -205,10 +205,8 @@ public class BpmnOperations implements ProcessOperations {
 		} else if (element instanceof IntermediateThrowEvent) {
 			return new MessageFlowNode(getProcessIdFromChildElement(element),
 					ProcessElementType.INTERMEDIATE_THROW_EVENT);
-		} else if (element instanceof StartEvent) {
-			return new MessageFlowNode(getProcessIdFromChildElement(element), ProcessElementType.START_EVENT);
 		}
-		return null;
+		return new MessageFlowNode(getProcessIdFromChildElement(element), ProcessElementType.START_EVENT);
 	}
 
 	private String getProcessIdFromChildElement(ModelElementInstance element) {
