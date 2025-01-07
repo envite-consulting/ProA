@@ -2,11 +2,11 @@ name: Backend - Continuous Integration
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, develop, jonaw1/test-coverage ]
     paths:
       - 'backend/**'
   pull_request:
-    branches: [ master ]
+    branches: [ main, develop, jonaw1/test-coverage ]
     paths:
       - 'backend/**'
   workflow_dispatch:
