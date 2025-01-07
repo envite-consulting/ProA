@@ -24,7 +24,7 @@ class TokenServiceTest {
     private static final String EMAIL = "test@test.de";
     private static final String ROLE = "Admin";
     private static final String ISSUER = "proa-issuer";
-    private static final String PUBLIC_KEY_PATH = "src/main/resources/publicKey.pem";
+    private static final String PUBLIC_KEY_PATH = "src/main/resources/publicKey.test.pem";
 
     private static User user;
 
