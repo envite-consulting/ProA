@@ -6,8 +6,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +16,7 @@ import java.util.Objects;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -107,19 +107,15 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testDelete() {
-		// Act
-		given()//
-				.when()//
-				.delete("/api/process-model/" + PROCESS_ID)//
-				.then()//
-				.statusCode(200);
+	public void testDeleteProcessModel() {
+		doNothing().when(usecase).deleteProcessModel(PROCESS_ID);
 
-		// Assert
-		ArgumentCaptor<Long> processIdCaptor = ArgumentCaptor.forClass(Long.class);
-		verify(usecase).deleteProcessModel(processIdCaptor.capture());
+		RestResponse<?> response = resource.deleteProcessModel(PROCESS_ID);
 
-		assertThat(processIdCaptor.getValue()).isEqualTo(PROCESS_ID);
+		assertThat(response.getStatus()).isEqualTo(200);
+		assertThat(response.getEntity()).isNull();
+
+		verify(usecase).deleteProcessModel(PROCESS_ID);
 	}
 
 	@Test
