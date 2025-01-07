@@ -282,7 +282,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 			processModelDao.merge(oldParent);
 		}
 
-		List<ProcessModelTable> oldChildren = new ArrayList<>(newProcess.getChildren());
+		List<ProcessModelTable> oldChildren = new ArrayList<>(oldProcess.getChildren());
 		for (ProcessModelTable oldChild : oldChildren) {
 			if (!newProcess.getChildren().contains(oldChild)) {
 				newProcess.getChildren().add(oldChild);
