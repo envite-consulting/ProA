@@ -22,8 +22,9 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	private UserDao userDao;
 
 	@Inject
-	public ProjectRepositoryImpl(ProjectDao dao) {
+	public ProjectRepositoryImpl(ProjectDao dao, UserDao userDao) {
 		this.projectDao = dao;
+		this.userDao = userDao;
 	}
 
 	@Transactional
