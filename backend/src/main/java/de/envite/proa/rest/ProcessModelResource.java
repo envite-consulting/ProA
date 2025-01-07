@@ -33,6 +33,9 @@ public class ProcessModelResource {
 	@Inject
 	private ProcessModelUsecase usecase;
 
+	@Inject
+	FileService fileService;
+
 	/**
 	 * 
 	 * Creates a new process model
@@ -53,7 +56,7 @@ public class ProcessModelResource {
 	public Response uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
 			@RestForm String description, @RestForm String isCollaboration) {
 		try {
-			String content = readFileToString(processModel);
+			String content = fileService.readFileToString(processModel);
 			fileName = fileName.replace(".bpmn", "");
 			return Response //
 					.ok(usecase.saveProcessModel( //
@@ -80,7 +83,7 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public Long replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
 			@RestForm String fileName, @RestForm String description) {
-		String content = readFileToString(processModel);
+		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
 		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description, null);
 	}
@@ -126,21 +129,5 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public ProcessDetails getProcessDetails(@RestPath Long id) {
 		return usecase.getProcessDetails(id);
-	}
-
-	private String readFileToString(File file) {
-		StringBuilder contentBuilder = new StringBuilder();
-
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-
-			String sCurrentLine;
-			while ((sCurrentLine = br.readLine()) != null) {
-				contentBuilder.append(sCurrentLine).append("\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return contentBuilder.toString();
 	}
 }
