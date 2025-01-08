@@ -11,6 +11,8 @@ import de.envite.proa.usecases.project.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 
 @ApplicationScoped
 public class ProjectRepositoryImpl implements ProjectRepository {
@@ -76,13 +78,26 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 
 	@Override
 	public Project getProject(Long projectId) {
-		return map(projectDao.findById(projectId));
+		ProjectTable project = projectDao.findById(projectId);
+		if (project == null) {
+			throw new NotFoundException("Project not found");
+		}
+		return map(project);
 	}
 
 	@Override
 	public Project getProject(Long userId, Long projectId) {
 		UserTable user = userDao.findById(userId);
-		return map(projectDao.findByUserAndId(user, projectId));
+		ProjectTable project = projectDao.findById(projectId);
+		if (project == null) {
+			throw new NotFoundException("Project not found");
+		}
+
+		ProjectTable projectForUser = projectDao.findByUserAndId(user, projectId);
+		if (projectForUser == null) {
+			throw new ForbiddenException("Access forbidden");
+		}
+		return map(projectForUser);
 	}
 
 	private Project map(ProjectTable table) {
