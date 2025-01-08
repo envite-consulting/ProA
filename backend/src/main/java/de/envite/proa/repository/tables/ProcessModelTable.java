@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.envite.proa.entities.ProcessType;
+import de.envite.proa.entities.process.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
 

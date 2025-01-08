@@ -1,6 +1,6 @@
 package de.envite.proa.usecases.user;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 
 public interface UserRepository {
     User findByEmail(String email);

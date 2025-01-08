@@ -1,6 +1,6 @@
 package de.envite.proa.usecases.authentication;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 
 public interface AuthenticationRepository {
 

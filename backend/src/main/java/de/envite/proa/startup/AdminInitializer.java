@@ -1,6 +1,6 @@
 package de.envite.proa.startup;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
 import de.envite.proa.usecases.user.UserUsecase;
 import io.quarkus.runtime.Startup;

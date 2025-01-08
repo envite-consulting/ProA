@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.camunda.bpm.model.bpmn.Bpmn;

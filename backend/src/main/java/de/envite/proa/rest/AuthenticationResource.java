@@ -1,6 +1,6 @@
 package de.envite.proa.rest;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 import de.envite.proa.exceptions.AccountLockedException;
 import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.exceptions.EmailNotFoundException;
