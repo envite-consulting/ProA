@@ -47,12 +47,17 @@
         <td>{{ getLocaleDate(item.createdAt) }}</td>
         <td>{{ getLocaleDate(item.modifiedAt) }}</td>
         <td>
-          <v-btn @click="deleteUser(item.id)" icon="mdi-delete" variant="text" color="grey-lighten-1"/>
+          <v-btn @click="openEditUser(item)" icon="mdi-pencil" variant="text" color="grey-lighten-1"/>
         </td>
       </tr>
       </tbody>
     </v-table>
   </v-container>
+  <EditUserDialog :show-dialog="showDialog" :user-id="editUser.id" :user-email="editUser.email"
+                  :user-first-name="editUser.firstName" :user-last-name="editUser.lastName"
+                  :user-created-at="editUser.createdAt" :user-modified-at="editUser.modifiedAt"
+                  :own-user-id="userId" @deleteUser="deleteUser"
+                  @close="closeEditUser" @fetchUsers="fetchUsers"/>
 </template>
 
 <style scoped>
@@ -62,22 +67,26 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { UserData } from "@/components/Home/ProjectOverview.vue";
+import {defineComponent} from 'vue'
+import {UserData} from "@/components/Home/ProjectOverview.vue";
 import axios from "axios";
-import { authHeader } from "@/components/Authentication/authHeader";
-import { useAppStore } from "@/store/app";
+import {authHeader} from "@/components/Authentication/authHeader";
+import {useAppStore} from "@/store/app";
+import EditUserDialog from "@/components/ManageUsers/EditUserDialog.vue";
 
 export default defineComponent({
   name: "ManageUsers",
+  components: { EditUserDialog },
 
   data() {
     return {
-      user: {} as UserData,
+      userId: -1 as number,
       users: [] as UserData[],
       usersShown: [] as UserData[],
       store: useAppStore(),
       searchValue: "" as string,
+      showDialog: false as boolean,
+      editUser: {} as UserData
     }
   },
 
@@ -88,22 +97,29 @@ export default defineComponent({
   },
 
   async mounted() {
-    const users = (await axios.get('/api/user/all', { headers: authHeader() })).data;
-    this.users = users.sort((user1: UserData, user2: UserData) => user1.id - user2.id);
-    this.usersShown = [...this.users];
+    await this.fetchUsers();
 
-    this.user = (await axios.get('/api/user', { headers: authHeader() })).data;
+    this.userId = (await axios.get('/api/user', {headers: authHeader()})).data.id;
   },
 
   methods: {
-    async deleteUser(id: number) {
-      await axios.delete(`/api/user/${id}`, { headers: authHeader() });
+    async fetchUsers() {
+      const users = (await axios.get('/api/user/all', {headers: authHeader()})).data;
+      this.users = users.sort((user1: UserData, user2: UserData) => user1.id - user2.id);
+      this.usersShown = [...this.users];
+    },
+    deleteUser(id: number) {
       this.users = this.users.filter(user => user.id !== id);
       this.usersShown = this.usersShown.filter(user => user.id !== id);
-      if (this.user.id === id) {
-        this.store.setUserToken(null);
-        this.$router.push("/");
-      }
+    },
+
+    openEditUser(user: UserData) {
+      this.editUser = { ...user };
+      this.showDialog = true;
+    },
+
+    closeEditUser() {
+      this.showDialog = false;
     },
 
     getLocaleDate(date: string): string {

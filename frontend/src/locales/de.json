@@ -73,6 +73,10 @@
     "settings": "Einstellungen",
     "signOut": "Abmelden"
   },
+  "manageUsers": {
+    "saveChanges": "Speichern",
+    "editProfile": "Profil bearbeiten"
+  },
   "navigation": {
     "c8Import": "C8 Import",
     "createAccount": "Account erstellen",
