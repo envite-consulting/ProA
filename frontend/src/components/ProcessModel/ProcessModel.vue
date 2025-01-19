@@ -1,47 +1,128 @@
 <template>
   <v-card height="100%">
-
     <div id="process-modelling" class="full-screen"></div>
-    <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
+    <div
+      class="ma-4"
+      style="
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      "
+    >
+      <div>
+        <v-chip
+          v-if="parentsBpmnProcessIds.length === 0"
+          prepend-icon="mdi-file"
+          class="ma-1"
+          variant="outlined"
+        >
+          {{ processName }}
+        </v-chip>
+        <v-chip
+          v-if="processLevels.length > 0"
+          prepend-icon="mdi-layers"
+          color="#EA9843"
+          class="ma-1"
+          variant="flat"
+        >
+          {{ level }}
+        </v-chip>
+      </div>
+      <v-select
+        v-if="processLevels.length > 0"
+        density="compact"
+        v-model="selectedProcessLevel"
+        :items="formattedProcessLevels"
+        item-title="displayTitle"
+        item-value="relatedProcessModelId"
+        @change="onProcessLevelChange"
+        style="width: 300px"
+        variant="outlined"
+      >
+        <template #label>
+          <v-icon style="margin-right: 5px">mdi-swap-vertical</v-icon>
+          {{ $t("processModel.changeLevel") }}
+        </template>
+      </v-select>
+    </div>
+    <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px">
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left"
-               @click="goLeft"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-chevron-left"
+          @click="goLeft"
+          size="large"
+        />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right"
-               @click="goRight"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-chevron-right"
+          @click="goRight"
+          size="large"
+        />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up" @click="goUp"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-chevron-up"
+          @click="goUp"
+          size="large"
+        />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down"
-               @click="goDown"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-chevron-down"
+          @click="goDown"
+          size="large"
+        />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus"
-               @click="zoomIn"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-magnify-plus"
+          @click="zoomIn"
+          size="large"
+        />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus"
-               @click="zoomOut"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-magnify-minus"
+          @click="zoomOut"
+          size="large"
+        />
       </v-fab-transition>
       <v-fab-transition style="margin-right: 5px">
-        <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen"
-               @click="fitToScreen"
-               size="large"/>
+        <v-btn
+          class="mt-auto pointer-events-initial"
+          color="primary"
+          elevation="8"
+          icon="mdi-fit-to-screen"
+          @click="fitToScreen"
+          size="large"
+        />
       </v-fab-transition>
     </div>
-    <div class="ma-4" style="position: absolute; top: 8px; left: 8px;">
-      <v-btn prepend-icon="mdi-arrow-left"
-             @click="goBack">
-        Zurück
+    <div class="ma-4" style="position: absolute; top: 8px; left: 8px">
+      <v-btn prepend-icon="mdi-arrow-left" @click="goBack">
+        {{ $t("processModel.back") }}
       </v-btn>
     </div>
   </v-card>
@@ -50,13 +131,15 @@
 .full-screen {
   width: 100%;
   height: 100%;
+  padding-top: 100px;
+  padding-bottom: 100px;
 }
 </style>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 import NavigatedViewer from "bpmn-js/lib/NavigatedViewer";
-import ElementRegistry from 'diagram-js/lib/core/ElementRegistry';
-import axios from 'axios';
+import ElementRegistry from "diagram-js/lib/core/ElementRegistry";
+import axios from "axios";
 import { Canvas } from "bpmn-js/lib/features/context-pad/ContextPadProvider";
 import { useAppStore } from "@/store/app";
 import { authHeader } from "@/components/Authentication/authHeader";
@@ -64,35 +147,70 @@ import { authHeader } from "@/components/Authentication/authHeader";
 export default defineComponent({
   data: () => ({
     canvas: null as Canvas | null,
-    store: useAppStore(),
     scrollStep: 20,
+    store: useAppStore(),
     zoomInMultiplier: 1.1,
-    zoomOutMultiplier: 0.9
+    zoomOutMultiplier: 0.9,
+    level: 0 as number,
+    parentsBpmnProcessIds: [] as Array<{}>,
+    processLevels: [] as Array<{
+      relatedProcessModelId: number;
+      processName: string;
+      level: number;
+    }>,
+    processName: "" as string,
+    selectedProcessLevel: null as { displayTitle: string } | null
   }),
 
   async mounted() {
     this.addKeydownListener();
 
-    const container = document.querySelector('#process-modelling') as HTMLElement;
+    const container = document.querySelector(
+      "#process-modelling"
+    ) as HTMLElement;
     const viewer = new NavigatedViewer({
       container
     });
 
-    this.canvas = viewer.get('canvas') as Canvas;
+    this.canvas = viewer.get("canvas") as Canvas;
 
-    const url = '/api/process-model/' + this.$route.params.id;
+    const processXmlUrl = "/api/process-model/" + this.$route.params.id;
+    const processInformationUrl =
+      "/api/project/" +
+      this.store.getSelectedProjectId() +
+      "/process-model/" +
+      this.$route.params.id;
+
     try {
-      const response = await axios.get(url, { headers: authHeader() });
-      const xmlText = response.data;
+      const xmlResponse = await axios.get(processXmlUrl, {
+        headers: authHeader()
+      });
+      const xmlText = xmlResponse.data;
       await viewer.importXML(xmlText);
+
+      const processModelResponse = await axios.get(processInformationUrl, {
+        headers: authHeader()
+      });
+      const processModel = processModelResponse.data;
+
+      this.processName = processModel.processName;
+      this.level = processModel.level;
+      this.parentsBpmnProcessIds = processModel.parentsBpmnProcessIds;
+      this.processLevels = processModel.processLevels.map(
+        (processLevel: any) => ({
+          relatedProcessModelId: processLevel.relatedProcessModelId,
+          processName: processLevel.processName,
+          level: processLevel.level
+        })
+      );
     } catch (error) {
       console.log(error);
     }
 
-    this.canvas.zoom('fit-viewport', 'auto');
+    this.canvas.zoom("fit-viewport", "auto");
     const portId = this.$route.query.portId as string;
     if (portId) {
-      const elementRegistry = viewer.get<ElementRegistry>('elementRegistry');
+      const elementRegistry = viewer.get<ElementRegistry>("elementRegistry");
       const port = elementRegistry.get(portId);
       if (port) {
         this.translateToCenter(port);
@@ -108,6 +226,12 @@ export default defineComponent({
   computed: {
     isUserLoggedIn() {
       return this.store.getUserToken() != null;
+    },
+    formattedProcessLevels() {
+      return this.processLevels.map((processLevel) => ({
+        ...processLevel,
+        displayTitle: `${this.$t("processModel.level")} ${processLevel.level} – ${processLevel.processName}`
+      }));
     }
   },
 
@@ -116,13 +240,24 @@ export default defineComponent({
       if (!newValue) {
         this.$router.push("/");
       }
+    },
+    selectedProcessLevel(newValue) {
+      if (newValue) {
+        this.onProcessLevelChange(newValue);
+      }
     }
   },
 
   methods: {
+    onProcessLevelChange(selectedProcessModelId: number) {
+      if (selectedProcessModelId) {
+        window.location.href = "/ProcessView/" + selectedProcessModelId;
+      }
+    },
     translateToCenter(port: any) {
       const viewbox = this.canvas.viewbox();
-      const elementBounds = port.width && port.height ? port : this.canvas.getBBox(port);
+      const elementBounds =
+        port.width && port.height ? port : this.canvas.getBBox(port);
       const elementCenter = {
         x: elementBounds.x + elementBounds.width / 2,
         y: elementBounds.y + elementBounds.height / 2
@@ -137,14 +272,14 @@ export default defineComponent({
     },
     zoomIn() {
       const currScale = this.canvas.viewbox().scale;
-      this.canvas.zoom(currScale * this.zoomInMultiplier, 'auto');
+      this.canvas.zoom(currScale * this.zoomInMultiplier, "auto");
     },
     zoomOut() {
       const currScale = this.canvas.viewbox().scale;
-      this.canvas.zoom(currScale * this.zoomOutMultiplier, 'auto');
+      this.canvas.zoom(currScale * this.zoomOutMultiplier, "auto");
     },
     fitToScreen() {
-      this.canvas.zoom('fit-viewport', 'auto');
+      this.canvas.zoom("fit-viewport", "auto");
     },
     goRight() {
       const { x, y, width, height } = this.canvas.viewbox();
@@ -164,44 +299,44 @@ export default defineComponent({
     },
     removeQueryParams() {
       const url = new URL(window.location.href);
-      url.searchParams.delete('portId');
-      window.history.replaceState({}, '', url.pathname + url.search);
+      url.searchParams.delete("portId");
+      window.history.replaceState({}, "", url.pathname + url.search);
     },
     goBack() {
       this.removeQueryParams();
       this.$router.go(-1);
     },
     addKeydownListener() {
-      window.addEventListener('keydown', this.onKeyDown);
+      window.addEventListener("keydown", this.onKeyDown);
     },
     removeKeydownListener() {
-      window.removeEventListener('keydown', this.onKeyDown);
+      window.removeEventListener("keydown", this.onKeyDown);
     },
     onKeyDown(evt: KeyboardEvent) {
       switch (evt.key) {
-        case 'ArrowLeft':
+        case "ArrowLeft":
           this.goLeft();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           this.goRight();
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           this.goUp();
           break;
-        case 'ArrowDown':
+        case "ArrowDown":
           this.goDown();
           break;
-        case '+':
+        case "+":
           this.zoomIn();
           break;
-        case '-':
+        case "-":
           this.zoomOut();
           break;
-        case 'f':
+        case "f":
           this.fitToScreen();
           break;
       }
     }
   }
-})
+});
 </script>

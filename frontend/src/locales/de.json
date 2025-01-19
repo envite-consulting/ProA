@@ -133,6 +133,11 @@
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Startereignis"
   },
+  "processModel": {
+    "back": "Zurück",
+    "changeLevel": "Prozessebene wechseln",
+    "level": "Ebene"
+  },
   "projectOverview": {
     "active": "AKTIV",
     "create": "Erstellen",
