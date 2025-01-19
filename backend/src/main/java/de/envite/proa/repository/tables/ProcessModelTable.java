@@ -33,12 +33,18 @@ public class ProcessModelTable {
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<ProcessDataStoreTable> dataStores = new ArrayList<>();
 
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
+	private List<ProcessLevelTable> processLevels = new ArrayList<>();
+
 	@Lob
 	@Column
 	private String description;
 
 	@Column
 	private LocalDateTime createdAt;
+
+	@Column
+	private Integer level;
 
 	@ManyToOne
 	private ProjectTable project;

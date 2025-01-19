@@ -110,7 +110,7 @@ public class ProcessModelResourceTest {
 		// Arrange
 		ProcessInformation information = new ProcessInformation();
 		information.setId(PROCESS_ID);
-		when(usecase.getProcessInformation(PROJECT_ID)).thenReturn(Arrays.asList(information));
+		when(usecase.getProcessInformation(PROJECT_ID, null)).thenReturn(Arrays.asList(information));
 
 		// Act
 		given()//

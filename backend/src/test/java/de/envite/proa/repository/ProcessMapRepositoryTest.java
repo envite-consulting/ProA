@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -86,7 +87,7 @@ public class ProcessMapRepositoryTest {
 		processModel2.setName(PROCESS_MODEL_NAME_2);
 		processModel2.setDescription(PROCESS_DESCRIPTION_2);
 
-		when(processModelDao.getProcessModels(any())).thenReturn(Arrays.asList(processModel1, processModel2));
+		when(processModelDao.getProcessModels(any(), isNull())).thenReturn(Arrays.asList(processModel1, processModel2));
 
 		ProcessConnectionTable processConnectionTable = new ProcessConnectionTable();
 		processConnectionTable.setCallingProcess(processModel1);

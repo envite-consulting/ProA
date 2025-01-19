@@ -17,6 +17,8 @@ public class ProcessInformation {
 	private String processName;
 	private String description; 
     private LocalDateTime createdAt;
+	private Integer level;
 	private List<String> parentsBpmnProcessIds;
 	private List<String> childrenBpmnProcessIds;
+	private List<ProcessLevel> processLevels;
 }

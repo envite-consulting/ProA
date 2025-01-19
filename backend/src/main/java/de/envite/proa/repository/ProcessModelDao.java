@@ -1,6 +1,5 @@
 package de.envite.proa.repository;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,12 +10,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
 public class ProcessModelDao {
 
-	private EntityManager em;
+	private final EntityManager em;
+	private static final String PROJECT = "project";
 
 	@Inject
 	public ProcessModelDao(EntityManager em) {
@@ -24,27 +25,50 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable) {
+	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable, List<Integer> levels) {
+		String queryString = """
+            SELECT pm FROM ProcessModelTable pm
+            LEFT JOIN FETCH pm.events
+            WHERE pm.project = :project
+            """;
 
-		List<ProcessModelTable> processModels = em//
-				.createQuery("""
-						SELECT pm FROM ProcessModelTable pm
-						LEFT JOIN FETCH pm.events
-						WHERE pm.project=:project
-						""", ProcessModelTable.class)//
-				.setParameter("project", projectTable)//
-				.getResultList();
+		if (levels != null && !levels.isEmpty()) {
+			queryString += " AND pm.level IN :levels";
+		}
+
+		TypedQuery<ProcessModelTable> query = em//
+				.createQuery(queryString, ProcessModelTable.class)//
+				.setParameter(PROJECT, projectTable);
+
+		if (levels != null && !levels.isEmpty()) {
+			query.setParameter("levels", levels);
+		}
+
+		List<ProcessModelTable> processModels = query.getResultList();
 
 		processModels = em//
 				.createQuery("""
 						SELECT DISTINCT pm FROM ProcessModelTable pm
 						LEFT JOIN FETCH pm.callActivites
 						WHERE pm in :processModels
+						ORDER BY pm.name ASC
 						""", ProcessModelTable.class)//
 				.setParameter("processModels", processModels)//
 				.getResultList();
 
 		return processModels;
+	}
+
+	@Transactional
+	public ProcessModelTable getProcessModelById(ProjectTable projectTable, Long id) {
+		return em
+				.createQuery("""
+                    SELECT pm FROM ProcessModelTable pm
+                    WHERE pm.project = :project AND pm.id = :id
+                    """, ProcessModelTable.class)
+				.setParameter(PROJECT, projectTable)
+				.setParameter("id", id)
+				.getSingleResult();
 	}
 
 	@Transactional
@@ -56,7 +80,7 @@ public class ProcessModelDao {
 						WHERE pm.name = :name AND pm.project =:project
 						""", ProcessModelTable.class)//
 				.setParameter("name", name)//
-				.setParameter("project", projectTable)//
+				.setParameter(PROJECT, projectTable)//
 				.getResultList();
 
 		processModels = em//
@@ -88,7 +112,7 @@ public class ProcessModelDao {
 		graph.addSubgraph("events");
 		graph.addSubgraph("callActivites");
 
-		Map<String, Object> hints = new HashMap<String, Object>();
+		Map<String, Object> hints = new HashMap<>();
 		hints.put("javax.persistence.loadgraph", graph);
 
 		return em.find(ProcessModelTable.class, id, hints);
@@ -105,7 +129,7 @@ public class ProcessModelDao {
 				.createQuery("SELECT p FROM ProcessModelTable p " + //
 						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
 				.setParameter("bpmnProcessId", bpmnProcessId) //
-				.setParameter("project", projectTable) //
+				.setParameter(PROJECT, projectTable) //
 				.getResultList();
 
 		return !processModels.isEmpty() ? processModels.getFirst() : null;
@@ -128,7 +152,7 @@ public class ProcessModelDao {
 				.createQuery("SELECT p FROM ProcessModelTable p " + //
 						"WHERE p.name = :name AND p.project = :project", ProcessModelTable.class)
 				.setParameter("name", name) //
-				.setParameter("project", projectTable) //
+				.setParameter(PROJECT, projectTable) //
 				.getResultList();
 		return processModels.isEmpty() ? null : processModels.getFirst();
 	}

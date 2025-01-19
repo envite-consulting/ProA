@@ -135,7 +135,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	private List<ProcessDetails> getProcessDetailsWithoutCollaborations(ProjectTable projectTable) {
 
 		return processModelDao//
-				.getProcessModels(projectTable)//
+				.getProcessModels(projectTable, null)//
 				.stream()//
 				.filter(pm -> pm.getProcessType() != ProcessType.COLLABORATION)//
 				.map(ProcessDetailsMapper::map)//

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import de.envite.proa.usecases.ProcessLevelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -48,6 +49,8 @@ public class ProcessmodelRepositoryTest {
 	@Mock
 	private ProjectDao projectDao;
 	@Mock
+	private ProcessLevelDao processLevelDao;
+	@Mock
 	private ProcessModelDao processModelDao;
 	@Mock
 	private DataStoreDao dataStoreDao;
@@ -61,6 +64,8 @@ public class ProcessmodelRepositoryTest {
 	private ProcessEventDao processEventDao;
 	@Mock
 	private MessageFlowDao messageFlowDao;
+	@Mock
+	private ProcessLevelRepository processLevelRepository;
 
 	@BeforeEach
 	public void setup() {
@@ -90,12 +95,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
+				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
-				messageFlowDao);
+				messageFlowDao, //
+				processLevelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -151,12 +158,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
+				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
-				messageFlowDao);
+				messageFlowDao, //
+				processLevelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -205,12 +214,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
+				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
-				messageFlowDao);
+				messageFlowDao, //
+				processLevelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -265,12 +276,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
+				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
-				messageFlowDao);
+				messageFlowDao, //
+				processLevelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -312,12 +325,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
+				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
-				messageFlowDao);
+				messageFlowDao, //
+				processLevelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -359,20 +374,22 @@ public class ProcessmodelRepositoryTest {
 		processModel.setDescription(PROCESS_DESCRIPTION);
 		processModel.setCreatedAt(dateTime);
 
-		when(processModelDao.getProcessModels(projectTable)).thenReturn(Arrays.asList(processModel));
+		when(processModelDao.getProcessModels(projectTable, null)).thenReturn(Arrays.asList(processModel));
 
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
+				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
-				messageFlowDao);
+				messageFlowDao, //
+				processLevelRepository);
 
 		// Act
-		List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID);
+		List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID, null);
 
 		// Assert
 		assertThat(processInformation)//

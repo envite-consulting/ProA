@@ -108,8 +108,12 @@ public class ProcessModelUsecase {
 		return repository.getProcessModel(id);
 	}
 
-	public List<ProcessInformation> getProcessInformation(Long projectId) {
-		return repository.getProcessInformation(projectId);
+	public List<ProcessInformation> getProcessInformation(Long projectId, String levelParam) {
+		return repository.getProcessInformation(projectId, levelParam);
+	}
+
+	public ProcessInformation getProcessInformationById(Long projectId, Long id) {
+		return repository.getProcessInformationById(projectId, id);
 	}
 
 	public ProcessDetails getProcessDetails(Long id) {

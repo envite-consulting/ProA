@@ -4,12 +4,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import de.envite.proa.security.RolesAllowedIfWebVersion;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
@@ -20,11 +20,6 @@ import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessInformation;
 import de.envite.proa.usecases.ProcessModelUsecase;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/api")
@@ -116,8 +111,8 @@ public class ProcessModelResource {
 	@Path("/project/{projectId}/process-model")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public List<ProcessInformation> getProcessInformation(@RestPath Long projectId) {
-		return usecase.getProcessInformation(projectId);
+	public List<ProcessInformation> getProcessInformation(@RestPath Long projectId, @QueryParam("levels") String levels) {
+		return usecase.getProcessInformation(projectId, levels);
 	}
 
 	@GET
@@ -126,6 +121,14 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public ProcessDetails getProcessDetails(@RestPath Long id) {
 		return usecase.getProcessDetails(id);
+	}
+
+	@GET
+	@Path("/project/{projectId}/process-model/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowedIfWebVersion({"User", "Admin"})
+	public ProcessInformation getProcessInformationById(@RestPath Long projectId, Long id) {
+		return usecase.getProcessInformationById(projectId, id);
 	}
 
 	private String readFileToString(File file) {

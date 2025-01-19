@@ -14,7 +14,9 @@ public interface ProcessModelRepository {
 
 	String getProcessModel(Long id);
 
-	List<ProcessInformation> getProcessInformation(Long projectId);
+	List<ProcessInformation> getProcessInformation(Long projectId, String levelParam);
+
+	ProcessInformation getProcessInformationById(Long projectId, Long id);
 
 	ProcessDetails getProcessDetails(Long id);
 
