@@ -104,6 +104,7 @@
     "confirmDeletionText1": "Are you sure you want to delete ",
     "confirmDeletionText2": "? This action will delete all process models associated with the collaboration.",
     "error": "Error",
+    "filterByLevels": "Filter by process level",
     "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",

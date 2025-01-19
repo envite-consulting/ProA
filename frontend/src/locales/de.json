@@ -104,6 +104,7 @@
     "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
     "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
     "error": "Fehler",
+    "filterByLevels": "Nach Prozessebene filtern",
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
