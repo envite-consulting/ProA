@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
-import de.envite.proa.usecases.ProcessLevelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +30,7 @@ import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.usecases.RelatedProcessModelRepository;
 
 public class ProcessmodelRepositoryTest {
 
@@ -49,8 +49,6 @@ public class ProcessmodelRepositoryTest {
 	@Mock
 	private ProjectDao projectDao;
 	@Mock
-	private ProcessLevelDao processLevelDao;
-	@Mock
 	private ProcessModelDao processModelDao;
 	@Mock
 	private DataStoreDao dataStoreDao;
@@ -65,7 +63,9 @@ public class ProcessmodelRepositoryTest {
 	@Mock
 	private MessageFlowDao messageFlowDao;
 	@Mock
-	private ProcessLevelRepository processLevelRepository;
+	private RelatedProcessModelDao relatedProcessModelDao;
+	@Mock
+	private RelatedProcessModelRepository relatedProcessModelRepository;
 
 	@BeforeEach
 	public void setup() {
@@ -95,14 +95,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
-				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
 				messageFlowDao, //
-				processLevelRepository);
+                relatedProcessModelDao, //
+				relatedProcessModelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -158,14 +158,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
-				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
 				messageFlowDao, //
-				processLevelRepository);
+                relatedProcessModelDao, //
+				relatedProcessModelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -214,14 +214,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
-				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
 				messageFlowDao, //
-				processLevelRepository);
+                relatedProcessModelDao, //
+				relatedProcessModelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -276,14 +276,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
-				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
 				messageFlowDao, //
-				processLevelRepository);
+                relatedProcessModelDao, //
+				relatedProcessModelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -325,14 +325,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
-				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
 				messageFlowDao, //
-				processLevelRepository);
+                relatedProcessModelDao, //
+				relatedProcessModelRepository);
 
 		ProcessModel model = new ProcessModel();
 		model.setName(NEW_PROCESS_MODEL_NAME);
@@ -379,14 +379,14 @@ public class ProcessmodelRepositoryTest {
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
-				processLevelDao, //
 				dataStoreDao, //
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processConnectionDao, //
 				processEventDao, //
 				messageFlowDao, //
-				processLevelRepository);
+                relatedProcessModelDao, //
+				relatedProcessModelRepository);
 
 		// Act
 		List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID, null);

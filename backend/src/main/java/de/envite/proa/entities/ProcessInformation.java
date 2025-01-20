@@ -20,5 +20,5 @@ public class ProcessInformation {
 	private Integer level;
 	private List<String> parentsBpmnProcessIds;
 	private List<String> childrenBpmnProcessIds;
-	private List<ProcessLevel> processLevels;
+	private List<RelatedProcessModel> relatedProcessModels;
 }

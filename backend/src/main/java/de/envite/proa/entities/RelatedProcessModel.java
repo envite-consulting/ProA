@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProcessLevel {
+public class RelatedProcessModel {
 
     private Long relatedProcessModelId;
     private String processName;

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Entity
 @Data
-public class ProcessLevelTable {
+public class RelatedProcessModelTable {
 
     @Id
     @GeneratedValue

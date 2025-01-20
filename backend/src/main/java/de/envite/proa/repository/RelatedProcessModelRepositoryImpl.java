@@ -1,12 +1,12 @@
 package de.envite.proa.repository;
 
 import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessLevel;
+import de.envite.proa.entities.RelatedProcessModel;
 import de.envite.proa.repository.tables.ProcessEventTable;
-import de.envite.proa.repository.tables.ProcessLevelTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
-import de.envite.proa.usecases.ProcessLevelRepository;
+import de.envite.proa.repository.tables.RelatedProcessModelTable;
+import de.envite.proa.usecases.RelatedProcessModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -16,18 +16,18 @@ import java.util.Comparator;
 import java.util.List;
 
 @ApplicationScoped
-public class ProcessLevelRepositoryImpl implements ProcessLevelRepository {
+public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRepository {
 
-    private final ProcessLevelDao processLevelDao;
     private final ProcessModelDao processModelDao;
+    private final RelatedProcessModelDao relatedProcessModelDao;
 
     @Inject
-    public ProcessLevelRepositoryImpl(ProcessLevelDao processLevelDao, ProcessModelDao processModelDao) {
-        this.processLevelDao = processLevelDao;
+    public RelatedProcessModelRepositoryImpl(ProcessModelDao processModelDao, RelatedProcessModelDao relatedProcessModelDao) {
         this.processModelDao = processModelDao;
+        this.relatedProcessModelDao = relatedProcessModelDao;
     }
 
-    public void calculateAndSaveProcessLevels(ProjectTable projectTable) {
+    public void calculateAndSaveRelatedProcessModels(ProjectTable projectTable) {
         List<ProcessModelTable> allModels = processModelDao.getProcessModels(projectTable, null)
                 .stream()
                 .filter(model -> model.getParents() == null || model.getParents().isEmpty())
@@ -61,7 +61,7 @@ public class ProcessLevelRepositoryImpl implements ProcessLevelRepository {
             }
 
             int rootLevel = 1;
-            List<ProcessLevelTable> levels = new ArrayList<>();
+            List<RelatedProcessModelTable> relatedProcessModels = new ArrayList<>();
 
             for (int i = 0; i < matchingModels.size(); i++) {
                 ProcessModelTable otherModel = matchingModels.get(i);
@@ -71,17 +71,17 @@ public class ProcessLevelRepositoryImpl implements ProcessLevelRepository {
                     model.setLevel(level);
                     processModelDao.merge(model);
                 } else {
-                    ProcessLevelTable processLevel = new ProcessLevelTable();
-                    processLevel.setProcessModel(model);
-                    processLevel.setRelatedProcessModelId(otherModel.getId());
-                    processLevel.setProcessName(otherModel.getName());
-                    processLevel.setLevel(level);
-                    levels.add(processLevel);
+                    RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
+                    relatedProcessModel.setProcessModel(model);
+                    relatedProcessModel.setRelatedProcessModelId(otherModel.getId());
+                    relatedProcessModel.setProcessName(otherModel.getName());
+                    relatedProcessModel.setLevel(level);
+                    relatedProcessModels.add(relatedProcessModel);
                 }
             }
 
-            processLevelDao.deleteByProcessModel(model);
-            levels.forEach(processLevelDao::merge);
+            relatedProcessModelDao.deleteByProcessModel(model);
+            relatedProcessModels.forEach(relatedProcessModelDao::merge);
         }
     }
 
@@ -108,12 +108,12 @@ public class ProcessLevelRepositoryImpl implements ProcessLevelRepository {
     }
 
     @Override
-    public ProcessLevel mapToProcessLevel(ProcessLevelTable levelTable) {
-        ProcessLevel level = new ProcessLevel();
-        level.setRelatedProcessModelId(levelTable.getRelatedProcessModelId());
-        level.setProcessName(levelTable.getProcessName());
-        level.setLevel(levelTable.getLevel());
+    public RelatedProcessModel mapToRelatedProcessModel(RelatedProcessModelTable relatedProcessModelTable) {
+        RelatedProcessModel relatedProcessModel = new RelatedProcessModel();
+        relatedProcessModel.setRelatedProcessModelId(relatedProcessModelTable.getRelatedProcessModelId());
+        relatedProcessModel.setProcessName(relatedProcessModelTable.getProcessName());
+        relatedProcessModel.setLevel(relatedProcessModelTable.getLevel());
 
-        return level;
+        return relatedProcessModel;
     }
 }

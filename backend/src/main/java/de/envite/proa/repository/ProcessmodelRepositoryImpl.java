@@ -14,8 +14,8 @@ import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
-import de.envite.proa.usecases.ProcessLevelRepository;
 import de.envite.proa.usecases.ProcessModelRepository;
+import de.envite.proa.usecases.RelatedProcessModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
@@ -25,36 +25,36 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	private final ProjectDao projectDao;
 	private final ProcessModelDao processModelDao;
-	private final ProcessLevelDao processLevelDao;
 	private final DataStoreDao dataStoreDao;
 	private final DataStoreConnectionDao dataStoreConnectionDao;
 	private final CallActivityDao callActivityDao;
 	private final ProcessConnectionDao processConnectionDao;
 	private final ProcessEventDao processEventDao;
 	private final MessageFlowDao messageFlowDao;
-	private final ProcessLevelRepository processLevelRepository;
+	private final RelatedProcessModelDao relatedProcessModelDao;
+	private final RelatedProcessModelRepository relatedProcessModelRepository;
 
 	@Inject
 	public ProcessmodelRepositoryImpl(ProjectDao projectDao, //
 									  ProcessModelDao processModelDao, //
-									  ProcessLevelDao processLevelDao, //
 									  DataStoreDao dataStoreDao, //
 									  DataStoreConnectionDao dataStoreConnectionDao, //
 									  CallActivityDao callActivityDao, //
 									  ProcessConnectionDao processConnectionDao, //
 									  ProcessEventDao processEventDao, //
 									  MessageFlowDao messageFlowDao, //
-									  ProcessLevelRepository processLevelRepository) {
+									  RelatedProcessModelDao relatedProcessModelDao, //
+									  RelatedProcessModelRepository relatedProcessModelRepository) {
 		this.projectDao = projectDao;
 		this.processModelDao = processModelDao;
-		this.processLevelDao = processLevelDao;
 		this.dataStoreDao = dataStoreDao;
 		this.dataStoreConnectionDao = dataStoreConnectionDao;
 		this.callActivityDao = callActivityDao;
 		this.processConnectionDao = processConnectionDao;
 		this.processEventDao = processEventDao;
 		this.messageFlowDao = messageFlowDao;
-		this.processLevelRepository = processLevelRepository;
+		this.relatedProcessModelDao = relatedProcessModelDao;
+		this.relatedProcessModelRepository = relatedProcessModelRepository;
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			processModelDao.merge(table);
 		}
 
-		processLevelRepository.calculateAndSaveProcessLevels(projectTable);
+		relatedProcessModelRepository.calculateAndSaveRelatedProcessModels(projectTable);
 
 		connectEvents(processModel, table, projectTable);
 
@@ -105,7 +105,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 						model.getLevel(), //
 						model.getParents().stream().map(ProcessModelTable::getBpmnProcessId).toList(), //
 						model.getChildren().stream().map(ProcessModelTable::getBpmnProcessId).toList(), //
-						processLevelDao.getProcessLevels(model).stream().map(processLevelRepository::mapToProcessLevel).toList()
+						relatedProcessModelDao.getRelatedProcessModels(model).stream().map(relatedProcessModelRepository::mapToRelatedProcessModel).toList()
 				))
 				.toList();
 	}
@@ -128,8 +128,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				model.getChildren().stream()
 						.map(ProcessModelTable::getBpmnProcessId)
 						.toList(), //
-				processLevelDao.getProcessLevels(model).stream()
-						.map(processLevelRepository::mapToProcessLevel)
+				relatedProcessModelDao.getRelatedProcessModels(model).stream()
+						.map(relatedProcessModelRepository::mapToRelatedProcessModel)
 						.toList()
 		);
 	}
@@ -317,11 +317,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		relatedProcessModelIdsToDelete.forEach(processModelId -> {
 			dataStoreConnectionDao.deleteForProcessModel(processModelId);
 			processConnectionDao.deleteForProcessModel(processModelId);
-			processLevelDao.deleteByRelatedProcessModelId(processModelId);
+			relatedProcessModelDao.deleteByRelatedProcessModelId(processModelId);
 		});
 
 		processModelDao.delete(relatedProcessModelIdsToDelete);
-		processLevelRepository.calculateAndSaveProcessLevels(project);
+		relatedProcessModelRepository.calculateAndSaveRelatedProcessModels(project);
 	}
 
 	private List<Long> getRelatedProcessModelsToDelete(Long id, List<Long> processModelIdsToDelete) {
