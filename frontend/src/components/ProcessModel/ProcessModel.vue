@@ -22,7 +22,7 @@
           {{ processName }}
         </v-chip>
         <v-chip
-          v-if="processLevels.length > 0"
+          v-if="relatedProcessModels.length > 0"
           prepend-icon="mdi-layers"
           color="#EA9843"
           class="ma-1"
@@ -32,13 +32,13 @@
         </v-chip>
       </div>
       <v-select
-        v-if="processLevels.length > 0"
+        v-if="relatedProcessModels.length > 0"
         density="compact"
-        v-model="selectedProcessLevel"
-        :items="formattedProcessLevels"
+        v-model="selectedProcessModel"
+        :items="formattedProcessModels"
         item-title="displayTitle"
         item-value="relatedProcessModelId"
-        @change="onProcessLevelChange"
+        @change="onProcessModelChange"
         style="width: 300px"
         variant="outlined"
       >
@@ -153,13 +153,13 @@ export default defineComponent({
     zoomOutMultiplier: 0.9,
     level: 0 as number,
     parentsBpmnProcessIds: [] as Array<{}>,
-    processLevels: [] as Array<{
+    processName: "" as string,
+    relatedProcessModels: [] as Array<{
       relatedProcessModelId: number;
       processName: string;
       level: number;
     }>,
-    processName: "" as string,
-    selectedProcessLevel: null as { displayTitle: string } | null
+    selectedProcessModel: null as { displayTitle: string } | null
   }),
 
   async mounted() {
@@ -196,11 +196,11 @@ export default defineComponent({
       this.processName = processModel.processName;
       this.level = processModel.level;
       this.parentsBpmnProcessIds = processModel.parentsBpmnProcessIds;
-      this.processLevels = processModel.processLevels.map(
-        (processLevel: any) => ({
-          relatedProcessModelId: processLevel.relatedProcessModelId,
-          processName: processLevel.processName,
-          level: processLevel.level
+      this.relatedProcessModels = processModel.relatedProcessModels.map(
+        (relatedProcessModel: any) => ({
+          relatedProcessModelId: relatedProcessModel.relatedProcessModelId,
+          processName: relatedProcessModel.processName,
+          level: relatedProcessModel.level
         })
       );
     } catch (error) {
@@ -227,10 +227,10 @@ export default defineComponent({
     isUserLoggedIn() {
       return this.store.getUserToken() != null;
     },
-    formattedProcessLevels() {
-      return this.processLevels.map((processLevel) => ({
-        ...processLevel,
-        displayTitle: `${this.$t("processModel.level")} ${processLevel.level} – ${processLevel.processName}`
+    formattedProcessModels() {
+      return this.relatedProcessModels.map((relatedProcessModel) => ({
+        ...relatedProcessModel,
+        displayTitle: `${this.$t("processModel.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`
       }));
     }
   },
@@ -241,15 +241,15 @@ export default defineComponent({
         this.$router.push("/");
       }
     },
-    selectedProcessLevel(newValue) {
+    selectedProcessModel(newValue) {
       if (newValue) {
-        this.onProcessLevelChange(newValue);
+        this.onProcessModelChange(newValue);
       }
     }
   },
 
   methods: {
-    onProcessLevelChange(selectedProcessModelId: number) {
+    onProcessModelChange(selectedProcessModelId: number) {
       if (selectedProcessModelId) {
         window.location.href = "/ProcessView/" + selectedProcessModelId;
       }
