@@ -66,10 +66,13 @@
     "intermediateEvent": "Intermediate Event",
     "intermediateThrowEvents": "Intermediate Throw Events",
     "lastModifiedOn": "Last modified on",
+    "level": "Level",
     "myProfile": "My Profile",
+    "processLevels": "Process Levels",
     "processModel": "Process Model",
     "save": "Save",
     "settings": "Settings",
+    "showProcessLevels": "Show process levels",
     "signOut": "Sign Out"
   },
   "navigation": {

@@ -66,10 +66,13 @@
     "intermediateEvent": "Zwischenereignis",
     "intermediateThrowEvents": "Zwischenereignisse werfend",
     "lastModifiedOn": "Zuletzt geändert am",
+    "level": "Ebene",
     "myProfile": "Mein Profil",
+    "processLevels": "Prozessebenen",
     "processModel": "Prozessmodell",
     "save": "Speichern",
     "settings": "Einstellungen",
+    "showProcessLevels": "Prozessebenen anzeigen",
     "signOut": "Abmelden"
   },
   "navigation": {

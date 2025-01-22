@@ -7,7 +7,16 @@
       <v-card-text>
         <v-container>
           <v-row>
-            <v-col v-if="details.startEvents && details.startEvents.length > 0" cols="12" sm="6" md="6">
+            <v-col v-if="relatedProcessModels.length > 0" cols="12">
+              <v-switch 
+                v-model="showProcessLevels"
+                :label="$t('general.showProcessLevels')"
+                color="primary"
+                hide-details
+                density="comfortable"
+              ></v-switch>
+            </v-col>
+            <v-col v-if="!showProcessLevels && details.startEvents && details.startEvents.length > 0" cols="12" sm="6" md="6">
               <b>Start Events</b>
               <ul class="mt-1">
                 <li v-for="(start, index) in details.startEvents" :key="'startEvent-' + index" class="mb-2">
@@ -16,7 +25,7 @@
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="details.endEvents && details.endEvents.length > 0" cols="12" sm="6" md="6">
+            <v-col v-if="!showProcessLevels && details.endEvents && details.endEvents.length > 0" cols="12" sm="6" md="6">
               <b class="mb-2">End Events</b>
               <ul class="mt-1">
                 <li v-for="(end, index) in details.endEvents" :key="'endEvent-' + index" class="mb-2">
@@ -25,7 +34,7 @@
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6"
+            <v-col v-if="!showProcessLevels && details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6"
                    md="6">
               <b class="mb-2">{{ $t('general.intermediateCatchEvents') }}</b>
               <ul class="mt-1">
@@ -38,7 +47,7 @@
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6"
+            <v-col v-if="!showProcessLevels && details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6"
                    md="6">
               <b class="mb-2">{{ $t('general.intermediateThrowEvents') }}</b>
               <ul class="mt-1">
@@ -51,7 +60,7 @@
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="details.activities && details.activities.length > 0" cols="12" sm="6" md="6">
+            <v-col v-if="!showProcessLevels && details.activities && details.activities.length > 0" cols="12" sm="6" md="6">
               <b class="mb-2">{{ $t('general.callActivities') }}</b>
               <ul class="mt-1">
                 <li v-for="(activity, index) in details.activities" :key="'activity-' + index" class="mb-2">
@@ -62,10 +71,33 @@
                 </li>
               </ul>
             </v-col>
+            <v-col v-if="showProcessLevels" cols="12">
+              <b class="mb-2">
+                <v-icon>mdi-layers</v-icon>
+                {{ $t('general.processLevels') }}
+              </b>
+              <v-radio-group v-model="selectedProcessModel" class="mt-1">
+                <v-radio 
+                  v-if="currentProcessModel" 
+                  :key="'currentProcessLevel'" 
+                  :label="$t('general.level') + ' ' + currentProcessModel.level + ' – ' + currentProcessModel.processName"
+                  :value="currentProcessModel.id"
+                  :disabled="true"
+                ></v-radio>
+                <v-radio 
+                  v-for="(model, index) in relatedProcessModels" 
+                  :key="'relatedProcess-' + index"
+                  :label="$t('general.level') + ' ' + model.level + ' – ' + model.processName"
+                  :value="model.relatedProcessModelId"
+                  @change="switchToRelatedModel(model.relatedProcessModelId)"
+                  color="primary"
+                ></v-radio>
+              </v-radio-group>
+            </v-col>
           </v-row>
-          <div v-if="details.description" class="px-3 pb-3">
+          <div v-if="!showProcessLevels && details.description" class="px-3 pb-3 pt-6">
             <v-row>
-              <b>{{ $t('general.description') }}:</b>
+              <b>{{ $t('general.description') }}</b>
             </v-row>
             <v-row>
               <p class="description-text">{{ details.description }}</p>
@@ -79,7 +111,7 @@
         <v-btn color="blue-darken-1" variant="text" @click="goToProcessModel(null)">
           {{ $t('general.processModel') }}
         </v-btn>
-        <v-btn color="blue-darken-1" variant="text" @click="infoDialog = false">
+        <v-btn color="blue-darken-1" variant="text" @click="closeProcessInfoDialog">
           {{ $t('general.cancel') }}
         </v-btn>
       </v-card-actions>
@@ -105,6 +137,7 @@ import { defineComponent } from 'vue';
 import axios from 'axios';
 import { dia } from "@joint/core";
 import BpmnViewer from "bpmn-js";
+import { useAppStore } from "@/store/app";
 import { authHeader } from "@/components/Authentication/authHeader";
 
 export interface Process {
@@ -123,6 +156,18 @@ declare interface Event {
   label: string
 }
 
+interface ProcessModel {
+  id: number;
+  processName: string;
+  level: number;
+}
+
+interface RelatedProcessModel {
+  relatedProcessModelId: number;
+  processName: string;
+  level: number;
+}
+
 interface RouteObject {
   path: string,
   query?: {
@@ -133,8 +178,24 @@ interface RouteObject {
 export default defineComponent({
   data: () => ({
     infoDialog: false,
-    details: {} as Process
+    showProcessLevels: false,
+    store: useAppStore(),
+    currentProcessModel: null as ProcessModel | null,
+    details: {} as Process,
+    relatedProcessModels: [] as RelatedProcessModel[],
+    selectedProcessModel: null as number | null,
   }),
+
+  watch: {
+    showProcessLevels(newValue) {
+      if (!newValue) {
+        if (this.currentProcessModel?.id !== this.details.id) {
+          this.resetProcessModel();
+          this.fetchProcessModel(this.details.id)
+        }
+      }
+    }
+  },
 
   methods: {
     async showProcessInfoDialog(processId: number) {
@@ -158,11 +219,25 @@ export default defineComponent({
         container: '#process-model-viewer'
       });
 
-      const url = '/api/process-model/' + modelId;
-      const response = await axios.get(url, { headers: authHeader() });
-      const xmlText = response.data;
+      const processXmlUrl = '/api/process-model/' + modelId;
+      const xmlResponse = await axios.get(processXmlUrl, { headers: authHeader() });
+      const xmlText = xmlResponse.data;
       await viewer.importXML(xmlText);
       (viewer.get('canvas') as any).zoom('fit-viewport', 'auto');
+
+      const processInformationUrl = 'api/project/' + this.store.getSelectedProjectId() + '/process-model/' + modelId;
+      const processModelResponse = await axios.get(processInformationUrl, { headers: authHeader() });
+      this.currentProcessModel = processModelResponse.data;
+      this.relatedProcessModels = processModelResponse.data.relatedProcessModels;
+      this.selectedProcessModel = processModelResponse.data.id;
+    },
+    async switchToRelatedModel(relatedProcessModelId: number) {
+      this.resetProcessModel();
+      await this.fetchProcessModel(relatedProcessModelId);
+    },
+    closeProcessInfoDialog() {
+      this.infoDialog = false;
+      this.showProcessLevels = false;
     },
     resetProcessModel() {
       document.getElementById('process-model-viewer')!.innerHTML = '';
