@@ -17,7 +17,7 @@
           v-if="parentsBpmnProcessIds.length === 0"
           prepend-icon="mdi-file"
           class="ma-1"
-          variant="outlined"
+          variant="tonal"
         >
           {{ processName }}
         </v-chip>
