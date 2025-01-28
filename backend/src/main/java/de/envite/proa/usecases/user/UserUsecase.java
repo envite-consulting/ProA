@@ -4,6 +4,8 @@ import de.envite.proa.entities.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.List;
+
 @ApplicationScoped
 public class UserUsecase {
 
@@ -20,5 +22,13 @@ public class UserUsecase {
 
     public User findById(Long id) {
         return repository.findById(id);
+    }
+
+    public List<User> getAllUsers() {
+        return repository.getAllUsers();
+    }
+
+    public void deleteById(Long id) {
+    	repository.deleteById(id);
     }
 }
