@@ -1,4 +1,4 @@
-package de.envite.proa.usecases;
+package de.envite.proa.usecases.processmodel;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import de.envite.proa.entities.*;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

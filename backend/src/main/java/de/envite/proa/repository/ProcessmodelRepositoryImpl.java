@@ -14,7 +14,7 @@ import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
-import de.envite.proa.usecases.ProcessModelRepository;
+import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;

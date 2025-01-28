@@ -37,6 +37,10 @@ public class AdminInitializer {
 		user.setEmail(adminEmail);
 		user.setPassword(adminPassword);
 		user.setRole("Admin");
-		authenticationUsecase.register(user);
+		try {
+			authenticationUsecase.register(user);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

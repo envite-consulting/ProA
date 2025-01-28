@@ -4,7 +4,7 @@ import de.envite.proa.usecases.ProcessOperations;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
-import de.envite.proa.usecases.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

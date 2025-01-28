@@ -1,4 +1,4 @@
-package de.envite.proa.usecases;
+package de.envite.proa.usecases.processmodel;
 
 import java.util.List;
 
