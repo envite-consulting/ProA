@@ -50,7 +50,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { currentPasswordRules, emailRules } from "@/components/Authentication/formValidation";
+import { currentPasswordRules, emailRulesSignIn } from "@/components/Authentication/formValidation";
 import { VForm } from "vuetify/components";
 import axios, { AxiosError } from "axios";
 import { SelectedDialog, useAppStore } from "@/store/app";
@@ -66,7 +66,7 @@ export default defineComponent({
     return {
       email: '' as string,
       password: '' as string,
-      emailRules: emailRules,
+      emailRules: emailRulesSignIn,
       passwordRules: currentPasswordRules,
       store: useAppStore(),
       SelectedDialog: SelectedDialog,
