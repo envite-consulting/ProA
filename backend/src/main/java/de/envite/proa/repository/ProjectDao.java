@@ -50,6 +50,8 @@ public class ProjectDao {
 				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user AND p.id = :id", ProjectTable.class)//
 				.setParameter("user", user)//
 				.setParameter("id", id)//
-				.getSingleResult();
+				.getResultStream() //
+				.findFirst() //
+				.orElse(null);
 	}
 }
