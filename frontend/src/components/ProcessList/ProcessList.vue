@@ -8,7 +8,14 @@
     </v-toolbar-title>
   </v-toolbar>
   <ProcessDetailDialog ref="processDetailDialog"/>
-  <v-list lines="two" class="pa-6">
+  <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
+    <div class="d-flex flex-column align-center justify-center">
+      <span class="mb-2">{{ $t('processList.fetchingProcessModels') }}</span>
+      <v-progress-circular indeterminate/>
+    </div>
+  </div>
+  <v-list v-else lines="two" class="pa-6">
+    <v-list-item v-if="rootProcessModels.length == 0">{{ $t('processList.noProcessModelsFound') }}</v-list-item>
     <template v-for="(model, index) in rootProcessModels" :key="'process-'+ model.id">
       <ProcessTreeNode
         :model="model"
@@ -305,6 +312,7 @@ export default defineComponent({
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
     fileExtensionMatcher: /.[^/.]+$/,
+    isFetching: false as boolean
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -353,9 +361,11 @@ export default defineComponent({
     },
 
     fetchProcessModels() {
+      this.isFetching = true;
       axios.get("/api/project/" + this.selectedProjectId + "/process-model", { headers: authHeader() })
         .then(result => {
           this.rootProcessModels = this.collectRoots(result.data);
+          this.isFetching = false;
         });
     },
 

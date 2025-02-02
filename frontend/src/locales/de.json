@@ -86,6 +86,7 @@
   "processDetailSidebar": {
     "endEvents": "Endereignisse",
     "goToProcessModel": "Zum Prozessmodell",
+    "loadingData": "Daten werden geladen...",
     "startEvents": "Startereignisse"
   },
   "processList": {
@@ -104,9 +105,11 @@
     "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
     "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
     "error": "Fehler",
+    "fetchingProcessModels": "Prozessmodelle werden geladen...",
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
+    "noProcessModelsFound": "Keine Prozessmodelle gefunden.",
     "participant": "Teilnehmer",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
@@ -124,6 +127,7 @@
     "hide": "Ausblenden",
     "intermediateEvents": "Zwischenereignisse",
     "legend": "Legende",
+    "loadingProcessMap": "Prozesskarte wird geladen...",
     "messageFlows": "Nachrichtenflüsse",
     "noInformationAvailable": "Keine Informationen verfügbar",
     "process": "Prozess",
@@ -131,6 +135,9 @@
     "resources": "Ressourcen",
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Startereignis"
+  },
+  "processView": {
+    "loadingProcessModel": "Prozessmodell wird geladen..."
   },
   "projectOverview": {
     "active": "AKTIV",
