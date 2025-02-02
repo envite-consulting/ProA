@@ -342,7 +342,6 @@ export default defineComponent({
     },
     fetchProcessModels() {
       this.isFetching = true;
-      console.log("isFetching = true");
       this.resetFilters();
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() }).then(result => {
@@ -478,7 +477,6 @@ export default defineComponent({
 
         this.saveGraphState();
         this.isFetching = false;
-        console.log("isFetching = false");
       });
     },
     getProcessElementType(portId: string): ProcessElementType | null {

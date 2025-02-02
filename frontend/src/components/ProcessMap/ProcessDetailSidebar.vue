@@ -151,7 +151,6 @@ export default defineComponent({
   methods: {
     async open(model: AbstractProcessShape) {
       this.isFetching = true;
-      console.log('isFetching = true');
       this.showSidebar = true;
       await this.$nextTick();
       this.model = model;
@@ -161,7 +160,6 @@ export default defineComponent({
       axios.get("/api/process-model/" + modelId + "/details", { headers: authHeader() }).then(result => {
         this.details = result.data;
         this.isFetching = false;
-        console.log('isFetching = false');
       })
     },
     close() {
