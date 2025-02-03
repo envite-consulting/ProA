@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.envite.proa.entities.*;
+import de.envite.proa.XmlConverter;
 import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
@@ -284,7 +285,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public String getProcessModel(Long id) {
-		return processModelDao.find(id).getBpmnXml();
+		byte[] xmlBytes = processModelDao.find(id).getBpmnXml();
+		return XmlConverter.bytesToString(xmlBytes);
 	}
 
 	@Override
