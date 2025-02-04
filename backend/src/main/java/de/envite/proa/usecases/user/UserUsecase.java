@@ -1,6 +1,6 @@
 package de.envite.proa.usecases.user;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

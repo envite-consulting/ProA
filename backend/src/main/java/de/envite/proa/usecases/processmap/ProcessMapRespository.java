@@ -1,7 +1,7 @@
 package de.envite.proa.usecases.processmap;
 
-import de.envite.proa.entities.ProcessConnection;
-import de.envite.proa.entities.ProcessMap;
+import de.envite.proa.entities.process.ProcessConnection;
+import de.envite.proa.entities.processmap.ProcessMap;
 
 public interface ProcessMapRespository {
 

@@ -10,7 +10,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.project.Project;
 import de.envite.proa.usecases.project.ProjectUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;

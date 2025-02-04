@@ -2,7 +2,7 @@ package de.envite.proa.usecases.project;
 
 import java.util.List;
 
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.project.Project;
 
 public interface ProjectRepository {
 

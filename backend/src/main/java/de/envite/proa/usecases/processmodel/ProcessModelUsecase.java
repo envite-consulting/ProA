@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.process.*;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;

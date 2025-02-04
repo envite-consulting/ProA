@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.DataAccess;
+import de.envite.proa.entities.datastore.DataAccess;
 import jakarta.persistence.*;
 import lombok.Data;
 

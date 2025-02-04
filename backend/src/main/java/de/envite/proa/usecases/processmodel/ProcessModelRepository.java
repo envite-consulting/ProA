@@ -2,10 +2,10 @@ package de.envite.proa.usecases.processmodel;
 
 import java.util.List;
 
-import de.envite.proa.entities.MessageFlowDetails;
-import de.envite.proa.entities.ProcessDetails;
-import de.envite.proa.entities.ProcessInformation;
-import de.envite.proa.entities.ProcessModel;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.process.ProcessDetails;
+import de.envite.proa.entities.process.ProcessInformation;
+import de.envite.proa.entities.process.ProcessModel;
 import de.envite.proa.repository.tables.ProcessModelTable;
 
 public interface ProcessModelRepository {

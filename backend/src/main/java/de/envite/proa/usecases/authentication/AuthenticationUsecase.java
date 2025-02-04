@@ -1,10 +1,10 @@
 package de.envite.proa.usecases.authentication;
 
-import de.envite.proa.entities.User;
 import de.envite.proa.usecases.authentication.exceptions.AccountLockedException;
 import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.usecases.authentication.exceptions.EmailNotFoundException;
 import de.envite.proa.usecases.authentication.exceptions.InvalidPasswordException;
+import de.envite.proa.entities.authentication.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
