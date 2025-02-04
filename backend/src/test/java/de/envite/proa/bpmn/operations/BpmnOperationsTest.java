@@ -8,11 +8,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import de.envite.proa.entities.DataAccess;
-import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessActivity;
-import de.envite.proa.entities.ProcessDataStore;
-import de.envite.proa.entities.ProcessEvent;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessActivity;
+import de.envite.proa.entities.process.ProcessDataStore;
+import de.envite.proa.entities.process.ProcessEvent;
 
 public class BpmnOperationsTest {
 

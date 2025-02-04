@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.EventType;
+import de.envite.proa.entities.process.EventType;
 import jakarta.persistence.*;
 import lombok.Data;
 

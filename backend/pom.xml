@@ -45,7 +45,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-jdbc-mssql</artifactId>
+			<artifactId>quarkus-jdbc-postgresql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -259,25 +259,6 @@
 				<skipITs>false</skipITs>
 				<quarkus.package.type>native</quarkus.package.type>
 			</properties>
-		</profile>
-
-		<profile>
-			<id>dev-postgres</id>
-			<properties>
-				<quarkus.profile>dev-postgres</quarkus.profile>
-			</properties>
-			<activation>
-				<property>
-					<name>env</name>
-					<value>dev-postgres</value>
-				</property>
-			</activation>
-			<dependencies>
-				<dependency>
-					<groupId>io.quarkus</groupId>
-					<artifactId>quarkus-jdbc-postgresql</artifactId>
-				</dependency>
-			</dependencies>
 		</profile>
 	</profiles>
 </project>

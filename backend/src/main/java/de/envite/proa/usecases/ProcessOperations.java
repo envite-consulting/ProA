@@ -3,7 +3,11 @@ package de.envite.proa.usecases;
 import java.util.List;
 import java.util.Map;
 
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.process.ProcessActivity;
+import de.envite.proa.entities.process.ProcessDataStore;
+import de.envite.proa.entities.process.ProcessEvent;
 
 public interface ProcessOperations {
 
