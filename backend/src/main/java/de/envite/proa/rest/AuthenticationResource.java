@@ -1,10 +1,10 @@
 package de.envite.proa.rest;
 
+import de.envite.proa.usecases.authentication.exceptions.AccountLockedException;
+import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
+import de.envite.proa.usecases.authentication.exceptions.EmailNotFoundException;
+import de.envite.proa.usecases.authentication.exceptions.InvalidPasswordException;
 import de.envite.proa.entities.authentication.User;
-import de.envite.proa.exceptions.AccountLockedException;
-import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
-import de.envite.proa.exceptions.EmailNotFoundException;
-import de.envite.proa.exceptions.InvalidPasswordException;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import jakarta.annotation.security.RolesAllowed;

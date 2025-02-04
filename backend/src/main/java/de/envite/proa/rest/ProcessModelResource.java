@@ -15,9 +15,9 @@ import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
 
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
-import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;

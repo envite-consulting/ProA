@@ -19,23 +19,9 @@ public class MessageFlowTable {
 	private String description;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn( //
-			name = "calling_process_id", //
-			foreignKey = @ForeignKey( //
-					name = "fk_calling_process", //
-					foreignKeyDefinition = "FOREIGN KEY (calling_process_id) REFERENCES processmodeltable(id) ON DELETE CASCADE" //
-			) //
-	)
 	private ProcessModelTable callingProcess;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn( //
-			name = "called_process_id", //
-			foreignKey = @ForeignKey( //
-					name = "fk_called_process", //
-					foreignKeyDefinition = "FOREIGN KEY (called_process_id) REFERENCES processmodeltable(id) ON DELETE CASCADE" //
-			) //
-	)
 	private ProcessModelTable calledProcess;
 
 	@Enumerated(EnumType.STRING)

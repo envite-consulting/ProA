@@ -24,13 +24,23 @@
       {{ $t('navigation.createAccount') }}
     </v-tooltip>
 
+    <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn && isUserAdmin">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" @click="$router.push('/ManageUsers')">
+          <v-icon icon="mdi-account-multiple"></v-icon>
+        </v-btn>
+      </template>
+      {{ $t('navigation.manageUsers') }}
+    </v-tooltip>
+
     <v-tooltip location="bottom" v-if="webVersion && isUserLoggedIn">
       <template v-slot:activator="{ props }">
         <v-btn v-bind="props" @click="signOut">
           <v-icon icon="mdi-logout"></v-icon>
         </v-btn>
       </template>
-      {{ $t('general.signOut') }}
+      {{ $t('general.' +
+      'signOut') }}
     </v-tooltip>
 
     <v-menu>
@@ -98,8 +108,6 @@ import i18n from "@/i18n";
 import AuthenticationDialog from "@/components/Authentication/AuthenticationDialog.vue";
 import { SelectedDialog } from "@/store/app";
 import { Role } from "@/components/ProcessMap/types";
-import { UserData } from "@/components/Home/ProjectOverview.vue";
-import getUser from "@/components/userService";
 
 export type LanguageCode = 'en' | 'de';
 
@@ -127,6 +135,7 @@ export default defineComponent({
     },
     signOut() {
       this.store.setUserToken(null);
+      this.store.setUserRole(null);
     },
     openDialog(dialog: SelectedDialog) {
       this.store.setSelectedDialog(dialog);
@@ -145,14 +154,11 @@ export default defineComponent({
       showEditDialog: false as boolean,
       showProfileDialog: false as boolean,
       showProfileSuccessMessage: false as boolean,
-      SelectedDialog: SelectedDialog,
-      user: {} as UserData
+      SelectedDialog: SelectedDialog
     }
   },
 
   async mounted() {
-    if (this.store.getUserToken() != null) this.user = await getUser();
-
     i18n.global.locale = this.selectedLanguage;
   },
 
@@ -200,16 +206,13 @@ export default defineComponent({
       return this.store.getUserToken() != null;
     },
     isUserAdmin() {
-      return this.user.role === Role.ADMIN;
+      return this.store.getUserRole() === Role.ADMIN;
     }
   },
 
   watch: {
     group() {
       this.drawer = false
-    },
-    async isUserLoggedIn() {
-      this.user = await getUser();
     }
   }
 })

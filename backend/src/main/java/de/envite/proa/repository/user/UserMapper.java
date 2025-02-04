@@ -11,6 +11,8 @@ public class UserMapper {
         table.setFirstName(user.getFirstName());
         table.setLastName(user.getLastName());
         table.setPassword(user.getPassword());
+        table.setCreatedAt(user.getCreatedAt());
+        table.setModifiedAt(user.getModifiedAt());
         switch (user.getRole()) {
             case "Admin":
                 table.setRole(Role.Admin);
