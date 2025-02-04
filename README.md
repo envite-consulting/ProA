@@ -3,6 +3,23 @@
 ProA is a tool that lets you manage your processes and their connections smoothly. It detects relations among the
 processes and shows them in a diagram.
 
+## Web or desktop mode
+
+It is possible to run ProA in web or desktop mode.
+
+Web mode includes authentication and allows multiple users to use the app.
+
+To activate either mode please navigate to the frontend folder via `cd frontend` and run `yarn mode [web|desktop]`.
+
+Web mode: The default user is `admin` and the default password is `admin`.
+
+### Generating JWT keys (web mode only)
+
+To generate the keys necessary for authentication via JWT please run the following script once:
+```
+./backend/generate-keys.sh
+```
+
 ## The Entire Application
 
 In order to build an uber jar, which also contains the frontend, run the following in the root:
@@ -17,25 +34,10 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
 
-### Setting up environment variables
-
-> The Gemini API Key for creating process model descriptions as well as the connections to Camunda Cloud can be set up
-> via environment variables in the file `frontend/.env`. However, the values can also be specified from within the app in
-> the settings.
-
-- Duplicate the `.env-sample` in the frontend folder and rename the file to `.env`
-- Set up a [Google AI Studio](https://aistudio.google.com/app) account and create an API key
-- Set up a billing account (the Gemini API is free of charge for 1 million tokens per minute/15 requests per
-  minute/15,000 requests per day)
-- Copy the API key into the `.env` file variable `VITE_GEMINI_API_KEY`
-- Add the credentials from the Camunda Web Modeler API to the variables `VITE_MODELER_CLIENT_ID` and
-  `VITE_MODELER_CLIENT_ID`
-- Add the credentials from the Camunda Operate API to the variables `VITE_OPERATE_CLIENT_ID` and
-  `VITE_OPERATE_CLIENT_SECRET`
-
 ### Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
+
 
 ```shell script
 ./mvnw compile quarkus:dev
@@ -47,9 +49,11 @@ You can run your application in dev mode that enables live coding using:
 
 The application can be packaged using:
 
+
 ```shell script
 ./mvnw package
 ```
+
 
 It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
 
@@ -64,6 +68,7 @@ configured: https://github.com/quarkusio/quarkus/issues/27021
 
 ### Using GraalVM
 
+
 Install GraalVM version 21 from https://github.com/graalvm/graalvm-ce-builds/releases
 
 For Windows Users:
@@ -74,6 +79,7 @@ You can create a native executable using:
 ```shell script
 ./mvnw package -Dnative
 ```
+
 
 For Windows Users: Execute the above statement using the x64 Native Tools Command Prompt .
 
@@ -94,6 +100,7 @@ If you want to learn more about building native executables, please consult http
 ### Jacoco
 
 To create a jacoco report run:
+
 
 ```shell script
 mvn verify
@@ -154,6 +161,16 @@ npm run lint
 # pnpm
 pnpm lint
 ```
+
+## Configuring settings
+
+Settings can be configured by clicking the settings icon in the top right corner of the app.
+
+`Gemini API Key` is used to generate process model descriptions with AI.
+
+Camunda Modeler `Client ID` and `Client Secret` are used to retrieve process models from the Camunda Web Modeler.
+
+Camunda Operate `Client ID`, `Client Secret`, `Region ID` and `Cluster ID` are used to fetch active process instances.
 
 ## Code Formatting Guide (IntelliJ IDEA)
 

@@ -5,6 +5,7 @@ import {
   Project
 } from "@/components/Home/ProjectOverview.vue";
 import { LanguageCode } from "@/layouts/default/AppBar.vue";
+import { Role } from "@/components/ProcessMap/types";
 
 export enum SelectedDialog {
   NONE = -1,
@@ -27,13 +28,14 @@ export const useAppStore = defineStore('app', {
       filtersByProject: {} as { [key: number]: string },
       hiddenCellsByProject: {} as { [key: number]: string },
       hiddenPortsByProject: {} as { [key: number]: string },
-      hiddenLinksByProject: {} as {[key: number]: { [key: string]: string }},
+      hiddenLinksByProject: {} as { [key: number]: { [key: string]: string } },
       processModelsChangeFlag: false as boolean,
       selectedLanguage: 'en' as LanguageCode,
       areSettingsOpened: false as boolean,
       operateConnectionError: '' as string,
       operateClusterError: '' as string,
       userToken: null as string | null,
+      userRole: null as Role | null,
       selectedDialog: SelectedDialog.NONE as SelectedDialog
     }
   },
@@ -138,6 +140,12 @@ export const useAppStore = defineStore('app', {
     },
     getSelectedDialog(): SelectedDialog {
       return this.selectedDialog;
+    },
+    setUserRole(role: Role | null) {
+      this.userRole = role;
+    },
+    getUserRole(): Role | null {
+      return this.userRole;
     }
   },
   persist: {
@@ -158,6 +166,7 @@ export const useAppStore = defineStore('app', {
       'operateConnectionError',
       'operateClusterError',
       'userToken',
+      'userRole',
       'selectedDialog'
     ]
   },

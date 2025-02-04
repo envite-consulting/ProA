@@ -1,16 +1,14 @@
 
 package de.envite.proa.rest;
 
-import de.envite.proa.entities.Settings;
+import de.envite.proa.entities.settings.Settings;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.settings.SettingsUsecase;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.*;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.jboss.resteasy.reactive.RestPath;
 
 @Path("/api/settings")
 public class SettingsResource {
