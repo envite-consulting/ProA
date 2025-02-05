@@ -8,20 +8,20 @@ import lombok.Data;
 @Data
 public class ProcessEventTable {
 
-    @Id
-    @GeneratedValue
-    private Long id;
-    
-    private String elementId;
-    
-    private String label;
-    
-    @Enumerated(EnumType.STRING)
-    private EventType eventType;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    private ProcessModelTable processModel;
-    
-    @ManyToOne
-    private ProjectTable project;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+
+	private String elementId;
+
+	private String label;
+
+	@Enumerated(EnumType.STRING)
+	private EventType eventType;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	private ProcessModelTable processModel;
+
+	@ManyToOne
+	private ProjectTable project;
 }

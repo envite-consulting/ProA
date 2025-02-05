@@ -9,12 +9,11 @@ import lombok.Data;
 public class ProcessConnectionTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	/**
-	 * the name of the common elements, e.g. the name of the connecting start and
-	 * end event
+	 * the name of the common elements, e.g. the name of the connecting start and end event
 	 */
 	private String label;
 
