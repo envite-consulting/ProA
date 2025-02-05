@@ -1,19 +1,19 @@
 package de.envite.proa.repository.tables;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
 import de.envite.proa.entities.ProcessType;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
 public class ProcessModelTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long id;
 
 	private String name;

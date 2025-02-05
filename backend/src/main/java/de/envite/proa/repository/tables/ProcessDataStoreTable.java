@@ -9,16 +9,16 @@ import lombok.Data;
 public class ProcessDataStoreTable {
 
 	@Id
-    @GeneratedValue
-    private Long id;
-    
-    private String elementId;
-    
-    private String label;
-    
-    @Enumerated(EnumType.STRING)
-    private DataAccess access;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    private ProcessModelTable processModel;
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+
+	private String elementId;
+
+	private String label;
+
+	@Enumerated(EnumType.STRING)
+	private DataAccess access;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	private ProcessModelTable processModel;
 }
