@@ -93,6 +93,7 @@
   "processDetailSidebar": {
     "endEvents": "End Events",
     "goToProcessModel": "Go to Process Model",
+    "loadingData": "Loading data...",
     "startEvents": "Start Events"
   },
   "processList": {
@@ -111,9 +112,11 @@
     "confirmDeletionText1": "Are you sure you want to delete ",
     "confirmDeletionText2": "? This action will delete all process models associated with the collaboration.",
     "error": "Error",
+    "fetchingProcessModels": "Fetching process models...",
     "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",
+    "noProcessModelsFound": "No process models found.",
     "participant": "Participant",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
@@ -131,6 +134,7 @@
     "hide": "Hide",
     "intermediateEvents": "Intermediate Events",
     "legend": "Legend",
+    "loadingProcessMap": "Loading process map...",
     "messageFlows": "Message Flows",
     "noInformationAvailable": "No information available",
     "process": "Process",
@@ -138,6 +142,9 @@
     "resources": "Resources",
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Start Event"
+  },
+  "processView": {
+    "loadingProcessModel": "Loading process model..."
   },
   "projectOverview": {
     "active": "ACTIVE",

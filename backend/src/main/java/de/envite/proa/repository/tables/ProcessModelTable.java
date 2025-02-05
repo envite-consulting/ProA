@@ -20,9 +20,8 @@ public class ProcessModelTable {
 
 	private String bpmnProcessId;
 
-	@Lob
-	@Column
-	private String bpmnXml;
+	@Column(columnDefinition = "BYTEA")
+	private byte[] bpmnXml;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<ProcessEventTable> events = new ArrayList<>();

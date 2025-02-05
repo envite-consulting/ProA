@@ -3,6 +3,7 @@ package de.envite.proa.repository.processmodel;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.envite.proa.XmlConverter;
 import de.envite.proa.entities.process.EventType;
 import de.envite.proa.entities.process.ProcessActivity;
 import de.envite.proa.entities.process.ProcessDataStore;
@@ -19,7 +20,8 @@ public class ProcessmodelMapper {
 	public static ProcessModelTable map(ProcessModel processModel, ProjectTable projectTable) {
 		ProcessModelTable table = new ProcessModelTable();
 		table.setName(processModel.getName());
-		table.setBpmnXml(processModel.getBpmnXml());
+		byte[] xmlBytes = XmlConverter.stringToBytes(processModel.getBpmnXml());
+		table.setBpmnXml(xmlBytes);
 		table.setEvents(mapEvents(processModel.getEvents(), table, projectTable));
 		table.setCallActivites(map(processModel.getCallActivities(), table, projectTable));
 		table.setDataStores(mapDataStore(processModel.getDataStores(), table));
