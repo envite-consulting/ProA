@@ -1,18 +1,5 @@
 package de.envite.proa.bpmn.operations;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Collection;
-
 import de.envite.proa.entities.*;
 import de.envite.proa.repository.ProcessmodelRepositoryTest;
 import de.envite.proa.rest.FileService;
@@ -21,9 +8,17 @@ import org.camunda.bpm.model.bpmn.BpmnModelInstance;
 import org.camunda.bpm.model.bpmn.instance.Participant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 public class BpmnOperationsTest {
 
@@ -42,7 +37,6 @@ public class BpmnOperationsTest {
 	private static final String PARTICIPANT_ID_4 = "Participant_4";
 	private static final String PARTICIPANT_DOCUMENTATION_1 = "This is the first participant.";
 
-
 	private static final String MESSAGE_FLOW_DOCUMENTATION_1 = "This is a message flow.";
 	private static final String MESSAGE_FLOW_NAME_2 = "Message Flow 2";
 	private static final String MESSAGE_FLOW_ID_3 = "MessageFlow_3";
@@ -50,7 +44,7 @@ public class BpmnOperationsTest {
 	private static final FileService fileService = new FileService();
 	public static final String COLLABORATION_WITH_TWO_PARTICIPANTS_BPMN = "collaboration-with-two-participants.bpmn";
 
-	private static final Map<String, Long> bpmnIdToIdMap = new HashMap<>();
+	private static final Map<String, Long> bpmnIdToDatabseIdMap = new HashMap<>();
 	public static final String PROCESS_BPMN = "process.bpmn";
 	public static final String COLLABORATION_WITH_DOCUMENTATION_BPMN = "collaboration-with-documentation.bpmn";
 	public static final String COLLABORATION_WITH_PROCESSES_NO_DOCUMENTATIONS_BPMN = "collaboration-with-processes-no-documentations.bpmn";
@@ -304,9 +298,9 @@ public class BpmnOperationsTest {
 		File collaboration = loadFile(COLLABORATION_WITH_DETAILED_MESSAGE_FLOWS_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
-		bpmnIdToIdMap.put(PROCESS_BPMN_ID_1, PROCESS_ID_1);
-		bpmnIdToIdMap.put(PROCESS_BPMN_ID_2, PROCESS_ID_2);
-		List<MessageFlowDetails> result = bpmnOperations.getMessageFlows(collaborationXml, bpmnIdToIdMap);
+		bpmnIdToDatabseIdMap.put(PROCESS_BPMN_ID_1, PROCESS_ID_1);
+		bpmnIdToDatabseIdMap.put(PROCESS_BPMN_ID_2, PROCESS_ID_2);
+		List<MessageFlowDetails> result = bpmnOperations.getMessageFlows(collaborationXml, bpmnIdToDatabseIdMap);
 
 		assertThat(result).hasSize(8);
 
@@ -381,7 +375,7 @@ public class BpmnOperationsTest {
 		String collaborationXml = fileService.readFileToString(collaboration);
 
 		List<MessageFlowDetails> result = bpmnOperations.getMessageFlows(collaborationXml, new HashMap<>());
-		assertThat(result).isNull();
+		assertThat(result).isEmpty();
 	}
 
 	@Test
@@ -391,7 +385,8 @@ public class BpmnOperationsTest {
 
 		String result = bpmnOperations.addEmptyProcessRefs(collaborationXml);
 
-		BpmnModelInstance model = Bpmn.readModelFromStream(new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8)));
+		BpmnModelInstance model = Bpmn.readModelFromStream(
+				new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8)));
 		Collection<Participant> participants = model.getModelElementsByType(Participant.class);
 
 		assertThat(participants).hasSize(2);

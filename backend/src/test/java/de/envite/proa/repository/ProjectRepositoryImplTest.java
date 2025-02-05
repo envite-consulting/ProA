@@ -16,110 +16,117 @@ import static org.mockito.Mockito.*;
 
 class ProjectRepositoryImplTest {
 
-    private static final Long PROJECT_ID = 1L;
-    private static final String PROJECT_NAME = "Test Project";
-    private static final String PROJECT_VERSION = "1.0";
-    private static final Long USER_ID = 1L;
+	private static final Long PROJECT_ID = 1L;
+	private static final String PROJECT_NAME = "Test Project";
+	private static final String PROJECT_VERSION = "1.0";
+	private static final Long USER_ID = 1L;
 
-    @InjectMocks
-    ProjectRepositoryImpl projectRepository;
+	@InjectMocks
+	ProjectRepositoryImpl projectRepository;
 
-    @Mock
-    ProjectDao projectDao;
+	@Mock
+	ProjectDao projectDao;
 
-    @Mock
-    UserDao userDao;
+	@Mock
+	UserDao userDao;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+	@BeforeEach
+	void setUp() {
+		MockitoAnnotations.openMocks(this);
+	}
 
-    @Test
-    void testCreateProject() {
-        doNothing().when(projectDao).persist(any(ProjectTable.class));
+	@Test
+	void testCreateProject() {
+		doNothing().when(projectDao).persist(any(ProjectTable.class));
 
-        Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
+		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 
-        assertNotNull(project);
-        assertEquals(PROJECT_NAME, project.getName());
-        assertEquals(PROJECT_VERSION, project.getVersion());
+		assertNotNull(project);
+		assertEquals(PROJECT_NAME, project.getName());
+		assertEquals(PROJECT_VERSION, project.getVersion());
 
-        verify(projectDao).persist(any(ProjectTable.class));
-    }
+		verify(projectDao).persist(any(ProjectTable.class));
+	}
 
-    @Test
-    void testCreateProjectWithUser() {
-        UserTable user = new UserTable();
-        user.setId(USER_ID);
+	@Test
+	void testCreateProjectWithUser() {
+		UserTable user = new UserTable();
+		user.setId(USER_ID);
 
-        when(userDao.findById(USER_ID)).thenReturn(user);
-        doNothing().when(projectDao).persist(any(ProjectTable.class));
+		when(userDao.findById(USER_ID)).thenReturn(user);
+		doNothing().when(projectDao).persist(any(ProjectTable.class));
 
-        Project project = projectRepository.createProject(USER_ID, PROJECT_NAME, PROJECT_VERSION);
+		Project project = projectRepository.createProject(USER_ID, PROJECT_NAME, PROJECT_VERSION);
 
-        assertNotNull(project);
-        assertEquals(PROJECT_NAME, project.getName());
-        assertEquals(PROJECT_VERSION, project.getVersion());
+		assertNotNull(project);
+		assertEquals(PROJECT_NAME, project.getName());
+		assertEquals(PROJECT_VERSION, project.getVersion());
 
-        verify(userDao).findById(USER_ID);
-        verify(projectDao).persist(any(ProjectTable.class));
-    }
+		ProjectTable projectArgument = new ProjectTable();
+		projectArgument.setUser(user);
+		projectArgument.setName(PROJECT_NAME);
+		projectArgument.setVersion(PROJECT_VERSION);
+		projectArgument.setCreatedAt(project.getCreatedAt());
+		projectArgument.setModifiedAt(project.getModifiedAt());
 
-    @Test
-    void testGetProjects() {
-        ProjectTable projectTable = new ProjectTable();
-        projectTable.setId(PROJECT_ID);
-        when(projectDao.getProjects()).thenReturn(List.of(projectTable));
+		verify(userDao).findById(USER_ID);
+		verify(projectDao).persist(projectArgument);
+	}
 
-        List<Project> projects = projectRepository.getProjects();
+	@Test
+	void testGetProjects() {
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		when(projectDao.getProjects()).thenReturn(List.of(projectTable));
 
-        assertFalse(projects.isEmpty());
-        assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
+		List<Project> projects = projectRepository.getProjects();
 
-        verify(projectDao).getProjects();
-    }
+		assertFalse(projects.isEmpty());
+		assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
 
-    @Test
-    void testGetProjectsForUser() {
-        UserTable user = new UserTable();
-        ProjectTable projectTable = new ProjectTable();
-        projectTable.setId(PROJECT_ID);
-        when(userDao.findById(USER_ID)).thenReturn(user);
-        when(projectDao.getProjectsForUser(user)).thenReturn(List.of(projectTable));
+		verify(projectDao).getProjects();
+	}
 
-        List<Project> projects = projectRepository.getProjects(USER_ID);
-        assertFalse(projects.isEmpty());
-        assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
+	@Test
+	void testGetProjectsForUser() {
+		UserTable user = new UserTable();
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		when(userDao.findById(USER_ID)).thenReturn(user);
+		when(projectDao.getProjectsForUser(user)).thenReturn(List.of(projectTable));
 
-        verify(userDao).findById(USER_ID);
-        verify(projectDao).getProjectsForUser(user);
-    }
+		List<Project> projects = projectRepository.getProjects(USER_ID);
+		assertFalse(projects.isEmpty());
+		assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
 
-    @Test
-    void testGetProjectById() {
-        ProjectTable projectTable = new ProjectTable();
-        when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
+		verify(userDao).findById(USER_ID);
+		verify(projectDao).getProjectsForUser(user);
+	}
 
-        Project retrievedProject = projectRepository.getProject(projectTable.getId());
-        assertNotNull(retrievedProject);
-        assertEquals(projectTable.getId(), retrievedProject.getId());
+	@Test
+	void testGetProjectById() {
+		ProjectTable projectTable = new ProjectTable();
+		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
 
-        verify(projectDao).findById(projectTable.getId());
-    }
+		Project retrievedProject = projectRepository.getProject(projectTable.getId());
+		assertNotNull(retrievedProject);
+		assertEquals(projectTable.getId(), retrievedProject.getId());
 
-    @Test
-    void testGetProjectByUserAndId() {
-        UserTable user = new UserTable();
-        ProjectTable projectTable = new ProjectTable();
-        when(userDao.findById(USER_ID)).thenReturn(user);
-        when(projectDao.findByUserAndId(user, projectTable.getId())).thenReturn(projectTable);
+		verify(projectDao).findById(projectTable.getId());
+	}
 
-        Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
-        assertNotNull(retrievedProject);
-        assertEquals(projectTable.getId(), retrievedProject.getId());
+	@Test
+	void testGetProjectByUserAndId() {
+		UserTable user = new UserTable();
+		ProjectTable projectTable = new ProjectTable();
+		when(userDao.findById(USER_ID)).thenReturn(user);
+		when(projectDao.findByUserAndId(user, projectTable.getId())).thenReturn(projectTable);
 
-        verify(userDao).findById(USER_ID);
-        verify(projectDao).findByUserAndId(user, projectTable.getId());
-    }
+		Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
+		assertNotNull(retrievedProject);
+		assertEquals(projectTable.getId(), retrievedProject.getId());
+
+		verify(userDao).findById(USER_ID);
+		verify(projectDao).findByUserAndId(user, projectTable.getId());
+	}
 }
