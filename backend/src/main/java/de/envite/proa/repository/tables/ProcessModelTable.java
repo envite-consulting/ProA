@@ -1,28 +1,27 @@
 package de.envite.proa.repository.tables;
 
+import de.envite.proa.entities.process.ProcessType;
+import jakarta.persistence.*;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import de.envite.proa.entities.ProcessType;
-import jakarta.persistence.*;
-import lombok.Data;
 
 @Entity
 @Data
 public class ProcessModelTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long id;
 
 	private String name;
 
 	private String bpmnProcessId;
 
-	@Lob
-	@Column
-	private String bpmnXml;
+	@Column(columnDefinition = "BYTEA")
+	private byte[] bpmnXml;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
 	private List<ProcessEventTable> events = new ArrayList<>();

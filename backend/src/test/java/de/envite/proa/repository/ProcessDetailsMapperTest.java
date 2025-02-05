@@ -5,10 +5,11 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.Arrays;
 
+import de.envite.proa.repository.processmodel.ProcessDetailsMapper;
 import org.junit.jupiter.api.Test;
 
-import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 

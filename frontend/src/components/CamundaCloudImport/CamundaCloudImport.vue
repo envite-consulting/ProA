@@ -287,6 +287,7 @@ export default defineComponent({
         this.processModels = this.processModels.filter(model => !selectedProcessModelIds.includes(model.id));
         this.selectedProcessModels = [];
         this.loadingDialog = false;
+        this.store.setProcessModelsChanged();
         this.$router.push("/ProcessList");
       }).catch(error => {
         console.log(error);

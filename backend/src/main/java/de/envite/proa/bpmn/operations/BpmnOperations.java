@@ -1,6 +1,9 @@
 package de.envite.proa.bpmn.operations;
 
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.*;
 import de.envite.proa.usecases.ProcessOperations;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.AllArgsConstructor;
@@ -204,8 +207,10 @@ public class BpmnOperations implements ProcessOperations {
 		} else if (element instanceof IntermediateThrowEvent) {
 			return new MessageFlowNode(getProcessIdFromChildElement(element),
 					ProcessElementType.INTERMEDIATE_THROW_EVENT);
+		} else if (element instanceof StartEvent) {
+			return new MessageFlowNode(getProcessIdFromChildElement(element), ProcessElementType.START_EVENT);
 		}
-		return new MessageFlowNode(getProcessIdFromChildElement(element), ProcessElementType.START_EVENT);
+		return null;
 	}
 
 	private String getProcessIdFromChildElement(ModelElementInstance element) {

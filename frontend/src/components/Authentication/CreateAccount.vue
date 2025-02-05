@@ -2,23 +2,24 @@
   <v-card class="pa-5">
     <v-card-title class="px-0 pt-0">
       <div class="d-flex align-center">
-        <span>{{ $t('authentication.createAnAccount') }}</span>
+        <span>{{ $t("authentication.createAnAccount") }}</span>
         <v-btn variant="text" icon class="ms-auto" @click="closeDialog">
           <v-icon icon="mdi-close"></v-icon>
         </v-btn>
       </div>
     </v-card-title>
 
-    <v-divider/>
+    <v-divider />
     <v-card-text>
       <v-form ref="createAccountForm" @submit.prevent>
-        <v-alert v-if="message.message !== ''"
-                 closable
-                 icon="mdi-alert-circle-outline"
-                 :text="message.message"
-                 :type="message.type"
-                 class="mb-5"
-                 @click:close="removeMessage"
+        <v-alert
+          v-if="message.message !== ''"
+          closable
+          icon="mdi-alert-circle-outline"
+          :text="message.message"
+          :type="message.type"
+          class="mb-5"
+          @click:close="removeMessage"
         ></v-alert>
         <v-text-field
           type="email"
@@ -64,8 +65,14 @@
           variant="outlined"
           class="my-2"
         ></v-select>
-        <v-btn type="button" @click="createAccount" color="primary" block height="50">
-          {{ $t('general.continue') }}
+        <v-btn
+          type="button"
+          @click="createAccount"
+          color="primary"
+          block
+          height="50"
+        >
+          {{ $t("general.continue") }}
         </v-btn>
       </v-form>
     </v-card-text>
@@ -77,12 +84,12 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 import {
   emailRules,
   firstNameRules,
   lastNameRules,
-  newPasswordRules
+  newPasswordRules,
 } from "@/components/Authentication/formValidation";
 import { VForm } from "vuetify/components";
 import axios, { AxiosError } from "axios";
@@ -97,39 +104,39 @@ export default defineComponent({
   props: {
     message: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
 
   data() {
     return {
-      email: '' as string,
-      password: '' as string,
-      firstName: '' as string,
-      lastName: '' as string,
+      email: "" as string,
+      password: "" as string,
+      firstName: "" as string,
+      lastName: "" as string,
       emailRules: emailRules,
       firstNameRules: firstNameRules,
       lastNameRules: lastNameRules,
       passwordRules: newPasswordRules,
       SelectedDialog: SelectedDialog,
       store: useAppStore(),
-      selectedRole: Role.USER
-    }
+      selectedRole: Role.USER,
+    };
   },
 
   computed: {
     localizedRoleOptions() {
       const roles = Object.values(Role);
-      return roles.map(role => ({
+      return roles.map((role) => ({
         value: role,
-        label: this.$t(`authentication.${role.toLowerCase()}`)
+        label: this.$t(`authentication.${role.toLowerCase()}`),
       }));
-    }
+    },
   },
 
   methods: {
     async createAccount() {
-      this.$emit('showMessage', { message: '', type: 'error' } as Message);
+      this.$emit("showMessage", { message: "", type: "error" } as Message);
       const form = this.$refs.createAccountForm as VForm;
       form.resetValidation();
       const { valid } = await form.validate();
@@ -138,38 +145,50 @@ export default defineComponent({
       }
 
       try {
-        await axios.post('/api/authentication/register', {
-          email: this.email,
-          password: this.password,
-          firstName: this.firstName,
-          lastName: this.lastName,
-          role: this.selectedRole
-        }, { headers: { ...authHeader(), 'Content-Type': 'application/json' } });
+        await axios.post(
+          "/api/authentication/register",
+          {
+            email: this.email,
+            password: this.password,
+            firstName: this.firstName,
+            lastName: this.lastName,
+            role: this.selectedRole,
+          },
+          { headers: { ...authHeader(), "Content-Type": "application/json" } },
+        );
 
-        this.$emit('showMessage', {
-          type: 'success',
-          message: this.$t('authentication.successfullyCreatedAccount') as string
+        this.$emit("showMessage", {
+          type: "success",
+          message: this.$t(
+            "authentication.successfullyCreatedAccount",
+          ) as string,
         });
+
+        if (this.$route.name === "ManageUsers") {
+          this.closeDialog();
+          window.location.reload();
+        }
+        this.resetForm();
       } catch (e) {
         if ((e as AxiosError).response?.status === 409) {
-          this.$emit('showMessage', {
-            type: 'error',
-            message: this.$t('authentication.emailAlreadyRegistered') as string
+          this.$emit("showMessage", {
+            type: "error",
+            message: this.$t("authentication.emailAlreadyRegistered") as string,
           });
           return;
         }
 
         if ((e as AxiosError).response?.status === 429) {
-          this.$emit('showMessage', {
-            type: 'error',
-            message: this.$t('authentication.tooManyRequests') as string
+          this.$emit("showMessage", {
+            type: "error",
+            message: this.$t("authentication.tooManyRequests") as string,
           });
           return;
         }
 
-        this.$emit('showMessage', {
-          type: 'error',
-          message: this.$t('authentication.accountCreationFailed') as string
+        this.$emit("showMessage", {
+          type: "error",
+          message: this.$t("authentication.accountCreationFailed") as string,
         });
       }
     },
@@ -177,8 +196,18 @@ export default defineComponent({
       this.store.setSelectedDialog(SelectedDialog.NONE);
     },
     removeMessage() {
-      this.$emit('removeMessage');
-    }
-  }
+      this.$emit("removeMessage");
+    },
+    resetForm() {
+      this.email = "";
+      this.password = "";
+      this.firstName = "";
+      this.lastName = "";
+      this.selectedRole = Role.USER;
+
+      const form = this.$refs.createAccountForm as VForm;
+      form.resetValidation();
+    },
+  },
 });
 </script>

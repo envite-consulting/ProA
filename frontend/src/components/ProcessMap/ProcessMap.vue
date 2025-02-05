@@ -4,7 +4,13 @@
                      @handleFetchProcessInstances="handleFetchProcessInstances"/>
   <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
     <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState"/>
-    <div id="graph-container" class="full-screen"></div>
+    <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
+      <div class="d-flex flex-column align-center justify-center">
+        <span class="mb-2">{{ $t('processMap.loadingProcessMap') }}</span>
+        <v-progress-circular indeterminate/>
+      </div>
+    </div>
+    <div :hidden="isFetching" id="graph-container" class="full-screen"></div>
     <NavigationButtons ref="navigationButtons" :selectedProjectId="selectedProjectId"/>
   </v-card>
   <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
@@ -109,6 +115,7 @@ export default defineComponent({
       hiddenPorts,
       portsInformation,
       selectedProjectId,
+      isFetching: false as boolean
     }
   },
 
@@ -330,6 +337,7 @@ export default defineComponent({
       this.saveHiddenPorts();
     },
     fetchProcessModels() {
+      this.isFetching = true;
       this.resetFilters();
       graph.clear();
       axios.get("/api/project/" + this.selectedProjectId + "/process-map", { headers: authHeader() }).then(result => {
@@ -464,6 +472,7 @@ export default defineComponent({
         setTimeout(this.fitToScreen, 1);
 
         this.saveGraphState();
+        this.isFetching = false;
       });
     },
     getProcessElementType(portId: string): ProcessElementType | null {

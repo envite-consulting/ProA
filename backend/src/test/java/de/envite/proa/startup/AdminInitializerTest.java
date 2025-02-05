@@ -1,7 +1,8 @@
 package de.envite.proa.startup;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 import de.envite.proa.usecases.authentication.AuthenticationUsecase;
+import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.usecases.user.UserUsecase;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -15,50 +16,50 @@ import static org.mockito.Mockito.*;
 
 public class AdminInitializerTest {
 
-    private static final String ROLE = "Admin";
+	private static final String ROLE = "Admin";
 
-    @InjectMocks
-    private AdminInitializer adminInitializer;
+	@InjectMocks
+	private AdminInitializer adminInitializer;
 
-    @Mock
-    private UserUsecase userUsecase;
+	@Mock
+	private UserUsecase userUsecase;
 
-    @Mock
-    private AuthenticationUsecase authenticationUsecase;
+	@Mock
+	private AuthenticationUsecase authenticationUsecase;
 
-    @Inject
-    @ConfigProperty(name = "admin.email")
-    String adminEmail;
+	@Inject
+	@ConfigProperty(name = "admin.email")
+	String adminEmail;
 
-    @Inject
-    @ConfigProperty(name = "admin.password")
-    String adminPassword;
+	@Inject
+	@ConfigProperty(name = "admin.password")
+	String adminPassword;
 
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
+	@BeforeEach
+	public void setup() {
+		MockitoAnnotations.openMocks(this);
+	}
 
-    @Test
-    public void testAdminAlreadyExists() {
-        when(userUsecase.findByEmail(adminEmail)).thenReturn(new User());
+	@Test
+	public void testAdminAlreadyExists() throws EmailAlreadyRegisteredException {
+		when(userUsecase.findByEmail(adminEmail)).thenReturn(new User());
 
-        adminInitializer.init();
+		adminInitializer.init();
 
-        verify(authenticationUsecase, never()).register(any(User.class));
-    }
+		verify(authenticationUsecase, never()).register(any(User.class));
+	}
 
-    @Test
-    public void testAdminDoesNotExist() {
-        when(userUsecase.findByEmail(adminEmail)).thenReturn(null);
+	@Test
+	public void testAdminDoesNotExist() throws EmailAlreadyRegisteredException {
+		when(userUsecase.findByEmail(adminEmail)).thenReturn(null);
 
-        adminInitializer.init();
+		adminInitializer.init();
 
-        User user = new User();
-        user.setEmail(adminEmail);
-        user.setPassword(adminPassword);
-        user.setRole(ROLE);
+		User user = new User();
+		user.setEmail(adminEmail);
+		user.setPassword(adminPassword);
+		user.setRole(ROLE);
 
-        verify(authenticationUsecase, times(1)).register(user);
-    }
+		verify(authenticationUsecase, times(1)).register(user);
+	}
 }

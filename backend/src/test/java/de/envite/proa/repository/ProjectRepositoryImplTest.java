@@ -1,8 +1,11 @@
 package de.envite.proa.repository;
 
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.project.Project;
+import de.envite.proa.repository.project.ProjectDao;
+import de.envite.proa.repository.project.ProjectRepositoryImpl;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.repository.tables.UserTable;
+import de.envite.proa.repository.user.UserDao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -120,6 +123,7 @@ class ProjectRepositoryImplTest {
 		UserTable user = new UserTable();
 		ProjectTable projectTable = new ProjectTable();
 		when(userDao.findById(USER_ID)).thenReturn(user);
+		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
 		when(projectDao.findByUserAndId(user, projectTable.getId())).thenReturn(projectTable);
 
 		Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
@@ -127,6 +131,7 @@ class ProjectRepositoryImplTest {
 		assertEquals(projectTable.getId(), retrievedProject.getId());
 
 		verify(userDao).findById(USER_ID);
+		verify(projectDao).findById(projectTable.getId());
 		verify(projectDao).findByUserAndId(user, projectTable.getId());
 	}
 }

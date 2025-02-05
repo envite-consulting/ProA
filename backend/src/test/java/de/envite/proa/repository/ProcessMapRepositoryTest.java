@@ -1,23 +1,37 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessConnection;
+import de.envite.proa.entities.process.ProcessElementType;
+import de.envite.proa.entities.process.ProcessType;
+import de.envite.proa.entities.processmap.ProcessMap;
+import de.envite.proa.repository.datastore.DataStoreConnectionDao;
+import de.envite.proa.repository.datastore.DataStoreDao;
+import de.envite.proa.repository.messageflow.MessageFlowDao;
+import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
+import de.envite.proa.repository.processmodel.CallActivityDao;
+import de.envite.proa.repository.processmodel.ProcessConnectionDao;
+import de.envite.proa.repository.processmodel.ProcessEventDao;
+import de.envite.proa.repository.processmodel.ProcessModelDao;
+import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
 public class ProcessMapRepositoryTest {
 
@@ -36,7 +50,7 @@ public class ProcessMapRepositoryTest {
 
 	private static final String CALLING_ELEMENT_ID = "callingElementId";
 	private static final String CALLED_ELEMENT_ID = "calledElementId";
-	
+
 	private static final String COMMON_LABEL = "event label";
 
 	private static final String DATA_STORE_LABEL = "dataStoreLabel";
@@ -100,7 +114,7 @@ public class ProcessMapRepositoryTest {
 				dataStoreConnectionDao, //
 				callActivityDao, //
 				processEventDao, //
- 				messageFlowDao);
+				messageFlowDao);
 
 		ProcessModelTable processModel1 = new ProcessModelTable();
 		processModel1.setId(PROCESS_MODEL_ID_1);
@@ -216,14 +230,14 @@ public class ProcessMapRepositoryTest {
 		for (Long messageFlowId : MESSAGE_FLOW_IDS) {
 			MessageFlowTable messageFlow = new MessageFlowTable();
 			messageFlow.setId(messageFlowId);
-            if (Objects.equals(messageFlowId, MESSAGE_FLOW_ID_2)) {
-                messageFlow.setCallingProcess(oldProcess);
+			if (Objects.equals(messageFlowId, MESSAGE_FLOW_ID_2)) {
+				messageFlow.setCallingProcess(oldProcess);
 				messageFlow.setCalledProcess(thirdProcess);
-            } else {
-                messageFlow.setCalledProcess(oldProcess);
+			} else {
+				messageFlow.setCalledProcess(oldProcess);
 				messageFlow.setCallingProcess(thirdProcess);
-            }
-            doNothing().when(messageFlowDao).merge(messageFlow);
+			}
+			doNothing().when(messageFlowDao).merge(messageFlow);
 			messageFlows.add(messageFlow);
 		}
 
@@ -393,12 +407,15 @@ public class ProcessMapRepositoryTest {
 		when(callActivityDao.findForProcessModel(newProcess)).thenReturn(callActivity);
 
 		when(processEventDao.findForProcessModelAndEventType(newProcess, null)).thenReturn(null);
-		when(processEventDao.findForProcessModelAndEventType(newProcess, EventType.INTERMEDIATE_THROW)).thenReturn(null);
-		when(processEventDao.findForProcessModelAndEventType(thirdProcess, EventType.INTERMEDIATE_CATCH)).thenReturn(event);
+		when(processEventDao.findForProcessModelAndEventType(newProcess, EventType.INTERMEDIATE_THROW)).thenReturn(
+				null);
+		when(processEventDao.findForProcessModelAndEventType(thirdProcess, EventType.INTERMEDIATE_CATCH)).thenReturn(
+				event);
 		when(processEventDao.findForProcessModelAndEventType(thirdProcess, EventType.START)).thenReturn(null);
 
 		when(processConnectionDao.getProcessConnections(project, oldProcess)).thenReturn(oldConnections);
-		when(processConnectionDao.getProcessConnections(project, newProcess)).thenReturn(List.of(newConnectionOutgoing, newConnectionIncoming));
+		when(processConnectionDao.getProcessConnections(project, newProcess)).thenReturn(
+				List.of(newConnectionOutgoing, newConnectionIncoming));
 		doNothing().when(processConnectionDao).persist(any(ProcessConnectionTable.class));
 
 		repository.copyConnections(PROJECT_ID, PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2);

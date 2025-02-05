@@ -1,5 +1,6 @@
 package de.envite.proa.repository;
 
+import de.envite.proa.repository.settings.SettingsDao;
 import de.envite.proa.repository.tables.SettingsTable;
 import de.envite.proa.repository.tables.UserTable;
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,98 +16,98 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 class SettingsDaoTest {
 
-    private static final String EMAIL = "example@email.com";
-    private static final String API_KEY = "api-key";
+	private static final String EMAIL = "example@email.com";
+	private static final String API_KEY = "api-key";
 
-    @Inject
-    EntityManager em;
+	@Inject
+	EntityManager em;
 
-    @Inject
-    SettingsDao settingsDao;
+	@Inject
+	SettingsDao settingsDao;
 
-    private UserTable user;
-    private SettingsTable settings;
+	private UserTable user;
+	private SettingsTable settings;
 
-    @BeforeEach
-    @Transactional
-    void setUp() {
-        user = new UserTable();
-        user.setEmail(EMAIL);
-        em.persist(user);
+	@BeforeEach
+	@Transactional
+	void setUp() {
+		user = new UserTable();
+		user.setEmail(EMAIL);
+		em.persist(user);
 
-        settings = new SettingsTable();
-        settings.setUser(user);
-        settingsDao.persist(settings);
-    }
+		settings = new SettingsTable();
+		settings.setUser(user);
+		settingsDao.persist(settings);
+	}
 
-    @AfterEach
-    @Transactional
-    void cleanup() {
-        em.createQuery("DELETE FROM SettingsTable").executeUpdate();
-        em.createQuery("DELETE FROM UserTable").executeUpdate();
-    }
+	@AfterEach
+	@Transactional
+	void cleanup() {
+		em.createQuery("DELETE FROM SettingsTable").executeUpdate();
+		em.createQuery("DELETE FROM UserTable").executeUpdate();
+	}
 
-    private void flushAndClear() {
-        em.flush();
-        em.clear();
-    }
+	private void flushAndClear() {
+		em.flush();
+		em.clear();
+	}
 
-    @Test
-    @Transactional
-    void testGetSettings() {
-        SettingsTable savedSettings = settingsDao.getSettings();
-        assertNotNull(savedSettings);
-        assertEquals(settings.getId(), savedSettings.getId());
-    }
+	@Test
+	@Transactional
+	void testGetSettings() {
+		SettingsTable savedSettings = settingsDao.getSettings();
+		assertNotNull(savedSettings);
+		assertEquals(settings.getId(), savedSettings.getId());
+	}
 
-    @Test
-    @Transactional
-    void testGetSettingsNotFound() {
-        em.createQuery("DELETE FROM SettingsTable").executeUpdate();
+	@Test
+	@Transactional
+	void testGetSettingsNotFound() {
+		em.createQuery("DELETE FROM SettingsTable").executeUpdate();
 
-        flushAndClear();
+		flushAndClear();
 
-        SettingsTable savedSettings = settingsDao.getSettings();
-        assertNull(savedSettings);
-    }
+		SettingsTable savedSettings = settingsDao.getSettings();
+		assertNull(savedSettings);
+	}
 
-    @Test
-    @Transactional
-    void testGetSettingsForUser() {
-        SettingsTable savedSettings = settingsDao.getSettingsForUser(user);
-        assertNotNull(savedSettings);
-        assertEquals(settings.getId(), savedSettings.getId());
-    }
+	@Test
+	@Transactional
+	void testGetSettingsForUser() {
+		SettingsTable savedSettings = settingsDao.getSettingsForUser(user);
+		assertNotNull(savedSettings);
+		assertEquals(settings.getId(), savedSettings.getId());
+	}
 
-    @Test
-    @Transactional
-    void testGetSettingsForUserNotFound() {
-        em.createQuery("DELETE FROM SettingsTable").executeUpdate();
+	@Test
+	@Transactional
+	void testGetSettingsForUserNotFound() {
+		em.createQuery("DELETE FROM SettingsTable").executeUpdate();
 
-        flushAndClear();
+		flushAndClear();
 
-        SettingsTable savedSettings = settingsDao.getSettingsForUser(user);
-        assertNull(savedSettings);
-    }
+		SettingsTable savedSettings = settingsDao.getSettingsForUser(user);
+		assertNull(savedSettings);
+	}
 
-    @Test
-    @Transactional
-    void testPersistSettings() {
-        SettingsTable persistedSettings = em.find(SettingsTable.class, settings.getId());
+	@Test
+	@Transactional
+	void testPersistSettings() {
+		SettingsTable persistedSettings = em.find(SettingsTable.class, settings.getId());
 
-        assertNotNull(persistedSettings.getId());
-        assertEquals(settings.getId(), persistedSettings.getId());
-    }
+		assertNotNull(persistedSettings.getId());
+		assertEquals(settings.getId(), persistedSettings.getId());
+	}
 
-    @Test
-    @Transactional
-    void testMergeSettings() {
-        settings.setGeminiApiKey(API_KEY);
-        settingsDao.merge(settings);
+	@Test
+	@Transactional
+	void testMergeSettings() {
+		settings.setGeminiApiKey(API_KEY);
+		settingsDao.merge(settings);
 
-        flushAndClear();
+		flushAndClear();
 
-        SettingsTable retrievedSettings = em.find(SettingsTable.class, settings.getId());
-        assertEquals(API_KEY, retrievedSettings.getGeminiApiKey());
-    }
+		SettingsTable retrievedSettings = em.find(SettingsTable.class, settings.getId());
+		assertEquals(API_KEY, retrievedSettings.getGeminiApiKey());
+	}
 }

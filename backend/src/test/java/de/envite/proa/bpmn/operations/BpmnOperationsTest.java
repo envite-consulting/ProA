@@ -1,6 +1,9 @@
 package de.envite.proa.bpmn.operations;
 
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.*;
 import de.envite.proa.repository.ProcessmodelRepositoryTest;
 import de.envite.proa.rest.FileService;
 import org.camunda.bpm.model.bpmn.Bpmn;

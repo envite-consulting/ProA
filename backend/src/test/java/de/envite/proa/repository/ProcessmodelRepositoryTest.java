@@ -1,27 +1,30 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-
-import java.io.File;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-
-import de.envite.proa.entities.*;
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.*;
+import de.envite.proa.repository.datastore.DataStoreConnectionDao;
+import de.envite.proa.repository.datastore.DataStoreDao;
+import de.envite.proa.repository.messageflow.MessageFlowDao;
+import de.envite.proa.repository.processmodel.*;
+import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.*;
-import de.envite.proa.rest.FileService;
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 public class ProcessmodelRepositoryTest {
 
@@ -41,7 +44,7 @@ public class ProcessmodelRepositoryTest {
 	private static final Long PROCESS_MODEL_ID_5 = 5L;
 	private static final Long PROJECT_ID = 2341234L;
 	private static final String BPMN_PROCESS_ID = "bpmn123";
-	private static final String BPMN_XML = "<xml></xml>";
+	private static final byte[] BPMN_XML = "<xml></xml>".getBytes();
 	private static final String PARENT_PROCESS_MODEL_ID = "parentProcessModelId";
 	private static final String PROCESS_MODEL_NAME = "processModelName";
 	private static final String PROCESS_EVENT_ID = "processEventId";
@@ -394,7 +397,8 @@ public class ProcessmodelRepositoryTest {
 		when(processModelDao.findByName(NEW_PROCESS_MODEL_NAME, project)).thenReturn(null);
 		when(processModelDao.findByBpmnProcessId(BPMN_PROCESS_ID, project)).thenReturn(process);
 
-		ProcessModelTable result = repository.findByNameOrBpmnProcessId(NEW_PROCESS_MODEL_NAME, BPMN_PROCESS_ID, PROJECT_ID);
+		ProcessModelTable result = repository.findByNameOrBpmnProcessId(NEW_PROCESS_MODEL_NAME, BPMN_PROCESS_ID,
+				PROJECT_ID);
 
 		assertThat(result).isEqualTo(process);
 		verify(projectDao, times(1)).findById(PROJECT_ID);
@@ -410,7 +414,8 @@ public class ProcessmodelRepositoryTest {
 		when(projectDao.findById(PROJECT_ID)).thenReturn(project);
 		when(processModelDao.findByName(EXISTING_PROCESS_MODEL_NAME, project)).thenReturn(process);
 
-		ProcessModelTable result = repository.findByNameOrBpmnProcessId(EXISTING_PROCESS_MODEL_NAME, BPMN_PROCESS_ID, PROJECT_ID);
+		ProcessModelTable result = repository.findByNameOrBpmnProcessId(EXISTING_PROCESS_MODEL_NAME, BPMN_PROCESS_ID,
+				PROJECT_ID);
 
 		assertThat(result).isEqualTo(process);
 		verify(projectDao, times(1)).findById(PROJECT_ID);
@@ -427,7 +432,7 @@ public class ProcessmodelRepositoryTest {
 
 		String result = repository.getProcessModel(PROCESS_MODEL_ID_1);
 
-		assertThat(result).isEqualTo(BPMN_XML);
+		assertThat(result.getBytes()).isEqualTo(BPMN_XML);
 		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_1);
 	}
 
@@ -552,8 +557,10 @@ public class ProcessmodelRepositoryTest {
 
 		ProcessEventTable eventToConnect = new ProcessEventTable();
 
-		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.END, project)).thenReturn(List.of(eventToConnect));
-		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_THROW, project)).thenReturn(List.of(eventToConnect));
+		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.END, project)).thenReturn(
+				List.of(eventToConnect));
+		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_THROW,
+				project)).thenReturn(List.of(eventToConnect));
 
 		doNothing().when(processConnectionDao).persist(any(ProcessConnectionTable.class));
 
@@ -562,7 +569,8 @@ public class ProcessmodelRepositoryTest {
 		verify(projectDao, times(1)).findById(PROJECT_ID);
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
 		verify(processEventDao, times(1)).getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.END, project);
-		verify(processEventDao, times(1)).getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_THROW, project);
+		verify(processEventDao, times(1)).getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_THROW,
+				project);
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
 	}
 
@@ -582,8 +590,10 @@ public class ProcessmodelRepositoryTest {
 
 		ProcessEventTable eventToConnect = new ProcessEventTable();
 
-		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.START, project)).thenReturn(List.of(eventToConnect));
-		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_CATCH, project)).thenReturn(List.of(eventToConnect));
+		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.START, project)).thenReturn(
+				List.of(eventToConnect));
+		when(processEventDao.getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_CATCH,
+				project)).thenReturn(List.of(eventToConnect));
 
 		doNothing().when(processConnectionDao).persist(any(ProcessConnectionTable.class));
 
@@ -592,7 +602,8 @@ public class ProcessmodelRepositoryTest {
 		verify(projectDao, times(1)).findById(PROJECT_ID);
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
 		verify(processEventDao, times(1)).getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.START, project);
-		verify(processEventDao, times(1)).getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_CATCH, project);
+		verify(processEventDao, times(1)).getEventsForLabelAndType(PROCESS_EVENT_LABEL, EventType.INTERMEDIATE_CATCH,
+				project);
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
 	}
 }

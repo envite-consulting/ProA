@@ -1,6 +1,6 @@
 package de.envite.proa.usecases.project;
 
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.project.Project;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

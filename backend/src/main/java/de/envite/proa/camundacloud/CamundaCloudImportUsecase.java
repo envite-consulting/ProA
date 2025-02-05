@@ -1,7 +1,7 @@
 package de.envite.proa.camundacloud;
 
-import de.envite.proa.usecases.ProcessModelUsecase;
 import de.envite.proa.usecases.ProcessOperations;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;

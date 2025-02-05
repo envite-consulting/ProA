@@ -3,8 +3,8 @@ package de.envite.proa.rest;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import org.jboss.resteasy.reactive.RestPath;
 
-import de.envite.proa.entities.ProcessConnection;
-import de.envite.proa.entities.ProcessMap;
+import de.envite.proa.entities.process.ProcessConnection;
+import de.envite.proa.entities.processmap.ProcessMap;
 import de.envite.proa.usecases.processmap.ProcessMapUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;

@@ -1,6 +1,6 @@
 package de.envite.proa.authservice;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;

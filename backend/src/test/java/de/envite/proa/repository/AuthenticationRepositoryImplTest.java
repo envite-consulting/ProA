@@ -1,13 +1,16 @@
 package de.envite.proa.repository;
 
 import de.envite.proa.authservice.TokenService;
-import de.envite.proa.entities.Role;
-import de.envite.proa.entities.User;
-import de.envite.proa.exceptions.AccountLockedException;
-import de.envite.proa.exceptions.EmailAlreadyRegisteredException;
-import de.envite.proa.exceptions.EmailNotFoundException;
-import de.envite.proa.exceptions.InvalidPasswordException;
+import de.envite.proa.entities.authentication.Role;
+import de.envite.proa.entities.authentication.User;
+import de.envite.proa.repository.authentication.AuthenticationDao;
+import de.envite.proa.repository.authentication.AuthenticationRepositoryImpl;
 import de.envite.proa.repository.tables.UserTable;
+import de.envite.proa.repository.user.UserDao;
+import de.envite.proa.usecases.authentication.exceptions.AccountLockedException;
+import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
+import de.envite.proa.usecases.authentication.exceptions.EmailNotFoundException;
+import de.envite.proa.usecases.authentication.exceptions.InvalidPasswordException;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +48,7 @@ class AuthenticationRepositoryImplTest {
 	}
 
 	@Test
-	void testLogin_SuccessfulLogin() {
+	void testLogin_SuccessfulLogin() throws EmailNotFoundException, AccountLockedException, InvalidPasswordException {
 		User user = new User();
 		user.setEmail(USER_EMAIL);
 		user.setPassword(USER_PASSWORD);
@@ -136,7 +139,7 @@ class AuthenticationRepositoryImplTest {
 	}
 
 	@Test
-	void testRegister_SuccessfulRegistration() {
+	void testRegister_SuccessfulRegistration() throws EmailAlreadyRegisteredException {
 		User user = new User();
 		user.setEmail(USER_EMAIL);
 		user.setPassword(USER_PASSWORD);

@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.DataAccess;
+import de.envite.proa.entities.datastore.DataAccess;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import lombok.Data;
 public class DataStoreConnectionTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.EAGER)
@@ -20,7 +20,7 @@ public class DataStoreConnectionTable {
 
 	@Enumerated(EnumType.STRING)
 	private DataAccess access;
-	
+
 	@ManyToOne
 	private ProjectTable project;
 }
