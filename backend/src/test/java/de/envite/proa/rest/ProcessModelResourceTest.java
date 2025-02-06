@@ -1,25 +1,22 @@
 package de.envite.proa.rest;
 
-import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import de.envite.proa.entities.process.ProcessDetails;
+import de.envite.proa.entities.process.ProcessInformation;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
-import de.envite.proa.entities.process.ProcessDetails;
-import de.envite.proa.entities.process.ProcessInformation;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 public class ProcessModelResourceTest {
@@ -30,7 +27,7 @@ public class ProcessModelResourceTest {
 	private static final Long PROJECT_ID = 1L;
 	private static final Long PROCESS_ID = 54321L;
 	private static final int PROCESS_ID_AS_INT = Math.toIntExact(PROCESS_ID);
-	private static final String IS_COLLABORATION = "false";
+	private static final boolean IS_COLLABORATION = false;
 
 	@InjectMock
 	private ProcessModelUsecase usecase;
@@ -59,10 +56,10 @@ public class ProcessModelResourceTest {
 		ArgumentCaptor<String> fileNameCaptor = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> isCollaborationCaptor = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Boolean> isCollaborationCaptor = ArgumentCaptor.forClass(Boolean.class);
 		ArgumentCaptor<String> parentBpmnProcessIdCaptor = ArgumentCaptor.forClass(String.class);
 		verify(usecase).saveProcessModel(projectIdCaptor.capture(), fileNameCaptor.capture(), contentCaptor.capture(),
-				descriptionCaptor.capture(), isCollaborationCaptor.capture(), parentBpmnProcessIdCaptor.capture());
+				descriptionCaptor.capture(), isCollaborationCaptor.capture());
 
 		assertThat(projectIdCaptor.getValue()).isEqualTo(PROJECT_ID);
 		assertThat(fileNameCaptor.getValue()).isEqualTo(FILE_NAME.replace(".bpmn", ""));

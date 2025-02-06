@@ -59,8 +59,8 @@ public class CamundaCloudImportUsecase {
 			String description = processOperations.getDescription(xml);
 			boolean isCollaboration = processOperations.getIsCollaboration(xml);
 
-			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), xml, description, isCollaboration,
-					null);
+			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), xml, description,
+					isCollaboration);
 		}
 	}
 

@@ -54,8 +54,7 @@ public class ProcessModelResource {
 							fileName, //
 							content, //
 							description, //
-							isCollaboration, //
-							null //
+							isCollaboration //
 					)) //
 					.build();
 		} catch (IllegalArgumentException e) {
@@ -75,7 +74,7 @@ public class ProcessModelResource {
 			@RestForm String fileName, @RestForm String description) {
 		String content = readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
-		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description, null);
+		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description);
 	}
 
 	/**
