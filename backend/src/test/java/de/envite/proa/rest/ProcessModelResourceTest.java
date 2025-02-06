@@ -127,7 +127,7 @@ public class ProcessModelResourceTest {
 		// Arrange
 		ProcessDetails details = new ProcessDetails();
 		details.setName(FILE_NAME);
-		when(usecase.getProcessDetails(PROCESS_ID)).thenReturn(details);
+		when(usecase.getProcessDetails(PROCESS_ID, false)).thenReturn(details);
 
 		// Act
 		given()//

@@ -135,10 +135,18 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	@Override
-	public ProcessDetails getProcessDetails(Long id) {
-		ProcessModelTable table = processModelDao.findWithChildren(id);
+	public ProcessDetails getProcessDetails(Long id, boolean aggregate) {
+		if (aggregate) {
+			List<ProcessModelTable> relatedProcessModels = processModelDao.findWithRelatedProcessModels(id);
+			List<ProcessEventTable> allEvents = processModelDao.findEventsForProcessModels(relatedProcessModels);
+			List<CallActivityTable> allCallActivities = processModelDao.findCallActivitiesForProcessModels(relatedProcessModels);
 
-		return ProcessDetailsMapper.map(table);
+			return ProcessDetailsMapper.mapWithAggregation(id, relatedProcessModels, allEvents, allCallActivities);
+		} else {
+			ProcessModelTable table = processModelDao.findWithChildren(id);
+
+			return ProcessDetailsMapper.map(table);
+		}
 	}
 
 	@Override
@@ -151,7 +159,6 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		table//
 				.getDataStores()//
 				.forEach(store -> connectProcessDataStore(store, table, projectTable));
-
 	}
 
 	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table,

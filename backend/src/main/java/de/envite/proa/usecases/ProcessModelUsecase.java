@@ -64,7 +64,7 @@ public class ProcessModelUsecase {
 
 		Map<String, Long> bpmnIdToIdMap = participantIds //
 				.stream() //
-				.collect(Collectors.toMap(id -> repository.getProcessDetails(id).getBpmnProcessId(), id -> id));
+				.collect(Collectors.toMap(id -> repository.getProcessDetails(id, false).getBpmnProcessId(), id -> id));
 
 		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
 		repository.saveMessageFlows(messageFlows, projectId);
@@ -116,8 +116,8 @@ public class ProcessModelUsecase {
 		return repository.getProcessInformationById(projectId, id);
 	}
 
-	public ProcessDetails getProcessDetails(Long id) {
-		return repository.getProcessDetails(id);
+	public ProcessDetails getProcessDetails(Long id, boolean aggregate) {
+		return repository.getProcessDetails(id, aggregate);
 	}
 
 	public void deleteProcessModel(Long id) {

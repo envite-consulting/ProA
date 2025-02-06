@@ -18,7 +18,7 @@ public interface ProcessModelRepository {
 
 	ProcessInformation getProcessInformationById(Long projectId, Long id);
 
-	ProcessDetails getProcessDetails(Long id);
+	ProcessDetails getProcessDetails(Long id, boolean aggregate);
 
 	void deleteProcessModel(Long id);
 

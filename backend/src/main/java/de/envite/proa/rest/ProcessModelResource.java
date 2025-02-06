@@ -104,7 +104,7 @@ public class ProcessModelResource {
 	}
 
 	/**
-	 * This methods gets the names and the corresponding ids of all process models
+	 * This method gets the names and the corresponding ids of all process models
 	 * in order to show them as a list in the process list in the frontend
 	 */
 	@GET
@@ -116,19 +116,19 @@ public class ProcessModelResource {
 	}
 
 	@GET
-	@Path("/process-model/{id}/details")
-	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public ProcessDetails getProcessDetails(@RestPath Long id) {
-		return usecase.getProcessDetails(id);
-	}
-
-	@GET
 	@Path("/project/{projectId}/process-model/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowedIfWebVersion({"User", "Admin"})
 	public ProcessInformation getProcessInformationById(@RestPath Long projectId, Long id) {
 		return usecase.getProcessInformationById(projectId, id);
+	}
+
+	@GET
+	@Path("/process-model/{id}/details")
+	@Produces(MediaType.APPLICATION_JSON)
+	@RolesAllowedIfWebVersion({"User", "Admin"})
+	public ProcessDetails getProcessDetails(@RestPath Long id, @QueryParam("aggregate") @DefaultValue("false") boolean aggregate) {
+		return usecase.getProcessDetails(id, aggregate);
 	}
 
 	private String readFileToString(File file) {

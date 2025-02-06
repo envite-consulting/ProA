@@ -66,7 +66,7 @@ public class RepositoryIntegrationTest {
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 		Long processId = processModelrepository.saveProcessModel(project.getId(), model);
-		ProcessDetails processDetails = processModelrepository.getProcessDetails(processId);
+		ProcessDetails processDetails = processModelrepository.getProcessDetails(processId, false);
 
 		// Assert
 		assertThat(processDetails.getName()).isEqualTo(PROCESS_MODEL_NAME);

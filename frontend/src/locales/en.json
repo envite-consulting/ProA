@@ -60,6 +60,7 @@
     "createdOn": "Created on",
     "description": "Description",
     "end": "End",
+    "endEvents": "End Events",
     "english": "English",
     "german": "German",
     "intermediateCatchEvents": "Intermediate Catch Events",
@@ -72,8 +73,9 @@
     "processModel": "Process Model",
     "save": "Save",
     "settings": "Settings",
-    "showProcessLevels": "Show process levels",
-    "signOut": "Sign Out"
+    "showProcessLevels": "Show process levels and aggregate all call activities / events",
+    "signOut": "Sign Out",
+    "startEvents": "Start Events"
   },
   "navigation": {
     "c8Import": "C8 Import",

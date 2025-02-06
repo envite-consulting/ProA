@@ -2,7 +2,7 @@
   <v-dialog v-model="infoDialog" persistent width="600">
     <v-card>
       <v-card-title>
-        <span class="text-h5">{{ $t('general.processModel') }}: {{ details.name }}</span>
+        <span class="text-h5">{{ $t('general.processModel') }}: {{ currentProcessModel.processName }}</span>
       </v-card-title>
       <v-card-text>
         <v-container>
@@ -16,58 +16,97 @@
                 density="comfortable"
               ></v-switch>
             </v-col>
-            <v-col v-if="!showProcessLevels && details.startEvents && details.startEvents.length > 0" cols="12" sm="6" md="6">
-              <b>Start Events</b>
+            <v-col v-if="details.startEvents && details.startEvents.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">{{ $t('general.startEvents') }}</b>
               <ul class="mt-1">
-                <li v-for="(start, index) in details.startEvents" :key="'startEvent-' + index" class="mb-2">
-                  <v-chip @click="goToProcessModel(start.elementId)">{{ start.label || 'Start' }}
-                  </v-chip>
+                <li v-for="(start, index) in showProcessLevels ? aggregateDetails.startEvents : details.startEvents" :key="'startEvent-' + index" class="mb-2">
+                  <template v-if="showProcessLevels">
+                    <v-badge v-if="start.count > 1" :content="start.count + 'x'">
+                      <span class="badge-content">{{ start.label || 'Start' }}</span>
+                    </v-badge>
+                    <span v-else class="no-badge">{{ start.label || 'Start' }}</span>
+                  </template>
+                  <template v-else>
+                    <v-chip @click="goToProcessModel(start.elementId)">
+                      {{ start.label || 'Start' }}
+                    </v-chip>
+                  </template>
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="!showProcessLevels && details.endEvents && details.endEvents.length > 0" cols="12" sm="6" md="6">
-              <b class="mb-2">End Events</b>
+            <v-col v-if="details.endEvents && details.endEvents.length > 0" cols="12" sm="6" md="6">
+              <b class="mb-2">{{ $t('general.endEvents') }}</b>
               <ul class="mt-1">
-                <li v-for="(end, index) in details.endEvents" :key="'endEvent-' + index" class="mb-2">
-                  <v-chip @click="goToProcessModel(end.elementId)">{{ end.label || $t('general.end') }}
-                  </v-chip>
+                <li v-for="(end, index) in showProcessLevels ? aggregateDetails.endEvents : details.endEvents" :key="'endEvent-' + index" class="mb-2">
+                  <template v-if="showProcessLevels">
+                    <v-badge v-if="end.count > 1" :content="end.count + 'x'">
+                      <span class="badge-content">{{ end.label || $t('general.end') }}</span>
+                    </v-badge>
+                    <span v-else class="no-badge">{{ end.label || $t('general.end') }}</span>
+                  </template>
+                  <template v-else>
+                    <v-chip @click="goToProcessModel(end.elementId)">
+                      {{ end.label || $t('general.end') }}
+                    </v-chip>
+                  </template>
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="!showProcessLevels && details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6"
+            <v-col v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" cols="12" sm="6"
                    md="6">
               <b class="mb-2">{{ $t('general.intermediateCatchEvents') }}</b>
               <ul class="mt-1">
-                <li v-for="(event, index) in details.intermediateCatchEvents" :key="'intermediateCatchEvent-' + index"
+                <li v-for="(event, index) in showProcessLevels ? aggregateDetails.intermediateCatchEvents : details.intermediateCatchEvents" :key="'intermediateCatchEvent-' + index"
                     class="mb-2">
-                  <v-chip @click="goToProcessModel(event.elementId)">{{
-                      event.label || $t('general.intermediateEvent')
-                    }}
-                  </v-chip>
+                    <template v-if="showProcessLevels">
+                    <v-badge v-if="event.count > 1" :content="event.count + 'x'">
+                      <span class="badge-content">{{ event.label || $t('general.intermediateEvent') }}</span>
+                    </v-badge>
+                    <span v-else class="no-badge">{{ event.label || $t('general.intermediateEvent') }}</span>
+                  </template>
+                  <template v-else>
+                    <v-chip @click="goToProcessModel(event.elementId)">
+                      {{ event.label || $t('general.intermediateEvent') }}
+                    </v-chip>
+                  </template>
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="!showProcessLevels && details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6"
+            <v-col v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" cols="12" sm="6"
                    md="6">
               <b class="mb-2">{{ $t('general.intermediateThrowEvents') }}</b>
               <ul class="mt-1">
-                <li v-for="(event, index) in details.intermediateThrowEvents" :key="'intermediateThrowEvent-' + index"
+                <li v-for="(event, index) in showProcessLevels ? aggregateDetails.intermediateThrowEvents : details.intermediateThrowEvents" :key="'intermediateThrowEvent-' + index"
                     class="mb-2">
-                  <v-chip @click="goToProcessModel(event.elementId)">{{
-                      event.label || $t('general.intermediateEvent')
-                    }}
-                  </v-chip>
+                    <template v-if="showProcessLevels">
+                    <v-badge v-if="event.count > 1" :content="event.count + 'x'">
+                      <span class="badge-content">{{ event.label || $t('general.intermediateEvent') }}</span>
+                    </v-badge>
+                    <span v-else class="no-badge">{{ event.label || $t('general.intermediateEvent') }}</span>
+                  </template>
+                  <template v-else>
+                    <v-chip @click="goToProcessModel(event.elementId)">
+                      {{ event.label || $t('general.intermediateEvent') }}
+                    </v-chip>
+                  </template>
                 </li>
               </ul>
             </v-col>
-            <v-col v-if="!showProcessLevels && details.activities && details.activities.length > 0" cols="12" sm="6" md="6">
+            <v-col v-if="details.activities && details.activities.length > 0" cols="12" sm="6" md="6">
               <b class="mb-2">{{ $t('general.callActivities') }}</b>
               <ul class="mt-1">
-                <li v-for="(activity, index) in details.activities" :key="'activity-' + index" class="mb-2">
-                  <v-chip @click="goToProcessModel(activity.elementId)">{{
-                      activity.label || $t('general.activity')
-                    }}
-                  </v-chip>
+                <li v-for="(activity, index) in showProcessLevels ? aggregateDetails.activities : details.activities" :key="'activity-' + index" class="mb-2">
+                  <template v-if="showProcessLevels">
+                    <v-badge v-if="activity.count > 1" :content="activity.count + 'x'">
+                      <span class="badge-content">{{ activity.label || $t('general.activity') }}</span>
+                    </v-badge>
+                    <span v-else class="no-badge">{{ activity.label || $t('general.activity') }}</span>
+                  </template>
+                  <template v-else>
+                    <v-chip @click="goToProcessModel(activity.elementId)">
+                      {{ activity.label || $t('general.activity') }}
+                    </v-chip>
+                  </template>
                 </li>
               </ul>
             </v-col>
@@ -78,29 +117,23 @@
               </b>
               <v-radio-group v-model="selectedProcessModel" class="mt-1">
                 <v-radio 
-                  v-if="currentProcessModel" 
-                  :key="'currentProcessLevel'" 
-                  :label="$t('general.level') + ' ' + currentProcessModel.level + ' – ' + currentProcessModel.processName"
-                  :value="currentProcessModel.id"
-                  :disabled="true"
-                ></v-radio>
-                <v-radio 
-                  v-for="(model, index) in relatedProcessModels" 
+                  v-for="(model, index) in sortedProcessModels" 
                   :key="'relatedProcess-' + index"
                   :label="$t('general.level') + ' ' + model.level + ' – ' + model.processName"
-                  :value="model.relatedProcessModelId"
-                  @change="switchToRelatedModel(model.relatedProcessModelId)"
+                  :value="model.id"
+                  :disabled="model.isCurrent"
+                  @change="switchToRelatedModel(model.id)"
                   color="primary"
                 ></v-radio>
               </v-radio-group>
             </v-col>
           </v-row>
-          <div v-if="!showProcessLevels && details.description" class="px-3 pb-3 pt-6">
+          <div v-if="currentProcessModel.description" class="px-3 pb-3 pt-6">
             <v-row>
               <b>{{ $t('general.description') }}</b>
             </v-row>
             <v-row>
-              <p class="description-text">{{ details.description }}</p>
+              <p class="description-text">{{ currentProcessModel.description }}</p>
             </v-row>
           </div>
           <div id="process-model-viewer" class="mt-4"></div>
@@ -131,6 +164,23 @@ li {
   word-break: break-word;
   white-space: pre-wrap;
 }
+
+.badge-content {
+  background-color: #e0e0e0;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.no-badge {
+  background-color: #e0e0e0;
+  padding: 5px 12px;
+  margin-bottom: 6px;
+  border-radius: 16px;
+  font-size: 14px;
+  display: inline-block;
+}
 </style>
 <script lang="ts">
 import { defineComponent } from 'vue';
@@ -153,12 +203,14 @@ export interface Process {
 
 declare interface Event {
   elementId: string,
-  label: string
+  label: string,
+  count: number
 }
 
 interface ProcessModel {
   id: number;
   processName: string;
+  description: string;
   level: number;
 }
 
@@ -180,20 +232,67 @@ export default defineComponent({
     infoDialog: false,
     showProcessLevels: false,
     store: useAppStore(),
-    currentProcessModel: null as ProcessModel | null,
+    currentProcessModel: {} as ProcessModel,
     details: {} as Process,
     relatedProcessModels: [] as RelatedProcessModel[],
     selectedProcessModel: null as number | null,
   }),
-
+  
   watch: {
     showProcessLevels(newValue) {
+      this.fetchProcessDetails(this.details.id);
       if (!newValue) {
-        if (this.currentProcessModel?.id !== this.details.id) {
+        if (this.selectedProcessModel !== this.details.id) {
           this.resetProcessModel();
-          this.fetchProcessModel(this.details.id)
+          this.fetchProcessModel(this.details.id);
         }
       }
+    }
+  },
+
+  computed: {
+    sortedProcessModels() {
+      return [
+        ...(this.currentProcessModel ? [{ 
+          ...this.currentProcessModel, 
+          id: this.currentProcessModel.id, 
+          isCurrent: true 
+        }] : []),
+        ...this.relatedProcessModels.map(model => ({
+          ...model,
+          id: model.relatedProcessModelId,
+          isCurrent: false
+        }))
+      ].sort((a, b) => a.level - b.level);
+    },
+    aggregateDetails(): {
+      startEvents: { elementId: string; label: string; count: number }[];
+      endEvents: { elementId: string; label: string; count: number }[];
+      intermediateCatchEvents: { elementId: string; label: string; count: number }[];
+      intermediateThrowEvents: { elementId: string; label: string; count: number }[];
+      activities: { elementId: string; label: string; count: number }[];
+    } {
+      const filterUnique = (items: { elementId: string; label: string; count: number }[]) => {
+        const seenLabels = new Map();
+        
+        items.forEach(item => {
+        if (!seenLabels.has(item.label)) {
+          seenLabels.set(item.label, { ...item, count: 1 });
+        } else {
+          seenLabels.get(item.label).count++;
+        }
+      });
+
+      return Array.from(seenLabels.values());
+      };
+
+      return {
+        startEvents: filterUnique(this.details.startEvents || []),
+        endEvents: filterUnique(this.details.endEvents || []),
+        intermediateCatchEvents: filterUnique(this.details.intermediateCatchEvents || []),
+        intermediateThrowEvents: filterUnique(this.details.intermediateThrowEvents || []),
+        activities: filterUnique(this.details.activities || [])
+      };
     }
   },
 
@@ -203,12 +302,18 @@ export default defineComponent({
       await this.$nextTick();
       this.resetProcessModel();
       await this.fetchProcessModel(processId);
-      axios.get("/api/process-model/" + processId + "/details", { headers: authHeader() }).then(result => {
-        this.details = result.data;
-      })
+      await this.fetchProcessDetails(processId);
+    },
+    async fetchProcessDetails(processId: number) {
+      const url = this.showProcessLevels
+        ? "/api/process-model/" + processId + "/details?aggregate=true"
+        : "/api/process-model/" + processId + "/details"
+      
+      const response = await axios.get(url, { headers: authHeader() });
+      this.details = response.data;
     },
     async goToProcessModel(portId: string | null) {
-      const routeObject: RouteObject = { path: '/ProcessView/' + this.details.id };
+      const routeObject: RouteObject = { path: '/ProcessView/' + this.selectedProcessModel };
       if (portId) {
         routeObject.query = { portId };
       }
@@ -228,8 +333,8 @@ export default defineComponent({
       const processInformationUrl = 'api/project/' + this.store.getSelectedProjectId() + '/process-model/' + modelId;
       const processModelResponse = await axios.get(processInformationUrl, { headers: authHeader() });
       this.currentProcessModel = processModelResponse.data;
-      this.relatedProcessModels = processModelResponse.data.relatedProcessModels;
       this.selectedProcessModel = processModelResponse.data.id;
+      this.relatedProcessModels = processModelResponse.data.relatedProcessModels;
     },
     async switchToRelatedModel(relatedProcessModelId: number) {
       this.resetProcessModel();

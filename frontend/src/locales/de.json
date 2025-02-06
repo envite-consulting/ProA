@@ -60,6 +60,7 @@
     "createdOn": "Erstellt am",
     "description": "Beschreibung",
     "end": "Ende",
+    "endEvents": "Endereignisse",
     "english": "Englisch",
     "german": "Deutsch",
     "intermediateCatchEvents": "Zwischenereignisse fangend",
@@ -72,8 +73,9 @@
     "processModel": "Prozessmodell",
     "save": "Speichern",
     "settings": "Einstellungen",
-    "showProcessLevels": "Prozessebenen anzeigen",
-    "signOut": "Abmelden"
+    "showProcessLevels": "Prozessebenen anzeigen und alle Aufrufaktivitäten / Ereignisse aggregieren",
+    "signOut": "Abmelden",
+    "startEvents": "Startereignisse"
   },
   "navigation": {
     "c8Import": "C8 Import",
