@@ -36,7 +36,7 @@ public class ProcessModelResourceTest {
 	private ProcessModelUsecase usecase;
 
 	@Test
-	public void testUploadProcessModel() throws IOException {
+	void testUploadProcessModel() throws IOException {
 
 		// Arrange
 		File processModel = new File(getClass().getClassLoader().getResource("test-diagram.bpmn").getFile());
@@ -66,13 +66,13 @@ public class ProcessModelResourceTest {
 
 		assertThat(projectIdCaptor.getValue()).isEqualTo(PROJECT_ID);
 		assertThat(fileNameCaptor.getValue()).isEqualTo(FILE_NAME.replace(".bpmn", ""));
-		assertThat(contentCaptor.getValue()).isEqualTo(bpmnXml);
+		assertThat(contentCaptor.getValue()).isEqualToNormalizingNewlines(bpmnXml);
 		assertThat(descriptionCaptor.getValue()).isEqualTo(DESCRIPTION);
 		assertThat(isCollaborationCaptor.getValue()).isEqualTo(IS_COLLABORATION);
 	}
 
 	@Test
-	public void testGetProcessModel() {
+	void testGetProcessModel() {
 
 		// Arrange
 		when(usecase.getProcessModel(PROCESS_ID)).thenReturn(PROCESS_XML);
@@ -87,7 +87,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testDelete() {
+	void testDelete() {
 		// Act
 		given()//
 				.when()//
@@ -103,7 +103,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testGetProcessInformation() {
+	void testGetProcessInformation() {
 
 		// Arrange
 		ProcessInformation information = new ProcessInformation();
@@ -120,7 +120,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testGetProcessDetails() {
+	void testGetProcessDetails() {
 
 		// Arrange
 		ProcessDetails details = new ProcessDetails();
