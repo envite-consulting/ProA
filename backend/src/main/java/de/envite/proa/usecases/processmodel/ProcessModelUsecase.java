@@ -1,12 +1,5 @@
 package de.envite.proa.usecases.processmodel;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.collaboration.ParticipantDetails;
 import de.envite.proa.entities.process.*;
@@ -15,6 +8,13 @@ import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class ProcessModelUsecase {
@@ -28,13 +28,12 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessMapRespository processMapRepository;
 
-	public Long saveProcessModel(Long projectId, String name, String xml, String description, String isCollaboration,
-			String parentBpmnProcessId) {
+	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration) {
 
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
 
-		if (existingProcessModel != null && isCollaboration.equals("true")) {
+		if (existingProcessModel != null && isCollaboration) {
 			throw new IllegalArgumentException("Collaboration already exists: " + bpmnProcessId);
 		}
 
@@ -43,13 +42,13 @@ public class ProcessModelUsecase {
 					parentBpmnProcessId);
 		}
 
-		if (isCollaboration.equals("true")) {
+		if (isCollaboration) {
 			xml = processOperations.addEmptyProcessRefs(xml);
 		}
 
 		ProcessModel processModel = createProcessModel(name, description, xml, parentBpmnProcessId, isCollaboration);
 
-		if (isCollaboration.equals("false")) {
+		if (!isCollaboration) {
 			return repository.saveProcessModel(projectId, processModel);
 		}
 
@@ -61,7 +60,54 @@ public class ProcessModelUsecase {
 		participants //
 				.forEach(participant -> { //
 					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
-							participant.getDescription(), "false", processModel.getBpmnProcessId());
+							participant.getDescription(), false, processModel.getBpmnProcessId());
+					participantIds.add(participantId); //
+				});
+
+		Map<String, Long> bpmnIdToIdMap = participantIds //
+				.stream() //
+				.collect(Collectors.toMap(id -> repository.getProcessDetails(id).getBpmnProcessId(), id -> id));
+
+		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
+		repository.saveMessageFlows(messageFlows, projectId);
+
+		return collaborationId;
+	}
+
+	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration,
+			String parentBpmnProcessId) {
+
+		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
+		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
+
+		if (existingProcessModel != null && isCollaboration) {
+			throw new IllegalArgumentException("Collaboration already exists: " + bpmnProcessId);
+		}
+
+		if (existingProcessModel != null && existingProcessModel.getProcessType() != ProcessType.COLLABORATION) {
+			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description,
+					parentBpmnProcessId);
+		}
+
+		if (isCollaboration) {
+			xml = processOperations.addEmptyProcessRefs(xml);
+		}
+
+		ProcessModel processModel = createProcessModel(name, description, xml, parentBpmnProcessId, isCollaboration);
+
+		if (!isCollaboration) {
+			return repository.saveProcessModel(projectId, processModel);
+		}
+
+		List<ParticipantDetails> participants = processOperations.getParticipants(xml);
+		Long collaborationId = repository.saveProcessModel(projectId, processModel);
+
+		List<Long> participantIds = new ArrayList<>();
+
+		participants //
+				.forEach(participant -> { //
+					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
+							participant.getDescription(), false, processModel.getBpmnProcessId());
 					participantIds.add(participantId); //
 				});
 
@@ -76,7 +122,7 @@ public class ProcessModelUsecase {
 	}
 
 	private ProcessModel createProcessModel(String name, String description, String xml, String parentBpmnProcessId,
-			String isCollaboration) {
+			boolean isCollaboration) {
 		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
 		List<ProcessEvent> intermediateThrowEvents = processOperations.getIntermediateThrowEvents(xml);
 		List<ProcessEvent> intermediateCatchEvents = processOperations.getIntermediateCatchEvents(xml);
@@ -92,7 +138,7 @@ public class ProcessModelUsecase {
 				? processOperations.getDescription(xml)
 				: description;
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessType processType = isCollaboration.equals("true")
+		ProcessType processType = isCollaboration
 				? ProcessType.COLLABORATION
 				: parentBpmnProcessId != null ? ProcessType.PARTICIPANT : ProcessType.PROCESS;
 
@@ -131,7 +177,7 @@ public class ProcessModelUsecase {
 			throw new IllegalArgumentException("Can't replace with collaboration");
 		}
 
-		ProcessModel processModel = createProcessModel(fileName, description, content, parentBpmnProcessId, "false");
+		ProcessModel processModel = createProcessModel(fileName, description, content, parentBpmnProcessId, false);
 		Long newProcessId = repository.saveProcessModel(projectId, processModel);
 		copyConnections(projectId, oldProcessId, newProcessId);
 		copyMessageFlowsAndRelations(projectId, oldProcessId, newProcessId);
