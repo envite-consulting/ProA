@@ -150,11 +150,25 @@ export default defineComponent({
           type: 'success',
           message: this.$t('authentication.successfullyCreatedAccount') as string
         });
+
+        if (this.$route.name === 'ManageUsers') {
+          this.closeDialog();
+          window.location.reload();
+        }
+        this.resetForm();
       } catch (e) {
         if ((e as AxiosError).response?.status === 409) {
           this.$emit('showMessage', {
             type: 'error',
             message: this.$t('authentication.emailAlreadyRegistered') as string
+          });
+          return;
+        }
+
+        if ((e as AxiosError).response?.status === 429) {
+          this.$emit('showMessage', {
+            type: 'error',
+            message: this.$t('authentication.tooManyRequests') as string
           });
           return;
         }
@@ -167,6 +181,16 @@ export default defineComponent({
     },
     closeDialog() {
       this.store.setSelectedDialog(SelectedDialog.NONE);
+    },
+    resetForm() {
+      this.email = '';
+      this.password = '';
+      this.firstName = '';
+      this.lastName = '';
+      this.selectedRole = Role.USER;
+
+      const form = this.$refs.createAccountForm as VForm;
+      form.resetValidation();
     }
   }
 });

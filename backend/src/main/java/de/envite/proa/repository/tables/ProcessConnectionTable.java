@@ -1,13 +1,7 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.ProcessElementType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import de.envite.proa.entities.process.ProcessElementType;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -15,12 +9,11 @@ import lombok.Data;
 public class ProcessConnectionTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	/**
-	 * the name of the common elements, e.g. the name of the connecting start and
-	 * end event
+	 * the name of the common elements, e.g. the name of the connecting start and end event
 	 */
 	private String label;
 

@@ -9,14 +9,23 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
+import de.envite.proa.repository.datastore.DataStoreConnectionDao;
+import de.envite.proa.repository.datastore.DataStoreDao;
+import de.envite.proa.repository.messageflow.MessageFlowDao;
+import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
+import de.envite.proa.repository.processmodel.CallActivityDao;
+import de.envite.proa.repository.processmodel.ProcessConnectionDao;
+import de.envite.proa.repository.processmodel.ProcessEventDao;
+import de.envite.proa.repository.processmodel.ProcessModelDao;
+import de.envite.proa.repository.project.ProjectDao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import de.envite.proa.entities.DataAccess;
-import de.envite.proa.entities.ProcessElementType;
-import de.envite.proa.entities.ProcessMap;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.ProcessElementType;
+import de.envite.proa.entities.processmap.ProcessMap;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessConnectionTable;

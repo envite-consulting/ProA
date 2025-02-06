@@ -1,7 +1,6 @@
 package de.envite.proa.rest;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
@@ -16,9 +15,9 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import de.envite.proa.entities.ProcessDetails;
-import de.envite.proa.entities.ProcessInformation;
-import de.envite.proa.usecases.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import de.envite.proa.entities.process.ProcessDetails;
+import de.envite.proa.entities.process.ProcessInformation;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 
@@ -32,7 +31,6 @@ public class ProcessModelResourceTest {
 	private static final Long PROCESS_ID = 54321L;
 	private static final int PROCESS_ID_AS_INT = Math.toIntExact(PROCESS_ID);
 	private static final String IS_COLLABORATION = "false";
-	private static final String PARENT_BPMN_PROCESS_ID = null;
 
 	@InjectMock
 	private ProcessModelUsecase usecase;

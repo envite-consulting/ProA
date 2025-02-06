@@ -16,6 +16,7 @@
     "emailAlreadyRegistered": "Diese E-Mail Adresse ist bereits registriert",
     "firstName": "Vorname",
     "forgotPwQuestion": "Passwort vergessen?",
+    "id": "ID",
     "lastName": "Nachname",
     "name": "Name",
     "newPassword": "Neues Passwort",
@@ -31,6 +32,7 @@
     "samePasswordError": "Das neue Passwort muss sich vom alten Passwort unterscheiden.",
     "signInFailed": "Anmeldung fehlgeschlagen",
     "successfullyCreatedAccount": "Account erfolgreich erstellt",
+    "tooManyRequests": "Zu viele Anfragen. Versuchen Sie es bitte später erneut.",
     "user": "Nutzer",
     "version": "Version",
     "welcomeBack": "Willkommen zurück!"
@@ -68,13 +70,19 @@
     "myProfile": "Mein Profil",
     "processModel": "Prozessmodell",
     "save": "Speichern",
+    "search": "Suchen",
     "settings": "Einstellungen",
     "signOut": "Abmelden"
+  },
+  "manageUsers": {
+    "saveChanges": "Speichern",
+    "editProfile": "Profil bearbeiten"
   },
   "navigation": {
     "c8Import": "C8 Import",
     "createAccount": "Account erstellen",
     "camundaCloudImport": "C8 Import",
+    "manageUsers": "Nutzer verwalten",
     "pageNotFound": "Seite nicht gefunden",
     "processList": "Prozessliste",
     "processMap": "Prozesskarte",
@@ -85,6 +93,7 @@
   "processDetailSidebar": {
     "endEvents": "Endereignisse",
     "goToProcessModel": "Zum Prozessmodell",
+    "loadingData": "Daten werden geladen...",
     "startEvents": "Startereignisse"
   },
   "processList": {
@@ -103,9 +112,11 @@
     "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
     "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
     "error": "Fehler",
+    "fetchingProcessModels": "Prozessmodelle werden geladen...",
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
+    "noProcessModelsFound": "Keine Prozessmodelle gefunden.",
     "participant": "Teilnehmer",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
@@ -123,6 +134,7 @@
     "hide": "Ausblenden",
     "intermediateEvents": "Zwischenereignisse",
     "legend": "Legende",
+    "loadingProcessMap": "Prozesskarte wird geladen...",
     "messageFlows": "Nachrichtenflüsse",
     "noInformationAvailable": "Keine Informationen verfügbar",
     "process": "Prozess",
@@ -130,6 +142,9 @@
     "resources": "Ressourcen",
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Startereignis"
+  },
+  "processView": {
+    "loadingProcessModel": "Prozessmodell wird geladen..."
   },
   "projectOverview": {
     "active": "AKTIV",

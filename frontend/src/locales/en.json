@@ -16,6 +16,7 @@
     "emailAlreadyRegistered": "This email is already registered",
     "firstName": "First Name",
     "forgotPwQuestion": "Forgot your password?",
+    "id": "ID",
     "lastName": "Last Name",
     "name": "Name",
     "newPassword": "New Password",
@@ -31,6 +32,7 @@
     "samePasswordError": "New password needs to be different from current password.",
     "signInFailed": "Sign in failed",
     "successfullyCreatedAccount": "Successfully created account",
+    "tooManyRequests": "Too many requests. Please try again later.",
     "user": "User",
     "version": "Version",
     "welcomeBack": "Welcome back!"
@@ -68,13 +70,19 @@
     "myProfile": "My Profile",
     "processModel": "Process Model",
     "save": "Save",
+    "search": "Search",
     "settings": "Settings",
     "signOut": "Sign Out"
+  },
+  "manageUsers": {
+    "saveChanges": "Save changes",
+    "editProfile": "Edit profile"
   },
   "navigation": {
     "c8Import": "C8 Import",
     "createAccount": "Create Account",
     "camundaCloudImport": "C8 Import",
+    "manageUsers": "Manage Users",
     "pageNotFound": "Page Not Found",
     "processList": "Process List",
     "processMap": "Process Map",
@@ -85,6 +93,7 @@
   "processDetailSidebar": {
     "endEvents": "End Events",
     "goToProcessModel": "Go to Process Model",
+    "loadingData": "Loading data...",
     "startEvents": "Start Events"
   },
   "processList": {
@@ -103,9 +112,11 @@
     "confirmDeletionText1": "Are you sure you want to delete ",
     "confirmDeletionText2": "? This action will delete all process models associated with the collaboration.",
     "error": "Error",
+    "fetchingProcessModels": "Fetching process models...",
     "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",
+    "noProcessModelsFound": "No process models found.",
     "participant": "Participant",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
@@ -123,6 +134,7 @@
     "hide": "Hide",
     "intermediateEvents": "Intermediate Events",
     "legend": "Legend",
+    "loadingProcessMap": "Loading process map...",
     "messageFlows": "Message Flows",
     "noInformationAvailable": "No information available",
     "process": "Process",
@@ -130,6 +142,9 @@
     "resources": "Resources",
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Start Event"
+  },
+  "processView": {
+    "loadingProcessModel": "Loading process model..."
   },
   "projectOverview": {
     "active": "ACTIVE",

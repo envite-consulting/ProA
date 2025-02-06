@@ -9,20 +9,25 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import de.envite.proa.repository.datastore.DataStoreConnectionDao;
+import de.envite.proa.repository.datastore.DataStoreDao;
+import de.envite.proa.repository.messageflow.MessageFlowDao;
+import de.envite.proa.repository.processmodel.*;
+import de.envite.proa.repository.project.ProjectDao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import de.envite.proa.entities.DataAccess;
-import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessActivity;
-import de.envite.proa.entities.ProcessDataStore;
-import de.envite.proa.entities.ProcessElementType;
-import de.envite.proa.entities.ProcessEvent;
-import de.envite.proa.entities.ProcessInformation;
-import de.envite.proa.entities.ProcessModel;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessActivity;
+import de.envite.proa.entities.process.ProcessDataStore;
+import de.envite.proa.entities.process.ProcessElementType;
+import de.envite.proa.entities.process.ProcessEvent;
+import de.envite.proa.entities.process.ProcessInformation;
+import de.envite.proa.entities.process.ProcessModel;
 import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
@@ -87,7 +92,7 @@ class ProcessModelRepositoryTest {
 		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.START, projectTable))
 				.thenReturn(startEventTables);
 
-		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -148,7 +153,7 @@ class ProcessModelRepositoryTest {
 		when(processEventDao.getEventsForLabelAndType(COMMON_EVENT_LABEL, EventType.END, projectTable))
 				.thenReturn(endEventTables);
 
-		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -202,7 +207,7 @@ class ProcessModelRepositoryTest {
 		when(processModelDao.getProcessModelsForName(EXISTING_PROCESS_MODEL_NAME, projectTable))
 				.thenReturn(Arrays.asList(processModelTable));
 
-		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -262,7 +267,7 @@ class ProcessModelRepositoryTest {
 		when(callActivityDao.getCallActivitiesForName(NEW_PROCESS_MODEL_NAME, projectTable))
 				.thenReturn(Arrays.asList(callActivityTable));
 
-		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -309,7 +314,7 @@ class ProcessModelRepositoryTest {
 
 		when(dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL, projectTable)).thenReturn(dataStoreTable);
 
-		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //
@@ -361,7 +366,7 @@ class ProcessModelRepositoryTest {
 
 		when(processModelDao.getProcessModels(projectTable)).thenReturn(Arrays.asList(processModel));
 
-		ProcessModelRepositoryImpl repository = new ProcessModelRepositoryImpl(//
+		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				projectDao, //
 				processModelDao, //
 				dataStoreDao, //

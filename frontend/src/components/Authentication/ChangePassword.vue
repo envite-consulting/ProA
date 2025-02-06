@@ -63,7 +63,7 @@ import { currentPasswordRules, newPasswordRules } from "@/components/Authenticat
 import { Message } from "@/components/Authentication/AuthenticationDialog.vue";
 import { SelectedDialog, useAppStore } from "@/store/app";
 import { VForm } from "vuetify/components";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { authHeader } from "@/components/Authentication/authHeader";
 import { UserData } from "@/components/Home/ProjectOverview.vue";
 import getUser from "@/components/userService";
@@ -150,6 +150,15 @@ export default defineComponent({
         this.$emit('showMessage', message);
         this.openDialog(SelectedDialog.PROFILE);
       } catch (e) {
+        if ((e as AxiosError).response?.status === 429) {
+          const message: Message = {
+            type: 'error',
+            message: this.$t('authentication.tooManyRequests') as string
+          }
+          this.$emit('showMessage', message);
+          return;
+        }
+
         const message: Message = {
           type: 'error',
           message: this.$t('authentication.passwordChangeErrorMsg') as string

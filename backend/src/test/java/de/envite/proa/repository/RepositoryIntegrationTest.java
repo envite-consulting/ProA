@@ -7,14 +7,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.persistence.NoResultException;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.*;
+import de.envite.proa.entities.processmap.ProcessMap;
+import de.envite.proa.entities.project.Project;
+import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
+import de.envite.proa.repository.processmodel.ProcessmodelRepositoryImpl;
+import de.envite.proa.repository.project.ProjectRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.envite.proa.entities.*;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 
 @QuarkusTest
@@ -37,7 +43,7 @@ class RepositoryIntegrationTest {
 	private EntityManager entityManager;
 
 	@Inject
-	private ProcessModelRepositoryImpl processModelRepository;
+	private ProcessmodelRepositoryImpl processModelRepository;
 
 	@Inject
 	private ProcessMapRepositoryImpl processMapRepository;

@@ -1,18 +1,18 @@
 package de.envite.proa.repository.tables;
 
+import jakarta.persistence.*;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import jakarta.persistence.*;
-import lombok.Data;
 
 @Data
 @Entity
 public class ProjectTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long id;
 
 	private String name;

@@ -1,6 +1,11 @@
 <template>
   <v-card height="100%">
-
+    <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
+      <div class="d-flex flex-column align-center justify-center">
+        <span class="mb-2 mx-5 text-center">{{ $t('processView.loadingProcessModel') }}</span>
+        <v-progress-circular indeterminate/>
+      </div>
+    </div>
     <div id="process-modelling" class="full-screen"></div>
     <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
       <v-fab-transition style="margin-right: 5px">
@@ -67,10 +72,12 @@ export default defineComponent({
     store: useAppStore(),
     scrollStep: 20,
     zoomInMultiplier: 1.1,
-    zoomOutMultiplier: 0.9
+    zoomOutMultiplier: 0.9,
+    isFetching: false as boolean
   }),
 
   async mounted() {
+    this.isFetching = true;
     this.addKeydownListener();
 
     const container = document.querySelector('#process-modelling') as HTMLElement;
@@ -99,6 +106,8 @@ export default defineComponent({
       }
       this.removeQueryParams();
     }
+
+    this.isFetching = false;
   },
 
   beforeUnmount() {

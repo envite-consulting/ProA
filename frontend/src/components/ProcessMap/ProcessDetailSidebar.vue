@@ -8,81 +8,89 @@
       <div class="btn-container">
         <v-btn icon="mdi-arrow-collapse-right" variant="text" class="ms-2" @click="close"></v-btn>
       </div>
-      <v-container class="flex-shrink-0 py-0">
-        <p class="text-h6 font-weight-regular">{{ details.name }}</p>
-      </v-container>
-      <v-container class="flex-grow-1 overflow-auto py-0">
-        <v-list dense>
-          <div v-if="details.startEvents && details.startEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('processDetailSidebar.startEvents') }}</v-list-subheader>
-            <v-list-item v-for="(start, index) in details.startEvents" :key="'startEvent-' + index">
-              <v-chip @click="goToProcessModel(start.elementId)"
-                      @mouseenter="model!.highlightPort(ProcessElementType.START_EVENT)"
-                      @mouseleave="model!.unhighlightPort(ProcessElementType.START_EVENT)">{{ start.label || 'Start' }}
-              </v-chip>
-            </v-list-item>
-          </div>
+      <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
+        <div class="d-flex flex-column align-center justify-center">
+          <span class="mb-2 mx-5 text-center">{{ $t('processDetailSidebar.loadingData') }}</span>
+          <v-progress-circular indeterminate/>
+        </div>
+      </div>
+      <div :hidden="isFetching">
+        <v-container class="flex-shrink-0 py-0">
+          <p class="text-h6 font-weight-regular">{{ details.name }}</p>
+        </v-container>
+        <v-container class="flex-grow-1 overflow-auto py-0">
+          <v-list dense>
+            <div v-if="details.startEvents && details.startEvents.length > 0" class="mb-2">
+              <v-list-subheader>{{ $t('processDetailSidebar.startEvents') }}</v-list-subheader>
+              <v-list-item v-for="(start, index) in details.startEvents" :key="'startEvent-' + index">
+                <v-chip @click="goToProcessModel(start.elementId)"
+                        @mouseenter="model!.highlightPort(ProcessElementType.START_EVENT)"
+                        @mouseleave="model!.unhighlightPort(ProcessElementType.START_EVENT)">{{ start.label || 'Start' }}
+                </v-chip>
+              </v-list-item>
+            </div>
 
-          <div v-if="details.endEvents && details.endEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('processDetailSidebar.endEvents') }}</v-list-subheader>
-            <v-list-item v-for="(end, index) in details.endEvents" :key="'endEvent' + index">
-              <v-chip @click="goToProcessModel(end.elementId)"
-                      @mouseenter="model!.highlightPort(ProcessElementType.END_EVENT)"
-                      @mouseleave="model!.unhighlightPort(ProcessElementType.END_EVENT)">{{
-                  end.label || $t('general.end')
-                }}
-              </v-chip>
-            </v-list-item>
-          </div>
+            <div v-if="details.endEvents && details.endEvents.length > 0" class="mb-2">
+              <v-list-subheader>{{ $t('processDetailSidebar.endEvents') }}</v-list-subheader>
+              <v-list-item v-for="(end, index) in details.endEvents" :key="'endEvent' + index">
+                <v-chip @click="goToProcessModel(end.elementId)"
+                        @mouseenter="model!.highlightPort(ProcessElementType.END_EVENT)"
+                        @mouseleave="model!.unhighlightPort(ProcessElementType.END_EVENT)">{{
+                    end.label || $t('general.end')
+                  }}
+                </v-chip>
+              </v-list-item>
+            </div>
 
-          <div v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('general.intermediateCatchEvents') }}</v-list-subheader>
-            <v-list-item v-for="(event, index) in details.intermediateCatchEvents" :key="'endEvent' + index">
-              <v-chip @click="goToProcessModel(event.elementId)"
-                      @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)"
-                      @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)">
-                {{ event.label || $t('general.intermediateEvent') }}
-              </v-chip>
-            </v-list-item>
-          </div>
+            <div v-if="details.intermediateCatchEvents && details.intermediateCatchEvents.length > 0" class="mb-2">
+              <v-list-subheader>{{ $t('general.intermediateCatchEvents') }}</v-list-subheader>
+              <v-list-item v-for="(event, index) in details.intermediateCatchEvents" :key="'endEvent' + index">
+                <v-chip @click="goToProcessModel(event.elementId)"
+                        @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)"
+                        @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_CATCH_EVENT)">
+                  {{ event.label || $t('general.intermediateEvent') }}
+                </v-chip>
+              </v-list-item>
+            </div>
 
-          <div v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('general.intermediateThrowEvents') }}</v-list-subheader>
-            <v-list-item v-for="(event, index) in details.intermediateThrowEvents"
-                         :key="'intermediateThrowEvent' + index">
-              <v-chip @click="goToProcessModel(event.elementId)"
-                      @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)"
-                      @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)">
-                {{ event.label || $t('general.intermediateEvent') }}
-              </v-chip>
-            </v-list-item>
-          </div>
+            <div v-if="details.intermediateThrowEvents && details.intermediateThrowEvents.length > 0" class="mb-2">
+              <v-list-subheader>{{ $t('general.intermediateThrowEvents') }}</v-list-subheader>
+              <v-list-item v-for="(event, index) in details.intermediateThrowEvents"
+                           :key="'intermediateThrowEvent' + index">
+                <v-chip @click="goToProcessModel(event.elementId)"
+                        @mouseenter="model!.highlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)"
+                        @mouseleave="model!.unhighlightPort(ProcessElementType.INTERMEDIATE_THROW_EVENT)">
+                  {{ event.label || $t('general.intermediateEvent') }}
+                </v-chip>
+              </v-list-item>
+            </div>
 
-          <div v-if="details.activities && details.activities.length > 0" class="mb-2">
-            <v-list-subheader>{{ $t('general.callActivities') }}</v-list-subheader>
-            <v-list-item v-for="(activity, index) in details.activities" :key="'activity' + index">
-              <v-chip @click="goToProcessModel(activity.elementId)"
-                      @mouseenter="model!.highlightPort(ProcessElementType.CALL_ACTIVITY)"
-                      @mouseleave="model!.unhighlightPort(ProcessElementType.CALL_ACTIVITY)">
-                {{ activity.label || $t('general.activity') }}
-              </v-chip>
-            </v-list-item>
-          </div>
+            <div v-if="details.activities && details.activities.length > 0" class="mb-2">
+              <v-list-subheader>{{ $t('general.callActivities') }}</v-list-subheader>
+              <v-list-item v-for="(activity, index) in details.activities" :key="'activity' + index">
+                <v-chip @click="goToProcessModel(activity.elementId)"
+                        @mouseenter="model!.highlightPort(ProcessElementType.CALL_ACTIVITY)"
+                        @mouseleave="model!.unhighlightPort(ProcessElementType.CALL_ACTIVITY)">
+                  {{ activity.label || $t('general.activity') }}
+                </v-chip>
+              </v-list-item>
+            </div>
 
-          <div v-if="details.description" class="mb-4">
-            <v-list-subheader>{{ $t('general.description') }}</v-list-subheader>
-            <v-list-item>
-              {{ details.description }}
-            </v-list-item>
-          </div>
-        </v-list>
-      </v-container>
-      <v-container class="flex-shrink-0 text-center mb-4">
-        <div id="process-model-viewer" class="mb-4"></div>
-        <v-btn color="blue-darken-1" variant="text" @click="goToProcessModel(null)">
-          {{ $t('processDetailSidebar.goToProcessModel') }}
-        </v-btn>
-      </v-container>
+            <div v-if="details.description" class="mb-4">
+              <v-list-subheader>{{ $t('general.description') }}</v-list-subheader>
+              <v-list-item>
+                {{ details.description }}
+              </v-list-item>
+            </div>
+          </v-list>
+        </v-container>
+      </div>
+        <v-container class="flex-shrink-0 text-center mb-4">
+          <div id="process-model-viewer" class="mb-4"></div>
+          <v-btn color="blue-darken-1" variant="text" @click="goToProcessModel(null)">
+            {{ $t('processDetailSidebar.goToProcessModel') }}
+          </v-btn>
+        </v-container>
     </div>
   </v-navigation-drawer>
 </template>
@@ -136,11 +144,13 @@ export default defineComponent({
   data: () => ({
     showSidebar: false as boolean,
     details: {} as Process,
-    model: null as AbstractProcessShape | null
+    model: null as AbstractProcessShape | null,
+    isFetching: false as boolean
   }),
 
   methods: {
     async open(model: AbstractProcessShape) {
+      this.isFetching = true;
       this.showSidebar = true;
       await this.$nextTick();
       this.model = model;
@@ -149,6 +159,7 @@ export default defineComponent({
       await this.fetchProcessModel(modelId);
       axios.get("/api/process-model/" + modelId + "/details", { headers: authHeader() }).then(result => {
         this.details = result.data;
+        this.isFetching = false;
       })
     },
     close() {
