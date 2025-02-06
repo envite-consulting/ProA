@@ -28,52 +28,6 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessMapRespository processMapRepository;
 
-	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration) {
-
-		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
-
-		if (existingProcessModel != null && isCollaboration) {
-			throw new IllegalArgumentException("Collaboration already exists: " + bpmnProcessId);
-		}
-
-		if (existingProcessModel != null && existingProcessModel.getProcessType() != ProcessType.COLLABORATION) {
-			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description,
-					parentBpmnProcessId);
-		}
-
-		if (isCollaboration) {
-			xml = processOperations.addEmptyProcessRefs(xml);
-		}
-
-		ProcessModel processModel = createProcessModel(name, description, xml, parentBpmnProcessId, isCollaboration);
-
-		if (!isCollaboration) {
-			return repository.saveProcessModel(projectId, processModel);
-		}
-
-		List<ParticipantDetails> participants = processOperations.getParticipants(xml);
-		Long collaborationId = repository.saveProcessModel(projectId, processModel);
-
-		List<Long> participantIds = new ArrayList<>();
-
-		participants //
-				.forEach(participant -> { //
-					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
-							participant.getDescription(), false, processModel.getBpmnProcessId());
-					participantIds.add(participantId); //
-				});
-
-		Map<String, Long> bpmnIdToIdMap = participantIds //
-				.stream() //
-				.collect(Collectors.toMap(id -> repository.getProcessDetails(id).getBpmnProcessId(), id -> id));
-
-		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
-		repository.saveMessageFlows(messageFlows, projectId);
-
-		return collaborationId;
-	}
-
 	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration,
 			String parentBpmnProcessId) {
 
