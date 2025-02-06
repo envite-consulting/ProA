@@ -48,7 +48,7 @@ public class ProjectResource {
     }
 
     /**
-     * This methods gets the names and the corresponding ids of all projects in
+     * This method gets the names and the corresponding ids of all projects in
      * order to show them as tiles in the frontend
      */
     @GET

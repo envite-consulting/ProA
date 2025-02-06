@@ -22,7 +22,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
-public class ProcessModelResourceTest {
+class ProcessModelResourceTest {
 
 	private static final String PROCESS_XML = "ProcessXML";
 	private static final String FILE_NAME = "testfile.bpmn";
