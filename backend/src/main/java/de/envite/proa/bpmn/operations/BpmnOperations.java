@@ -207,10 +207,9 @@ public class BpmnOperations implements ProcessOperations {
 		} else if (element instanceof IntermediateThrowEvent) {
 			return new MessageFlowNode(getProcessIdFromChildElement(element),
 					ProcessElementType.INTERMEDIATE_THROW_EVENT);
-		} else if (element instanceof StartEvent) {
+		} else {
 			return new MessageFlowNode(getProcessIdFromChildElement(element), ProcessElementType.START_EVENT);
 		}
-		return null;
 	}
 
 	private String getProcessIdFromChildElement(ModelElementInstance element) {

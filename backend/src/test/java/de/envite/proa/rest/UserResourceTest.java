@@ -2,6 +2,7 @@ package de.envite.proa.rest;
 
 import de.envite.proa.entities.authentication.User;
 import de.envite.proa.usecases.user.UserUsecase;
+import jakarta.persistence.NoResultException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -92,5 +95,61 @@ public class UserResourceTest {
 		assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
 		verify(jwt, times(1)).getClaim("userId");
 		verify(usecase, times(1)).findById(USER_ID);
+	}
+
+	@Test
+	public void testDeleteById() {
+		doNothing().when(usecase).deleteById(USER_ID);
+
+		Response response = resource.deleteById(USER_ID);
+
+		assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+
+		verify(usecase, times(1)).deleteById(USER_ID);
+	}
+
+	@Test
+	public void testDeleteById_NotFound() {
+		doThrow(new NoResultException()).when(usecase).deleteById(USER_ID);
+
+		Response response = resource.deleteById(USER_ID);
+
+		assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+
+		verify(usecase, times(1)).deleteById(USER_ID);
+	}
+
+	@Test
+	public void testDeleteById_InternalServerError() {
+		doThrow(new RuntimeException()).when(usecase).deleteById(USER_ID);
+
+		Response response = resource.deleteById(USER_ID);
+
+		assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+
+		verify(usecase, times(1)).deleteById(USER_ID);
+	}
+
+	@Test
+	public void testGetUsers() {
+		when(usecase.getAllUsers()).thenReturn(List.of(USER));
+
+		Response response = resource.getUsers();
+
+		assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+		assertEquals(List.of(USER), response.getEntity());
+
+		verify(usecase, times(1)).getAllUsers();
+	}
+
+	@Test
+	public void testGetUsers_InternalServerError() {
+		doThrow(new RuntimeException()).when(usecase).getAllUsers();
+
+		Response response = resource.getUsers();
+
+		assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
+
+		verify(usecase, times(1)).getAllUsers();
 	}
 }

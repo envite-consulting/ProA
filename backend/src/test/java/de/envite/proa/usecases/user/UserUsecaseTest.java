@@ -8,6 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -67,5 +69,25 @@ class UserUsecaseTest {
 		assertNotNull(result, "findById should return a User object.");
 		assertEquals(user, result, "The returned user should match the test user.");
 		verify(repository, times(1)).findById(ID);
+	}
+
+	@Test
+	void testDeleteById() {
+		doNothing().when(repository).deleteById(ID);
+
+		usecase.deleteById(ID);
+
+		verify(repository, times(1)).deleteById(ID);
+	}
+
+	@Test
+	void testGetAllUsers() {
+		when(repository.getAllUsers()).thenReturn(List.of(user));
+
+		List<User> result = usecase.getAllUsers();
+
+		assertNotNull(result, "getAllUsers should return a list of User objects.");
+		assertEquals(List.of(user), result, "The returned list should contain the test user.");
+		verify(repository, times(1)).getAllUsers();
 	}
 }

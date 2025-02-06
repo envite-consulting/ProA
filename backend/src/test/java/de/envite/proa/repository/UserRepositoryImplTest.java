@@ -3,6 +3,7 @@ package de.envite.proa.repository;
 import de.envite.proa.entities.authentication.User;
 import de.envite.proa.repository.tables.UserTable;
 import de.envite.proa.repository.user.UserDao;
+import de.envite.proa.repository.user.UserMapper;
 import de.envite.proa.repository.user.UserRepositoryImpl;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -153,5 +155,31 @@ class UserRepositoryImplTest {
 
 		verify(userDao).findById(USER_ID);
 		verify(userDao).patchUser(any(UserTable.class));
+	}
+
+	@Test
+	void testDeleteById() {
+		doNothing().when(userDao).deleteById(USER_ID);
+
+		userRepository.deleteById(USER_ID);
+
+		verify(userDao).deleteById(USER_ID);
+	}
+
+	@Test
+	void testGetAllUsers() {
+		UserTable userTable1 = new UserTable();
+		userTable1.setEmail(USER_EMAIL);
+		UserTable userTable2 = new UserTable();
+		userTable2.setEmail(OLD_EMAIL);
+
+		when(userDao.getAllUsers()).thenReturn(List.of(userTable1, userTable2));
+
+		List<User> expectedUsers = List.of(UserMapper.map(userTable1), UserMapper.map(userTable2));
+
+		List<User> users = userRepository.getAllUsers();
+
+		assertEquals(expectedUsers, users);
+		verify(userDao).getAllUsers();
 	}
 }

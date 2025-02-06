@@ -2,6 +2,8 @@ package de.envite.proa.rest;
 
 import de.envite.proa.entities.project.Project;
 import de.envite.proa.usecases.project.ProjectUsecase;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeAll;
@@ -137,6 +139,48 @@ public class ProjectResourceTest {
 	}
 
 	@Test
+	public void testGetProjectWebMode_NotFound() {
+		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
+		resource.appMode = APP_MODE_WEB;
+
+		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new NotFoundException());
+
+		Response result = resource.getProject(PROJECT_ID_1);
+
+		assertEquals(Response.Status.NOT_FOUND.getStatusCode(), result.getStatus());
+		verify(jwt, times(1)).getClaim("userId");
+		verify(usecase, times(1)).getProject(USER_ID, PROJECT_ID_1);
+	}
+
+	@Test
+	public void testGetProjectWebMode_Forbidden() {
+		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
+		resource.appMode = APP_MODE_WEB;
+
+		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new ForbiddenException());
+
+		Response result = resource.getProject(PROJECT_ID_1);
+
+		assertEquals(Response.Status.FORBIDDEN.getStatusCode(), result.getStatus());
+		verify(jwt, times(1)).getClaim("userId");
+		verify(usecase, times(1)).getProject(USER_ID, PROJECT_ID_1);
+	}
+
+	@Test
+	public void testGetProjectWebMode_InternalServerError() {
+		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
+		resource.appMode = APP_MODE_WEB;
+
+		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new RuntimeException());
+
+		Response result = resource.getProject(PROJECT_ID_1);
+
+		assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), result.getStatus());
+		verify(jwt, times(1)).getClaim("userId");
+		verify(usecase, times(1)).getProject(USER_ID, PROJECT_ID_1);
+	}
+
+	@Test
 	public void testGetProjectDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 
@@ -146,6 +190,32 @@ public class ProjectResourceTest {
 
 		assertEquals(Response.Status.OK.getStatusCode(), result.getStatus());
 		assertEquals(expectedProject1, result.getEntity());
+		verify(jwt, never()).getClaim("userId");
+		verify(usecase, times(1)).getProject(PROJECT_ID_1);
+	}
+
+	@Test
+	public void testGetProjectDesktopMode_NotFound() {
+		resource.appMode = APP_MODE_DESKTOP;
+
+		when(usecase.getProject(PROJECT_ID_1)).thenThrow(new NotFoundException());
+
+		Response result = resource.getProject(PROJECT_ID_1);
+
+		assertEquals(Response.Status.NOT_FOUND.getStatusCode(), result.getStatus());
+		verify(jwt, never()).getClaim("userId");
+		verify(usecase, times(1)).getProject(PROJECT_ID_1);
+	}
+
+	@Test
+	public void testGetProjectDesktopMode_InternalServerError() {
+		resource.appMode = APP_MODE_DESKTOP;
+
+		when(usecase.getProject(PROJECT_ID_1)).thenThrow(new RuntimeException());
+
+		Response result = resource.getProject(PROJECT_ID_1);
+
+		assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), result.getStatus());
 		verify(jwt, never()).getClaim("userId");
 		verify(usecase, times(1)).getProject(PROJECT_ID_1);
 	}

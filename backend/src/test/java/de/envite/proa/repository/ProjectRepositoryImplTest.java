@@ -6,6 +6,8 @@ import de.envite.proa.repository.project.ProjectRepositoryImpl;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.repository.tables.UserTable;
 import de.envite.proa.repository.user.UserDao;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -119,6 +121,15 @@ class ProjectRepositoryImplTest {
 	}
 
 	@Test
+	void testGetProjectById_NotFound() {
+		when(projectDao.findById(PROJECT_ID)).thenReturn(null);
+
+		assertThrows(NotFoundException.class, () -> projectRepository.getProject(PROJECT_ID));
+
+		verify(projectDao).findById(PROJECT_ID);
+	}
+
+	@Test
 	void testGetProjectByUserAndId() {
 		UserTable user = new UserTable();
 		ProjectTable projectTable = new ProjectTable();
@@ -129,6 +140,33 @@ class ProjectRepositoryImplTest {
 		Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
 		assertNotNull(retrievedProject);
 		assertEquals(projectTable.getId(), retrievedProject.getId());
+
+		verify(userDao).findById(USER_ID);
+		verify(projectDao).findById(projectTable.getId());
+		verify(projectDao).findByUserAndId(user, projectTable.getId());
+	}
+
+	@Test
+	void testGetProjectByUserAndId_NotFound() {
+		UserTable user = new UserTable();
+		when(userDao.findById(USER_ID)).thenReturn(user);
+		when(projectDao.findById(PROJECT_ID)).thenReturn(null);
+
+		assertThrows(NotFoundException.class, () -> projectRepository.getProject(USER_ID, PROJECT_ID));
+
+		verify(userDao).findById(USER_ID);
+		verify(projectDao).findById(PROJECT_ID);
+	}
+
+	@Test
+	void testGetProjectByUserAndId_Forbidden() {
+		UserTable user = new UserTable();
+		ProjectTable projectTable = new ProjectTable();
+		when(userDao.findById(USER_ID)).thenReturn(user);
+		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
+		when(projectDao.findByUserAndId(user, projectTable.getId())).thenReturn(null);
+
+		assertThrows(ForbiddenException.class, () -> projectRepository.getProject(USER_ID, projectTable.getId()));
 
 		verify(userDao).findById(USER_ID);
 		verify(projectDao).findById(projectTable.getId());

@@ -12,6 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class AdminInitializerTest {
@@ -46,6 +50,7 @@ public class AdminInitializerTest {
 
 		adminInitializer.init();
 
+		verify(userUsecase).findByEmail(adminEmail);
 		verify(authenticationUsecase, never()).register(any(User.class));
 	}
 
@@ -60,6 +65,31 @@ public class AdminInitializerTest {
 		user.setPassword(adminPassword);
 		user.setRole(ROLE);
 
+		verify(userUsecase).findByEmail(adminEmail);
+		verify(authenticationUsecase, times(1)).register(user);
+	}
+
+	@Test
+	public void testAdminDoesNotExist_Exception() throws EmailAlreadyRegisteredException {
+		User user = new User();
+		user.setEmail(adminEmail);
+		user.setPassword(adminPassword);
+		user.setRole(ROLE);
+
+		when(userUsecase.findByEmail(adminEmail)).thenReturn(null);
+		doThrow(new RuntimeException("Test Exception")).when(authenticationUsecase).register(user);
+
+		ByteArrayOutputStream errContent = new ByteArrayOutputStream();
+		System.setErr(new PrintStream(errContent));
+
+		adminInitializer.init();
+
+		System.setErr(System.err);
+
+		String output = errContent.toString();
+		assertTrue(output.contains("Test Exception"));
+
+		verify(userUsecase).findByEmail(adminEmail);
 		verify(authenticationUsecase, times(1)).register(user);
 	}
 }
