@@ -1,6 +1,7 @@
 # ProA
 
-ProA is a tool that lets you manage your processes and their connections smoothly. It detects relations among the processes and shows them in a diagram.
+ProA is a tool that lets you manage your processes and their connections smoothly. It detects relations among the
+processes and shows them in a diagram.
 
 ## Web or desktop mode
 
@@ -36,6 +37,8 @@ If you want to learn more about Quarkus, please visit its website: https://quark
 ### Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
+
+
 ```shell script
 ./mvnw compile quarkus:dev
 ```
@@ -45,35 +48,45 @@ You can run your application in dev mode that enables live coding using:
 ### Packaging and running the application
 
 The application can be packaged using:
+
+
 ```shell script
 ./mvnw package
 ```
+
+
 It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
 
 The produced jar is an uber jar due to the configuration in the application.properties.
 
 The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
 
-
 ### Creating a native executable
 
-Important: H2 Database is not supported in native mode. When native mode is used, an external DB needs to be configured: https://github.com/quarkusio/quarkus/issues/27021
+Important: H2 Database is not supported in native mode. When native mode is used, an external DB needs to be
+configured: https://github.com/quarkusio/quarkus/issues/27021
 
 ### Using GraalVM
+
+
 Install GraalVM version 21 from https://github.com/graalvm/graalvm-ce-builds/releases
 
 For Windows Users:
 Install Visual Studio Code: https://www.graalvm.org/latest/docs/getting-started/windows/
 
-You can create a native executable using: 
+You can create a native executable using:
+
 ```shell script
 ./mvnw package -Dnative
 ```
+
+
 For Windows Users: Execute the above statement using the x64 Native Tools Command Prompt .
 
 #### Using Docker
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
+Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+
 ```shell script
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
@@ -87,12 +100,13 @@ If you want to learn more about building native executables, please consult http
 ### Jacoco
 
 To create a jacoco report run:
+
+
 ```shell script
 mvn verify
 ```
 
 The report can be found under target/jacoco-report
-
 
 ## Frontend
 
@@ -157,3 +171,59 @@ Settings can be configured by clicking the settings icon in the top right corner
 Camunda Modeler `Client ID` and `Client Secret` are used to retrieve process models from the Camunda Web Modeler.
 
 Camunda Operate `Client ID`, `Client Secret`, `Region ID` and `Cluster ID` are used to fetch active process instances.
+
+## Code Formatting Guide (IntelliJ IDEA)
+
+### 1. Frontend: Prettier for Vue Files
+
+#### Setup
+
+1. **Install Prettier** globally or in your project (if not already installed):
+
+```sh
+npm install --save-dev prettier
+```
+
+2. **Install the Prettier Plugin** in IntelliJ IDEA:
+    - Go to **IntelliJ IDEA** → **Settings...** → **Plugins**
+    - Search for **Prettier** and install it
+
+#### Usage
+
+To format Vue files using Prettier in IntelliJ IDEA:
+
+1. **Enable Prettier**:
+    - Go to **IntelliJ IDEA** → **Settings...** → **Languages & Frameworks** → **JavaScript** → **Prettier**
+    - Select **Manual Prettier configuration**
+    - Set the **Prettier package** to your project's `node_modules/prettier` or the globally installed version
+    - Select **Run on 'Reformat Code' action** and **Run on save**
+2. **Manually Format Vue Files**:
+    - Right-click a file or folder in the **Project** view
+    - Select **Reformat with Prettier**
+
+#### Verification
+
+To check formatting without modifying files, run:
+
+```sh
+npx prettier --check "src/**/*.{vue,js,ts,css,scss,json,md}"
+```
+
+## 2. Backend: Eclipse Formatter for Java Files
+
+### Setup
+
+1. **Import `eclipse-formatter.xml`** in IntelliJ IDEA:
+    - Go to **IntelliJ IDEA** → **Settings...** → **Editor** → **Code Style** → **Java**
+    - Click the gear icon next to **Scheme** → **Import Scheme**
+    - Select `eclipse-formatter.xml` from the project
+    - Click **Apply** and **OK**
+
+### Usage
+
+1. **Format on Save:**
+    - Go to **IntelliJ** → **Settings** → **Tools** → **Actions on Save**
+    - Check **Reformat code** and **Optimize imports**
+
+2. **Manually Format Java Files:**
+    - Open a Java file and press **Ctrl + Alt + L** (Windows/Linux) or **Cmd + Option + L** (Mac)
