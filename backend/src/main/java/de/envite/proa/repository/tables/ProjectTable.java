@@ -24,10 +24,22 @@ public class ProjectTable {
 	private UserTable user;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<CallActivityTable> callActivities = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
 	private List<DataStoreConnectionTable> dataStoreConnections = new ArrayList<>();
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
 	private List<DataStoreTable> dataStores = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<MessageFlowTable> messageFlows = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<ProcessConnectionTable> processConnections = new ArrayList<>();
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+	private List<ProcessEventTable> processEvents = new ArrayList<>();
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
 	private List<ProcessModelTable> processModels = new ArrayList<>();
