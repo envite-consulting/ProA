@@ -19,7 +19,7 @@
     <v-card-text>
       <v-form @submit.prevent ref="editProfileForm">
         <v-alert :type="message.type" closable class="mb-5" icon="mdi-alert-circle-outline"
-                 v-if="message.message !== ''" :text="message.message" @click:close="message.message = ''"></v-alert>
+                 v-if="message.message !== ''" :text="message.message" @click:close="removeMessage"></v-alert>
         <v-text-field
           v-model="newUserData.firstName"
           :label="$t('authentication.firstName')"
@@ -153,6 +153,9 @@ export default defineComponent({
         }
         this.$emit('showMessage', message);
       }
+    },
+    removeMessage() {
+      this.$emit('removeMessage');
     }
   }
 });

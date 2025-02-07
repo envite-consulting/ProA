@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             targetNamespace="http://example.com/bpmn">
+    <collaboration>
+        <documentation>
+            This collaboration defines the interactions between the Alice and Bob teams during the order processing.
+        </documentation>
+        <participant/>
+        <participant/>
+    </collaboration>
+</definitions>

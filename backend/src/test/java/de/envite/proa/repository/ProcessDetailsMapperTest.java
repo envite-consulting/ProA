@@ -32,6 +32,12 @@ public class ProcessDetailsMapperTest {
 	private static final String END_EVENT_ID = "end-event-id";
 
 	@Test
+	void testClassInitialization() {
+		ProcessDetailsMapper mapper = new ProcessDetailsMapper();
+		assertThat(mapper).isNotNull();
+	}
+
+	@Test
 	public void testMap() {
 
 		// Arrange

@@ -34,14 +34,9 @@ public class UserMapper {
         user.setLastName(table.getLastName());
         user.setCreatedAt(table.getCreatedAt());
         user.setModifiedAt(table.getModifiedAt());
-        switch (table.getRole()) {
-            case Admin:
-                user.setRole("Admin");
-                break;
-            case User:
-                user.setRole("User");
-                break;
-        }
+
+        user.setRole(table.getRole() == Role.Admin ? "Admin" : "User");
+
         return user;
     }
 }

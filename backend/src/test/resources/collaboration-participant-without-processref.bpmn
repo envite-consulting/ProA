@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             targetNamespace="http://example.com/bpmn">
+    <collaboration>
+        <participant id="Participant_1" processRef="Process_1"/>
+        <participant id="Participant_2"/>
+    </collaboration>
+    <process id="Process_1"/>
+</definitions>

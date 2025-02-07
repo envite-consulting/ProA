@@ -225,6 +225,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				connectWithCatchEvents(table, event, EventType.START, projectTable);
 				connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
 				break;
+			default:
+				throw new IllegalArgumentException("Unknown event type: " + event.getEventType());
 		}
 	}
 
@@ -239,7 +241,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCallingElement(newThrowEvent.getElementId());
 			if (newThrowEvent.getEventType().equals(EventType.INTERMEDIATE_THROW)) {
 				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
-			} else if (newThrowEvent.getEventType().equals(EventType.END)) {
+			} else {
 				connection.setCallingElementType(ProcessElementType.END_EVENT);
 			}
 
@@ -247,7 +249,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCalledElement(event.getElementId());
 			if (eventTypeToConnectTo.equals(EventType.START)) {
 				connection.setCalledElementType(ProcessElementType.START_EVENT);
-			} else if (eventTypeToConnectTo.equals(EventType.INTERMEDIATE_CATCH)) {
+			} else {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 
@@ -270,7 +272,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCallingElement(event.getElementId());
 			if (eventTypeForConnectionFrom.equals(EventType.END)) {
 				connection.setCallingElementType(ProcessElementType.END_EVENT);
-			} else if (eventTypeForConnectionFrom.equals(EventType.INTERMEDIATE_THROW)) {
+			} else {
 				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
 			}
 
@@ -278,7 +280,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCalledElement(newEvent.getElementId());
 			if (newEvent.getEventType().equals(EventType.START)) {
 				connection.setCalledElementType(ProcessElementType.START_EVENT);
-			} else if (newEvent.getEventType().equals(EventType.INTERMEDIATE_CATCH)) {
+			} else {
 				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
 			}
 

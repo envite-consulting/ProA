@@ -1,12 +1,8 @@
-name: Backend - Continuous Integration
+name: Backend Tests
 
 on:
-  push:
-    branches: [ master ]
-    paths:
-      - 'backend/**'
   pull_request:
-    branches: [ master ]
+    branches: [ main, develop ]
     paths:
       - 'backend/**'
   workflow_dispatch:
