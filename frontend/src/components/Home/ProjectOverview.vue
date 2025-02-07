@@ -33,7 +33,9 @@
             :class="{ 'active-card': activeProjectByGroup[group.name]?.id === store.selectedProjectId }">
 
       <div class="d-flex flex-row justify-space-between align-center">
-        <v-card-title v-text="group.name"></v-card-title>
+        <v-card-title>
+          {{ group.name }}
+        </v-card-title>
 
         <p v-if="activeProjectByGroup[group.name]?.id === store.selectedProjectId" class="active-text">
           {{ $t('projectOverview.active') }}</p>
@@ -288,7 +290,7 @@ export default defineComponent({
         groupedProjects[project.name].push(project);
       }
 
-      const projectGroups: ProjectGroup[] = Object.keys(groupedProjects).map(name => {
+      return Object.keys(groupedProjects).map(name => {
         return {
           name: name,
           projects: groupedProjects[name].sort((a, b) => {
@@ -296,13 +298,6 @@ export default defineComponent({
           })
         }
       });
-
-      for (const group of projectGroups) {
-        const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
-        this.activeProjectByGroup[group.name] = persistedActiveProject ?? group.projects[0];
-      }
-
-      return projectGroups;
     }
   },
 
@@ -311,6 +306,12 @@ export default defineComponent({
       if (!newValue) {
         window.location.reload();
       }
+    },
+    projectGroups(newGroups) {
+        for (const group of newGroups) {
+          const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
+          this.activeProjectByGroup[group.name] = persistedActiveProject ?? group.projects[0];
+        }
     }
   },
 

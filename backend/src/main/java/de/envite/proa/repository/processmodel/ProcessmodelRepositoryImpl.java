@@ -213,43 +213,45 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
                 });
     }
 
-    private void connectEvents(ProcessModelTable table, ProcessEvent event, ProjectTable projectTable) {
-        switch (event.getEventType()) {
-            case START :
-            case INTERMEDIATE_CATCH :
-                connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectTable);
-                connectWithThrowEvents(table, event, EventType.END, projectTable);
-                break;
-            case INTERMEDIATE_THROW :
-            case END :
-                connectWithCatchEvents(table, event, EventType.START, projectTable);
-                connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
-                break;
-        }
-    }
+	private void connectEvents(ProcessModelTable table, ProcessEvent event, ProjectTable projectTable) {
+		switch (event.getEventType()) {
+			case START :
+			case INTERMEDIATE_CATCH :
+				connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectTable);
+				connectWithThrowEvents(table, event, EventType.END, projectTable);
+				break;
+			case INTERMEDIATE_THROW :
+			case END :
+				connectWithCatchEvents(table, event, EventType.START, projectTable);
+				connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown event type: " + event.getEventType());
+		}
+	}
 
     private void connectWithCatchEvents(ProcessModelTable newTable, ProcessEvent newThrowEvent,
                                         EventType eventTypeToConnectTo, ProjectTable projectTable) {
         List<ProcessEventTable> startEventsWithSameLabel = processEventDao
                 .getEventsForLabelAndType(newThrowEvent.getLabel(), eventTypeToConnectTo, projectTable);
 
-        startEventsWithSameLabel.forEach(event -> {
-            ProcessConnectionTable connection = new ProcessConnectionTable();
-            connection.setCallingProcess(newTable);
-            connection.setCallingElement(newThrowEvent.getElementId());
-            if (newThrowEvent.getEventType().equals(EventType.INTERMEDIATE_THROW)) {
-                connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
-            } else if (newThrowEvent.getEventType().equals(EventType.END)) {
-                connection.setCallingElementType(ProcessElementType.END_EVENT);
-            }
+		startEventsWithSameLabel.forEach(event -> {
+			ProcessConnectionTable connection = new ProcessConnectionTable();
+			connection.setCallingProcess(newTable);
+			connection.setCallingElement(newThrowEvent.getElementId());
+			if (newThrowEvent.getEventType().equals(EventType.INTERMEDIATE_THROW)) {
+				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
+			} else {
+				connection.setCallingElementType(ProcessElementType.END_EVENT);
+			}
 
-            connection.setCalledProcess(event.getProcessModel());
-            connection.setCalledElement(event.getElementId());
-            if (eventTypeToConnectTo.equals(EventType.START)) {
-                connection.setCalledElementType(ProcessElementType.START_EVENT);
-            } else if (eventTypeToConnectTo.equals(EventType.INTERMEDIATE_CATCH)) {
-                connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
-            }
+			connection.setCalledProcess(event.getProcessModel());
+			connection.setCalledElement(event.getElementId());
+			if (eventTypeToConnectTo.equals(EventType.START)) {
+				connection.setCalledElementType(ProcessElementType.START_EVENT);
+			} else {
+				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
+			}
 
             connection.setLabel(event.getLabel());
             connection.setProject(projectTable);
@@ -264,23 +266,23 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
         List<ProcessEventTable> endEventsWithSameLabel = processEventDao.getEventsForLabelAndType(newEvent.getLabel(),
                 eventTypeForConnectionFrom, projectTable);
 
-        endEventsWithSameLabel.forEach(event -> {
-            ProcessConnectionTable connection = new ProcessConnectionTable();
-            connection.setCallingProcess(event.getProcessModel());
-            connection.setCallingElement(event.getElementId());
-            if (eventTypeForConnectionFrom.equals(EventType.END)) {
-                connection.setCallingElementType(ProcessElementType.END_EVENT);
-            } else if (eventTypeForConnectionFrom.equals(EventType.INTERMEDIATE_THROW)) {
-                connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
-            }
+		endEventsWithSameLabel.forEach(event -> {
+			ProcessConnectionTable connection = new ProcessConnectionTable();
+			connection.setCallingProcess(event.getProcessModel());
+			connection.setCallingElement(event.getElementId());
+			if (eventTypeForConnectionFrom.equals(EventType.END)) {
+				connection.setCallingElementType(ProcessElementType.END_EVENT);
+			} else {
+				connection.setCallingElementType(ProcessElementType.INTERMEDIATE_THROW_EVENT);
+			}
 
-            connection.setCalledProcess(newTable);
-            connection.setCalledElement(newEvent.getElementId());
-            if (newEvent.getEventType().equals(EventType.START)) {
-                connection.setCalledElementType(ProcessElementType.START_EVENT);
-            } else if (newEvent.getEventType().equals(EventType.INTERMEDIATE_CATCH)) {
-                connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
-            }
+			connection.setCalledProcess(newTable);
+			connection.setCalledElement(newEvent.getElementId());
+			if (newEvent.getEventType().equals(EventType.START)) {
+				connection.setCalledElementType(ProcessElementType.START_EVENT);
+			} else {
+				connection.setCalledElementType(ProcessElementType.INTERMEDIATE_CATCH_EVENT);
+			}
 
             connection.setLabel(event.getLabel());
             connection.setProject(projectTable);

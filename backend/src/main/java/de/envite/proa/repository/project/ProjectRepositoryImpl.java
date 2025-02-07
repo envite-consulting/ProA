@@ -1,19 +1,19 @@
 package de.envite.proa.repository.project;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import de.envite.proa.entities.project.Project;
-import de.envite.proa.repository.user.UserDao;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.repository.tables.UserTable;
+import de.envite.proa.repository.user.UserDao;
 import de.envite.proa.usecases.project.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectRepositoryImpl implements ProjectRepository {
@@ -25,8 +25,9 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	private UserDao userDao;
 
 	@Inject
-	public ProjectRepositoryImpl(ProjectDao dao) {
+	public ProjectRepositoryImpl(ProjectDao dao, UserDao userDao) {
 		this.projectDao = dao;
+		this.userDao = userDao;
 	}
 
 	@Transactional
