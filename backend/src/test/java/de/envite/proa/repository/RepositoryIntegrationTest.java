@@ -14,7 +14,6 @@ import de.envite.proa.entities.project.Project;
 import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
 import de.envite.proa.repository.processmodel.ProcessmodelRepositoryImpl;
 import de.envite.proa.repository.project.ProjectRepositoryImpl;
-import de.envite.proa.repository.tables.UserTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -270,7 +269,6 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testDeleteProjectWithUser() {
 
 		// Arrange
@@ -283,11 +281,10 @@ class RepositoryIntegrationTest {
 		dataStore.setLabel(DATA_STORE_LABEL);
 		model.setDataStores(Collections.singletonList(dataStore));
 
-		UserTable user = new UserTable();
-		user.setId(1L);
-
-		Long userId = user.getId();
+		Long userId = 1L;
 		Long projectId = projectRepository.createProject(userId, PROJECT_NAME, PROJECT_VERSION).getId();
+
+		processModelRepository.saveProcessModel(projectId, model);
 
 		// Act
 		projectRepository.deleteProject(userId, projectId);
@@ -299,14 +296,10 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testDeleteProjectWithUserNonExistentProject() {
 
 		// Arrange
-		UserTable user = new UserTable();
-		user.setId(1L);
-
-		Long userId = user.getId();
+		Long userId = 1L;
 		Long nonExistentProjectId = 1L;
 
 		// Act & Assert
@@ -315,17 +308,11 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testDeleteProjectWithUserNotBelongingToUser() {
 
 		// Arrange
-		UserTable user1 = new UserTable();
-		user1.setId(1L);
-		UserTable user2 = new UserTable();
-		user2.setId(2L);
-
-		Long userId1 = user1.getId();
-		Long userId2 = user2.getId();
+		Long userId1 = 1L;
+		Long userId2 = 2L;
 		Long projectId = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act & Assert
