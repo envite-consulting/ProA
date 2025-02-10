@@ -270,6 +270,7 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
+	@Transactional
 	void testDeleteProjectWithUser() {
 
 		// Arrange
@@ -298,6 +299,7 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
+	@Transactional
 	void testDeleteProjectWithUserNonExistentProject() {
 
 		// Arrange
@@ -313,6 +315,7 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
+	@Transactional
 	void testDeleteProjectWithUserNotBelongingToUser() {
 
 		// Arrange
