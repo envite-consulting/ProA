@@ -1,19 +1,18 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import de.envite.proa.entities.*;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 @QuarkusTest
 public class RepositoryIntegrationTest {
@@ -78,7 +77,6 @@ public class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	public void testGetProcessMap() {
 
 		// Arrange
@@ -124,7 +122,8 @@ public class RepositoryIntegrationTest {
 		assertThat(processMap.getConnections())//
 				.hasSize(1)//
 				.extracting("callingProcessid", "callingElementType", "calledProcessid", "calledElementType", "label")//
-				.contains(tuple(processId2, ProcessElementType.END_EVENT, processId1, ProcessElementType.START_EVENT, EVENT_LABEL));
+				.contains(tuple(processId2, ProcessElementType.END_EVENT, processId1, ProcessElementType.START_EVENT,
+						EVENT_LABEL));
 
 		assertThat(processMap.getDataStores())//
 				.hasSize(1)//
@@ -139,7 +138,6 @@ public class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	public void testDeleteProcess() {
 
 		// Arrange
@@ -192,7 +190,6 @@ public class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	public void testGetProjects() {
 
 		// Arange
@@ -212,7 +209,6 @@ public class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	public void testGetProject() {
 
 		// Arange

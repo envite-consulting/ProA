@@ -1,16 +1,15 @@
 package de.envite.proa.repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import de.envite.proa.entities.Project;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.repository.tables.UserTable;
 import de.envite.proa.usecases.project.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectRepositoryImpl implements ProjectRepository {
@@ -26,7 +25,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		this.projectDao = dao;
 	}
 
-	@Transactional
 	@Override
 	public Project createProject(String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
@@ -34,7 +32,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return map(table);
 	}
 
-	@Transactional
 	@Override
 	public Project createProject(Long userId, String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
@@ -53,7 +50,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return table;
 	}
 
-	@Transactional
 	@Override
 	public List<Project> getProjects() {
 		return projectDao//
@@ -63,10 +59,9 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 				.collect(Collectors.toList());
 	}
 
-	@Transactional
 	@Override
 	public List<Project> getProjects(Long userId) {
-		UserTable user =userDao.findById(userId);
+		UserTable user = userDao.findById(userId);
 		return projectDao//
 				.getProjectsForUser(user)//
 				.stream()//
