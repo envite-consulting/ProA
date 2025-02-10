@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import de.envite.proa.entities.datastore.DataAccess;
@@ -14,6 +14,7 @@ import de.envite.proa.entities.project.Project;
 import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
 import de.envite.proa.repository.processmodel.ProcessmodelRepositoryImpl;
 import de.envite.proa.repository.project.ProjectRepositoryImpl;
+import de.envite.proa.repository.tables.UserTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -62,12 +63,12 @@ class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-		model.setEvents(Arrays.asList(startEvent));
+		model.setEvents(Collections.singletonList(startEvent));
 
 		ProcessActivity activity = new ProcessActivity();
 		activity.setElementId(ACTIVITY_ID);
 		activity.setLabel(ACTIVITY_LABEL);
-		model.setCallActivities(Arrays.asList(activity));
+		model.setCallActivities(Collections.singletonList(activity));
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
@@ -94,7 +95,7 @@ class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-		model1.setEvents(Arrays.asList(startEvent));
+		model1.setEvents(Collections.singletonList(startEvent));
 
 		ProcessModel model2 = new ProcessModel();
 		model2.setName(PROCESS_MODEL_NAME_2);
@@ -103,13 +104,13 @@ class RepositoryIntegrationTest {
 		endEvent.setElementId(EVENT_ID);
 		endEvent.setLabel(EVENT_LABEL);
 		endEvent.setEventType(EventType.END);
-		model2.setEvents(Arrays.asList(endEvent));
+		model2.setEvents(Collections.singletonList(endEvent));
 
 		ProcessDataStore dataStore = new ProcessDataStore();
 		dataStore.setAccess(DataAccess.READ);
 		dataStore.setElementId(DATA_STORE_ID);
 		dataStore.setLabel(DATA_STORE_LABEL);
-		model2.setDataStores(Arrays.asList(dataStore));
+		model2.setDataStores(Collections.singletonList(dataStore));
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
@@ -154,7 +155,7 @@ class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-		model1.setEvents(Arrays.asList(startEvent));
+		model1.setEvents(Collections.singletonList(startEvent));
 
 		ProcessModel model2 = new ProcessModel();
 		model2.setName(PROCESS_MODEL_NAME_2);
@@ -163,13 +164,13 @@ class RepositoryIntegrationTest {
 		endEvent.setElementId(EVENT_ID);
 		endEvent.setLabel(EVENT_LABEL);
 		endEvent.setEventType(EventType.END);
-		model2.setEvents(Arrays.asList(endEvent));
+		model2.setEvents(Collections.singletonList(endEvent));
 
 		ProcessDataStore dataStore = new ProcessDataStore();
 		dataStore.setAccess(DataAccess.READ);
 		dataStore.setElementId(DATA_STORE_ID);
 		dataStore.setLabel(DATA_STORE_LABEL);
-		model2.setDataStores(Arrays.asList(dataStore));
+		model2.setDataStores(Collections.singletonList(dataStore));
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
@@ -240,7 +241,7 @@ class RepositoryIntegrationTest {
 		dataStore.setAccess(DataAccess.READ);
 		dataStore.setElementId(DATA_STORE_ID);
 		dataStore.setLabel(DATA_STORE_LABEL);
-		model.setDataStores(Arrays.asList(dataStore));
+		model.setDataStores(Collections.singletonList(dataStore));
 
 		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
 		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2).getId();
@@ -279,9 +280,12 @@ class RepositoryIntegrationTest {
 		dataStore.setAccess(DataAccess.READ);
 		dataStore.setElementId(DATA_STORE_ID);
 		dataStore.setLabel(DATA_STORE_LABEL);
-		model.setDataStores(Arrays.asList(dataStore));
+		model.setDataStores(Collections.singletonList(dataStore));
 
-		Long userId = 1L;
+		UserTable user = new UserTable();
+		user.setId(1L);
+
+		Long userId = user.getId();
 		Long projectId = projectRepository.createProject(userId, PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act
@@ -297,7 +301,10 @@ class RepositoryIntegrationTest {
 	void testDeleteProjectWithUserNonExistentProject() {
 
 		// Arrange
-		Long userId = 1L;
+		UserTable user = new UserTable();
+		user.setId(1L);
+
+		Long userId = user.getId();
 		Long nonExistentProjectId = 1L;
 
 		// Act & Assert
@@ -309,8 +316,13 @@ class RepositoryIntegrationTest {
 	void testDeleteProjectWithUserNotBelongingToUser() {
 
 		// Arrange
-		Long userId1 = 1L;
-		Long userId2 = 2L;
+		UserTable user1 = new UserTable();
+		user1.setId(1L);
+		UserTable user2 = new UserTable();
+		user2.setId(2L);
+
+		Long userId1 = user1.getId();
+		Long userId2 = user2.getId();
 		Long projectId = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act & Assert
@@ -321,8 +333,8 @@ class RepositoryIntegrationTest {
 
 	/**
 	 * There is no quarkus feature to clean up the database
-	 * https://stackoverflow.com/questions/71857904/quarkus-clean-h2-db-after-every-test
-	 * https://github.com/quarkusio/quarkus/issues/14240
+	 * @see <a href="https://stackoverflow.com/questions/71857904/quarkus-clean-h2-db-after-every-test"</a>
+	 * @see <a href="https://github.com/quarkusio/quarkus/issues/14240"</a>
 	 */
 	@BeforeEach
 	@Transactional
