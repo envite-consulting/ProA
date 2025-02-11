@@ -7,13 +7,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Collections;
 import java.util.List;
 
+import de.envite.proa.entities.authentication.User;
 import de.envite.proa.entities.datastore.DataAccess;
 import de.envite.proa.entities.process.*;
 import de.envite.proa.entities.processmap.ProcessMap;
 import de.envite.proa.entities.project.Project;
+import de.envite.proa.repository.authentication.AuthenticationRepositoryImpl;
 import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
 import de.envite.proa.repository.processmodel.ProcessmodelRepositoryImpl;
 import de.envite.proa.repository.project.ProjectRepositoryImpl;
+import de.envite.proa.repository.user.UserRepositoryImpl;
+import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +29,10 @@ import jakarta.transaction.Transactional;
 
 @QuarkusTest
 class RepositoryIntegrationTest {
-
+	private static final String USER_EMAIL_1 = "email1@example.com";
+	private static final String USER_EMAIL_2 = "email2@example.com";
+	private static final String USER_PASSWORD = "P@ssword123";
+	private static final String USER_ROLE = "User";
 	private static final String DATA_STORE_LABEL = "DataStore Label";
 	private static final String DATA_STORE_ID = "dataStoreId";
 	private static final String EVENT_LABEL = "common event label";
@@ -38,6 +45,8 @@ class RepositoryIntegrationTest {
 	private static final String PROJECT_VERSION = "1.0";
 	private static final String PROJECT_NAME_2 = "Project Name 2";
 	private static final String PROJECT_VERSION_2 = "2.0";
+	@Inject
+	UserRepositoryImpl userRepositoryImpl;
 
 	@Inject
 	private EntityManager entityManager;
@@ -50,6 +59,9 @@ class RepositoryIntegrationTest {
 
 	@Inject
 	private ProjectRepositoryImpl projectRepository;
+
+	@Inject
+	private AuthenticationRepositoryImpl authenticationRepository;
 
 	@Test
 	void testSaveAndGetProcessModel() {
@@ -83,7 +95,6 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testGetProcessMap() {
 
 		// Arrange
@@ -143,7 +154,6 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testDeleteProcess() {
 
 		// Arrange
@@ -195,7 +205,6 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testGetProjects() {
 
 		// Arrange
@@ -214,7 +223,6 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	@Transactional
 	void testGetProject() {
 
 		// Arrange
@@ -269,8 +277,7 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	void testDeleteProjectWithUser() {
-
+	void testDeleteProjectWithUser() throws EmailAlreadyRegisteredException {
 		// Arrange
 		ProcessModel model = new ProcessModel();
 		model.setName(PROCESS_MODEL_NAME);
@@ -281,7 +288,15 @@ class RepositoryIntegrationTest {
 		dataStore.setLabel(DATA_STORE_LABEL);
 		model.setDataStores(Collections.singletonList(dataStore));
 
-		Long userId = 1L;
+		User user = new User();
+		user.setEmail(USER_EMAIL_1);
+		user.setPassword(USER_PASSWORD);
+		user.setRole(USER_ROLE);
+
+		authenticationRepository.register(user);
+		User fetchedUser = userRepositoryImpl.findByEmail(USER_EMAIL_1);
+		Long userId = fetchedUser.getId();
+
 		Long projectId = projectRepository.createProject(userId, PROJECT_NAME, PROJECT_VERSION).getId();
 
 		processModelRepository.saveProcessModel(projectId, model);
@@ -308,11 +323,24 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	void testDeleteProjectWithUserNotBelongingToUser() {
-
+	void testDeleteProjectWithProjectNotBelongingToUser() throws EmailAlreadyRegisteredException {
 		// Arrange
-		Long userId1 = 1L;
-		Long userId2 = 2L;
+		User user1 = new User();
+		user1.setEmail(USER_EMAIL_1);
+		user1.setPassword(USER_PASSWORD);
+		user1.setRole(USER_ROLE);
+
+		User user2 = new User();
+		user2.setEmail(USER_EMAIL_2);
+		user2.setPassword(USER_PASSWORD);
+		user2.setRole(USER_ROLE);
+
+		authenticationRepository.register(user1);
+		authenticationRepository.register(user2);
+
+		Long userId1 = userRepositoryImpl.findByEmail(USER_EMAIL_1).getId();
+		Long userId2 = userRepositoryImpl.findByEmail(USER_EMAIL_2).getId();
+
 		Long projectId = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act & Assert
@@ -332,7 +360,11 @@ class RepositoryIntegrationTest {
 		entityManager.createNativeQuery("DELETE FROM ProcessEventTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM CallActivityTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessConnectionTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM DataStoreConnectionTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM ProcessDataStoreTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM DataStoreTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessModelTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProjectTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM UserTable").executeUpdate();
 	}
 }
