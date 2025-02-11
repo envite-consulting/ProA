@@ -35,4 +35,12 @@ public class ProjectUsecase {
 	public Project getProject(Long userId, Long projectId) {
 		return repository.getProject(userId, projectId);
 	}
+
+	public void deleteProject(Long projectId) {
+		repository.deleteProject(projectId);
+	}
+
+	public void deleteProject(Long userId, Long projectId) {
+		repository.deleteProject(userId, projectId);
+	}
 }

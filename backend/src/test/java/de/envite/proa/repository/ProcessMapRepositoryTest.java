@@ -33,7 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-public class ProcessMapRepositoryTest {
+class ProcessMapRepositoryTest {
 
 	private static final Long PROJECT_ID = 1L;
 
@@ -103,7 +103,7 @@ public class ProcessMapRepositoryTest {
 	}
 
 	@Test
-	public void testGetProcessMap() {
+	void testGetProcessMap() {
 		// Arrange
 
 		ProcessMapRepositoryImpl repository = new ProcessMapRepositoryImpl(//

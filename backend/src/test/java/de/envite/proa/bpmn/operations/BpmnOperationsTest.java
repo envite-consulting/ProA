@@ -4,7 +4,6 @@ import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.collaboration.ParticipantDetails;
 import de.envite.proa.entities.datastore.DataAccess;
 import de.envite.proa.entities.process.*;
-import de.envite.proa.repository.ProcessmodelRepositoryTest;
 import de.envite.proa.rest.FileService;
 import org.camunda.bpm.model.bpmn.Bpmn;
 import org.camunda.bpm.model.bpmn.BpmnModelInstance;
@@ -69,7 +68,7 @@ public class BpmnOperationsTest {
 
 	private static File loadFile(String fileName) {
 		return new File(Objects.requireNonNull(
-				ProcessmodelRepositoryTest.class.getClassLoader().getResource(fileName)).getFile());
+				BpmnOperationsTest.class.getClassLoader().getResource(fileName)).getFile());
 	}
 
 	private static Boolean isValidXml(String xml) {
