@@ -30,6 +30,8 @@ public class ProcessModelUsecase {
 
 	public Long saveProcessModel(Long projectId, String name, String xml, String description, String isCollaboration,
 			String parentBpmnProcessId) {
+		
+		System.out.println("save Process Model enter");
 
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
@@ -47,9 +49,15 @@ public class ProcessModelUsecase {
 			xml = processOperations.addEmptyProcessRefs(xml);
 		}
 
+		System.out.println("process operations start");
+		
 		ProcessModel processModel = createProcessModel(name, description, xml, parentBpmnProcessId, isCollaboration);
 
+		System.out.println("process operations end");
+		
+		
 		if (isCollaboration.equals("false")) {
+			System.out.println("save process model iscollaboration false");
 			return repository.saveProcessModel(projectId, processModel);
 		}
 
@@ -58,6 +66,8 @@ public class ProcessModelUsecase {
 
 		List<Long> participantIds = new ArrayList<>();
 
+		
+		System.out.println("save participants");
 		participants //
 				.forEach(participant -> { //
 					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
@@ -65,13 +75,18 @@ public class ProcessModelUsecase {
 					participantIds.add(participantId); //
 				});
 
+		System.out.println("get bpmn ids");
 		Map<String, Long> bpmnIdToIdMap = participantIds //
 				.stream() //
 				.collect(Collectors.toMap(id -> repository.getProcessDetails(id).getBpmnProcessId(), id -> id));
 
+		System.out.println("get message flows");
 		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
+		
+		System.out.println("save message flows");
 		repository.saveMessageFlows(messageFlows, projectId);
 
+		System.out.println("save message flows end");
 		return collaborationId;
 	}
 

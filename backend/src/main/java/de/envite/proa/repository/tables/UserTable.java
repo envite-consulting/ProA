@@ -26,7 +26,7 @@ public class UserTable {
 	@OneToMany
 	private List<ProjectTable> projects;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	private SettingsTable settings;
 
 	private Integer failedLoginAttempts = 0;

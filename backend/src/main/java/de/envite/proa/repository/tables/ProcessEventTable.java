@@ -22,6 +22,6 @@ public class ProcessEventTable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	private ProcessModelTable processModel;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }

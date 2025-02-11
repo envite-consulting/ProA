@@ -30,6 +30,6 @@ public class MessageFlowTable {
 	@Enumerated(EnumType.STRING)
 	private ProcessElementType calledElementType;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }

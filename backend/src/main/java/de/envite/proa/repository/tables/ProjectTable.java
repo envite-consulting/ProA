@@ -20,7 +20,7 @@ public class ProjectTable {
 	private LocalDateTime createdAt;
 	private LocalDateTime modifiedAt;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private UserTable user;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
