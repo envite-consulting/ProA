@@ -270,8 +270,9 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		}
 
 		List<ProcessModelTable> oldParents = new ArrayList<>(oldProcess.getParents());
+		List<Long> newProcessParentIds = newProcess.getParents().stream().map(ProcessModelTable::getId).toList();
 		for (ProcessModelTable oldParent : oldParents) {
-			if (!newProcess.getParents().contains(oldParent)) {
+			if (!newProcessParentIds.contains(oldParent.getId())) {
 				newProcess.getParents().add(oldParent);
 				oldParent.getChildren().add(newProcess);
 			}
@@ -283,8 +284,9 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		}
 
 		List<ProcessModelTable> oldChildren = new ArrayList<>(newProcess.getChildren());
+		List<Long> newProcessChildrenIds = newProcess.getChildren().stream().map(ProcessModelTable::getId).toList();
 		for (ProcessModelTable oldChild : oldChildren) {
-			if (!newProcess.getChildren().contains(oldChild)) {
+			if (!newProcessChildrenIds.contains(oldChild.getId())) {
 				newProcess.getChildren().add(oldChild);
 				oldChild.getParents().add(newProcess);
 			}

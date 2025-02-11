@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +71,8 @@ public class ProcessModelResource {
 			errorResponse.put("error", errorMessage);
 			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
 			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 

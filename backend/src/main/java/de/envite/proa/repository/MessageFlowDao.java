@@ -56,4 +56,13 @@ public class MessageFlowDao {
 				.setParameter("project", projectTable) //
 				.getResultList(); //
 	}
+
+	@Transactional
+	public void deleteForProcessModel(Long id) {
+		ProcessModelTable processModel = em.find(ProcessModelTable.class, id);
+		em.createQuery(
+						"DELETE FROM MessageFlowTable mf WHERE mf.callingProcess = :processModel OR mf.calledProcess = :processModel")
+				.setParameter("processModel", processModel)//
+				.executeUpdate();
+	}
 }
