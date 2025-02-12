@@ -39,7 +39,7 @@ public class ProcessModelTable {
 	@Column
 	private LocalDateTime createdAt;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 
 	@ManyToMany(fetch = FetchType.EAGER)
