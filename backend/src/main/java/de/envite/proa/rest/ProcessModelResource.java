@@ -9,12 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import de.envite.proa.security.RolesAllowedIfWebVersion;
+import de.envite.proa.entities.RelatedProcessModelRequest;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
-import org.jboss.resteasy.reactive.RestResponse;
-import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
 
 import de.envite.proa.entities.ProcessDetails;
 import de.envite.proa.entities.ProcessInformation;
@@ -51,7 +50,8 @@ public class ProcessModelResource {
 			String content = readFileToString(processModel);
 			fileName = fileName.replace(".bpmn", "");
 			return Response //
-					.ok(usecase.saveProcessModel( //
+					.status(Response.Status.CREATED)
+					.entity(usecase.saveProcessModel( //
 							projectId, //
 							fileName, //
 							content, //
@@ -73,11 +73,23 @@ public class ProcessModelResource {
 	@Path("project/{projectId}/process-model/{oldProcessId}")
 	@POST
 	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public Long replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
+	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
 			@RestForm String fileName, @RestForm String description) {
 		String content = readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
-		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description, null);
+		return Response
+				.status(Response.Status.CREATED)
+				.entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description, null))
+				.build();
+	}
+
+	@POST
+	@Path("/project/{projectId}/process-model/{id}/related-process-model")
+	@RolesAllowedIfWebVersion({"User", "Admin"})
+	public Response addRelatedProcessModel(@RestPath Long projectId, Long id,
+										   RelatedProcessModelRequest request) {
+		usecase.addRelatedProcessModel(projectId, id, request.getRelatedProcessModelIds());
+		return Response.status(Response.Status.CREATED).build();
 	}
 
 	/**
@@ -98,9 +110,9 @@ public class ProcessModelResource {
 	@Path("/process-model/{id}")
 	@DELETE
 	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public RestResponse<?> deleteProcessModel(@RestPath Long id) {
+	public Response deleteProcessModel(@RestPath Long id) {
 		usecase.deleteProcessModel(id);
-		return ResponseBuilder.ok().build();
+		return Response.status(Response.Status.OK).build();
 	}
 
 	/**

@@ -65,7 +65,7 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable getProcessModelById(ProjectTable projectTable, Long id) {
-		return em
+		return em//
 				.createQuery("""
                     SELECT pm FROM ProcessModelTable pm
                     WHERE pm.project = :project AND pm.id = :id
@@ -73,6 +73,18 @@ public class ProcessModelDao {
 				.setParameter(PROJECT, projectTable)
 				.setParameter("id", id)
 				.getSingleResult();
+	}
+
+	@Transactional
+	public List<ProcessModelTable> getProcessModelsByIds(ProjectTable projectTable, List<Long> ids) {
+		return em//
+				.createQuery("""
+                 SELECT pm FROM ProcessModelTable pm
+                 WHERE pm.project = :project AND pm.id IN :ids
+                 """, ProcessModelTable.class)
+				.setParameter(PROJECT, projectTable)
+				.setParameter("ids", ids)
+				.getResultList();
 	}
 
 	@Transactional
@@ -124,7 +136,8 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<ProcessModelTable> findWithRelatedProcessModels(Long id) {
-		return em.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
+		return em//
+				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"LEFT JOIN FETCH p.relatedProcessModels r " + //
 						"WHERE p.id = :id OR r.relatedProcessModelId = :id", ProcessModelTable.class)
 				.setParameter("id", id)
@@ -133,7 +146,8 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<ProcessEventTable> findEventsForProcessModels(List<ProcessModelTable> processModels) {
-		return em.createQuery("SELECT e FROM ProcessEventTable e " + //
+		return em//
+				.createQuery("SELECT e FROM ProcessEventTable e " + //
 						"WHERE e.processModel IN :processModels", ProcessEventTable.class)
 				.setParameter(PROCESS_MODELS, processModels)
 				.getResultList();
@@ -141,7 +155,8 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<CallActivityTable> findCallActivitiesForProcessModels(List<ProcessModelTable> processModels) {
-		return em.createQuery("SELECT ca FROM CallActivityTable ca " + //
+		return em//
+				.createQuery("SELECT ca FROM CallActivityTable ca " + //
 						"WHERE ca.processModel IN :processModels", CallActivityTable.class)
 				.setParameter(PROCESS_MODELS, processModels)
 				.getResultList();
@@ -154,11 +169,11 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, ProjectTable projectTable) {
-		List<ProcessModelTable> processModels = em //
+		List<ProcessModelTable> processModels = em//
 				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
-				.setParameter("bpmnProcessId", bpmnProcessId) //
-				.setParameter(PROJECT, projectTable) //
+				.setParameter("bpmnProcessId", bpmnProcessId)//
+				.setParameter(PROJECT, projectTable)//
 				.getResultList();
 
 		return !processModels.isEmpty() ? processModels.getFirst() : null;
@@ -177,11 +192,11 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable findByName(String name, ProjectTable projectTable) {
-		List<ProcessModelTable> processModels = em //
+		List<ProcessModelTable> processModels = em//
 				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"WHERE p.name = :name AND p.project = :project", ProcessModelTable.class)
-				.setParameter("name", name) //
-				.setParameter(PROJECT, projectTable) //
+				.setParameter("name", name)//
+				.setParameter(PROJECT, projectTable)//
 				.getResultList();
 		return processModels.isEmpty() ? null : processModels.getFirst();
 	}

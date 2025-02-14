@@ -12,4 +12,5 @@ public class RelatedProcessModel {
     private Long relatedProcessModelId;
     private String processName;
     private Integer level;
+    private boolean manuallyAdded;
 }

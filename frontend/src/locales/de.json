@@ -51,6 +51,7 @@
   },
   "general": {
     "activity": "Aktivität",
+    "addToRelatedProcessModels": "Prozessmodell zu Prozessebenen hinzufügen",
     "callActivities": "Aufrufaktivitäten",
     "cancel": "Abbrechen",
     "clientId": "Client ID",

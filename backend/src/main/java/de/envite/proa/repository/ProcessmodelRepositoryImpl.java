@@ -87,6 +87,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	@Override
+	public void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds) {
+		relatedProcessModelRepository.addRelatedProcessModel(projectId, id, relatedProcessModelIds);
+	}
+
+	@Override
 	public List<ProcessInformation> getProcessInformation(Long projectId, String levelParam) {
 		ProjectTable projectTable = projectDao.findById(projectId);
 

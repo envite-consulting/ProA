@@ -20,6 +20,9 @@ public class RelatedProcessModelTable {
     @Column
     private Integer level;
 
+    @Column
+    private boolean manuallyAdded;
+
     @ManyToOne
     private ProcessModelTable processModel;
 }

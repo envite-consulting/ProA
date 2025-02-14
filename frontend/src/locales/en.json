@@ -51,6 +51,7 @@
   },
   "general": {
     "activity": "Activity",
+    "addToRelatedProcessModels": "Add process model to process levels",
     "callActivities": "Call Activities",
     "cancel": "Cancel",
     "clientId": "Client ID",

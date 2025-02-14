@@ -104,6 +104,10 @@ public class ProcessModelUsecase {
 				processType);
 	}
 
+	public void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds) {
+		repository.addRelatedProcessModel(projectId, id, relatedProcessModelIds);
+	}
+
 	public String getProcessModel(Long id) {
 		return repository.getProcessModel(id);
 	}
