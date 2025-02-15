@@ -131,7 +131,8 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        {{ $t('processList.uploadingProcessModels') }}
+        {{ $t('processList.uploadingProcessModel') }}: {{ currentlyUploadingProcessModel.name }}
+        ({{ currentUploadStatus }})
         <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
       </template>
 
@@ -197,6 +198,9 @@
       <template v-slot:text v-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
         {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
       </template>
+      <template v-slot:text v-if="errorType === ErrorType.UNKNOWN">
+        {{ $t("processList.unknownErrorMsg") }}
+      </template>
       <template v-slot:actions>
         <div class="ms-auto">
           <v-btn
@@ -222,7 +226,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import axios from 'axios';
+import axios, {AxiosError} from 'axios';
 import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
@@ -283,7 +287,8 @@ interface HttpError {
 
 enum ErrorType {
   ALREADY_EXISTING = "ALREADY_EXISTING",
-  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION"
+  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION",
+  UNKNOWN = "UNKNOWN",
 }
 
 export default defineComponent({
@@ -312,7 +317,9 @@ export default defineComponent({
     selectedProjectName: '' as string,
     selectedVersionName: '' as string,
     fileExtensionMatcher: /.[^/.]+$/,
-    isFetching: false as boolean
+    isFetching: false as boolean,
+    currentlyUploadingProcessModel: {} as ProcessModelToUpload,
+    currentUploadStatus: "" as string,
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -498,22 +505,35 @@ export default defineComponent({
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
         let error = false;
+        let errorType = ErrorType.ALREADY_EXISTING;
         this.alreadyExistingBpmnProcessIds = [];
+        const numProcessModels = this.processModelsToUpload.length;
+        let i = 0;
         for (const processModel of this.processModelsToUpload) {
           this.progress += progressSteps;
+          this.currentlyUploadingProcessModel = processModel;
+          i += 1;
+          this.currentUploadStatus = `${i}/${numProcessModels}`;
 
           try {
             await this.uploadProcessModel(processModel);
           } catch (e) {
-            error = true;
-            this.alreadyExistingBpmnProcessIds.push((e as HttpError).response.data.data);
+            if ((e as AxiosError).response?.status === 400) {
+              error = true;
+              this.alreadyExistingBpmnProcessIds.push(
+                (e as HttpError).response.data.data,
+              );
+            } else {
+              error = true;
+              errorType = ErrorType.UNKNOWN;
+            }
           }
 
           this.progress += progressSteps;
         }
         this.afterUploadActions();
         if (error) {
-          this.errorType = ErrorType.ALREADY_EXISTING;
+          this.errorType = errorType;
           this.errorDialog = true;
         }
       }

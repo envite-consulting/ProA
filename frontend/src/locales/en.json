@@ -114,7 +114,9 @@
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
     "toTheProcessMap": "To the Process Map",
+    "unknownErrorMsg": "Unknown error while uploading process models.",
     "uploadProcessModels": "Upload Process Models",
+    "uploadingProcessModel": "Uploading Process Model",
     "uploadingProcessModels": "Uploading Process Models..."
   },
   "processMap": {
