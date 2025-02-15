@@ -3,6 +3,7 @@ package de.envite.proa.repository.processmodel;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.envite.proa.XmlConverter;
@@ -23,13 +24,13 @@ import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
 
-@ApplicationScoped
+@RequestScoped
 public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
-    private ProjectDao projectDao;
     private ProcessModelDao processModelDao;
     private DataStoreDao dataStoreDao;
     private DataStoreConnectionDao dataStoreConnectionDao;
@@ -39,7 +40,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
     private MessageFlowDao messageFlowDao;
 
     @Inject
-    public ProcessmodelRepositoryImpl(ProjectDao projectDao, //
+    public ProcessmodelRepositoryImpl(//
                                       ProcessModelDao processModelDao, //
                                       DataStoreDao dataStoreDao, //
                                       DataStoreConnectionDao dataStoreConnectionDao, //
@@ -47,7 +48,6 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
                                       ProcessConnectionDao processConnectionDao, //
                                       ProcessEventDao processEventDao, //
                                       MessageFlowDao messageFlowDao) {
-        this.projectDao = projectDao;
         this.processModelDao = processModelDao;
         this.dataStoreDao = dataStoreDao;
         this.dataStoreConnectionDao = dataStoreConnectionDao;
@@ -60,8 +60,9 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
     @Override
     public Long saveProcessModel(Long projectId, ProcessModel processModel) {
 
-        ProjectTable projectTable = projectDao.findById(projectId);
-
+        ProjectTable projectTable = new ProjectTable();
+        projectTable.setId(projectId);
+        
         ProcessModelTable table = ProcessmodelMapper.map(processModel, projectTable);
         table.setCreatedAt(LocalDateTime.now());
         table.setProject(projectTable);
@@ -69,11 +70,9 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
         String parentBpmnProcessId = processModel.getParentBpmnProcessId();
         processModelDao.persist(table);
         if (parentBpmnProcessId != null) {
-            ProcessModelTable parent = processModelDao.findByBpmnProcessId(parentBpmnProcessId, projectTable);
+            ProcessModelTable parent = processModelDao.findByBpmnProcessIdWithChildren(parentBpmnProcessId, projectTable);
             parent.getChildren().add(table);
             processModelDao.merge(parent);
-            table.getParents().add(parent);
-            processModelDao.merge(table);
         }
 
         connectEvents(processModel, table, projectTable);
@@ -88,9 +87,12 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
     @Override
     public List<ProcessInformation> getProcessInformation(Long projectId) {
 
-        ProjectTable projectTable = projectDao.findById(projectId);
-        return processModelDao //
-                .getProcessModels(projectTable) //
+    	
+        ProjectTable projectTable = new ProjectTable();
+        projectTable.setId(projectId);
+        
+        List<ProcessInformation> processinforomation = processModelDao //
+                .getProcessModelsWithParentsAndChildren(projectTable) //
                 .stream() //
                 .map(model -> new ProcessInformation( //
                         model.getId(), //
@@ -103,6 +105,9 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
                         model.getChildren().stream().map(ProcessModelTable::getBpmnProcessId) //
                                 .collect(Collectors.toList()))) //
                 .collect(Collectors.toList());
+        
+        
+        return processinforomation;
     }
 
     @Override
@@ -115,9 +120,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
     @Override
     public void saveMessageFlows(List<MessageFlowDetails> messageFlows, Long projectId) {
-        ProjectTable projectTable = projectDao.findById(projectId);
+        ProjectTable projectTable = new ProjectTable();
+        projectTable.setId(projectId);
+        
         messageFlows.forEach(messageFlow -> {
-            messageFlowDao.persist(MessageFlowMapper.map(messageFlow, projectTable, processModelDao));
+            messageFlowDao.persist(MessageFlowMapper.map(messageFlow, projectTable));
         });
     }
 
@@ -290,9 +297,14 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
             processConnectionDao.persist(connection);
         });
     }
-
+    
     @Override
-    public String getProcessModel(Long id) {
+    public ProcessModelTable getProcessModel(Long id) {
+        return processModelDao.find(id);
+    }
+    
+    @Override
+    public String getProcessModelXml(Long id) {
         byte[] xmlBytes = processModelDao.find(id).getBpmnXml();
         return XmlConverter.bytesToString(xmlBytes);
     }
@@ -314,7 +326,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
         }
 
         processModelIdsToDelete.add(id);
-        ProcessModelTable table = processModelDao.find(id);
+        ProcessModelTable table = processModelDao.findWithParentsAndChildren(id);
 
         List<ProcessModelTable> children = table.getChildren();
         for (ProcessModelTable child : children) {
@@ -334,7 +346,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
     @Override
     public ProcessModelTable findByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId) {
-        ProjectTable project = projectDao.findById(projectId);
+        ProjectTable project = new ProjectTable();
+        project.setId(projectId);
         ProcessModelTable processModel = processModelDao.findByName(name, project);
         if (processModel != null) {
             return processModel;

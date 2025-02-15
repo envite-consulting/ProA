@@ -12,7 +12,7 @@ public interface ProcessModelRepository {
 
 	Long saveProcessModel(Long projectId, ProcessModel processModel);
 
-	String getProcessModel(Long id);
+	String getProcessModelXml(Long id);
 
 	List<ProcessInformation> getProcessInformation(Long projectId);
 
@@ -23,4 +23,6 @@ public interface ProcessModelRepository {
 	void saveMessageFlows(List<MessageFlowDetails> messageFlows, Long projectId);
 
 	ProcessModelTable findByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId);
+
+	ProcessModelTable getProcessModel(Long id);
 }

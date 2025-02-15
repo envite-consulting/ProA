@@ -18,6 +18,7 @@ import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -212,16 +213,13 @@ class ProcessMapRepositoryTest {
 
 	@Test
 	public void testCopyMessageFlowsAndRelations() {
-		ProjectTable project = new ProjectTable();
-		when(projectDao.findById(PROJECT_ID)).thenReturn(project);
-
 		ProcessModelTable oldProcess = new ProcessModelTable();
 		oldProcess.setId(PROCESS_MODEL_ID_1);
-		when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(oldProcess);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_1)).thenReturn(oldProcess);
 
 		ProcessModelTable newProcess = new ProcessModelTable();
 		newProcess.setId(PROCESS_MODEL_ID_2);
-		when(processModelDao.find(PROCESS_MODEL_ID_2)).thenReturn(newProcess);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_2)).thenReturn(newProcess);
 
 		ProcessModelTable thirdProcess = new ProcessModelTable();
 		thirdProcess.setId(PROCESS_MODEL_ID_3);
@@ -241,7 +239,7 @@ class ProcessMapRepositoryTest {
 			messageFlows.add(messageFlow);
 		}
 
-		when(messageFlowDao.getMessageFlows(project, oldProcess)).thenReturn(messageFlows);
+		when(messageFlowDao.getMessageFlows(any(), eq(oldProcess))).thenReturn(messageFlows);
 
 		ProcessModelTable oldParent1 = new ProcessModelTable();
 		oldParent1.setName(OLD_PARENT_NAME_1);
@@ -270,10 +268,13 @@ class ProcessMapRepositoryTest {
 
 		repository.copyMessageFlowsAndRelations(PROJECT_ID, PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2);
 
-		verify(projectDao, times(1)).findById(PROJECT_ID);
-		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_1);
-		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_2);
-		verify(messageFlowDao, times(1)).getMessageFlows(project, oldProcess);
+		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
+		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_2);
+		
+		
+		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
+		verify(messageFlowDao, times(1)).getMessageFlows(projectCaptor.capture(), eq(oldProcess));
+		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
 		messageFlows.forEach(messageFlow -> verify(messageFlowDao, times(1)).merge(messageFlow));
 		verify(processModelDao, times(1)).merge(oldParents.get(0));
 		verify(processModelDao, times(1)).merge(oldParents.get(1));

@@ -56,7 +56,8 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	@Override
 	public ProcessMap getProcessMap(Long projectId) {
 
-		ProjectTable projectTable = projectDao.findById(projectId);
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(projectId);
 		List<ProcessDetails> processModelInformation = getProcessDetailsWithoutCollaborations(projectTable);
 		List<ProcessConnection> processConnections = getProcessConnectionsWithoutCollaborations(projectTable);
 		List<MessageFlowDetails> messageFlows = getMessageFlows(projectTable);
@@ -265,9 +266,10 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	@Override
 	public void copyMessageFlowsAndRelations(Long projectId, Long oldProcessId, Long newProcessId) {
-		ProjectTable project = projectDao.findById(projectId);
-		ProcessModelTable oldProcess = processModelDao.find(oldProcessId);
-		ProcessModelTable newProcess = processModelDao.find(newProcessId);
+		ProjectTable project = new ProjectTable();
+		project.setId(projectId);
+		ProcessModelTable oldProcess = processModelDao.findWithParentsAndChildren(oldProcessId);
+		ProcessModelTable newProcess = processModelDao.findWithParentsAndChildren(newProcessId);
 		List<MessageFlowTable> messageFlows = messageFlowDao.getMessageFlows(project, oldProcess);
 		for (MessageFlowTable messageFlow : messageFlows) {
 			if (messageFlow.getCalledProcess().getId().equals(oldProcessId)) {
