@@ -114,7 +114,7 @@ public class ProcessModelUsecase {
 	}
 
 	public String getProcessModel(Long id) {
-		return repository.getProcessModel(id);
+		return repository.getProcessModelXml(id);
 	}
 
 	public List<ProcessInformation> getProcessInformation(Long projectId) {

@@ -33,7 +33,7 @@ public class ProcessConnectionTable {
 
 	private String calledElement;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 
 	private Boolean userCreated;

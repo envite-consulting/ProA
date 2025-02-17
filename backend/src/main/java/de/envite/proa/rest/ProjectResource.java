@@ -18,6 +18,8 @@ import jakarta.ws.rs.core.MediaType;
 @Path("/api")
 public class ProjectResource {
 
+    private static final String USER_ID = "userId";
+
     @Inject
     private ProjectUsecase usecase;
 
@@ -39,14 +41,14 @@ public class ProjectResource {
     @RolesAllowedIfWebVersion({"User", "Admin"})
     public Project createProject(@RestForm String name, @RestForm String version) {
         if (appMode.equals("web")) {
-            Long userId = Long.parseLong(jwt.getClaim("userId").toString());
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
             return usecase.createProject(userId, name, version);
         }
         return usecase.createProject(name, version);
     }
 
     /**
-     * This methods gets the names and the corresponding ids of all projects in
+     * This method gets the names and the corresponding ids of all projects in
      * order to show them as tiles in the frontend
      */
     @GET
@@ -55,7 +57,7 @@ public class ProjectResource {
     @RolesAllowedIfWebVersion({"User", "Admin"})
     public List<Project> getProjects() {
         if (appMode.equals("web")) {
-            Long userId = Long.parseLong(jwt.getClaim("userId").toString());
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
             return usecase.getProjects(userId);
         }
         return usecase.getProjects();
@@ -67,7 +69,7 @@ public class ProjectResource {
     @RolesAllowedIfWebVersion({"User", "Admin"})
     public Response getProject(@RestPath Long projectId) {
         if (appMode.equals("web")) {
-            Long userId = Long.parseLong(jwt.getClaim("userId").toString());
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
             try {
                 return Response.ok().entity(usecase.getProject(userId, projectId)).build();
             } catch (NotFoundException e) {
@@ -85,5 +87,17 @@ public class ProjectResource {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @DELETE
+    @Path("/project/{projectId}")
+    @RolesAllowedIfWebVersion({"User", "Admin"})
+    public void deleteProject(@RestPath Long projectId) {
+        if (appMode.equals("web")) {
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
+            usecase.deleteProject(userId, projectId);
+            return;
+        }
+        usecase.deleteProject(projectId);
     }
 }

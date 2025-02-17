@@ -218,12 +218,12 @@ public class ProcessModelUsecaseTest {
 
 	@Test
 	public void testGetProcessModel() {
-		when(repository.getProcessModel(TEST_PROCESS_MODEL_ID)).thenReturn(TEST_PROCESS_XML);
+		when(repository.getProcessModelXml(TEST_PROCESS_MODEL_ID)).thenReturn(TEST_PROCESS_XML);
 
 		String result = processModelUsecase.getProcessModel(TEST_PROCESS_MODEL_ID);
 
 		assertEquals(TEST_PROCESS_XML, result);
-		verify(repository, times(1)).getProcessModel(TEST_PROCESS_MODEL_ID);
+		verify(repository, times(1)).getProcessModelXml(TEST_PROCESS_MODEL_ID);
 	}
 
 	@Test
@@ -384,11 +384,11 @@ public class ProcessModelUsecaseTest {
 
 		when(repository.saveProcessModel(eq(TEST_PROJECT_ID), eq(participantModel))).thenReturn(PARTICIPANT_ID);
 
-		ProcessDetails participantProcessDetails = new ProcessDetails();
+		ProcessModelTable participantProcessDetails = new ProcessModelTable();
 		participantProcessDetails.setId(PARTICIPANT_ID);
 		participantProcessDetails.setBpmnProcessId(PARTICIPANT_BPMN_ID);
 
-		when(repository.getProcessDetails(PARTICIPANT_ID)).thenReturn(participantProcessDetails);
+		when(repository.getProcessModel(PARTICIPANT_ID)).thenReturn(participantProcessDetails);
 
 		List<MessageFlowDetails> messageFlowDetailsList = new ArrayList<>();
 		Map<String, Long> bpmnIdToIdMap = new HashMap<>();
@@ -447,6 +447,8 @@ public class ProcessModelUsecaseTest {
 		verify(repository, times(2)).saveProcessModel(any(Long.class), any(ProcessModel.class));
 		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(collaborationModel));
 		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(participantModel));
+
+		verify(repository, times(1)).getProcessModel(PARTICIPANT_ID);
 
 		verify(processOperations, times(1)).getMessageFlows(eq(TEST_PROCESS_XML), eq(bpmnIdToIdMap));
 		verify(repository, times(1)).saveMessageFlows(messageFlowDetailsList, TEST_PROJECT_ID);

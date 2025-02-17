@@ -21,6 +21,6 @@ public class DataStoreConnectionTable {
 	@Enumerated(EnumType.STRING)
 	private DataAccess access;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }

@@ -10,6 +10,7 @@ import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -94,18 +95,19 @@ class ProjectRepositoryImplTest {
 
 	@Test
 	void testGetProjectsForUser() {
-		UserTable user = new UserTable();
+
 		ProjectTable projectTable = new ProjectTable();
 		projectTable.setId(PROJECT_ID);
-		when(userDao.findById(USER_ID)).thenReturn(user);
-		when(projectDao.getProjectsForUser(user)).thenReturn(List.of(projectTable));
+
+		when(projectDao.getProjectsForUser(any())).thenReturn(List.of(projectTable));
 
 		List<Project> projects = projectRepository.getProjects(USER_ID);
 		assertFalse(projects.isEmpty());
 		assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
 
-		verify(userDao).findById(USER_ID);
-		verify(projectDao).getProjectsForUser(user);
+		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
+		verify(projectDao).getProjectsForUser(userCaptor.capture());
+		assertEquals(USER_ID, userCaptor.getValue().getId());
 	}
 
 	@Test
@@ -131,45 +133,42 @@ class ProjectRepositoryImplTest {
 
 	@Test
 	void testGetProjectByUserAndId() {
-		UserTable user = new UserTable();
+
 		ProjectTable projectTable = new ProjectTable();
-		when(userDao.findById(USER_ID)).thenReturn(user);
+		projectTable.setId(PROJECT_ID);
+
 		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
-		when(projectDao.findByUserAndId(user, projectTable.getId())).thenReturn(projectTable);
+		when(projectDao.findByUserAndId(any(), any())).thenReturn(projectTable);
 
 		Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
 		assertNotNull(retrievedProject);
 		assertEquals(projectTable.getId(), retrievedProject.getId());
 
-		verify(userDao).findById(USER_ID);
-		verify(projectDao).findById(projectTable.getId());
-		verify(projectDao).findByUserAndId(user, projectTable.getId());
-	}
-
-	@Test
-	void testGetProjectByUserAndId_NotFound() {
-		UserTable user = new UserTable();
-		when(userDao.findById(USER_ID)).thenReturn(user);
-		when(projectDao.findById(PROJECT_ID)).thenReturn(null);
-
-		assertThrows(NotFoundException.class, () -> projectRepository.getProject(USER_ID, PROJECT_ID));
-
-		verify(userDao).findById(USER_ID);
-		verify(projectDao).findById(PROJECT_ID);
+		
+		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
+		ArgumentCaptor<Long> projectIdCaptor = ArgumentCaptor.forClass(Long.class);
+		
+		verify(projectDao).findByUserAndId(userCaptor.capture(), projectIdCaptor.capture());
+		
+		assertEquals(USER_ID, userCaptor.getValue().getId());
+		assertEquals(PROJECT_ID, projectIdCaptor.getValue());
 	}
 
 	@Test
 	void testGetProjectByUserAndId_Forbidden() {
-		UserTable user = new UserTable();
+
 		ProjectTable projectTable = new ProjectTable();
-		when(userDao.findById(USER_ID)).thenReturn(user);
-		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
-		when(projectDao.findByUserAndId(user, projectTable.getId())).thenReturn(null);
+		projectTable.setId(PROJECT_ID);
+		when(projectDao.findByUserAndId(any(), any())).thenReturn(null);
 
 		assertThrows(ForbiddenException.class, () -> projectRepository.getProject(USER_ID, projectTable.getId()));
 
-		verify(userDao).findById(USER_ID);
-		verify(projectDao).findById(projectTable.getId());
-		verify(projectDao).findByUserAndId(user, projectTable.getId());
+		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
+		ArgumentCaptor<Long> projectIdCaptor = ArgumentCaptor.forClass(Long.class);
+		
+		verify(projectDao).findByUserAndId(userCaptor.capture(), projectIdCaptor.capture());
+		
+		assertEquals(USER_ID, userCaptor.getValue().getId());
+		assertEquals(PROJECT_ID, projectIdCaptor.getValue());
 	}
 }

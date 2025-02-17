@@ -1,21 +1,18 @@
 package de.envite.proa.repository;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
+
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.process.ProcessElementType;
 import de.envite.proa.repository.messageflow.MessageFlowMapper;
-import de.envite.proa.repository.processmodel.ProcessModelDao;
 import de.envite.proa.repository.tables.MessageFlowTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class MessageFlowMapperTest {
 
@@ -27,9 +24,6 @@ class MessageFlowMapperTest {
 	private static final Long CALLED_PROCESS_ID = 2L;
 	private static final ProcessElementType CALLING_ELEMENT_TYPE = ProcessElementType.END_EVENT;
 	private static final ProcessElementType CALLED_ELEMENT_TYPE = ProcessElementType.START_EVENT;
-
-	@Mock
-	private ProcessModelDao processModelDao;
 
 	private ProjectTable project;
 
@@ -53,9 +47,6 @@ class MessageFlowMapperTest {
 		ProcessModelTable calledProcess = new ProcessModelTable();
 		calledProcess.setId(CALLED_PROCESS_ID);
 
-		when(processModelDao.find(CALLING_PROCESS_ID)).thenReturn(callingProcess);
-		when(processModelDao.find(CALLED_PROCESS_ID)).thenReturn(calledProcess);
-
 		MessageFlowDetails details = new MessageFlowDetails();
 		details.setBpmnId(BPMN_ID);
 		details.setName(NAME);
@@ -65,7 +56,7 @@ class MessageFlowMapperTest {
 		details.setCallingElementType(CALLING_ELEMENT_TYPE);
 		details.setCalledElementType(CALLED_ELEMENT_TYPE);
 
-		MessageFlowTable table = MessageFlowMapper.map(details, project, processModelDao);
+		MessageFlowTable table = MessageFlowMapper.map(details, project);
 
 		assertNotNull(table);
 		assertEquals(BPMN_ID, table.getBpmnId());
@@ -77,8 +68,6 @@ class MessageFlowMapperTest {
 		assertEquals(CALLED_ELEMENT_TYPE, table.getCalledElementType());
 		assertEquals(project, table.getProject());
 
-		verify(processModelDao).find(CALLING_PROCESS_ID);
-		verify(processModelDao).find(CALLED_PROCESS_ID);
 	}
 
 	@Test

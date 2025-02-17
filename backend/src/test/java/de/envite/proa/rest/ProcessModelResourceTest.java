@@ -3,6 +3,7 @@ package de.envite.proa.rest;
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import io.quarkus.test.junit.QuarkusTest;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,6 +112,7 @@ public class ProcessModelResourceTest {
 	@Test
 	public void testGetProcessDetails() {
 		ProcessDetails expected = new ProcessDetails();
+
 
 		when(usecase.getProcessDetails(PROCESS_ID)).thenReturn(expected);
 
