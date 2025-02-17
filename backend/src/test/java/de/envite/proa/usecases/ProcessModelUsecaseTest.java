@@ -27,7 +27,6 @@ public class ProcessModelUsecaseTest {
 	private static final String TEST_PROCESS_XML = "<xml></xml>";
 	private static final String TEST_DESCRIPTION = "Description";
 	private static final String TEST_BPMN_PROCESS_ID = "bpmn123";
-	private static final String PARENT_BPMN_PROCESS_ID = "parentBpmnProcessId";
 	private static final Long TEST_PROJECT_ID = 1L;
 	private static final Long TEST_PROCESS_MODEL_ID = 1L;
 	private static final Long TEST_OLD_PROCESS_ID = 2L;
@@ -161,10 +160,10 @@ public class ProcessModelUsecaseTest {
 		when(repository.findByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID, TEST_PROJECT_ID))
 				.thenReturn(processModel);
 
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION,
-					IS_COLLABORATION);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class,
+				() -> processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
+						TEST_DESCRIPTION,
+						IS_COLLABORATION));
 
 		assertEquals("Collaboration already exists: " + TEST_BPMN_PROCESS_ID, exception.getMessage());
 
@@ -259,10 +258,9 @@ public class ProcessModelUsecaseTest {
 	public void testReplaceProcessModel_IsCollaboration() {
 		when(processOperations.getIsCollaboration(TEST_PROCESS_XML)).thenReturn(true);
 
-		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-			processModelUsecase.replaceProcessModel(TEST_PROJECT_ID, TEST_OLD_PROCESS_ID,
-					REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION);
-		});
+		Exception exception = assertThrows(IllegalArgumentException.class,
+				() -> processModelUsecase.replaceProcessModel(TEST_PROJECT_ID, TEST_OLD_PROCESS_ID,
+						REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION));
 
 		assertEquals("Can't replace with collaboration", exception.getMessage());
 	}

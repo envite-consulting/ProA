@@ -219,4 +219,27 @@ public class ProjectResourceTest {
 		verify(jwt, never()).getClaim("userId");
 		verify(usecase, times(1)).getProject(PROJECT_ID_1);
 	}
+
+	@Test
+	public void testDeleteProject_DesktopMode() {
+		resource.appMode = APP_MODE_DESKTOP;
+		doNothing().when(usecase).deleteProject(PROJECT_ID_1);
+
+		resource.deleteProject(PROJECT_ID_1);
+
+		verify(jwt, never()).getClaim("userId");
+		verify(usecase, times(1)).deleteProject(PROJECT_ID_1);
+	}
+
+	@Test
+	public void testDeleteProject_WebMode() {
+		resource.appMode = APP_MODE_WEB;
+		doNothing().when(usecase).deleteProject(USER_ID, PROJECT_ID_1);
+		when(jwt.getClaim("userId")).thenReturn(USER_ID);
+
+		resource.deleteProject(PROJECT_ID_1);
+
+		verify(jwt, times(1)).getClaim("userId");
+		verify(usecase, times(1)).deleteProject(USER_ID, PROJECT_ID_1);
+	}
 }

@@ -98,4 +98,22 @@ public class ProjectUsecaseTest {
 		assertEquals(expectedProject, result);
 		verify(repository, times(1)).getProject(USER_ID, PROJECT_ID);
 	}
+
+	@Test
+	public void testDeleteProject_DesktopMode() {
+		doNothing().when(repository).deleteProject(USER_ID);
+
+		projectUsecase.deleteProject(USER_ID);
+
+		verify(repository, times(1)).deleteProject(USER_ID);
+	}
+
+	@Test
+	public void testDeleteProject_WebMode() {
+		doNothing().when(repository).deleteProject(USER_ID, PROJECT_ID);
+
+		projectUsecase.deleteProject(USER_ID, PROJECT_ID);
+
+		verify(repository, times(1)).deleteProject(USER_ID, PROJECT_ID);
+	}
 }

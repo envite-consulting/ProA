@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -354,7 +355,7 @@ class ProcessModelRepositoryTest {
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
 		verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture());
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-	
+
 	}
 
 	@Test
@@ -369,10 +370,10 @@ class ProcessModelRepositoryTest {
 
 		assertThat(result).isEqualTo(process);
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-		
+
 		verify(processModelDao, times(1)).findByName(eq(NEW_PROCESS_MODEL_NAME), projectCaptor.capture());
 		verify(processModelDao, times(1)).findByBpmnProcessId(eq(BPMN_PROCESS_ID), projectCaptor.capture());
-		
+
 		assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
 	}
 
@@ -389,12 +390,24 @@ class ProcessModelRepositoryTest {
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
 		verify(processModelDao, times(1)).findByName(eq(EXISTING_PROCESS_MODEL_NAME), projectCaptor.capture());
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-		
+
 		verify(processModelDao, never()).findByBpmnProcessId(any(), any());
 	}
 
 	@Test
 	public void testGetProcessModel() {
+		ProcessModelTable processModel = new ProcessModelTable();
+
+		when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(processModel);
+
+		ProcessModelTable result = repository.getProcessModel(PROCESS_MODEL_ID_1);
+
+		assertEquals(processModel, result);
+		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_1);
+	}
+
+	@Test
+	public void testGetProcessModelXml() {
 		ProcessModelTable processModel = new ProcessModelTable();
 		processModel.setBpmnXml(BPMN_XML);
 
@@ -438,9 +451,10 @@ class ProcessModelRepositoryTest {
 		repository.saveProcessModel(PROJECT_ID, processModel);
 
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
-		
+
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-		verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(eq(PARENT_PROCESS_MODEL_ID), projectCaptor.capture());
+		verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(eq(PARENT_PROCESS_MODEL_ID),
+				projectCaptor.capture());
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
 		verify(processModelDao, times(1)).merge(any(ProcessModelTable.class));
 	}
@@ -532,14 +546,16 @@ class ProcessModelRepositoryTest {
 		repository.saveProcessModel(PROJECT_ID, processModel);
 
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
-		
+
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-		
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.END), projectCaptor.capture());
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.INTERMEDIATE_THROW),
+
+		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.END),
 				projectCaptor.capture());
-		assertThat(projectCaptor.getAllValues()).allMatch(project-> project.getId().equals(PROJECT_ID));
-		
+		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL),
+				eq(EventType.INTERMEDIATE_THROW),
+				projectCaptor.capture());
+		assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
+
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
 	}
 
@@ -567,13 +583,15 @@ class ProcessModelRepositoryTest {
 		repository.saveProcessModel(PROJECT_ID, processModel);
 
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
-		
+
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.START), projectCaptor.capture());
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.INTERMEDIATE_CATCH),
+		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.START),
 				projectCaptor.capture());
-		assertThat(projectCaptor.getAllValues()).allMatch(project-> project.getId().equals(PROJECT_ID));
-		
+		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL),
+				eq(EventType.INTERMEDIATE_CATCH),
+				projectCaptor.capture());
+		assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
+
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
 	}
 }

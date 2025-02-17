@@ -12,9 +12,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -57,7 +57,8 @@ public class ProcessModelResourceTest {
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
 
-		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION)).thenReturn(PROCESS_ID);
+		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION,
+				IS_COLLABORATION)).thenReturn(PROCESS_ID);
 
 		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, //
 				DESCRIPTION, IS_COLLABORATION);
@@ -66,6 +67,26 @@ public class ProcessModelResourceTest {
 		assertThat(response.getStatus()).isEqualTo(200);
 		assertThat(response.getEntity()).isInstanceOf(Long.class);
 		assertThat((Long) response.getEntity()).isEqualTo(PROCESS_ID);
+
+		verify(fileService).readFileToString(processModel);
+		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
+	}
+
+	@Test
+	public void testUploadProcessModel_InternalError() {
+		File processModel = new File(Objects.requireNonNull( //
+				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
+		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
+
+		doThrow(RuntimeException.class).when(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML,
+				DESCRIPTION, IS_COLLABORATION);
+
+		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, //
+				DESCRIPTION, IS_COLLABORATION);
+
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isEqualTo(500);
+		assertThat(response.getEntity()).isNull();
 
 		verify(fileService).readFileToString(processModel);
 		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
@@ -110,7 +131,6 @@ public class ProcessModelResourceTest {
 	@Test
 	public void testGetProcessDetails() {
 		ProcessDetails expected = new ProcessDetails();
-
 
 		when(usecase.getProcessDetails(PROCESS_ID)).thenReturn(expected);
 

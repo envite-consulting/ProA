@@ -1,17 +1,17 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessDetails;
+import de.envite.proa.repository.processmodel.ProcessDetailsMapper;
+import de.envite.proa.repository.tables.ProcessEventTable;
+import de.envite.proa.repository.tables.ProcessModelTable;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import de.envite.proa.repository.processmodel.ProcessDetailsMapper;
-import org.junit.jupiter.api.Test;
-
-import de.envite.proa.entities.process.EventType;
-import de.envite.proa.entities.process.ProcessDetails;
-import de.envite.proa.repository.tables.ProcessEventTable;
-import de.envite.proa.repository.tables.ProcessModelTable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class ProcessDetailsMapperTest {
 
@@ -30,6 +30,12 @@ class ProcessDetailsMapperTest {
 
 	private static final String END_EVENT_LABEL = "End Event Label";
 	private static final String END_EVENT_ID = "end-event-id";
+
+	@Test
+	public void testClassInitialization() {
+		ProcessDetailsMapper mapper = new ProcessDetailsMapper();
+		assertNotNull(mapper);
+	}
 
 	@Test
 	public void testMap() {

@@ -59,9 +59,13 @@ class ProcessMapRepositoryTest {
 
 	private static final Long MESSAGE_FLOW_ID_2 = 2L;
 	private static final List<Long> MESSAGE_FLOW_IDS = List.of(1L, MESSAGE_FLOW_ID_2, 3L);
+	private static final Long OLD_PARENT_ID_1 = 21L;
 	private static final String OLD_PARENT_NAME_1 = "oldParentName1";
+	private static final Long OLD_PARENT_ID_2 = 22L;
 	private static final String OLD_PARENT_NAME_2 = "oldParentName2";
+	private static final Long OLD_CHILD_ID_1 = 23L;
 	private static final String OLD_CHILD_NAME_1 = "oldChildName1";
+	private static final Long OLD_CHILD_ID_2 = 24L;
 	private static final String OLD_CHILD_NAME_2 = "oldChildName2";
 
 	private static final Long CONNECTION_ID = 1L;
@@ -242,8 +246,10 @@ class ProcessMapRepositoryTest {
 		when(messageFlowDao.getMessageFlows(any(), eq(oldProcess))).thenReturn(messageFlows);
 
 		ProcessModelTable oldParent1 = new ProcessModelTable();
+		oldParent1.setId(OLD_PARENT_ID_1);
 		oldParent1.setName(OLD_PARENT_NAME_1);
 		ProcessModelTable oldParent2 = new ProcessModelTable();
+		oldParent2.setId(OLD_PARENT_ID_2);
 		oldParent2.setName(OLD_PARENT_NAME_2);
 		List<ProcessModelTable> oldParents = List.of(oldParent1, oldParent2);
 		oldProcess.getParents().addAll(oldParents);
@@ -253,8 +259,10 @@ class ProcessMapRepositoryTest {
 		doNothing().when(processModelDao).merge(oldParent2);
 
 		ProcessModelTable oldChild1 = new ProcessModelTable();
+		oldChild1.setId(OLD_CHILD_ID_1);
 		oldChild1.setName(OLD_CHILD_NAME_1);
 		ProcessModelTable oldChild2 = new ProcessModelTable();
+		oldChild2.setId(OLD_CHILD_ID_2);
 		oldChild2.setName(OLD_CHILD_NAME_2);
 		List<ProcessModelTable> oldChildren = List.of(oldChild1, oldChild2);
 		oldProcess.getChildren().addAll(oldChildren);
@@ -270,8 +278,7 @@ class ProcessMapRepositoryTest {
 
 		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
 		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_2);
-		
-		
+
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
 		verify(messageFlowDao, times(1)).getMessageFlows(projectCaptor.capture(), eq(oldProcess));
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
