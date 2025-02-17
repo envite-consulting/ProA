@@ -13,6 +13,6 @@ public class DataStoreTable {
 
 	private String label;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }

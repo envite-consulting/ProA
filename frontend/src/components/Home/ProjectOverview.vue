@@ -1,5 +1,4 @@
 <template>
-
   <v-container fluid style="margin: auto">
     <v-banner
       v-if="showLoggedInBanner && webVersion && isUserLoggedIn"
@@ -17,12 +16,26 @@
       </template>
     </v-banner>
 
-    <v-card v-for="(group, index) in projectGroups" :key="index" width="300px" height="252px"
+    <v-snackbar
+      v-model="snackbar.visible"
+      :color="snackbar.color"
+      timeout="3000"
+      centered
+    >
+      <v-icon left large class="snackbar-icon">
+        {{ snackbar.icon }}
+      </v-icon>
+      <span class="snackbar-text">{{ snackbar.message }}</span>
+    </v-snackbar>
+
+    <v-card v-for="(group, index) in projectGroups" :key="index" width="310px" height="310px"
             style="float: left; margin: 16px"
             :class="{ 'active-card': activeProjectByGroup[group.name]?.id === store.selectedProjectId }">
 
       <div class="d-flex flex-row justify-space-between align-center">
-        <v-card-title v-text="group.name"></v-card-title>
+        <v-card-title>
+          {{ group.name }}
+        </v-card-title>
 
         <p v-if="activeProjectByGroup[group.name]?.id === store.selectedProjectId" class="active-text">
           {{ $t('projectOverview.active') }}</p>
@@ -43,22 +56,42 @@
           <v-icon icon="mdi-plus" size="large"></v-icon>
           {{ $t('projectOverview.newVersion') }}
         </v-btn>
-        <div class="text-dots">{{ $t('general.createdOn') }}: {{
-            formatDate(activeProjectByGroup[group.name].createdAt)
-          }}
+        <div class="text-dots">{{ $t('general.createdOn') }}: 
+          {{ formatDate(activeProjectByGroup[group.name].createdAt) }}
         </div>
-        <div class="text-dots">{{ $t('general.lastModifiedOn') }}: {{
-            formatDate(activeProjectByGroup[group.name].modifiedAt)
-          }}
+        <div class="text-dots">{{ $t('general.lastModifiedOn') }}: 
+          {{ formatDate(activeProjectByGroup[group.name].modifiedAt) }}
         </div>
       </v-card-text>
       <v-divider></v-divider>
       <v-list-item append-icon="mdi-chevron-right" lines="two" :subtitle="$t('projectOverview.open')" link
                    @click="() => openProject(activeProjectByGroup[group.name].id)"></v-list-item>
+      <v-card-actions class="justify-end">
+        <v-btn icon color="grey" @click="openDeleteDialog(activeProjectByGroup[group.name])">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+      </v-card-actions>
     </v-card>
 
-    <v-card width="300px" height="252px" style="float: left; margin: 16px" class="d-flex flex-column">
+    <v-dialog v-model="confirmDeleteDialog" max-width="400">
+      <v-card prepend-icon="mdi-delete" :title="$t('projectOverview.confirmDeletion')">
+        <template v-slot:text>
+          {{ $t("projectOverview.confirmDeletionText1")
+          }}<strong>{{ projectToBeDeleted?.name }}</strong
+          >{{ $t("projectOverview.confirmDeletionText2")
+          }}<strong>{{ projectToBeDeleted?.version }}</strong
+          >{{ $t("projectOverview.confirmDeletionText3") }}
+        </template>
+        <template v-slot:actions>
+          <div class="ms-auto">
+            <v-btn :text="$t('general.cancel')" @click="confirmDeleteDialog = false"></v-btn>
+            <v-btn :text="$t('projectOverview.confirm')" @click="confirmDelete"></v-btn>
+          </div>
+        </template>
+      </v-card>
+    </v-dialog>
 
+    <v-card width="310px" height="310px" style="float: left; margin: 16px" class="d-flex flex-column">
       <v-card-title>
         <div style="text-align: center; margin-top: 25px">
           <v-icon icon="mdi-plus" size="x-large">
@@ -151,6 +184,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.snackbar-icon {
+  font-size: 1.5rem;
+  margin-right: 10px;
+}
 </style>
 <script lang="ts">
 import { defineComponent } from 'vue'
@@ -187,6 +225,22 @@ export interface UserData {
   modifiedAt: string;
 }
 
+enum SnackbarType {
+  SUCCESS = "success",
+  ERROR = "error"
+}
+
+const SnackbarConfig = {
+  [SnackbarType.SUCCESS]: {
+    color: "#43a047",
+    icon: "mdi-emoticon-happy-outline"
+  },
+  [SnackbarType.ERROR]: {
+    color: "#e53935",
+    icon: "mdi-emoticon-sad-outline"
+  }
+}
+
 export default defineComponent({
   data: () => {
     const store = useAppStore();
@@ -194,6 +248,15 @@ export default defineComponent({
       store: store,
       projects: [] as Project[],
       projectDialog: false as boolean,
+      confirmDeleteDialog: false,
+      projectToBeDeleted: null as Project | null,
+      snackbar: {
+        visible: false as boolean,
+        message: "" as string,
+        type: "" as SnackbarType,
+        color: "" as string,
+        icon: "" as string
+      },
       showNewVersionDialog: false as boolean,
       newProjectName: "" as string,
       activeProjectByGroup: {} as ActiveProjectByGroup,
@@ -227,7 +290,7 @@ export default defineComponent({
         groupedProjects[project.name].push(project);
       }
 
-      const projectGroups: ProjectGroup[] = Object.keys(groupedProjects).map(name => {
+      return Object.keys(groupedProjects).map(name => {
         return {
           name: name,
           projects: groupedProjects[name].sort((a, b) => {
@@ -235,13 +298,6 @@ export default defineComponent({
           })
         }
       });
-
-      for (const group of projectGroups) {
-        const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
-        this.activeProjectByGroup[group.name] = persistedActiveProject ?? group.projects[0];
-      }
-
-      return projectGroups;
     }
   },
 
@@ -250,6 +306,12 @@ export default defineComponent({
       if (!newValue) {
         window.location.reload();
       }
+    },
+    projectGroups(newGroups) {
+        for (const group of newGroups) {
+          const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
+          this.activeProjectByGroup[group.name] = persistedActiveProject ?? group.projects[0];
+        }
     }
   },
 
@@ -294,30 +356,29 @@ export default defineComponent({
       }
 
       if (this.webVersion && this.isUserLoggedIn) {
-        await axios.get('/api/project', { headers: authHeader() })
-          .then((result: { data: Project[] }) => {
-            const sortProjectsByActiveFirst = (project: Project): number => {
-              return project.id == this.store.selectedProjectId ? -1 : 0;
-            };
-            this.projects = result.data.sort(sortProjectsByActiveFirst);
-          })
-          .catch(error => {
-            console.error(error);
-            this.projects = [];
+        try {
+          const result = await axios.get("/api/project", { headers: authHeader() });
+          this.projects = result.data.sort((project: Project) => {
+            return project.id === this.store.selectedProjectId ? -1 : 0;
           });
+          
+          this.updateActiveProjects();
+        } catch (error) {
+          this.projects = [];
+        }
         return;
       }
 
-      axios.get("/api/project", { headers: authHeader() })
-        .then((result: { data: Project[] }) => {
-          const sortProjectsByActiveFirst = (project: Project): number => {
-            return project.id == this.store.selectedProjectId ? -1 : 0;
-          };
-          this.projects = result.data.sort(sortProjectsByActiveFirst);
-        })
-        .catch(error => {
-          console.error(error);
+      try {
+        const result = await axios.get("/api/project", { headers: authHeader() });
+        this.projects = result.data.sort((project: Project) => {
+            return project.id === this.store.selectedProjectId ? -1 : 0;
         });
+        
+        this.updateActiveProjects();
+      } catch (error) {
+        this.projects = [];
+      }
     },
     async createProject() {
       const newProjectNameInput = this.$refs.newProjectNameInput as VTextField;
@@ -341,14 +402,47 @@ export default defineComponent({
       let formData = new FormData();
       formData.append("name", projectName);
       formData.append("version", projectVersion);
+      
+      try {
+        const result = await axios.post("api/project", formData, { headers: authHeader() });
 
-      await axios.post('/api/project', formData, { headers: authHeader() })
-        .then(result => {
-          this.projectDialog = false;
-          this.showNewVersionDialog = false;
-          this.setActiveProject(result.data.name, result.data.id);
-          this.projects.push(result.data);
-        });
+        this.projectDialog = false;
+        this.showNewVersionDialog = false;
+        this.setActiveProject(result.data.name, result.data.id);
+        this.projects.push(result.data);
+
+        this.showSnackbar(this.$t("projectOverview.projectSuccessfullyCreated"), SnackbarType.SUCCESS);
+      } catch (error) {
+        this.showSnackbar(this.$t("projectOverview.errorMessage"), SnackbarType.ERROR);
+      }
+    },
+    openDeleteDialog(project: Project) {
+      this.projectToBeDeleted = project;
+      this.confirmDeleteDialog = true;
+    },
+    async confirmDelete() {
+      if (this.projectToBeDeleted) {
+        try {
+          await this.deleteProject(this.projectToBeDeleted.id);
+          
+          this.projects = this.projects.filter(project => project.id !== this.projectToBeDeleted?.id);
+          this.updateActiveProjects();
+          this.handleSelectedProjectAfterDelete();
+          this.confirmDeleteDialog = false;
+          this.projectToBeDeleted = null;
+
+          this.projects = this.projects.sort((project: Project) => {
+            return project.id === this.store.selectedProjectId ? -1 : 0;
+          });
+
+          this.showSnackbar(this.$t("projectOverview.projectSuccessfullyDeleted"), SnackbarType.SUCCESS);
+        } catch (error) {
+          this.showSnackbar(this.$t("projectOverview.errorMessage"), SnackbarType.ERROR);
+        }
+      }
+    },
+    async deleteProject(projectId: number) {
+      await axios.delete(`/api/project/${projectId}`, { headers: authHeader() });
     },
     openProject(id: number) {
       this.store.setSelectedProjectId(id);
@@ -357,6 +451,50 @@ export default defineComponent({
     closeNewProjectOrVersionDialog() {
       this.projectDialog = false;
       this.showNewVersionDialog = false;
+    },
+    showSnackbar(message: string, type: SnackbarType) {
+      this.snackbar.visible = false;
+      
+      this.$nextTick(() => {
+        this.snackbar.visible = true;
+        this.snackbar.message = message;
+        this.snackbar.type = type;
+        this.snackbar.color = SnackbarConfig[type].color;
+        this.snackbar.icon = SnackbarConfig[type].icon;
+      })
+    },
+    updateActiveProjects() {
+      this.projectGroups.forEach((group) => {
+        const persistedActiveProject = this.store.getActiveProjectForGroup(group.name);
+        if (persistedActiveProject) {
+          const project = group.projects.find((project) => project.id === persistedActiveProject.id);
+          if (project) {
+            this.activeProjectByGroup[group.name] = project;
+          } else {
+            this.activeProjectByGroup[group.name] = group.projects[0];
+          }
+        }
+      })
+    },
+    handleSelectedProjectAfterDelete() {
+      if (this.projectToBeDeleted) {
+        const groupName = this.projectToBeDeleted.name;
+        const remainingProjects = this.projects
+          .filter(project => project.name === groupName)
+          .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+        const nextActiveProject = remainingProjects.length > 0 ? remainingProjects[0] : null;
+        const currentSelectedProjectId = this.store.getSelectedProjectId();
+        const belongsToGroup = this.projectToBeDeleted && this.projectToBeDeleted.id === currentSelectedProjectId;
+          
+        if (currentSelectedProjectId && nextActiveProject && belongsToGroup) {
+          this.setActiveProject(groupName, nextActiveProject.id);
+          this.store.setSelectedProjectId(nextActiveProject.id);
+        } else if (currentSelectedProjectId && !belongsToGroup) {
+          this.store.setSelectedProjectId(currentSelectedProjectId);
+        } else {
+          this.store.setSelectedProjectId(null);
+        }
+      }
     }
   }
 });

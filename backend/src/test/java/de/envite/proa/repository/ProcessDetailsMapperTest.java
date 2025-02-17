@@ -13,7 +13,7 @@ import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 
-public class ProcessDetailsMapperTest {
+class ProcessDetailsMapperTest {
 
 	private static final long PROCESS_ID = 1L;
 	private static final String PROCESS_NAME = "processName";

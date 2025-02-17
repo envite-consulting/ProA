@@ -7,12 +7,13 @@ import java.util.Map;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-@ApplicationScoped
+@RequestScoped
 public class ProcessModelDao {
 
 	private EntityManager em;
@@ -23,7 +24,26 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
+	public List<ProcessModelTable> getProcessModelsWithParentsAndChildren(ProjectTable projectTable) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
+		List<ProcessModelTable> processModels = em//
+				.createQuery("""
+						SELECT pm FROM ProcessModelTable pm
+						WHERE pm.project=:project
+						""", ProcessModelTable.class)//
+				.setParameter("project", projectTable)//
+				.setHint("jakarta.persistence.loadgraph", graph)
+				.getResultList();
+
+		return processModels;
+	}
+	
+	@Transactional
 	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
 
 		List<ProcessModelTable> processModels = em//
 				.createQuery("""
@@ -32,6 +52,7 @@ public class ProcessModelDao {
 						WHERE pm.project=:project
 						""", ProcessModelTable.class)//
 				.setParameter("project", projectTable)//
+				.setHint("jakarta.persistence.fetchgraph", graph)
 				.getResultList();
 
 		processModels = em//
@@ -41,6 +62,7 @@ public class ProcessModelDao {
 						WHERE pm in :processModels
 						""", ProcessModelTable.class)//
 				.setParameter("processModels", processModels)//
+				.setHint("jakarta.persistence.fetchgraph", graph)
 				.getResultList();
 
 		return processModels;
@@ -48,6 +70,9 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<ProcessModelTable> getProcessModelsForName(String name, ProjectTable projectTable) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
 		List<ProcessModelTable> processModels = em//
 				.createQuery("""
 						SELECT pm FROM ProcessModelTable pm
@@ -56,6 +81,7 @@ public class ProcessModelDao {
 						""", ProcessModelTable.class)//
 				.setParameter("name", name)//
 				.setParameter("project", projectTable)//
+				.setHint("jakarta.persistence.fetchgraph", graph)
 				.getResultList();
 
 		processModels = em//
@@ -65,6 +91,7 @@ public class ProcessModelDao {
 						WHERE pm in :processModels
 						""", ProcessModelTable.class)//
 				.setParameter("processModels", processModels)//
+				.setHint("jakarta.persistence.fetchgraph", graph)
 				.getResultList();
 
 		return processModels;
@@ -88,23 +115,59 @@ public class ProcessModelDao {
 		graph.addSubgraph("callActivites");
 
 		Map<String, Object> hints = new HashMap<String, Object>();
-		hints.put("javax.persistence.loadgraph", graph);
+		hints.put("jakarta.persistence.fetchgraph", graph);
 
 		return em.find(ProcessModelTable.class, id, hints);
 	}
 
 	@Transactional
+	public ProcessModelTable findWithParentsAndChildren(Long id) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
+		Map<String, Object> hints = new HashMap<String, Object>();
+		hints.put("jakarta.persistence.loadgraph", graph);
+		
+		return em.find(ProcessModelTable.class, id, hints);
+	}
+	
+	@Transactional
 	public ProcessModelTable find(Long id) {
-		return em.find(ProcessModelTable.class, id);
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
+		Map<String, Object> hints = new HashMap<String, Object>();
+		hints.put("jakarta.persistence.fetchgraph", graph);
+		
+		return em.find(ProcessModelTable.class, id, hints);
 	}
 
 	@Transactional
 	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, ProjectTable projectTable) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
 		List<ProcessModelTable> processModels = em //
 				.createQuery("SELECT p FROM ProcessModelTable p " + //
 						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
 				.setParameter("bpmnProcessId", bpmnProcessId) //
 				.setParameter("project", projectTable) //
+				.setHint("jakarta.persistence.fetchgraph", graph)
+				.getResultList();
+
+		return !processModels.isEmpty() ? processModels.getFirst() : null;
+	}
+	
+	@Transactional
+	public ProcessModelTable findByBpmnProcessIdWithChildren(String bpmnProcessId, ProjectTable projectTable) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
+		List<ProcessModelTable> processModels = em //
+				.createQuery("SELECT p FROM ProcessModelTable p " + //
+						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
+				.setParameter("bpmnProcessId", bpmnProcessId) //
+				.setParameter("project", projectTable) //
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 
 		return !processModels.isEmpty() ? processModels.getFirst() : null;
@@ -123,11 +186,15 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable findByName(String name, ProjectTable projectTable) {
+		
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
 		List<ProcessModelTable> processModels = em //
 				.createQuery("SELECT p FROM ProcessModelTable p " + //
 						"WHERE p.name = :name AND p.project = :project", ProcessModelTable.class)
 				.setParameter("name", name) //
 				.setParameter("project", projectTable) //
+				.setHint("jakarta.persistence.fetchgraph", graph)
 				.getResultList();
 		return processModels.isEmpty() ? null : processModels.getFirst();
 	}

@@ -1,5 +1,12 @@
 package de.envite.proa.usecases.processmodel;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.collaboration.ParticipantDetails;
 import de.envite.proa.entities.process.*;
@@ -8,13 +15,6 @@ import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 public class ProcessModelUsecase {
@@ -54,18 +54,24 @@ public class ProcessModelUsecase {
 		List<ParticipantDetails> participants = processOperations.getParticipants(xml);
 		Long collaborationId = repository.saveProcessModel(projectId, processModel);
 
-		List<Long> participantIds = new ArrayList<>();
+		Map<String, Long> bpmnIdToIdMap = new HashMap<>();
 
 		participants //
 				.forEach(participant -> { //
-					Long participantId = saveParticipant(projectId, participant.getName(), participant.getXml(),
-							participant.getDescription(), processModel.getBpmnProcessId());
-					participantIds.add(participantId); //
+					String participantBpmnProcessId = processOperations.getBpmnProcessId(participant.getXml());
+					ProcessModelTable duplicateProcessModel = repository.findByNameOrBpmnProcessId(
+							participant.getName(), participantBpmnProcessId, projectId);
+					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
+							participant.getDescription(), "false", processModel.getBpmnProcessId());
+					if (duplicateProcessModel != null && duplicateProcessModel.getProcessType() != ProcessType.COLLABORATION) {
+						bpmnIdToIdMap.forEach((key, value) -> {
+							if (value.equals(duplicateProcessModel.getId())) {
+								bpmnIdToIdMap.replace(key, participantId);
+							}
+						});
+					}
+					bpmnIdToIdMap.put(participantBpmnProcessId, participantId);
 				});
-
-		Map<String, Long> bpmnIdToIdMap = participantIds //
-				.stream() //
-				.collect(Collectors.toMap(id -> repository.getProcessDetails(id).getBpmnProcessId(), id -> id));
 
 		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
 		repository.saveMessageFlows(messageFlows, projectId);
@@ -138,7 +144,7 @@ public class ProcessModelUsecase {
 	}
 
 	public String getProcessModel(Long id) {
-		return repository.getProcessModel(id);
+		return repository.getProcessModelXml(id);
 	}
 
 	public List<ProcessInformation> getProcessInformation(Long projectId) {

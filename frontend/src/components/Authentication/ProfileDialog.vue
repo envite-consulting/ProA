@@ -12,7 +12,7 @@
     <v-divider/>
 
     <v-alert v-if="message.message !== ''" :type="message.type" closable
-             icon="mdi-check-circle-outline" :text="message.message" @click:close="message.message = ''"></v-alert>
+             icon="mdi-check-circle-outline" :text="message.message" @click:close="removeMessage"></v-alert>
     <v-card-title class="px-0">
       <div class="d-flex align-center">
         <span>{{ user.firstName }} {{ user.lastName }}</span>
@@ -159,6 +159,9 @@ export default defineComponent({
 
           this.projects = result.data.sort(sortProjectsByActiveFirstThenAlphabetically);
         });
+    },
+    removeMessage() {
+      this.$emit('removeMessage');
     }
   },
 

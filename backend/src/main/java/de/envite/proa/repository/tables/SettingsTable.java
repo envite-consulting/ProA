@@ -19,6 +19,6 @@ public class SettingsTable {
 	private String operateRegionId;
 	private String operateClusterId;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	private UserTable user;
 }

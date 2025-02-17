@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             targetNamespace="http://example.com/bpmn">
+    <collaboration>
+        <participant id="Participant_1" processRef="Process_1" name="Participant 1">
+            <documentation>
+                This is the first participant.
+            </documentation>
+        </participant>
+        <participant id="Participant_2" processRef="Process_2"/>
+        <participant id="Participant_3" processRef="Process_3"/>
+        <participant id="Participant_4" processRef="Process_4"/>
+        <messageFlow sourceRef="Participant_1" targetRef="Participant_2"/>
+    </collaboration>
+    <process id="Process_1"/>
+    <process id="Process_2">
+        <documentation>
+            This process handles the order processing workflow for Alice.
+        </documentation>
+    </process>
+    <process id="Process_3"/>
+</definitions>

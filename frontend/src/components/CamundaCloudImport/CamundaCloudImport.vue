@@ -24,7 +24,7 @@
         <v-list-item-subtitle>
           {{ getLocaleDate(model.created) }} - {{ model.updatedBy.email }}
         </v-list-item-subtitle>
-        <template v-slot:prepend="{ isActive }">
+        <template>
           <v-list-item-action start>
             <v-checkbox v-model="selectedProcessModels" :value="model"></v-checkbox>
           </v-list-item-action>

@@ -211,12 +211,9 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        {{ $t("processList.uploadingProcessModels") }}
-        <v-progress-linear
-          color="primary"
-          :model-value="progress"
-          :height="10"
-        ></v-progress-linear>
+        {{ $t('processList.uploadingProcessModel') }}: {{ currentlyUploadingProcessModel.name }}
+        ({{ currentUploadStatus }})
+        <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
       </template>
 
       <v-card-actions>
@@ -263,8 +260,8 @@
       prepend-icon="mdi-alert-circle-outline"
       :title="$t('processList.error')"
     >
-      <template v-slot:text v-if="errorType === ErrorType.ALREADY_EXISTING">
-        <span>
+      <template v-slot:text>
+        <span v-if="errorType = ErrorType.ALREADY_EXISTING">
           {{
             $t(
               "processList.alreadyExistsErrorMsg1." +
@@ -283,12 +280,12 @@
             )
           }}
         </span>
-      </template>
-      <template
-        v-slot:text
-        v-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION"
-      >
-        {{ $t("processList.cantReplaceWithCollaborationErrorMsg") }}
+        <span v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
+          {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
+        </span>
+        <span v-else-if="errorType === ErrorType.UNKNOWN">
+          {{ $t("processList.unknownErrorMsg") }}
+        </span>
       </template>
       <template v-slot:actions>
         <div class="ms-auto">
@@ -313,9 +310,9 @@
 </style>
 
 <script lang="ts">
+import axios, { AxiosError } from 'axios';
+import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
 import { defineComponent } from "vue";
-import axios from "axios";
-import ProcessDetailDialog from "@/components/ProcessDetailDialog.vue";
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -376,7 +373,8 @@ interface HttpError {
 
 enum ErrorType {
   ALREADY_EXISTING = "ALREADY_EXISTING",
-  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION"
+  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION",
+  UNKNOWN = "UNKNOWN",
 }
 
 export default defineComponent({
@@ -405,7 +403,9 @@ export default defineComponent({
     selectedVersionName: "" as string,
     fileExtensionMatcher: /.[^/.]+$/,
     isFetching: false as boolean,
-    descriptionErrors: {} as { [key: number]: string }
+    descriptionErrors: {} as { [key: number]: string },
+    currentlyUploadingProcessModel: {} as ProcessModelToUpload,
+    currentUploadStatus: "" as string,
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -619,24 +619,35 @@ export default defineComponent({
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
         let error = false;
+        let errorType = ErrorType.ALREADY_EXISTING;
         this.alreadyExistingBpmnProcessIds = [];
+        const numProcessModels = this.processModelsToUpload.length;
+        let i = 0;
         for (const processModel of this.processModelsToUpload) {
           this.progress += progressSteps;
+          this.currentlyUploadingProcessModel = processModel;
+          i += 1;
+          this.currentUploadStatus = `${i}/${numProcessModels}`;
 
           try {
             await this.uploadProcessModel(processModel);
           } catch (e) {
-            error = true;
-            this.alreadyExistingBpmnProcessIds.push(
-              (e as HttpError).response.data.data
-            );
+            if ((e as AxiosError).response?.status === 400) {
+              error = true;
+              this.alreadyExistingBpmnProcessIds.push(
+                (e as HttpError).response.data.data,
+              );
+            } else {
+              error = true;
+              errorType = ErrorType.UNKNOWN;
+            }
           }
 
           this.progress += progressSteps;
         }
         this.afterUploadActions();
         if (error) {
-          this.errorType = ErrorType.ALREADY_EXISTING;
+          this.errorType = errorType;
           this.errorDialog = true;
         }
       }

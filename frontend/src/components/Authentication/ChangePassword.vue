@@ -24,7 +24,7 @@
                  :text="message.message"
                  :type="message.type"
                  class="mb-5"
-                 @click:close="message.message = ''"
+                 @click:close="removeMessage"
         ></v-alert>
         <v-text-field
           type="password"
@@ -177,6 +177,9 @@ export default defineComponent({
       } catch (e) {
         return false;
       }
+    },
+    removeMessage() {
+      this.$emit('removeMessage');
     }
   }
 })

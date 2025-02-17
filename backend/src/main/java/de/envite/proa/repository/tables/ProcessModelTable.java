@@ -6,11 +6,20 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
 public class ProcessModelTable {
+
+	public ProcessModelTable() {
+	}
+
+	public ProcessModelTable(Long id) {
+		this.id = id;
+	}
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -39,7 +48,7 @@ public class ProcessModelTable {
 	@Column
 	private LocalDateTime createdAt;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 
 	@ManyToMany(fetch = FetchType.EAGER)

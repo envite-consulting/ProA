@@ -13,10 +13,7 @@ import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +23,9 @@ public class ProcessModelResource {
 
 	@Inject
 	private ProcessModelUsecase usecase;
+
+	@Inject
+	FileService fileService;
 
 	/**
 	 * Creates a new process model
@@ -46,7 +46,7 @@ public class ProcessModelResource {
 	public Response uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
 			@RestForm String description, @RestForm boolean isCollaboration) {
 		try {
-			String content = readFileToString(processModel);
+			String content = fileService.readFileToString(processModel);
 			fileName = fileName.replace(".bpmn", "");
 			return Response //
 					.ok(usecase.saveProcessModel( //
@@ -64,6 +64,8 @@ public class ProcessModelResource {
 			errorResponse.put("error", errorMessage);
 			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
 			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 
@@ -72,7 +74,7 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Long replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
 			@RestForm String fileName, @RestForm String description) {
-		String content = readFileToString(processModel);
+		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
 		return usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description);
 	}
@@ -118,21 +120,5 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public ProcessDetails getProcessDetails(@RestPath Long id) {
 		return usecase.getProcessDetails(id);
-	}
-
-	private String readFileToString(File file) {
-		StringBuilder contentBuilder = new StringBuilder();
-
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-
-			String sCurrentLine;
-			while ((sCurrentLine = br.readLine()) != null) {
-				contentBuilder.append(sCurrentLine).append("\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return contentBuilder.toString();
 	}
 }
