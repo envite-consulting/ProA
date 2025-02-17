@@ -61,8 +61,8 @@ public class ProcessModelUsecase {
 					String participantBpmnProcessId = processOperations.getBpmnProcessId(participant.getXml());
 					ProcessModelTable duplicateProcessModel = repository.findByNameOrBpmnProcessId(
 							participant.getName(), participantBpmnProcessId, projectId);
-					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
-							participant.getDescription(), "false", processModel.getBpmnProcessId());
+					Long participantId = saveParticipant(projectId, participant.getName(), participant.getXml(),
+							participant.getDescription(), processModel.getBpmnProcessId());
 					if (duplicateProcessModel != null && duplicateProcessModel.getProcessType() != ProcessType.COLLABORATION) {
 						bpmnIdToIdMap.forEach((key, value) -> {
 							if (value.equals(duplicateProcessModel.getId())) {

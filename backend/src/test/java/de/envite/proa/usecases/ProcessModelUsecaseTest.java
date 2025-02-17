@@ -44,6 +44,9 @@ public class ProcessModelUsecaseTest {
 	private static final List<ProcessActivity> EMPTY_CALL_ACTIVITIES = List.of();
 	private static final List<ProcessDataStore> EMPTY_DATA_STORES = List.of();
 
+	private static final boolean IS_COLLABORATION = true;
+	private static final boolean IS_NOT_COLLABORATION = false;
+
 	@Mock
 	private ProcessModelRepository repository;
 
@@ -84,7 +87,7 @@ public class ProcessModelUsecaseTest {
 		when(repository.saveProcessModel(eq(TEST_PROJECT_ID), eq(processModel))).thenReturn(TEST_PROCESS_MODEL_ID);
 
 		Long result = processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
-				" ", "false", null);
+				" ", IS_NOT_COLLABORATION);
 
 		assertNotNull(result);
 		assertEquals(TEST_PROCESS_MODEL_ID, result);
@@ -130,7 +133,7 @@ public class ProcessModelUsecaseTest {
 		when(repository.saveProcessModel(eq(TEST_PROJECT_ID), eq(processModel))).thenReturn(TEST_PROCESS_MODEL_ID);
 
 		Long result = processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
-				" ", "false", null);
+				" ", IS_NOT_COLLABORATION);
 
 		assertNotNull(result);
 		assertEquals(TEST_PROCESS_MODEL_ID, result);
@@ -152,49 +155,6 @@ public class ProcessModelUsecaseTest {
 	}
 
 	@Test
-	public void testSaveProcessModel_ChildModelWithoutDescription() {
-		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
-		when(repository.findByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID, TEST_PROJECT_ID))
-				.thenReturn(null);
-
-		// CREATE PROCESS MODEL
-		when(processOperations.getStartEvents(TEST_PROCESS_XML)).thenReturn(EMPTY_PROCESS_EVENTS);
-		when(processOperations.getIntermediateThrowEvents(TEST_PROCESS_XML)).thenReturn(EMPTY_PROCESS_EVENTS);
-		when(processOperations.getIntermediateCatchEvents(TEST_PROCESS_XML)).thenReturn(EMPTY_PROCESS_EVENTS);
-		when(processOperations.getEndEvents(TEST_PROCESS_XML)).thenReturn(EMPTY_PROCESS_EVENTS);
-		when(processOperations.getCallActivities(TEST_PROCESS_XML)).thenReturn(EMPTY_CALL_ACTIVITIES);
-		when(processOperations.getDataStores(TEST_PROCESS_XML)).thenReturn(EMPTY_DATA_STORES);
-		when(processOperations.getDescription(TEST_PROCESS_XML)).thenReturn(TEST_DESCRIPTION);
-
-		ProcessModel processModel = new ProcessModel(TEST_PROCESS_NAME, TEST_PROCESS_XML, EMPTY_PROCESS_EVENTS,
-				EMPTY_CALL_ACTIVITIES, EMPTY_DATA_STORES, "",
-				TEST_BPMN_PROCESS_ID, PARENT_BPMN_PROCESS_ID, ProcessType.PARTICIPANT);
-		//
-
-		when(repository.saveProcessModel(eq(TEST_PROJECT_ID), eq(processModel))).thenReturn(TEST_PROCESS_MODEL_ID);
-
-		Long result = processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
-				"", "false", PARENT_BPMN_PROCESS_ID);
-
-		assertNotNull(result);
-		assertEquals(TEST_PROCESS_MODEL_ID, result);
-
-		verify(processOperations, times(2)).getBpmnProcessId(TEST_PROCESS_XML);
-		verify(repository, times(1)).findByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
-				TEST_PROJECT_ID);
-		verify(processOperations, times(1)).getStartEvents(TEST_PROCESS_XML);
-		verify(processOperations, times(1)).getIntermediateThrowEvents(TEST_PROCESS_XML);
-		verify(processOperations, times(1)).getIntermediateCatchEvents(TEST_PROCESS_XML);
-		verify(processOperations, times(1)).getEndEvents(TEST_PROCESS_XML);
-		verify(processOperations, times(1)).getCallActivities(TEST_PROCESS_XML);
-		verify(processOperations, times(1)).getDataStores(TEST_PROCESS_XML);
-		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(processModel));
-
-		verifyNoMoreInteractions(processOperations);
-		verifyNoMoreInteractions(repository);
-	}
-
-	@Test
 	public void testSaveProcessModel_ExistingCollaboration() {
 		ProcessModelTable processModel = new ProcessModelTable();
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
@@ -203,7 +163,7 @@ public class ProcessModelUsecaseTest {
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
 			processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION,
-					"true", null);
+					IS_COLLABORATION);
 		});
 
 		assertEquals("Collaboration already exists: " + TEST_BPMN_PROCESS_ID, exception.getMessage());
@@ -268,7 +228,7 @@ public class ProcessModelUsecaseTest {
 		doNothing().when(repository).deleteProcessModel(TEST_OLD_PROCESS_ID);
 
 		Long processId = processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
-				TEST_DESCRIPTION, "false", null);
+				TEST_DESCRIPTION, IS_NOT_COLLABORATION);
 
 		assertNotNull(processId);
 		assertEquals(TEST_NEW_PROCESS_ID, processId);
@@ -301,7 +261,7 @@ public class ProcessModelUsecaseTest {
 
 		Exception exception = assertThrows(IllegalArgumentException.class, () -> {
 			processModelUsecase.replaceProcessModel(TEST_PROJECT_ID, TEST_OLD_PROCESS_ID,
-					REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION, null);
+					REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION);
 		});
 
 		assertEquals("Can't replace with collaboration", exception.getMessage());
@@ -399,7 +359,7 @@ public class ProcessModelUsecaseTest {
 		//
 
 		Long result = processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
-				null, "true", null);
+				null, IS_COLLABORATION);
 
 		assertNotNull(result);
 		assertEquals(TEST_PROCESS_MODEL_ID, result);
@@ -447,8 +407,6 @@ public class ProcessModelUsecaseTest {
 		verify(repository, times(2)).saveProcessModel(any(Long.class), any(ProcessModel.class));
 		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(collaborationModel));
 		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(participantModel));
-
-		verify(repository, times(1)).getProcessModel(PARTICIPANT_ID);
 
 		verify(processOperations, times(1)).getMessageFlows(eq(TEST_PROCESS_XML), eq(bpmnIdToIdMap));
 		verify(repository, times(1)).saveMessageFlows(messageFlowDetailsList, TEST_PROJECT_ID);

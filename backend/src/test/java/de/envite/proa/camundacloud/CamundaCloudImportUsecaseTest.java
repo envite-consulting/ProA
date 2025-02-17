@@ -33,9 +33,6 @@ class CamundaCloudImportUsecaseTest {
 	private static final String TEST_DESCRIPTION_2 = "Test Description 2";
 	private static final boolean IS_NOT_COLLABORATION = false;
 	private static final boolean IS_COLLABORATION = true;
-	private static final String IS_NOT_COLLABORATION_STRING = "false";
-	private static final String IS_COLLABORATION_STRING = "true";
-	private static final String NO_PARENT_BPMN_PROCESS_ID = null;
 	private static final String TEST_BASE_URI = "https://test.operate.camunda.io/";
 
 	@InjectMocks
@@ -161,10 +158,10 @@ class CamundaCloudImportUsecaseTest {
 
 		verify(processModelUsecase, times(1))
 				.saveProcessModel(PROJECT_ID, TEST_PROCESS_NAME_1, XML_CONTENT_1, TEST_DESCRIPTION_1,
-						IS_NOT_COLLABORATION_STRING, NO_PARENT_BPMN_PROCESS_ID);
+						IS_NOT_COLLABORATION);
 		verify(processModelUsecase, times(1))
 				.saveProcessModel(PROJECT_ID, TEST_PROCESS_NAME_2, XML_CONTENT_2, TEST_DESCRIPTION_2,
-						IS_COLLABORATION_STRING, NO_PARENT_BPMN_PROCESS_ID);
+						IS_COLLABORATION);
 	}
 
 	@Test

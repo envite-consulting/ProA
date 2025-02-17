@@ -4,6 +4,7 @@ import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -13,9 +14,9 @@ import org.mockito.MockitoAnnotations;
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
 public class ProcessModelResourceTest {
@@ -125,15 +126,13 @@ public class ProcessModelResourceTest {
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
-		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION_TRUE,
-				PARENT_BPMN_PROCESS_ID))
+		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION))
 				.thenThrow(new IllegalArgumentException(COLLABORATION_EXISTS_ERROR_MESSAGE));
 
 		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, DESCRIPTION,
 				IS_COLLABORATION);
 
-		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION_TRUE,
-				PARENT_BPMN_PROCESS_ID);
+		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
 
 		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
 		@SuppressWarnings("unchecked")
@@ -148,7 +147,7 @@ public class ProcessModelResourceTest {
 		File processModel = new File(
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
-		when(fileService.readFileToString(any(File.class))).thenReturn(PROCESS_XML);
+		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
 		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION))
 				.thenReturn(NEW_PROCESS_ID);
 
@@ -156,7 +155,7 @@ public class ProcessModelResourceTest {
 
 		assertThat(response).isEqualTo(NEW_PROCESS_ID);
 
-		verify(fileService).readFileToString(any(File.class));
+		verify(fileService).readFileToString(processModel);
 		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION);
 	}
 }
