@@ -65,16 +65,22 @@
       <span>{{ $t("processList.navigateToC8Import") }}</span>
     </v-tooltip>
 
-    <v-fab-transition>
-      <v-btn
-        class="mt-auto pointer-events-initial"
-        color="primary"
-        elevation="8"
-        icon="mdi-plus"
-        @click="openMultipleUploadDialog"
-        size="large"
-      />
-    </v-fab-transition>
+    <v-tooltip location="top">
+      <template v-slot:activator="{ props }">
+        <v-fab-transition>
+          <v-btn
+            class="mt-auto pointer-events-initial"
+            color="primary"
+            elevation="8"
+            icon="mdi-plus"
+            @click="openMultipleUploadDialog"
+            size="large"
+            v-bind="props"
+          />
+        </v-fab-transition>
+      </template>
+      <span>{{ $t("processList.uploadProcessModels") }}</span>
+    </v-tooltip>
   </div>
   <div
     v-if="rootProcessModels.length > 0"

@@ -2,8 +2,8 @@
   <v-dialog v-model="infoDialog" persistent width="600">
     <v-card>
       <v-card-title class="d-flex align-center">
-        <span class="text-h5">
-          {{ $t("general.processModel") }}:
+        <span class="text-h5 text-wrap">
+          <strong>{{ $t("general.processModel") }}:</strong>
           {{ currentProcessModel.processName }}
         </span>
         <v-spacer></v-spacer>
