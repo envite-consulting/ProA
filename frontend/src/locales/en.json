@@ -116,6 +116,7 @@
     "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",
+    "noApiKeyError": "No API key found. Please set an API key in the settings to enable AI generation.",
     "noProcessModelsFound": "No process models found.",
     "participant": "Participant",
     "processModels": "Process Models",
