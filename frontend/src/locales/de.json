@@ -121,7 +121,9 @@
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
+    "unknownErrorMsg": "Unbekannter Fehler beim Hochladen der Prozessmodelle.",
     "uploadProcessModels": "Prozessmodelle hochladen",
+    "uploadingProcessModel": "Hochladen des Prozessmodels",
     "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
   },
   "processMap": {

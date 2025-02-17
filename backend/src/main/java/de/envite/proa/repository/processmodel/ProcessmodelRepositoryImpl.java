@@ -303,6 +303,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		relatedProcessModelIdsToDelete.forEach(processModelId -> {
 			dataStoreConnectionDao.deleteForProcessModel(processModelId);
 			processConnectionDao.deleteForProcessModel(processModelId);
+			messageFlowDao.deleteForProcessModel(processModelId);
 		});
 
 		processModelDao.delete(relatedProcessModelIdsToDelete);

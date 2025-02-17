@@ -2,6 +2,11 @@ package de.envite.proa.rest;
 
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import jakarta.inject.Inject;
@@ -12,11 +17,6 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestResponse.ResponseBuilder;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Path("/api")
 public class ProcessModelResource {
@@ -65,6 +65,8 @@ public class ProcessModelResource {
 			errorResponse.put("error", errorMessage);
 			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
 			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 

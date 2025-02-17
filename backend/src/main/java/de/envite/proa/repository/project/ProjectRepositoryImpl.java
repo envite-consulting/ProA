@@ -30,7 +30,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		this.userDao = userDao;
 	}
 
-	@Transactional
 	@Override
 	public Project createProject(String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
@@ -38,7 +37,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return map(table);
 	}
 
-	@Transactional
 	@Override
 	public Project createProject(Long userId, String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
@@ -57,7 +55,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return table;
 	}
 
-	@Transactional
 	@Override
 	public List<Project> getProjects() {
 		return projectDao//
@@ -67,7 +64,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 				.collect(Collectors.toList());
 	}
 
-	@Transactional
 	@Override
 	public List<Project> getProjects(Long userId) {
 		UserTable user = userDao.findById(userId);
