@@ -197,9 +197,9 @@
         <span v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
           {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
         </span>
-      </template>
-      <template v-slot:text v-if="errorType === ErrorType.UNKNOWN">
+        <span v-else-if="errorType === ErrorType.UNKNOWN">
         {{ $t("processList.unknownErrorMsg") }}
+      </span>
       </template>
       <template v-slot:actions>
         <div class="ms-auto">

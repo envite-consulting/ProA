@@ -404,14 +404,14 @@ public class ProcessModelUsecaseTest {
 		assertNotNull(result);
 		assertEquals(TEST_PROCESS_MODEL_ID, result);
 
-		verify(processOperations, times(4)).getBpmnProcessId(any(String.class));
+		verify(processOperations, times(5)).getBpmnProcessId(any(String.class));
 		verify(processOperations, times(2)).getBpmnProcessId(TEST_PROCESS_XML);
-		verify(processOperations, times(2)).getBpmnProcessId(PARTICIPANT_XML_1);
+		verify(processOperations, times(3)).getBpmnProcessId(PARTICIPANT_XML_1);
 
-		verify(repository, times(2)).findByNameOrBpmnProcessId(any(String.class), any(String.class), any(Long.class));
+		verify(repository, times(3)).findByNameOrBpmnProcessId(any(String.class), any(String.class), any(Long.class));
 		verify(repository, times(1)).findByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID);
-		verify(repository, times(1)).findByNameOrBpmnProcessId(PARTICIPANT_NAME_1, PARTICIPANT_BPMN_ID,
+		verify(repository, times(2)).findByNameOrBpmnProcessId(PARTICIPANT_NAME_1, PARTICIPANT_BPMN_ID,
 				TEST_PROJECT_ID);
 
 		verify(processOperations, times(1)).addEmptyProcessRefs(TEST_PROCESS_XML);
@@ -447,8 +447,6 @@ public class ProcessModelUsecaseTest {
 		verify(repository, times(2)).saveProcessModel(any(Long.class), any(ProcessModel.class));
 		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(collaborationModel));
 		verify(repository, times(1)).saveProcessModel(eq(TEST_PROJECT_ID), eq(participantModel));
-
-		verify(repository, times(1)).getProcessDetails(PARTICIPANT_ID);
 
 		verify(processOperations, times(1)).getMessageFlows(eq(TEST_PROCESS_XML), eq(bpmnIdToIdMap));
 		verify(repository, times(1)).saveMessageFlows(messageFlowDetailsList, TEST_PROJECT_ID);
