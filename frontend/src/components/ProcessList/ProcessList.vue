@@ -163,12 +163,12 @@
               <v-row no-gutters align-items="center">
                 <v-col style="position: relative">
                   <v-textarea
-                    hide-details
                     rows="3"
                     :label="$t('general.description')"
                     v-model="file.description"
-                  >
-                  </v-textarea>
+                    :error-messages="descriptionErrors[index]"
+                    @input="resetDescriptionErrors"
+                  />
                   <v-overlay
                     class="align-center justify-center"
                     :model-value="file.aiLoading"
@@ -193,7 +193,7 @@
                         v-bind="props"
                         color="grey"
                         class="ms-2 hover-icon"
-                        @click="generateDescription(file)"
+                        @click="generateDescription(file, index)"
                       >
                         mdi-auto-fix
                       </v-icon>
@@ -233,7 +233,8 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        {{ $t("processList.uploadingProcessModels") }}
+        {{ $t("processList.uploadingProcessModel") }}:
+        {{ currentlyUploadingProcessModel.name }} ({{ currentUploadStatus }})
         <v-progress-linear
           color="primary"
           :model-value="progress"
@@ -285,14 +286,14 @@
       prepend-icon="mdi-alert-circle-outline"
       :title="$t('processList.error')"
     >
-      <template v-slot:text v-if="errorType === ErrorType.ALREADY_EXISTING">
-        <span>
+      <template v-slot:text>
+        <span v-if="(errorType = ErrorType.ALREADY_EXISTING)">
           {{
             $t(
               "processList.alreadyExistsErrorMsg1." +
                 (alreadyExistingBpmnProcessIds.length > 1
                   ? "plural"
-                  : "singular"),
+                  : "singular")
             )
           }}
           <strong>{{ alreadyExistingBpmnProcessIds.join(", ") }}</strong>
@@ -301,16 +302,18 @@
               "processList.alreadyExistsErrorMsg2." +
                 (alreadyExistingBpmnProcessIds.length > 1
                   ? "plural"
-                  : "singular"),
+                  : "singular")
             )
           }}
         </span>
-      </template>
-      <template
-        v-slot:text
-        v-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION"
-      >
-        {{ $t("processList.cantReplaceWithCollaborationErrorMsg") }}
+        <span
+          v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION"
+        >
+          {{ $t("processList.cantReplaceWithCollaborationErrorMsg") }}
+        </span>
+        <span v-else-if="errorType === ErrorType.UNKNOWN">
+          {{ $t("processList.unknownErrorMsg") }}
+        </span>
       </template>
       <template v-slot:actions>
         <div class="ms-auto">
@@ -376,7 +379,7 @@ interface RawProcessModel {
 
 enum UploadDialogMode {
   SINGLE = "single",
-  MULTIPLE = "multiple",
+  MULTIPLE = "multiple"
 }
 
 interface ProcessModelToUpload {
@@ -400,13 +403,13 @@ interface HttpError {
 enum ErrorType {
   ALREADY_EXISTING = "ALREADY_EXISTING",
   CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION",
-  UNKNOWN = "UNKNOWN",
+  UNKNOWN = "UNKNOWN"
 }
 
 export default defineComponent({
   components: {
     ProcessTreeNode,
-    ProcessDetailDialog,
+    ProcessDetailDialog
   },
   data: () => ({
     appStore: useAppStore(),
@@ -433,7 +436,7 @@ export default defineComponent({
     isFetching: false as boolean,
     descriptionErrors: {} as { [key: number]: string },
     currentlyUploadingProcessModel: {} as ProcessModelToUpload,
-    currentUploadStatus: "" as string,
+    currentUploadStatus: "" as string
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -453,14 +456,14 @@ export default defineComponent({
     },
     showFilter() {
       return this.availableLevels.some((level) => level > 0);
-    },
+    }
   },
   watch: {
     isUserLoggedIn(newValue) {
       if (!newValue) {
         this.$router.push("/");
       }
-    },
+    }
   },
   methods: {
     showProcessInfoDialog(processId: number) {
@@ -473,7 +476,7 @@ export default defineComponent({
 
     async deleteProcessModel(
       processModelNode: ProcessModelNode,
-      skipConfirm: boolean = false,
+      skipConfirm: boolean = false
     ) {
       const isPartOfCollaboration =
         processModelNode.parentsBpmnProcessIds.length > 0 ||
@@ -496,12 +499,12 @@ export default defineComponent({
 
     async fetchProcessModels(skipLoading = false) {
       if (!skipLoading) {
-        this.isFetching = null;
+        this.isFetching = true;
       }
 
       const response = await axios.get(
         "/api/project/" + this.selectedProjectId + "/process-model",
-        { headers: authHeader() },
+        { headers: authHeader() }
       );
 
       const levelsSet = new Set<number>();
@@ -523,7 +526,7 @@ export default defineComponent({
               this.selectedProjectId +
               "/process-model" +
               levelsQuery,
-            { headers: authHeader() },
+            { headers: authHeader() }
           )
         : response;
 
@@ -534,7 +537,7 @@ export default defineComponent({
     collectRoots(rawProcessModels: RawProcessModel[]): ProcessModelNode[] {
       const modelMap = new Map<string, ProcessModelNode>();
       rawProcessModels.forEach((model) =>
-        modelMap.set(model.bpmnProcessId, { ...model, children: [] }),
+        modelMap.set(model.bpmnProcessId, { ...model, children: [] })
       );
 
       const roots = [] as ProcessModelNode[];
@@ -608,7 +611,7 @@ export default defineComponent({
       return {
         name: name || "",
         description: documentation || "",
-        isCollaboration,
+        isCollaboration
       };
     },
 
@@ -618,7 +621,7 @@ export default defineComponent({
       for (const file of this.processModelFiles) {
         try {
           this.processModelsToUpload.push(
-            await this.getProcessModelToUpload(file),
+            await this.getProcessModelToUpload(file)
           );
         } catch (error) {
           console.error("Error reading file content: ", error);
@@ -637,20 +640,20 @@ export default defineComponent({
         description,
         content,
         aiLoading: false,
-        isCollaboration,
+        isCollaboration
       };
     },
 
     async uploadProcessModel(
-      processModel: ProcessModelToUpload,
+      processModel: ProcessModelToUpload
     ): Promise<number | string> {
       const formData = this.createProcessModelFormData(processModel);
       const { data } = await axios.post(
         "/api/project/" + this.selectedProjectId + "/process-model",
         formData,
         {
-          headers: authHeader(),
-        },
+          headers: authHeader()
+        }
       );
       return data;
     },
@@ -665,7 +668,7 @@ export default defineComponent({
       formData.append("description", processModel.description);
       formData.append(
         "isCollaboration",
-        processModel.isCollaboration ? "true" : "false",
+        processModel.isCollaboration ? "true" : "false"
       );
 
       return formData;
@@ -692,7 +695,7 @@ export default defineComponent({
           } catch (e) {
             error = true;
             this.alreadyExistingBpmnProcessIds.push(
-              (e as HttpError).response.data.data,
+              (e as HttpError).response.data.data
             );
           }
 
@@ -712,7 +715,7 @@ export default defineComponent({
       }
 
       const formData = this.createProcessModelFormData(
-        this.processModelsToUpload[0],
+        this.processModelsToUpload[0]
       );
 
       try {
@@ -722,7 +725,7 @@ export default defineComponent({
             "/process-model/" +
             this.processModelToBeReplacedId,
           formData,
-          { headers: authHeader() },
+          { headers: authHeader() }
         );
         this.afterUploadActions();
       } catch (e) {
@@ -754,21 +757,23 @@ export default defineComponent({
 
     async generateDescription(
       processModelToUpload: ProcessModelToUpload,
-      index: number,
+      index: number
     ) {
       processModelToUpload.aiLoading = true;
       const content = processModelToUpload.content;
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      const settings: Settings = (
+        await axios.get("api/settings", { headers: authHeader() })
+      ).data;
+      const apiKey =
+        settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
-        console.error(
-          "No API key found. Please set the GEMINI_API_KEY environment variable.",
-        );
+        this.descriptionErrors[index] = this.$t("processList.noApiKeyError");
+        processModelToUpload.aiLoading = false;
         return;
       }
       const genAi = new GoogleGenerativeAI(apiKey);
-      const model = genAi.getGenerativeModel({
-        model: "gemini-1.5-flash",
-      });
+      const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const promptInstructionsDe =
         "Ich möchte, dass du aus dem folgenden XML-Dokument " +
@@ -808,7 +813,7 @@ export default defineComponent({
     },
     resetDescriptionErrors() {
       this.descriptionErrors = {};
-    },
-  },
+    }
+  }
 });
 </script>
