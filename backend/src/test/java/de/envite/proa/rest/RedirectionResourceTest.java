@@ -8,18 +8,18 @@ import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RedirectionResourceTest {
+class RedirectionResourceTest {
 
     @InjectMocks
     private RedirectionResource redirectionResource;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testRedirectToLandingPage() {
+    void testRedirectToLandingPage() {
         Response response = redirectionResource.redirectToLandingPage();
 
         assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());

@@ -17,7 +17,7 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class AuthenticationResourceTest {
+class AuthenticationResourceTest {
 
 	private static final String EMAIL = "test@example.com";
 	private static final String PASSWORD = "password123";
@@ -39,12 +39,12 @@ public class AuthenticationResourceTest {
 	}
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testLoginSuccess() throws EmailNotFoundException, AccountLockedException, InvalidPasswordException {
+	void testLoginSuccess() throws EmailNotFoundException, AccountLockedException, InvalidPasswordException {
 		when(authenticationUsecase.login(user)).thenReturn(JWT);
 
 		Response response = authenticationResource.login(user);
@@ -56,7 +56,7 @@ public class AuthenticationResourceTest {
 	}
 
 	@Test
-	public void testLoginInvalidCredentials()
+	void testLoginInvalidCredentials()
 			throws EmailNotFoundException, AccountLockedException, InvalidPasswordException {
 		doThrow(InvalidPasswordException.class).when(authenticationUsecase).login(user);
 
@@ -68,7 +68,7 @@ public class AuthenticationResourceTest {
 	}
 
 	@Test
-	public void testLoginAccountLocked()
+	void testLoginAccountLocked()
 			throws EmailNotFoundException, AccountLockedException, InvalidPasswordException {
 		doThrow(AccountLockedException.class).when(authenticationUsecase).login(user);
 
@@ -80,7 +80,7 @@ public class AuthenticationResourceTest {
 	}
 
 	@Test
-	public void testLoginInternalError()
+	void testLoginInternalError()
 			throws EmailNotFoundException, AccountLockedException, InvalidPasswordException {
 		doThrow(new RuntimeException("Unexpected error")).when(authenticationUsecase).login(user);
 
@@ -92,7 +92,7 @@ public class AuthenticationResourceTest {
 	}
 
 	@Test
-	public void testRegisterSuccess() throws EmailAlreadyRegisteredException {
+	void testRegisterSuccess() throws EmailAlreadyRegisteredException {
 		doNothing().when(authenticationUsecase).register(user);
 
 		Response response = authenticationResource.register(user);
@@ -103,7 +103,7 @@ public class AuthenticationResourceTest {
 	}
 
 	@Test
-	public void testRegisterEmailAlreadyRegistered() throws EmailAlreadyRegisteredException {
+	void testRegisterEmailAlreadyRegistered() throws EmailAlreadyRegisteredException {
 		doThrow(EmailAlreadyRegisteredException.class).when(authenticationUsecase).register(user);
 
 		Response response = authenticationResource.register(user);
@@ -114,7 +114,7 @@ public class AuthenticationResourceTest {
 	}
 
 	@Test
-	public void testRegisterInternalError() throws EmailAlreadyRegisteredException {
+	void testRegisterInternalError() throws EmailAlreadyRegisteredException {
 		doThrow(new RuntimeException("Unexpected error")).when(authenticationUsecase).register(user);
 
 		Response response = authenticationResource.register(user);

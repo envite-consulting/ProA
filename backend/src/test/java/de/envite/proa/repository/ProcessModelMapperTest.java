@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ProcessmodelMapperTest {
+class ProcessModelMapperTest {
 
-	@Test
-	void testClassInitialization() {
-		ProcessmodelMapper mapper = new ProcessmodelMapper();
-		assertThat(mapper).isNotNull();
-	}
+    @Test
+    void testClassInitialization() {
+        ProcessmodelMapper mapper = new ProcessmodelMapper();
+        assertThat(mapper).isNotNull();
+    }
 }

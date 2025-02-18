@@ -19,7 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class ProjectResourceTest {
+class ProjectResourceTest {
 
 	@InjectMocks
 	private ProjectResource resource;
@@ -44,7 +44,7 @@ public class ProjectResourceTest {
 	private static Project expectedProject2;
 
 	@BeforeAll
-	public static void setUpClass() {
+	static void setUpClass() {
 		expectedProject1 = new Project();
 		expectedProject1.setId(PROJECT_ID_1);
 		expectedProject1.setName(PROJECT_NAME_1);
@@ -57,12 +57,12 @@ public class ProjectResourceTest {
 	}
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testCreateProjectWebMode() {
+	void testCreateProjectWebMode() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
@@ -76,7 +76,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testCreateProjectDesktopMode() {
+	void testCreateProjectDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 
 		when(usecase.createProject(PROJECT_NAME_1, PROJECT_VERSION_1)).thenReturn(expectedProject1);
@@ -89,7 +89,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectsWebMode() {
+	void testGetProjectsWebMode() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
@@ -107,7 +107,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectsDesktopMode() {
+	void testGetProjectsDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 
 		List<Project> expectedProjects = Arrays.asList(
@@ -124,7 +124,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectWebMode() {
+	void testGetProjectWebMode() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
@@ -139,7 +139,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectWebMode_NotFound() {
+	void testGetProjectWebMode_NotFound() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
@@ -153,7 +153,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectWebMode_Forbidden() {
+	void testGetProjectWebMode_Forbidden() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
@@ -167,7 +167,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectWebMode_InternalServerError() {
+	void testGetProjectWebMode_InternalServerError() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
@@ -181,7 +181,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectDesktopMode() {
+	void testGetProjectDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 
 		when(usecase.getProject(PROJECT_ID_1)).thenReturn(expectedProject1);
@@ -195,7 +195,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectDesktopMode_NotFound() {
+	void testGetProjectDesktopMode_NotFound() {
 		resource.appMode = APP_MODE_DESKTOP;
 
 		when(usecase.getProject(PROJECT_ID_1)).thenThrow(new NotFoundException());
@@ -208,7 +208,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testGetProjectDesktopMode_InternalServerError() {
+	void testGetProjectDesktopMode_InternalServerError() {
 		resource.appMode = APP_MODE_DESKTOP;
 
 		when(usecase.getProject(PROJECT_ID_1)).thenThrow(new RuntimeException());
@@ -221,7 +221,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testDeleteProject_DesktopMode() {
+	void testDeleteProject_DesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 		doNothing().when(usecase).deleteProject(PROJECT_ID_1);
 
@@ -232,7 +232,7 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testDeleteProject_WebMode() {
+	void testDeleteProject_WebMode() {
 		resource.appMode = APP_MODE_WEB;
 		doNothing().when(usecase).deleteProject(USER_ID, PROJECT_ID_1);
 		when(jwt.getClaim("userId")).thenReturn(USER_ID);

@@ -18,7 +18,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-public class ProcessEventDaoTest {
+class ProcessEventDaoTest {
 
 	private static final String PROJECT_NAME = "Test Project";
 	private static final String EVENT_LABEL_1 = "Event 1";

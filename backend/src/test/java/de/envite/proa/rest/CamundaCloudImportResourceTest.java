@@ -10,7 +10,7 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class CamundaCloudImportResourceTest {
+class CamundaCloudImportResourceTest {
 
     @InjectMocks
     private CamundaCloudImportResource resource;
@@ -33,7 +33,7 @@ public class CamundaCloudImportResourceTest {
     }
 
     @Test
-    public void testGetToken() {
+    void testGetToken() {
         when(usecase.getToken(CREDENTIALS)).thenReturn(EXPECTED_TOKEN);
 
         Object response = resource.getToken(CREDENTIALS);
@@ -43,7 +43,7 @@ public class CamundaCloudImportResourceTest {
     }
 
     @Test
-    public void testUploadProcessModel() {
+    void testUploadProcessModel() {
         when(usecase.getProcessModels(FETCH_CONFIGURATION)).thenReturn(PROCESS_MODELS);
 
         Object response = resource.uploadProcessModel(FETCH_CONFIGURATION);
@@ -53,7 +53,7 @@ public class CamundaCloudImportResourceTest {
     }
 
     @Test
-    public void testGetProcessInstances() {
+    void testGetProcessInstances() {
         when(usecase.getProcessInstances(FETCH_CONFIGURATION)).thenReturn(PROCESS_INSTANCES);
 
         Object response = resource.getProcessInstances(FETCH_CONFIGURATION);
@@ -63,7 +63,7 @@ public class CamundaCloudImportResourceTest {
     }
 
     @Test
-    public void testImportProcessModels() {
+    void testImportProcessModels() {
         doNothing().when(usecase).importProcessModels(PROJECT_ID, IMPORT_CONFIGURATION);
 
         resource.importProcessModels(PROJECT_ID, IMPORT_CONFIGURATION);

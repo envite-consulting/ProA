@@ -145,7 +145,7 @@ class DataStoreConnectionDaoTest {
 		flushAndClear();
 
 		List<DataStoreConnectionTable> connections = dataStoreConnectionDao.getDataStoreConnections(project);
-		assertTrue(connections.size() == 1);
+        assertEquals(1, connections.size());
 
 		DataStoreTable retrievedDataStore = em.find(DataStoreTable.class, dataStore.getId());
 		assertNotNull(retrievedDataStore);

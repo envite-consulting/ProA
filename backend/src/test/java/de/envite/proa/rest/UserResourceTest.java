@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class UserResourceTest {
+class UserResourceTest {
 
 	@InjectMocks
 	private UserResource resource;
@@ -32,12 +32,12 @@ public class UserResourceTest {
 	private static final User PATCHED_USER = new User();
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testPatchUserAdminRole() {
+	void testPatchUserAdminRole() {
 		when(usecase.patchUser(USER_ID, USER)).thenReturn(PATCHED_USER);
 
 		Response response = resource.patchUser(USER_ID, USER);
@@ -48,7 +48,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testPatchUserUserRole() {
+	void testPatchUserUserRole() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.patchUser(USER_ID, USER)).thenReturn(PATCHED_USER);
 
@@ -61,7 +61,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testGetUserSuccess() {
+	void testGetUserSuccess() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.findById(USER_ID)).thenReturn(USER);
 
@@ -74,7 +74,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testGetUserNotFound() {
+	void testGetUserNotFound() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.findById(USER_ID)).thenThrow(new jakarta.ws.rs.NotFoundException());
 
@@ -86,7 +86,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testGetUserServerError() {
+	void testGetUserServerError() {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.findById(USER_ID)).thenThrow(new RuntimeException("Internal Error"));
 
@@ -98,7 +98,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testDeleteById() {
+	void testDeleteById() {
 		doNothing().when(usecase).deleteById(USER_ID);
 
 		Response response = resource.deleteById(USER_ID);
@@ -109,7 +109,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testDeleteById_NotFound() {
+	void testDeleteById_NotFound() {
 		doThrow(new NoResultException()).when(usecase).deleteById(USER_ID);
 
 		Response response = resource.deleteById(USER_ID);
@@ -120,7 +120,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testDeleteById_InternalServerError() {
+	void testDeleteById_InternalServerError() {
 		doThrow(new RuntimeException()).when(usecase).deleteById(USER_ID);
 
 		Response response = resource.deleteById(USER_ID);
@@ -131,7 +131,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testGetUsers() {
+	void testGetUsers() {
 		when(usecase.getAllUsers()).thenReturn(List.of(USER));
 
 		Response response = resource.getUsers();
@@ -143,7 +143,7 @@ public class UserResourceTest {
 	}
 
 	@Test
-	public void testGetUsers_InternalServerError() {
+	void testGetUsers_InternalServerError() {
 		doThrow(new RuntimeException()).when(usecase).getAllUsers();
 
 		Response response = resource.getUsers();

@@ -31,7 +31,6 @@ import java.util.Objects;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 class ProcessMapRepositoryTest {
@@ -134,7 +133,7 @@ class ProcessMapRepositoryTest {
 		processModelCollaboration.setId(PROCESS_MODEL_ID_3);
 		processModelCollaboration.setProcessType(PROCESS_TYPE_COLLABORATION);
 
-		when(processModelDao.getProcessModels(any(), null)).thenReturn(
+		when(processModelDao.getProcessModels(any(), isNull())).thenReturn(
 				Arrays.asList(processModel1, processModel2, processModelCollaboration));
 
 		ProcessConnectionTable processConnectionTable = new ProcessConnectionTable();
@@ -187,7 +186,7 @@ class ProcessMapRepositoryTest {
 				List.of(dataStoreConnectionTable, dataStoreConnectionCollaboration));
 
 		// Act
-		ProcessMap processMap = repository.getProcessMap(anyLong());
+		ProcessMap processMap = repository.getProcessMap(1L);
 
 		// Assert
 		assertThat(processMap.getProcesses())//

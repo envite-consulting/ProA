@@ -12,7 +12,7 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class ProcessMapResourceTest {
+class ProcessMapResourceTest {
 
 	@InjectMocks
 	private ProcessMapResource resource;
@@ -24,12 +24,12 @@ public class ProcessMapResourceTest {
 	private static final Long CONNECTION_ID = 2L;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testGetProcessMap() {
+	void testGetProcessMap() {
 		ProcessMap expectedMap = new ProcessMap();
 		when(usecase.getProcessMap(PROJECT_ID)).thenReturn(expectedMap);
 
@@ -40,7 +40,7 @@ public class ProcessMapResourceTest {
 	}
 
 	@Test
-	public void testAddConnection() {
+	void testAddConnection() {
 		ProcessConnection connection = new ProcessConnection();
 
 		resource.addConnection(PROJECT_ID, connection);
@@ -49,14 +49,14 @@ public class ProcessMapResourceTest {
 	}
 
 	@Test
-	public void testDeleteProcessConnection() {
+	void testDeleteProcessConnection() {
 		resource.deleteProcessConnection(CONNECTION_ID);
 
 		verify(usecase, times(1)).deleteProcessConnection(CONNECTION_ID);
 	}
 
 	@Test
-	public void testDeleteDataStoreConnection() {
+	void testDeleteDataStoreConnection() {
 		resource.deleteDataStoreConnection(CONNECTION_ID);
 
 		verify(usecase, times(1)).deleteDataStoreConnection(CONNECTION_ID);

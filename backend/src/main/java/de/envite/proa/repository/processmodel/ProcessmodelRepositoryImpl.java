@@ -40,8 +40,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
     private final RelatedProcessModelRepository relatedProcessModelRepository;
 
     @Inject
-    public ProcessmodelRepositoryImpl(//
-                                      ProcessModelDao processModelDao, //
+    public ProcessmodelRepositoryImpl(ProcessModelDao processModelDao, //
                                       DataStoreDao dataStoreDao, //
                                       DataStoreConnectionDao dataStoreConnectionDao, //
                                       CallActivityDao callActivityDao, //

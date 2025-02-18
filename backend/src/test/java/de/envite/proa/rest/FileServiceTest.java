@@ -11,7 +11,7 @@ import java.util.Objects;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class FileServiceTest {
+class FileServiceTest {
 
     private static final String TEST_FILE_NAME = "test-diagram.bpmn";
     private static final String NONEXISTENT_FILE_NAME = "does_not_exist";
@@ -22,12 +22,12 @@ public class FileServiceTest {
     private FileService fileService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void readFileToString() throws IOException {
+    void readFileToString() throws IOException {
         String expected = new String(Objects.requireNonNull(getClass().getClassLoader()
                 .getResourceAsStream(TEST_FILE_NAME)).readAllBytes());
         String result = fileService.readFileToString(file);
@@ -36,7 +36,7 @@ public class FileServiceTest {
     }
 
     @Test
-    public void readFileToString_IOException() {
+    void readFileToString_IOException() {
         String result = fileService.readFileToString(new File(NONEXISTENT_FILE_NAME));
 
         assertThat(result).isNotNull();

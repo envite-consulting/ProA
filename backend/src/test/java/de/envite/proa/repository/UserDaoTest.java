@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-public class UserDaoTest {
+class UserDaoTest {
 
 	private static final String EMAIL_1 = "test1@example.com";
 	private static final String EMAIL_2 = "test2@example.com";

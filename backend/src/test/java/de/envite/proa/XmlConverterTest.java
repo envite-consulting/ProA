@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class XmlConverterTest {
+class XmlConverterTest {
 
 	public static final String XML = "<xml></xml>";
 	public static final byte[] XML_BYTES = XML.getBytes(StandardCharsets.UTF_8);

@@ -22,7 +22,7 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-public class BpmnOperationsTest {
+class BpmnOperationsTest {
 
 	private static final String COLLABORATION_ID = "Collaboration_1";
 	private static final String COLLABORATION_DOCUMENTATION = "This collaboration defines the interactions between the Alice and Bob teams during the order processing.";
@@ -62,7 +62,7 @@ public class BpmnOperationsTest {
 	private BpmnOperations bpmnOperations;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		MockitoAnnotations.openMocks(this);
 	}
 
@@ -81,7 +81,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testStartEvents() throws IOException {
+	void testStartEvents() throws IOException {
 		// Arrange
 		String bpmnXml = new String(
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
@@ -99,7 +99,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testIntermediateCatchEvents() throws IOException {
+	void testIntermediateCatchEvents() throws IOException {
 		// Arrange
 		String bpmnXml = new String(
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
@@ -115,7 +115,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testIntermediateThrowEvents() throws IOException {
+	void testIntermediateThrowEvents() throws IOException {
 		// Arrange
 		String bpmnXml = new String(
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
@@ -131,7 +131,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testEndEvents() throws IOException {
+	void testEndEvents() throws IOException {
 		// Arrange
 		String bpmnXml = new String(
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
@@ -149,7 +149,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testCallActivites() throws IOException {
+	void testCallActivites() throws IOException {
 		// Arrange
 		String bpmnXml = new String(
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
@@ -165,7 +165,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testDataStores() throws IOException {
+	void testDataStores() throws IOException {
 		// Arrange
 		String bpmnXml = new String(
 				getClass().getClassLoader().getResourceAsStream("test-diagram-datastores.bpmn").readAllBytes());
@@ -185,7 +185,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetIsCollaboration_True() {
+	void testGetIsCollaboration_True() {
 		File collaboration = loadFile(COLLABORATION_WITH_TWO_PARTICIPANTS_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -193,7 +193,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetIsCollaboration_False() {
+	void testGetIsCollaboration_False() {
 		File process = loadFile(PROCESS_BPMN);
 		String processXml = fileService.readFileToString(process);
 
@@ -201,7 +201,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetDescription_Collaboration_WithDocumentation() {
+	void testGetDescription_Collaboration_WithDocumentation() {
 		File collaboration = loadFile(COLLABORATION_WITH_DOCUMENTATION_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -211,7 +211,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetDescription_Collaboration_WithProcessesButNoDocumentations() {
+	void testGetDescription_Collaboration_WithProcessesButNoDocumentations() {
 		File collaboration = loadFile(COLLABORATION_WITH_PROCESSES_NO_DOCUMENTATIONS_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -221,7 +221,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetDescription_Process_WithDocumentation() {
+	void testGetDescription_Process_WithDocumentation() {
 		File process = loadFile(PROCESS_WITH_PROCESS_DOCUMENTATION_BPMN);
 		String processXml = fileService.readFileToString(process);
 
@@ -231,7 +231,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetBpmnProcessId_Collaboration_WithId() {
+	void testGetBpmnProcessId_Collaboration_WithId() {
 		File collaboration = loadFile(COLLABORATION_WITH_COLLABORATION_ID_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -241,7 +241,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetBpmnProcessId_Collaboration_WithoutId() {
+	void testGetBpmnProcessId_Collaboration_WithoutId() {
 		File collaboration = loadFile(COLLABORATION_WITH_PROCESSES_NO_DOCUMENTATIONS_BPMN1);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -251,7 +251,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetBpmnProcessId_Collaboration_OneParticipant() {
+	void testGetBpmnProcessId_Collaboration_OneParticipant() {
 		File collaboration = loadFile(COLLABORATION_ONE_PROCESS_WITH_ID_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -261,7 +261,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetBpmnProcessId_Process() {
+	void testGetBpmnProcessId_Process() {
 		File process = loadFile(PROCESS_BPMN);
 		String processXml = fileService.readFileToString(process);
 
@@ -271,7 +271,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetParticipants() {
+	void testGetParticipants() {
 		File collaboration = loadFile(COLLABORATION_WITH_DETAILED_PARTICIPANTS_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -296,7 +296,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetMessageFlows() {
+	void testGetMessageFlows() {
 		File collaboration = loadFile(COLLABORATION_WITH_DETAILED_MESSAGE_FLOWS_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -372,7 +372,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testGetMessageFlowsEmpty() {
+	void testGetMessageFlowsEmpty() {
 		File collaboration = loadFile(COLLABORATION_WITH_TWO_PARTICIPANTS_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 
@@ -381,7 +381,7 @@ public class BpmnOperationsTest {
 	}
 
 	@Test
-	public void testAddEmptyProcessRefs() {
+	void testAddEmptyProcessRefs() {
 		File collaboration = loadFile(COLLABORATION_PARTICIPANT_WITHOUT_PROCESSREF_BPMN);
 		String collaborationXml = fileService.readFileToString(collaboration);
 

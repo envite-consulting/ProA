@@ -18,7 +18,7 @@ import java.io.PrintStream;
 import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
-public class AdminInitializerTest {
+class AdminInitializerTest {
 
 	private static final String ROLE = "Admin";
 
@@ -40,12 +40,12 @@ public class AdminInitializerTest {
 	String adminPassword;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testAdminAlreadyExists() throws EmailAlreadyRegisteredException {
+	void testAdminAlreadyExists() throws EmailAlreadyRegisteredException {
 		when(userUsecase.findByEmail(adminEmail)).thenReturn(new User());
 
 		adminInitializer.init();
@@ -55,7 +55,7 @@ public class AdminInitializerTest {
 	}
 
 	@Test
-	public void testAdminDoesNotExist() throws EmailAlreadyRegisteredException {
+	void testAdminDoesNotExist() throws EmailAlreadyRegisteredException {
 		when(userUsecase.findByEmail(adminEmail)).thenReturn(null);
 
 		adminInitializer.init();
@@ -70,7 +70,7 @@ public class AdminInitializerTest {
 	}
 
 	@Test
-	public void testAdminDoesNotExist_Exception() throws EmailAlreadyRegisteredException {
+	void testAdminDoesNotExist_Exception() throws EmailAlreadyRegisteredException {
 		User user = new User();
 		user.setEmail(adminEmail);
 		user.setPassword(adminPassword);

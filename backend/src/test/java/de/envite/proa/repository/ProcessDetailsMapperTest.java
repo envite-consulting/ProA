@@ -23,7 +23,7 @@ class ProcessDetailsMapperTest {
 	private static final String START_EVENT_ID = "start-event-id";
 
 	private static final String INTERMEDIATE_THROW_LABEL = "Intermediate Throw Label";
-	private static final String INTEREMDIATE_THROW_EVENT_ID = "interemdiate-throw-event-id";
+	private static final String INTERMEDIATE_THROW_EVENT_ID = "intermediate-throw-event-id";
 
 	private static final String INTERMEDIATE_CATCH_EVENT_LABEL = "Intermediate Catch Event Label";
 	private static final String INTERMEDIATE_CATCH_EVENT_ID = "intermediate-catch-event-id";
@@ -32,13 +32,13 @@ class ProcessDetailsMapperTest {
 	private static final String END_EVENT_ID = "end-event-id";
 
 	@Test
-	public void testClassInitialization() {
+	void testClassInitialization() {
 		ProcessDetailsMapper mapper = new ProcessDetailsMapper();
 		assertNotNull(mapper);
 	}
 
 	@Test
-	public void testMap() {
+	void testMap() {
 
 		// Arrange
 
@@ -55,7 +55,7 @@ class ProcessDetailsMapperTest {
 		ProcessEventTable intermediateThrowEvent = new ProcessEventTable();
 		intermediateThrowEvent.setEventType(EventType.INTERMEDIATE_THROW);
 		intermediateThrowEvent.setLabel(INTERMEDIATE_THROW_LABEL);
-		intermediateThrowEvent.setElementId(INTEREMDIATE_THROW_EVENT_ID);
+		intermediateThrowEvent.setElementId(INTERMEDIATE_THROW_EVENT_ID);
 
 		ProcessEventTable intermediateCatchEvent = new ProcessEventTable();
 		intermediateCatchEvent.setEventType(EventType.INTERMEDIATE_CATCH);
@@ -83,7 +83,7 @@ class ProcessDetailsMapperTest {
 		assertThat(processDetails.getIntermediateThrowEvents())//
 				.hasSize(1)//
 				.extracting("elementId", "label", "eventType")//
-				.contains(tuple(INTEREMDIATE_THROW_EVENT_ID, INTERMEDIATE_THROW_LABEL, EventType.INTERMEDIATE_THROW));
+				.contains(tuple(INTERMEDIATE_THROW_EVENT_ID, INTERMEDIATE_THROW_LABEL, EventType.INTERMEDIATE_THROW));
 		assertThat(processDetails.getIntermediateCatchEvents())//
 				.hasSize(1)//
 				.extracting("elementId", "label", "eventType")//

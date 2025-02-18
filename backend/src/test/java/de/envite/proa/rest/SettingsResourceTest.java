@@ -12,7 +12,7 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class SettingsResourceTest {
+class SettingsResourceTest {
 
 	@InjectMocks
 	private SettingsResource resource;
@@ -29,12 +29,12 @@ public class SettingsResourceTest {
 	private static final Settings SETTINGS = new Settings();
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testGetSettingsWebMode() {
+	void testGetSettingsWebMode() {
 		resource.appMode = APP_MODE_WEB;
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.getSettings(USER_ID)).thenReturn(SETTINGS);
@@ -47,7 +47,7 @@ public class SettingsResourceTest {
 	}
 
 	@Test
-	public void testGetSettingsDesktopMode() {
+	void testGetSettingsDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 		when(usecase.getSettings()).thenReturn(SETTINGS);
 
@@ -59,7 +59,7 @@ public class SettingsResourceTest {
 	}
 
 	@Test
-	public void testCreateSettingsWebMode() {
+	void testCreateSettingsWebMode() {
 		resource.appMode = APP_MODE_WEB;
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.createSettings(USER_ID, SETTINGS)).thenReturn(SETTINGS);
@@ -72,7 +72,7 @@ public class SettingsResourceTest {
 	}
 
 	@Test
-	public void testCreateSettingsDesktopMode() {
+	void testCreateSettingsDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 		when(usecase.createSettings(SETTINGS)).thenReturn(SETTINGS);
 
@@ -84,7 +84,7 @@ public class SettingsResourceTest {
 	}
 
 	@Test
-	public void testUpdateSettingsWebMode() {
+	void testUpdateSettingsWebMode() {
 		resource.appMode = APP_MODE_WEB;
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		when(usecase.updateSettings(USER_ID, SETTINGS)).thenReturn(SETTINGS);
@@ -97,7 +97,7 @@ public class SettingsResourceTest {
 	}
 
 	@Test
-	public void testUpdateSettingsDesktopMode() {
+	void testUpdateSettingsDesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
 		when(usecase.updateSettings(SETTINGS)).thenReturn(SETTINGS);
 

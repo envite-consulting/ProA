@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-public class CallActivityDaoTest {
+class CallActivityDaoTest {
 
 	private static final String PROJECT_NAME = "Test Project";
 	private static final String ACTIVITY_LABEL_1 = "Test Activity 1";

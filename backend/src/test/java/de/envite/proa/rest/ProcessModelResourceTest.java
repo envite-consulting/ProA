@@ -18,7 +18,7 @@ import java.util.Objects;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-public class ProcessModelResourceTest {
+class ProcessModelResourceTest {
 
 	private static final String PROCESS_XML = "ProcessXML";
 	private static final String FILE_NAME = "testfile.bpmn";
@@ -46,12 +46,12 @@ public class ProcessModelResourceTest {
 	ProcessModelResource resource;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
-	public void testUploadProcessModel() {
+	void testUploadProcessModel() {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -63,7 +63,7 @@ public class ProcessModelResourceTest {
 				DESCRIPTION, IS_COLLABORATION);
 
 		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isEqualTo(200);
+		assertThat(response.getStatus()).isEqualTo(201);
 		assertThat(response.getEntity()).isInstanceOf(Long.class);
 		assertThat((Long) response.getEntity()).isEqualTo(PROCESS_ID);
 
@@ -72,7 +72,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModel_InternalError() {
+	void testUploadProcessModel_InternalError() {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -92,7 +92,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testGetProcessModel() {
+	void testGetProcessModel() {
 		when(usecase.getProcessModel(PROCESS_ID)).thenReturn(PROCESS_XML);
 
 		String result = resource.getProcessModel(PROCESS_ID);
@@ -103,7 +103,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testDeleteProcessModel() {
+	void testDeleteProcessModel() {
 		doNothing().when(usecase).deleteProcessModel(PROCESS_ID);
 
 		Response response = resource.deleteProcessModel(PROCESS_ID);
@@ -115,7 +115,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testGetProcessInformation() {
+	void testGetProcessInformation() {
 		List<ProcessInformation> expectedResultList = List.of(new ProcessInformation());
 
 		when(usecase.getProcessInformation(PROJECT_ID, null)).thenReturn(expectedResultList);
@@ -128,7 +128,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testGetProcessDetails() {
+	void testGetProcessDetails() {
 		ProcessDetails expected = new ProcessDetails();
 
 		when(usecase.getProcessDetails(PROCESS_ID, false)).thenReturn(expected);
@@ -140,7 +140,7 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModelIllegalArgument() {
+	void testUploadProcessModelIllegalArgument() {
 		File processModel = new File(
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
@@ -156,13 +156,14 @@ public class ProcessModelResourceTest {
 		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
 		@SuppressWarnings("unchecked")
         Map<String, String> entity = (Map<String, String>) response.getEntity();
-		assertThat(entity).containsKeys("error", "data");
-		assertThat(entity.get("error")).isEqualTo(COLLABORATION_EXISTS_ERROR_MESSAGE);
-		assertThat(entity.get("data")).isEqualTo(COLLABORATION_NAME);
+		assertThat(entity)
+				.containsKeys("error", "data")
+				.containsEntry("error", COLLABORATION_EXISTS_ERROR_MESSAGE)
+				.containsEntry("data", COLLABORATION_NAME);
 	}
 
 	@Test
-	public void testReplaceProcessModel() {
+	void testReplaceProcessModel() {
 		File processModel = new File(
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
@@ -171,8 +172,10 @@ public class ProcessModelResourceTest {
 				.thenReturn(NEW_PROCESS_ID);
 
 		Response response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION);
+		Long returnedProcessId = (Long) response.getEntity();
 
-		assertThat(response).isEqualTo(NEW_PROCESS_ID);
+		assertThat(response.getStatus()).isEqualTo(201);
+		assertThat(returnedProcessId).isEqualTo(NEW_PROCESS_ID);
 
 		verify(fileService).readFileToString(processModel);
 		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION);

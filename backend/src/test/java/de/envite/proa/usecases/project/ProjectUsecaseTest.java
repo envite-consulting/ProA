@@ -13,7 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class ProjectUsecaseTest {
+class ProjectUsecaseTest {
 
 	private static final long PROJECT_ID = 1L;
 	private static final String PROJECT_NAME = "Test Project";
@@ -29,7 +29,7 @@ public class ProjectUsecaseTest {
 	private ProjectUsecase projectUsecase;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 		expectedProject = new Project();
 		expectedProject.setId(PROJECT_ID);
@@ -38,7 +38,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testCreateProject() {
+	void testCreateProject() {
 		when(repository.createProject(PROJECT_NAME, PROJECT_VERSION)).thenReturn(expectedProject);
 
 		Project result = projectUsecase.createProject(PROJECT_NAME, PROJECT_VERSION);
@@ -48,7 +48,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testCreateProjectWithUserId() {
+	void testCreateProjectWithUserId() {
 		when(repository.createProject(USER_ID, PROJECT_NAME, PROJECT_VERSION)).thenReturn(expectedProject);
 
 		Project result = projectUsecase.createProject(USER_ID, PROJECT_NAME, PROJECT_VERSION);
@@ -58,7 +58,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testGetProjects() {
+	void testGetProjects() {
 		List<Project> mockProjects = Collections.singletonList(expectedProject);
 		when(repository.getProjects()).thenReturn(mockProjects);
 
@@ -69,7 +69,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testGetProjectsWithUserId() {
+	void testGetProjectsWithUserId() {
 		List<Project> mockProjects = Collections.singletonList(expectedProject);
 		when(repository.getProjects(USER_ID)).thenReturn(mockProjects);
 
@@ -80,7 +80,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testGetProjectById() {
+	void testGetProjectById() {
 		when(repository.getProject(PROJECT_ID)).thenReturn(expectedProject);
 
 		Project result = projectUsecase.getProject(PROJECT_ID);
@@ -90,7 +90,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testGetProjectByUserIdAndProjectId() {
+	void testGetProjectByUserIdAndProjectId() {
 		when(repository.getProject(USER_ID, PROJECT_ID)).thenReturn(expectedProject);
 
 		Project result = projectUsecase.getProject(USER_ID, PROJECT_ID);
@@ -100,7 +100,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testDeleteProject_DesktopMode() {
+	void testDeleteProject_DesktopMode() {
 		doNothing().when(repository).deleteProject(USER_ID);
 
 		projectUsecase.deleteProject(USER_ID);
@@ -109,7 +109,7 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testDeleteProject_WebMode() {
+	void testDeleteProject_WebMode() {
 		doNothing().when(repository).deleteProject(USER_ID, PROJECT_ID);
 
 		projectUsecase.deleteProject(USER_ID, PROJECT_ID);
