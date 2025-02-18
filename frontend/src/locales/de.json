@@ -16,6 +16,7 @@
     "emailAlreadyRegistered": "Diese E-Mail Adresse ist bereits registriert",
     "firstName": "Vorname",
     "forgotPwQuestion": "Passwort vergessen?",
+    "id": "ID",
     "lastName": "Nachname",
     "name": "Name",
     "newPassword": "Neues Passwort",
@@ -73,15 +74,21 @@
     "processLevels": "Prozessebenen",
     "processModel": "Prozessmodell",
     "save": "Speichern",
+    "search": "Suchen",
     "settings": "Einstellungen",
     "showProcessLevels": "Prozessebenen anzeigen und alle Aufrufaktivitäten / Ereignisse aggregieren",
     "signOut": "Abmelden",
     "startEvents": "Startereignisse"
   },
+  "manageUsers": {
+    "saveChanges": "Speichern",
+    "editProfile": "Profil bearbeiten"
+  },
   "navigation": {
     "c8Import": "C8 Import",
     "createAccount": "Account erstellen",
     "camundaCloudImport": "C8 Import",
+    "manageUsers": "Nutzer verwalten",
     "pageNotFound": "Seite nicht gefunden",
     "processList": "Prozessliste",
     "processMap": "Prozesskarte",
@@ -92,6 +99,7 @@
   "processDetailSidebar": {
     "endEvents": "Endereignisse",
     "goToProcessModel": "Zum Prozessmodell",
+    "loadingData": "Daten werden geladen...",
     "startEvents": "Startereignisse"
   },
   "processList": {
@@ -103,22 +111,27 @@
       "singular": " existiert bereits.",
       "plural": " existieren bereits."
     },
-    "cantReplaceWithCollaborationErrorMsg": "Es ist nicht möglich einen Prozess mit einer Kollaboration zu ersetzen.",
+    "cantReplaceWithCollaborationErrorMsg": "Es ist nicht möglich, einen Prozess mit einer Kollaboration zu ersetzen.",
     "collaboration": "Kollaboration",
     "confirm": "Bestätigen",
-    "confirmDeletion": "Löschen Bestätigen",
+    "confirmDeletion": "Löschen bestätigen",
     "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
     "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
     "error": "Fehler",
+    "fetchingProcessModels": "Prozessmodelle werden geladen...",
     "filterByLevels": "Nach Prozessebene filtern",
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
+    "noApiKeyError": "Kein API-Key gefunden. Bitte setzen Sie einen API-Key in den Einstellungen, um die KI-Generierung zu aktivieren.",
+    "noProcessModelsFound": "Keine Prozessmodelle gefunden.",
     "participant": "Teilnehmer",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
+    "unknownErrorMsg": "Unbekannter Fehler beim Hochladen der Prozessmodelle.",
     "uploadProcessModels": "Prozessmodelle hochladen",
+    "uploadingProcessModel": "Hochladen des Prozessmodels",
     "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
   },
   "processMap": {
@@ -131,6 +144,7 @@
     "hide": "Ausblenden",
     "intermediateEvents": "Zwischenereignisse",
     "legend": "Legende",
+    "loadingProcessMap": "Prozesskarte wird geladen...",
     "messageFlows": "Nachrichtenflüsse",
     "noInformationAvailable": "Keine Informationen verfügbar",
     "process": "Prozess",
@@ -144,15 +158,26 @@
     "changeLevel": "Prozessebene wechseln",
     "level": "Ebene"
   },
+  "processView": {
+    "loadingProcessModel": "Prozessmodell wird geladen..."
+  },
   "projectOverview": {
     "active": "AKTIV",
+    "confirm": "Bestätigen",
+    "confirmDeletion": "Löschen bestätigen",
+    "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
+    "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Version ",
+    "confirmDeletionText3": " des Projektes löschen.",
     "create": "Erstellen",
     "createProject": "Projekt erstellen",
+    "errorMessage": "Ein Fehler ist aufgetreten!",
     "newProject": "Neues Projekt",
     "newVersion": "Neue Version",
     "newVersionFor": "Neue Version für",
     "open": "Öffnen",
     "projectNameRequired": "Projektname ist erforderlich",
+    "projectSuccessfullyCreated": "Projekt erfolgreich erstellt",
+    "projectSuccessfullyDeleted": "Projekt erfolgreich gelöscht",
     "projectVersionRequired": "Projektversion ist erforderlich",
     "versionNameExists": "Versionsname existiert bereits",
     "versionNameRequired": "Versionsname ist erforderlich",

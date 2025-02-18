@@ -1,0 +1,35 @@
+package de.envite.proa.repository.messageflow;
+
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.repository.processmodel.ProcessModelDao;
+import de.envite.proa.repository.tables.MessageFlowTable;
+import de.envite.proa.repository.tables.ProcessModelTable;
+import de.envite.proa.repository.tables.ProjectTable;
+
+public class MessageFlowMapper {
+
+	static public MessageFlowTable map(MessageFlowDetails messageFlowDetails, ProjectTable project) {
+		MessageFlowTable table = new MessageFlowTable();
+		table.setBpmnId(messageFlowDetails.getBpmnId());
+		table.setName(messageFlowDetails.getName());
+		table.setDescription(messageFlowDetails.getDescription());
+		table.setCallingProcess(new ProcessModelTable(messageFlowDetails.getCallingProcessId()));
+		table.setCalledProcess(new ProcessModelTable(messageFlowDetails.getCalledProcessId()));
+		table.setCallingElementType(messageFlowDetails.getCallingElementType());
+		table.setCalledElementType(messageFlowDetails.getCalledElementType());
+		table.setProject(project);
+		return table;
+	}
+
+	static public MessageFlowDetails map(MessageFlowTable table) {
+		MessageFlowDetails details = new MessageFlowDetails();
+		details.setBpmnId(table.getBpmnId());
+		details.setName(table.getName());
+		details.setDescription(table.getDescription());
+		details.setCallingProcessId(table.getCallingProcess().getId());
+		details.setCalledProcessId(table.getCalledProcess().getId());
+		details.setCallingElementType(table.getCallingElementType());
+		details.setCalledElementType(table.getCalledElementType());
+		return details;
+	}
+}

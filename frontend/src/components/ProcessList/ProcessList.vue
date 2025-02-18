@@ -10,7 +10,13 @@
     </v-toolbar-title>
   </v-toolbar>
   <ProcessDetailDialog ref="processDetailDialog" />
-  <v-list lines="two" class="pa-6">
+  <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
+    <div class="d-flex flex-column align-center justify-center">
+      <span class="mb-2">{{ $t("processList.fetchingProcessModels") }}</span>
+      <v-progress-circular indeterminate />
+    </div>
+  </div>
+  <v-list v-else lines="two" class="pa-6">
     <v-select
       v-if="showFilter"
       v-model="selectedLevels"
@@ -18,7 +24,7 @@
       density="compact"
       multiple
       clearable
-      @update:modelValue="fetchProcessModels"
+      @update:modelValue="fetchProcessModels(true)"
       style="width: 300px"
       variant="outlined"
     >
@@ -27,6 +33,9 @@
         {{ $t("processList.filterByLevels") }}
       </template>
     </v-select>
+    <v-list-item v-if="rootProcessModels.length == 0"
+      >{{ $t("processList.noProcessModelsFound") }}
+    </v-list-item>
     <template
       v-for="(model, index) in rootProcessModels"
       :key="'process-' + model.id"
@@ -136,9 +145,7 @@
             class="py-5 mt-0"
           >
             <div class="d-flex align-center">
-              <p class="px-3">
-                {{ file.file.name }}
-              </p>
+              <p class="px-3">{{ file.file.name }}</p>
               <span
                 v-if="file.isCollaboration"
                 class="text-grey-darken-1 text-body-2"
@@ -285,7 +292,7 @@
               "processList.alreadyExistsErrorMsg1." +
                 (alreadyExistingBpmnProcessIds.length > 1
                   ? "plural"
-                  : "singular")
+                  : "singular"),
             )
           }}
           <strong>{{ alreadyExistingBpmnProcessIds.join(", ") }}</strong>
@@ -294,7 +301,7 @@
               "processList.alreadyExistsErrorMsg2." +
                 (alreadyExistingBpmnProcessIds.length > 1
                   ? "plural"
-                  : "singular")
+                  : "singular"),
             )
           }}
         </span>
@@ -337,6 +344,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { authHeader } from "@/components/Authentication/authHeader";
 import i18n from "@/i18n";
 import ProcessTreeNode from "@/components/ProcessList/ProcessTreeNode.vue";
+import { Settings } from "@/components/SettingsDrawer.vue";
 
 interface BPMNContent {
   name: string;
@@ -368,7 +376,7 @@ interface RawProcessModel {
 
 enum UploadDialogMode {
   SINGLE = "single",
-  MULTIPLE = "multiple"
+  MULTIPLE = "multiple",
 }
 
 interface ProcessModelToUpload {
@@ -391,13 +399,14 @@ interface HttpError {
 
 enum ErrorType {
   ALREADY_EXISTING = "ALREADY_EXISTING",
-  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION"
+  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION",
+  UNKNOWN = "UNKNOWN",
 }
 
 export default defineComponent({
   components: {
     ProcessTreeNode,
-    ProcessDetailDialog
+    ProcessDetailDialog,
   },
   data: () => ({
     appStore: useAppStore(),
@@ -420,7 +429,11 @@ export default defineComponent({
     selectedProjectId: null as number | null,
     selectedProjectName: "" as string,
     selectedVersionName: "" as string,
-    fileExtensionMatcher: /.[^/.]+$/
+    fileExtensionMatcher: /.[^/.]+$/,
+    isFetching: false as boolean,
+    descriptionErrors: {} as { [key: number]: string },
+    currentlyUploadingProcessModel: {} as ProcessModelToUpload,
+    currentUploadStatus: "" as string,
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -440,14 +453,14 @@ export default defineComponent({
     },
     showFilter() {
       return this.availableLevels.some((level) => level > 0);
-    }
+    },
   },
   watch: {
     isUserLoggedIn(newValue) {
       if (!newValue) {
         this.$router.push("/");
       }
-    }
+    },
   },
   methods: {
     showProcessInfoDialog(processId: number) {
@@ -460,7 +473,7 @@ export default defineComponent({
 
     async deleteProcessModel(
       processModelNode: ProcessModelNode,
-      skipConfirm: boolean = false
+      skipConfirm: boolean = false,
     ) {
       const isPartOfCollaboration =
         processModelNode.parentsBpmnProcessIds.length > 0 ||
@@ -471,19 +484,24 @@ export default defineComponent({
         return;
       }
       const processId = processModelNode.id;
-      await axios.delete("/api/process-model/" + processId, {
-        headers: authHeader()
-      });
-      this.confirmDeleteDialog = false;
-      this.processModelToBeDeleted = null;
-      this.appStore.setProcessModelsChanged();
-      this.fetchProcessModels();
+      await axios
+        .delete("/api/process-model/" + processId, { headers: authHeader() })
+        .then(() => {
+          this.confirmDeleteDialog = false;
+          this.processModelToBeDeleted = null;
+          this.appStore.setProcessModelsChanged();
+          this.fetchProcessModels(true);
+        });
     },
 
-    async fetchProcessModels() {
+    async fetchProcessModels(skipLoading = false) {
+      if (!skipLoading) {
+        this.isFetching = null;
+      }
+
       const response = await axios.get(
         "/api/project/" + this.selectedProjectId + "/process-model",
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
 
       const levelsSet = new Set<number>();
@@ -505,20 +523,18 @@ export default defineComponent({
               this.selectedProjectId +
               "/process-model" +
               levelsQuery,
-            { headers: authHeader() }
+            { headers: authHeader() },
           )
         : response;
 
       this.rootProcessModels = this.collectRoots(levelsResponse.data);
+      this.isFetching = false;
     },
 
     collectRoots(rawProcessModels: RawProcessModel[]): ProcessModelNode[] {
       const modelMap = new Map<string, ProcessModelNode>();
       rawProcessModels.forEach((model) =>
-        modelMap.set(model.bpmnProcessId, {
-          ...model,
-          children: []
-        })
+        modelMap.set(model.bpmnProcessId, { ...model, children: [] }),
       );
 
       const roots = [] as ProcessModelNode[];
@@ -592,7 +608,7 @@ export default defineComponent({
       return {
         name: name || "",
         description: documentation || "",
-        isCollaboration
+        isCollaboration,
       };
     },
 
@@ -602,7 +618,7 @@ export default defineComponent({
       for (const file of this.processModelFiles) {
         try {
           this.processModelsToUpload.push(
-            await this.getProcessModelToUpload(file)
+            await this.getProcessModelToUpload(file),
           );
         } catch (error) {
           console.error("Error reading file content: ", error);
@@ -621,20 +637,20 @@ export default defineComponent({
         description,
         content,
         aiLoading: false,
-        isCollaboration
+        isCollaboration,
       };
     },
 
     async uploadProcessModel(
-      processModel: ProcessModelToUpload
+      processModel: ProcessModelToUpload,
     ): Promise<number | string> {
       const formData = this.createProcessModelFormData(processModel);
       const { data } = await axios.post(
         "/api/project/" + this.selectedProjectId + "/process-model",
         formData,
         {
-          headers: authHeader()
-        }
+          headers: authHeader(),
+        },
       );
       return data;
     },
@@ -649,7 +665,7 @@ export default defineComponent({
       formData.append("description", processModel.description);
       formData.append(
         "isCollaboration",
-        processModel.isCollaboration ? "true" : "false"
+        processModel.isCollaboration ? "true" : "false",
       );
 
       return formData;
@@ -661,16 +677,22 @@ export default defineComponent({
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
         let error = false;
+        let errorType = ErrorType.ALREADY_EXISTING;
         this.alreadyExistingBpmnProcessIds = [];
+        const numProcessModels = this.processModelsToUpload.length;
+        let i = 0;
         for (const processModel of this.processModelsToUpload) {
           this.progress += progressSteps;
+          this.currentlyUploadingProcessModel = processModel;
+          i += 1;
+          this.currentUploadStatus = `${i}/${numProcessModels}`;
 
           try {
             await this.uploadProcessModel(processModel);
           } catch (e) {
             error = true;
             this.alreadyExistingBpmnProcessIds.push(
-              (e as HttpError).response.data.data
+              (e as HttpError).response.data.data,
             );
           }
 
@@ -678,7 +700,7 @@ export default defineComponent({
         }
         this.afterUploadActions();
         if (error) {
-          this.errorType = ErrorType.ALREADY_EXISTING;
+          this.errorType = errorType;
           this.errorDialog = true;
         }
       }
@@ -690,7 +712,7 @@ export default defineComponent({
       }
 
       const formData = this.createProcessModelFormData(
-        this.processModelsToUpload[0]
+        this.processModelsToUpload[0],
       );
 
       try {
@@ -700,9 +722,7 @@ export default defineComponent({
             "/process-model/" +
             this.processModelToBeReplacedId,
           formData,
-          {
-            headers: authHeader()
-          }
+          { headers: authHeader() },
         );
         this.afterUploadActions();
       } catch (e) {
@@ -732,20 +752,22 @@ export default defineComponent({
       this.progress = 0;
     },
 
-    async generateDescription(processModelToUpload: ProcessModelToUpload) {
+    async generateDescription(
+      processModelToUpload: ProcessModelToUpload,
+      index: number,
+    ) {
       processModelToUpload.aiLoading = true;
-
       const content = processModelToUpload.content;
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         console.error(
-          "No API key found. Please set the GEMINI_API_KEY environment variable."
+          "No API key found. Please set the GEMINI_API_KEY environment variable.",
         );
         return;
       }
       const genAi = new GoogleGenerativeAI(apiKey);
       const model = genAi.getGenerativeModel({
-        model: "gemini-1.5-flash"
+        model: "gemini-1.5-flash",
       });
 
       const promptInstructionsDe =
@@ -783,7 +805,10 @@ export default defineComponent({
     },
     goToProcessMap() {
       this.$router.push("ProcessMap");
-    }
-  }
+    },
+    resetDescriptionErrors() {
+      this.descriptionErrors = {};
+    },
+  },
 });
 </script>

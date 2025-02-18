@@ -1,25 +1,21 @@
 package de.envite.proa.rest;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import de.envite.proa.entities.process.RelatedProcessModelRequest;
+import de.envite.proa.entities.process.ProcessDetails;
+import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
-import de.envite.proa.entities.RelatedProcessModelRequest;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
-import de.envite.proa.entities.ProcessDetails;
-import de.envite.proa.entities.ProcessInformation;
-import de.envite.proa.usecases.ProcessModelUsecase;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Path("/api")
 public class ProcessModelResource {
@@ -27,27 +23,29 @@ public class ProcessModelResource {
 	@Inject
 	private ProcessModelUsecase usecase;
 
+	@Inject
+	FileService fileService;
+
 	/**
-	 * 
 	 * Creates a new process model
-	 * 
+	 *
 	 * @param projectId
-	 *            the id of the project the process model belongs to
+	 * 		the id of the project the process model belongs to
 	 * @param processModel
-	 *            the bpmn file
+	 * 		the bpmn file
 	 * @param fileName
-	 *            the file name of the bpmn file
+	 * 		the file name of the bpmn file
 	 * @param description
-	 *            the description of the process
+	 * 		the description of the process
 	 * @return id of saved process model
 	 */
 	@POST
 	@Path("/project/{projectId}/process-model")
-	@RolesAllowedIfWebVersion({"User", "Admin"})
+	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Response uploadProcessModel(@RestPath Long projectId, @RestForm File processModel, @RestForm String fileName,
-			@RestForm String description, @RestForm String isCollaboration) {
+                                       @RestForm String description, @RestForm boolean isCollaboration) {
 		try {
-			String content = readFileToString(processModel);
+			String content = fileService.readFileToString(processModel);
 			fileName = fileName.replace(".bpmn", "");
 			return Response //
 					.status(Response.Status.CREATED)
@@ -56,8 +54,7 @@ public class ProcessModelResource {
 							fileName, //
 							content, //
 							description, //
-							isCollaboration, //
-							null //
+							isCollaboration //
 					)) //
 					.build();
 		} catch (IllegalArgumentException e) {
@@ -67,19 +64,21 @@ public class ProcessModelResource {
 			errorResponse.put("error", errorMessage);
 			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
 			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 
 	@Path("project/{projectId}/process-model/{oldProcessId}")
 	@POST
-	@RolesAllowedIfWebVersion({"User", "Admin"})
+	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
 			@RestForm String fileName, @RestForm String description) {
-		String content = readFileToString(processModel);
+		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
 		return Response
 				.status(Response.Status.CREATED)
-				.entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description, null))
+				.entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description))
 				.build();
 	}
 
@@ -93,69 +92,53 @@ public class ProcessModelResource {
 	}
 
 	/**
-	 * Gets the xml representations of the bpmn file the id corresponds to. This
-	 * method is called from the process model view that shows the bpmn via bpmn.io
-	 * 
+	 * Gets the xml representations of the bpmn file the id corresponds to. This method is called from the process model
+	 * view that shows the bpmn via bpmn.io
+	 *
 	 * @param id
-	 *            of the bpmn file
+	 * 		of the bpmn file
 	 * @return bpmn file as string
 	 */
 	@Path("/process-model/{id}")
 	@GET
-	@RolesAllowedIfWebVersion({"User", "Admin"})
+	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public String getProcessModel(@RestPath Long id) {
 		return usecase.getProcessModel(id);
 	}
 
 	@Path("/process-model/{id}")
 	@DELETE
-	@RolesAllowedIfWebVersion({"User", "Admin"})
+	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Response deleteProcessModel(@RestPath Long id) {
 		usecase.deleteProcessModel(id);
-		return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.OK).build();
 	}
 
 	/**
-	 * This method gets the names and the corresponding ids of all process models
-	 * in order to show them as a list in the process list in the frontend
+	 * This method gets the names and the corresponding ids of all process models in order to show them as a list in
+	 * the process list in the frontend
 	 */
 	@GET
 	@Path("/project/{projectId}/process-model")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public List<ProcessInformation> getProcessInformation(@RestPath Long projectId, @QueryParam("levels") String levels) {
+	@RolesAllowedIfWebVersion({ "User", "Admin" })
+    public List<ProcessInformation> getProcessInformation(@RestPath Long projectId, @QueryParam("levels") String levels) {
 		return usecase.getProcessInformation(projectId, levels);
 	}
 
-	@GET
-	@Path("/project/{projectId}/process-model/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public ProcessInformation getProcessInformationById(@RestPath Long projectId, Long id) {
-		return usecase.getProcessInformationById(projectId, id);
-	}
+    @GET
+    @Path("/project/{projectId}/process-model/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowedIfWebVersion({"User", "Admin"})
+    public ProcessInformation getProcessInformationById(@RestPath Long projectId, Long id) {
+        return usecase.getProcessInformationById(projectId, id);
+    }
 
 	@GET
 	@Path("/process-model/{id}/details")
 	@Produces(MediaType.APPLICATION_JSON)
-	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public ProcessDetails getProcessDetails(@RestPath Long id, @QueryParam("aggregate") @DefaultValue("false") boolean aggregate) {
+	@RolesAllowedIfWebVersion({ "User", "Admin" })
+    public ProcessDetails getProcessDetails(@RestPath Long id, @QueryParam("aggregate") @DefaultValue("false") boolean aggregate) {
 		return usecase.getProcessDetails(id, aggregate);
-	}
-
-	private String readFileToString(File file) {
-		StringBuilder contentBuilder = new StringBuilder();
-
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-
-			String sCurrentLine;
-			while ((sCurrentLine = br.readLine()) != null) {
-				contentBuilder.append(sCurrentLine).append("\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		return contentBuilder.toString();
 	}
 }

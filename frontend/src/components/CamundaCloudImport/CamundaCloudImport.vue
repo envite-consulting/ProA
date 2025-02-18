@@ -24,7 +24,7 @@
         <v-list-item-subtitle>
           {{ getLocaleDate(model.created) }} - {{ model.updatedBy.email }}
         </v-list-item-subtitle>
-        <template v-slot:prepend="{ isActive }">
+        <template>
           <v-list-item-action start>
             <v-checkbox v-model="selectedProcessModels" :value="model"></v-checkbox>
           </v-list-item-action>
@@ -287,6 +287,7 @@ export default defineComponent({
         this.processModels = this.processModels.filter(model => !selectedProcessModelIds.includes(model.id));
         this.selectedProcessModels = [];
         this.loadingDialog = false;
+        this.store.setProcessModelsChanged();
         this.$router.push("/ProcessList");
       }).catch(error => {
         console.log(error);

@@ -1,5 +1,16 @@
 <template>
   <v-card height="100%">
+    <div
+      v-if="isFetching"
+      class="d-flex align-center justify-center w-100 h-75"
+    >
+      <div class="d-flex flex-column align-center justify-center">
+        <span class="mb-2 mx-5 text-center">{{
+          $t("processView.loadingProcessModel")
+        }}</span>
+        <v-progress-circular indeterminate />
+      </div>
+    </div>
     <div id="process-modelling" class="full-screen"></div>
     <div
       class="ma-4"
@@ -151,6 +162,8 @@ export default defineComponent({
     store: useAppStore(),
     zoomInMultiplier: 1.1,
     zoomOutMultiplier: 0.9,
+    zoomOutMultiplier: 0.9,
+    isFetching: false as boolean,
     level: 0 as number,
     parentsBpmnProcessIds: [] as Array<{}>,
     processName: "" as string,
@@ -159,17 +172,18 @@ export default defineComponent({
       processName: string;
       level: number;
     }>,
-    selectedProcessModel: null as { displayTitle: string } | null
+    selectedProcessModel: null as { displayTitle: string } | null,
   }),
 
   async mounted() {
+    this.isFetching = true;
     this.addKeydownListener();
 
     const container = document.querySelector(
-      "#process-modelling"
+      "#process-modelling",
     ) as HTMLElement;
     const viewer = new NavigatedViewer({
-      container
+      container,
     });
 
     this.canvas = viewer.get("canvas") as Canvas;
@@ -183,13 +197,13 @@ export default defineComponent({
 
     try {
       const xmlResponse = await axios.get(processXmlUrl, {
-        headers: authHeader()
+        headers: authHeader(),
       });
       const xmlText = xmlResponse.data;
       await viewer.importXML(xmlText);
 
       const processModelResponse = await axios.get(processInformationUrl, {
-        headers: authHeader()
+        headers: authHeader(),
       });
       const processModel = processModelResponse.data;
 
@@ -200,8 +214,8 @@ export default defineComponent({
         (relatedProcessModel: any) => ({
           relatedProcessModelId: relatedProcessModel.relatedProcessModelId,
           processName: relatedProcessModel.processName,
-          level: relatedProcessModel.level
-        })
+          level: relatedProcessModel.level,
+        }),
       );
     } catch (error) {
       console.log(error);
@@ -217,6 +231,8 @@ export default defineComponent({
       }
       this.removeQueryParams();
     }
+
+    this.isFetching = false;
   },
 
   beforeUnmount() {
@@ -230,9 +246,9 @@ export default defineComponent({
     formattedProcessModels() {
       return this.relatedProcessModels.map((relatedProcessModel) => ({
         ...relatedProcessModel,
-        displayTitle: `${this.$t("processModel.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`
+        displayTitle: `${this.$t("processModel.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`,
       }));
-    }
+    },
   },
 
   watch: {
@@ -245,7 +261,7 @@ export default defineComponent({
       if (newValue) {
         this.onProcessModelChange(newValue);
       }
-    }
+    },
   },
 
   methods: {
@@ -260,13 +276,13 @@ export default defineComponent({
         port.width && port.height ? port : this.canvas.getBBox(port);
       const elementCenter = {
         x: elementBounds.x + elementBounds.width / 2,
-        y: elementBounds.y + elementBounds.height / 2
+        y: elementBounds.y + elementBounds.height / 2,
       };
       const newViewbox = {
         x: elementCenter.x - viewbox.width / 2,
         y: elementCenter.y - viewbox.height / 2,
         width: viewbox.width,
-        height: viewbox.height
+        height: viewbox.height,
       };
       this.canvas.viewbox(newViewbox);
     },
@@ -336,7 +352,7 @@ export default defineComponent({
           this.fitToScreen();
           break;
       }
-    }
-  }
+    },
+  },
 });
 </script>

@@ -1,5 +1,21 @@
 package de.envite.proa.bpmn.operations;
 
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.*;
+import de.envite.proa.usecases.ProcessOperations;
+import jakarta.enterprise.context.ApplicationScoped;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.impl.instance.SourceRef;
+import org.camunda.bpm.model.bpmn.impl.instance.TargetRef;
+import org.camunda.bpm.model.bpmn.instance.Process;
+import org.camunda.bpm.model.bpmn.instance.*;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -8,20 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import de.envite.proa.entities.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.camunda.bpm.model.bpmn.Bpmn;
-import org.camunda.bpm.model.bpmn.BpmnModelInstance;
-import org.camunda.bpm.model.bpmn.impl.instance.SourceRef;
-import org.camunda.bpm.model.bpmn.impl.instance.TargetRef;
-import org.camunda.bpm.model.bpmn.instance.*;
-
-import de.envite.proa.usecases.ProcessOperations;
-import jakarta.enterprise.context.ApplicationScoped;
-import org.camunda.bpm.model.bpmn.instance.Process;
-import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 
 @ApplicationScoped
 public class BpmnOperations implements ProcessOperations {
@@ -97,7 +99,7 @@ public class BpmnOperations implements ProcessOperations {
 		}
 		Documentation documentation = documentations.iterator().next();
 
-		return documentation != null ? documentation.getTextContent() : null;
+		return documentation.getTextContent();
 	}
 
 	@Override
@@ -110,7 +112,7 @@ public class BpmnOperations implements ProcessOperations {
 		if (!collaborations.isEmpty() && participants.size() > 1) {
 			Collaboration collaboration = collaborations.iterator().next();
 
-			if (collaboration.getId() != null && !collaboration.getId().isEmpty()) {
+			if (collaboration.getId() != null) {
 				return collaboration.getId();
 			}
 
@@ -145,10 +147,10 @@ public class BpmnOperations implements ProcessOperations {
 	public List<MessageFlowDetails> getMessageFlows(String xml, Map<String, Long> bpmnIdToIdMap) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(xml);
 		Collection<MessageFlow> messageFlows = processModelInstance.getModelElementsByType(MessageFlow.class);
-		if (messageFlows.isEmpty()) {
-			return null;
-		}
 		List<MessageFlowDetails> messageFlowDetails = new ArrayList<>();
+		if (messageFlows.isEmpty()) {
+			return messageFlowDetails;
+		}
 		for (MessageFlow messageFlow : messageFlows) {
 			MessageFlowDetails messageFlowDetail = new MessageFlowDetails();
 			messageFlowDetail.setBpmnId(messageFlow.getId());
@@ -205,10 +207,9 @@ public class BpmnOperations implements ProcessOperations {
 		} else if (element instanceof IntermediateThrowEvent) {
 			return new MessageFlowNode(getProcessIdFromChildElement(element),
 					ProcessElementType.INTERMEDIATE_THROW_EVENT);
-		} else if (element instanceof StartEvent) {
+		} else {
 			return new MessageFlowNode(getProcessIdFromChildElement(element), ProcessElementType.START_EVENT);
 		}
-		return null;
 	}
 
 	private String getProcessIdFromChildElement(ModelElementInstance element) {

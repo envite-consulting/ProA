@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             targetNamespace="http://example.com/bpmn">
+    <collaboration>
+        <participant id="Participant_1" processRef="Process_1"/>
+        <participant id="Participant_2" processRef="Process_2"/>
+        <messageFlow sourceRef="Participant_1" targetRef="Participant_2">
+            <documentation>
+                This is a message flow.
+            </documentation>
+        </messageFlow>
+        <messageFlow sourceRef="Participant_2" targetRef="Participant_1" name="Message Flow 2"/>
+        <messageFlow id="MessageFlow_3" sourceRef="EndEvent_1" targetRef="Participant_2"/>
+        <messageFlow sourceRef="Participant_2" targetRef="StartEvent_1"/>
+        <messageFlow sourceRef="IntermediateThrowEvent_1" targetRef="Participant_2"/>
+        <messageFlow sourceRef="Participant_2" targetRef="IntermediateCatchEvent_1"/>
+        <messageFlow sourceRef="Participant_2" targetRef="CallActivity_1"/>
+        <messageFlow sourceRef="CallActivity_1" targetRef="Participant_2"/>
+    </collaboration>
+    <process id="Process_1">
+        <startEvent id="StartEvent_1"/>
+        <subProcess id="SubProcess_1">
+            <startEvent id="StartEvent_2"/>
+            <task id="Task_1" name="Subprocess Task"/>
+            <endEvent id="EndEvent_1"/>
+        </subProcess>
+        <intermediateThrowEvent id="IntermediateThrowEvent_1"/>
+        <intermediateCatchEvent id="IntermediateCatchEvent_1"/>
+        <callActivity id="CallActivity_1"/>
+    </process>
+    <process id="Process_2"/>
+</definitions>

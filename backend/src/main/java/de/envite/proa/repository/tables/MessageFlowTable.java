@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.ProcessElementType;
+import de.envite.proa.entities.process.ProcessElementType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import lombok.Data;
 public class MessageFlowTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private String bpmnId;
@@ -19,23 +19,9 @@ public class MessageFlowTable {
 	private String description;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn( //
-			name = "calling_process_id", //
-			foreignKey = @ForeignKey( //
-					name = "fk_calling_process", //
-					foreignKeyDefinition = "FOREIGN KEY (calling_process_id) REFERENCES processmodeltable(id) ON DELETE CASCADE" //
-			) //
-	)
 	private ProcessModelTable callingProcess;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn( //
-			name = "called_process_id", //
-			foreignKey = @ForeignKey( //
-					name = "fk_called_process", //
-					foreignKeyDefinition = "FOREIGN KEY (called_process_id) REFERENCES processmodeltable(id) ON DELETE CASCADE" //
-			) //
-	)
 	private ProcessModelTable calledProcess;
 
 	@Enumerated(EnumType.STRING)
@@ -44,6 +30,6 @@ public class MessageFlowTable {
 	@Enumerated(EnumType.STRING)
 	private ProcessElementType calledElementType;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }

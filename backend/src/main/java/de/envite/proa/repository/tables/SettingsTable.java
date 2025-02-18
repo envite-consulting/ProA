@@ -8,7 +8,7 @@ import lombok.Data;
 public class SettingsTable {
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long id;
 
 	private String geminiApiKey;
@@ -19,6 +19,6 @@ public class SettingsTable {
 	private String operateRegionId;
 	private String operateClusterId;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	private UserTable user;
 }

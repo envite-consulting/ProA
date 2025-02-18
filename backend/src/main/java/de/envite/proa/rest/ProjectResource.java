@@ -4,18 +4,21 @@ import java.util.List;
 
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.project.Project;
 import de.envite.proa.usecases.project.ProjectUsecase;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/api")
 public class ProjectResource {
+
+    private static final String USER_ID = "userId";
 
     @Inject
     private ProjectUsecase usecase;
@@ -38,14 +41,14 @@ public class ProjectResource {
     @RolesAllowedIfWebVersion({"User", "Admin"})
     public Project createProject(@RestForm String name, @RestForm String version) {
         if (appMode.equals("web")) {
-            Long userId = Long.parseLong(jwt.getClaim("userId").toString());
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
             return usecase.createProject(userId, name, version);
         }
         return usecase.createProject(name, version);
     }
 
     /**
-     * This methods gets the names and the corresponding ids of all projects in
+     * This method gets the names and the corresponding ids of all projects in
      * order to show them as tiles in the frontend
      */
     @GET
@@ -54,7 +57,7 @@ public class ProjectResource {
     @RolesAllowedIfWebVersion({"User", "Admin"})
     public List<Project> getProjects() {
         if (appMode.equals("web")) {
-            Long userId = Long.parseLong(jwt.getClaim("userId").toString());
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
             return usecase.getProjects(userId);
         }
         return usecase.getProjects();
@@ -64,11 +67,37 @@ public class ProjectResource {
     @Path("/project/{projectId}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowedIfWebVersion({"User", "Admin"})
-    public Project getProject(@RestPath Long projectId) {
+    public Response getProject(@RestPath Long projectId) {
         if (appMode.equals("web")) {
-            Long userId = Long.parseLong(jwt.getClaim("userId").toString());
-            return usecase.getProject(userId, projectId);
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
+            try {
+                return Response.ok().entity(usecase.getProject(userId, projectId)).build();
+            } catch (NotFoundException e) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            } catch (ForbiddenException e) {
+                return Response.status(Response.Status.FORBIDDEN).build();
+            } catch (Exception e) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
         }
-        return usecase.getProject(projectId);
+        try {
+            return Response.ok().entity(usecase.getProject(projectId)).build();
+        } catch (NotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DELETE
+    @Path("/project/{projectId}")
+    @RolesAllowedIfWebVersion({"User", "Admin"})
+    public void deleteProject(@RestPath Long projectId) {
+        if (appMode.equals("web")) {
+            Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
+            usecase.deleteProject(userId, projectId);
+            return;
+        }
+        usecase.deleteProject(projectId);
     }
 }
