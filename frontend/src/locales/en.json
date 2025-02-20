@@ -71,6 +71,7 @@
     "lastModifiedOn": "Last modified on",
     "level": "Level",
     "myProfile": "My Profile",
+    "participant": "Participant",
     "processLevels": "Process Levels",
     "processModel": "Process Model",
     "save": "Save",
@@ -154,12 +155,10 @@
     "startEvent": "Start Event"
   },
   "processView": {
-    "loadingProcessModel": "Loading process model..."
-  },
-  "processModel": {
     "back": "Back",
     "changeLevel": "Change process level",
-    "level": "Level"
+    "level": "Level",
+    "loadingProcessModel": "Loading process model..."
   },
   "projectOverview": {
     "active": "ACTIVE",

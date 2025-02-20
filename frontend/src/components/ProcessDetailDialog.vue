@@ -3,14 +3,20 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <span class="text-h5 text-wrap">
-          <strong>{{ $t("general.processModel") }}:</strong>
+          <strong
+            >{{
+              currentProcessModel.parentsBpmnProcessIds?.length === 0
+                ? $t("general.processModel")
+                : $t("general.participant")
+            }}:
+          </strong>
           {{ currentProcessModel.processName }}
         </span>
         <v-spacer></v-spacer>
         <template
           v-if="
             currentProcessModel.parentsBpmnProcessIds?.length === 0 &&
-            relatedProcessModels.length === 0
+            availableProcessModelsToAdd.length > 0
           "
         >
           <v-tooltip location="top">
@@ -283,14 +289,14 @@
     v-model="addDialog"
     persistent
     width="500"
-    @after-leave="resetUploadDialog"
+    @after-leave="resetAddDialog"
   >
     <v-card>
       <v-card-title>{{ $t("general.addToRelatedProcessModels") }}</v-card-title>
       <v-card-text>
         <v-select
           v-model="selectedProcessesToAdd"
-          :items="availableProcessModels"
+          :items="availableProcessModelsToAdd"
           :label="$t('processList.processModels')"
           multiple
           chips
@@ -301,15 +307,15 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" @click="addRelatedProcessModel">{{
-          $t("general.save")
-        }}</v-btn>
         <v-btn
           color="blue-darken-1"
           variant="text"
           @click="addDialog = false"
           >{{ $t("general.cancel") }}</v-btn
         >
+        <v-btn color="blue-darken-1" @click="addRelatedProcessModel">{{
+          $t("general.save")
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -350,7 +356,6 @@ import { defineComponent } from "vue";
 import axios from "axios";
 import { dia } from "@joint/core";
 import BpmnViewer from "bpmn-js";
-import ProcessList from "./ProcessList/ProcessList.vue";
 import { useAppStore } from "@/store/app";
 import { authHeader } from "@/components/Authentication/authHeader";
 
@@ -407,7 +412,7 @@ export default defineComponent({
     relatedProcessModels: [] as RelatedProcessModel[],
     selectedProcessModel: null as number | null,
     addDialog: false,
-    availableProcessModels: [] as ProcessModel[],
+    availableProcessModelsToAdd: [] as ProcessModel[],
     selectedProcessesToAdd: null as number | null
   }),
 
@@ -494,16 +499,16 @@ export default defineComponent({
       this.resetProcessModel();
       await this.fetchProcessModel(processId);
       await this.fetchProcessDetails(processId);
+      await this.fetchAvailableProcessModelsToAdd();
     },
     async openAddDialog() {
       this.addDialog = true;
-      this.fetchAvailableProcessModels();
     },
-    async fetchAvailableProcessModels() {
+    async fetchAvailableProcessModelsToAdd() {
       const url =
         "/api/project/" + this.store.getSelectedProjectId() + "/process-model";
       const response = await axios.get(url, { headers: authHeader() });
-      this.availableProcessModels = response.data.filter(
+      this.availableProcessModelsToAdd = response.data.filter(
         (process: ProcessModel) =>
           (!process.parentsBpmnProcessIds ||
             process.parentsBpmnProcessIds.length === 0) &&
@@ -529,7 +534,8 @@ export default defineComponent({
 
       this.addDialog = false;
       this.resetProcessModel();
-      this.fetchProcessModel(this.currentProcessModel.id);
+      await this.fetchProcessModel(this.currentProcessModel.id);
+      await this.fetchAvailableProcessModelsToAdd();
     },
     async fetchProcessDetails(processId: number) {
       const url = this.showProcessLevels
@@ -585,7 +591,7 @@ export default defineComponent({
     resetProcessModel() {
       document.getElementById("process-model-viewer")!.innerHTML = "";
     },
-    resetUploadDialog() {
+    resetAddDialog() {
       this.selectedProcessesToAdd = null;
     }
   }

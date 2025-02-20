@@ -55,7 +55,7 @@
       >
         <template #label>
           <v-icon style="margin-right: 5px">mdi-swap-vertical</v-icon>
-          {{ $t("processModel.changeLevel") }}
+          {{ $t("processView.changeLevel") }}
         </template>
       </v-select>
     </div>
@@ -133,7 +133,7 @@
     </div>
     <div class="ma-4" style="position: absolute; top: 8px; left: 8px">
       <v-btn prepend-icon="mdi-arrow-left" @click="goBack">
-        {{ $t("processModel.back") }}
+        {{ $t("processView.back") }}
       </v-btn>
     </div>
   </v-card>
@@ -245,7 +245,7 @@ export default defineComponent({
     formattedProcessModels() {
       return this.relatedProcessModels.map((relatedProcessModel) => ({
         ...relatedProcessModel,
-        displayTitle: `${this.$t("processModel.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`
+        displayTitle: `${this.$t("processView.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`
       }));
     }
   },

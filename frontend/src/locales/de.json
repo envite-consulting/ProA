@@ -71,6 +71,7 @@
     "lastModifiedOn": "Zuletzt geändert am",
     "level": "Ebene",
     "myProfile": "Mein Profil",
+    "participant": "Teilnehmer",
     "processLevels": "Prozessebenen",
     "processModel": "Prozessmodell",
     "save": "Speichern",
@@ -153,12 +154,10 @@
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Startereignis"
   },
-  "processModel": {
+  "processView": {
     "back": "Zurück",
     "changeLevel": "Prozessebene wechseln",
-    "level": "Ebene"
-  },
-  "processView": {
+    "level": "Ebene",
     "loadingProcessModel": "Prozessmodell wird geladen..."
   },
   "projectOverview": {
