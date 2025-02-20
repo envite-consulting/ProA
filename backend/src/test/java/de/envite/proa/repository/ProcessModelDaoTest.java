@@ -62,7 +62,7 @@ class ProcessModelDaoTest {
 	@Test
 	@Transactional
 	void testGetProcessModels() {
-		List<ProcessModelTable> processModels = processModelDao.getProcessModels(project, null);
+		List<ProcessModelTable> processModels = processModelDao.getProcessModels(project);
 		assertNotNull(processModels);
 		assertFalse(processModels.isEmpty());
 	}
@@ -220,7 +220,7 @@ class ProcessModelDaoTest {
 
 		flushAndClear();
 
-		List<ProcessModelTable> result = processModelDao.getProcessModelsWithParentsAndChildren(project);
+		List<ProcessModelTable> result = processModelDao.getProcessModelsWithParentsAndChildren(project, null);
 
 		assertNotNull(result);
 		assertEquals(3, result.size());

@@ -7,7 +7,7 @@ import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.repository.tables.RelatedProcessModelTable;
-import de.envite.proa.usecases.RelatedProcessModelRepository;
+import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
@@ -49,7 +49,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
     }
 
     private List<ProcessModelTable> getAllRootProcessModels(ProjectTable projectTable) {
-        return processModelDao.getProcessModels(projectTable, null)
+        return processModelDao.getProcessModelsWithParentsAndChildren(projectTable, null)
                 .stream()
                 .filter(model -> model.getParents() == null || model.getParents().isEmpty())
                 .toList();
@@ -75,7 +75,9 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
     }
 
     private void processSingleModel(ProcessModelTable model) {
-        model.setLevel(model.getLevel() != null ? model.getLevel() : null);
+        model = processModelDao.findWithRelatedProcessModels(model.getId()).stream().findFirst().orElse(model);
+        model.setLevel((model.getLevel() != null && !model.getRelatedProcessModels().isEmpty()) ? model.getLevel() : null);
+
         processModelDao.merge(model);
     }
 
@@ -128,7 +130,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
         }
 
         if (!processModel.getParents().isEmpty()) {
-            throw new IllegalArgumentException("Process model with related parents cannot be added to related process models.");
+            throw new IllegalArgumentException("Process model with parents cannot be added to related process models.");
         }
 
         allModels.add(processModel);

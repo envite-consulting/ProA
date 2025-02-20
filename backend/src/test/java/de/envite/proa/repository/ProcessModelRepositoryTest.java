@@ -7,9 +7,8 @@ import de.envite.proa.repository.datastore.DataStoreConnectionDao;
 import de.envite.proa.repository.datastore.DataStoreDao;
 import de.envite.proa.repository.messageflow.MessageFlowDao;
 import de.envite.proa.repository.processmodel.*;
-import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.*;
-import de.envite.proa.usecases.RelatedProcessModelRepository;
+import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -19,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,8 +53,6 @@ class ProcessModelRepositoryTest {
 
     @InjectMocks
     private ProcessmodelRepositoryImpl repository;
-    @Mock
-    private ProjectDao projectDao;
     @Mock
     private ProcessModelDao processModelDao;
     @Mock
@@ -347,7 +345,7 @@ class ProcessModelRepositoryTest {
         processModel.setDescription(PROCESS_DESCRIPTION);
         processModel.setCreatedAt(dateTime);
 
-        when(processModelDao.getProcessModelsWithParentsAndChildren(any())).thenReturn(List.of(processModel));
+        when(processModelDao.getProcessModelsWithParentsAndChildren(any(), any())).thenReturn(Arrays.asList(processModel));
 
         ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
                 processModelDao, //
@@ -370,9 +368,8 @@ class ProcessModelRepositoryTest {
                 .contains(tuple(PROCESS_MODEL_ID_1, EXISTING_PROCESS_MODEL_NAME, PROCESS_DESCRIPTION, dateTime));
 
         ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-        verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture());
+        verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture(), isNull());
         assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-
     }
 
     @Test
@@ -478,8 +475,12 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testDeleteProcessModel_DeleteParentsAndChildren() {
+        ProjectTable project = new ProjectTable();
+        project.setId(PROJECT_ID);
+
         ProcessModelTable processModel = new ProcessModelTable();
         processModel.setId(PROCESS_MODEL_ID_1);
+        processModel.setProject(project);
 
         ProcessModelTable parent = new ProcessModelTable();
         parent.setId(PROCESS_MODEL_ID_2);
@@ -497,6 +498,7 @@ class ProcessModelRepositoryTest {
 
         processModel.setChildren(List.of(child1, child2));
 
+        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(processModel);
         when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_1)).thenReturn(processModel);
         when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_2)).thenReturn(parent);
         when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_3)).thenReturn(child1);
@@ -523,6 +525,7 @@ class ProcessModelRepositoryTest {
         verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_2);
 
         verify(processModelDao, times(1)).delete(expectedIds);
+        verify(relatedProcessModelRepository, times(1)).calculateAndSaveRelatedProcessModels(project);
     }
 
     @Test

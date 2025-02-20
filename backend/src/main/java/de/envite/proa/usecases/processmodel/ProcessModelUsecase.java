@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
@@ -129,7 +128,7 @@ public class ProcessModelUsecase {
 				intermediateThrowEvents, //
 				intermediateCatchEvents, //
 				endEvents //
-		).flatMap(Collection::stream).collect(Collectors.toList());
+		).flatMap(Collection::stream).toList();
 		List<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
 		List<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);

@@ -1,4 +1,4 @@
-package de.envite.proa.usecases;
+package de.envite.proa.usecases.processmodel;
 
 import de.envite.proa.entities.process.RelatedProcessModel;
 import de.envite.proa.repository.tables.RelatedProcessModelTable;

@@ -19,8 +19,8 @@ import jakarta.transaction.Transactional;
 public class ProcessModelDao {
 
 	private final EntityManager em;
-	private static final String FETCH_GRAPH = "jakarta.persistence.loadgraph";
-	private static final String LOAD_GRAPH = "jakarta.persistence.fetchgraph";
+	private static final String FETCH_GRAPH = "jakarta.persistence.fetchgraph";
+	private static final String LOAD_GRAPH = "jakarta.persistence.loadgraph";
 	private static final String PROCESS_MODELS = "processModels";
 	private static final String PROJECT = "project";
 	private static final String SELECT_FROM_PROCESS_MODEL_TABLE = "SELECT p FROM ProcessModelTable p ";
@@ -31,53 +31,55 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public List<ProcessModelTable> getProcessModelsWithParentsAndChildren(ProjectTable projectTable) {
+	public List<ProcessModelTable> getProcessModelsWithParentsAndChildren(ProjectTable projectTable, List<Integer> levels) {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
-
-		return em//
-				.createQuery("""
-						SELECT pm FROM ProcessModelTable pm
-						WHERE pm.project=:project
-						""", ProcessModelTable.class)//
-				.setParameter(PROJECT, projectTable)//
-				.setHint(LOAD_GRAPH, graph)
-				.getResultList();
-	}
-
-	@Transactional
-	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable, List<Integer> levels) {
-		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		graph.addSubgraph("events");
 
 		String queryString = """
-            SELECT pm FROM ProcessModelTable pm
-            LEFT JOIN FETCH pm.events
-            WHERE pm.project = :project
-            """;
+						SELECT pm FROM ProcessModelTable pm
+						WHERE pm.project=:project
+						""";
 
 		if (levels != null && !levels.isEmpty()) {
 			queryString += " AND pm.level IN :levels";
 		}
 
+        queryString += " ORDER BY pm.name ASC";
+
 		TypedQuery<ProcessModelTable> query = em//
 				.createQuery(queryString, ProcessModelTable.class)//
-				.setParameter(PROJECT, projectTable)
-				.setHint(FETCH_GRAPH, graph);
+				.setParameter(PROJECT, projectTable)//
+				.setHint(LOAD_GRAPH, graph);
 
 		if (levels != null && !levels.isEmpty()) {
 			query.setParameter("levels", levels);
 		}
 
-		List<ProcessModelTable> processModels = query.getResultList();
+		return query.getResultList();
+	}
+
+	@Transactional
+	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
+		List<ProcessModelTable> processModels = em//
+				.createQuery("""
+						SELECT pm FROM ProcessModelTable pm
+						LEFT JOIN FETCH pm.events
+						WHERE pm.project=:project
+						""", ProcessModelTable.class)//
+				.setParameter(PROJECT, projectTable)//
+				.setHint(FETCH_GRAPH, graph)//
+				.getResultList();
 
 		processModels = em//
 				.createQuery("""
 						SELECT DISTINCT pm FROM ProcessModelTable pm
 						LEFT JOIN FETCH pm.callActivites
 						WHERE pm in :processModels
-						ORDER BY pm.name ASC
 						""", ProcessModelTable.class)//
-				.setParameter(PROCESS_MODELS, processModels)
-				.setHint(FETCH_GRAPH, graph)
+				.setParameter(PROCESS_MODELS, processModels)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 
 		return processModels;
@@ -85,25 +87,31 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable getProcessModelById(ProjectTable projectTable, Long id) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
 		return em//
 				.createQuery("""
                     SELECT pm FROM ProcessModelTable pm
                     WHERE pm.project = :project AND pm.id = :id
-                    """, ProcessModelTable.class)
-				.setParameter(PROJECT, projectTable)
-				.setParameter("id", id)
+                    """, ProcessModelTable.class)//
+				.setParameter(PROJECT, projectTable)//
+				.setParameter("id", id)//
+				.setHint(LOAD_GRAPH, graph)//
 				.getSingleResult();
 	}
 
 	@Transactional
 	public List<ProcessModelTable> getProcessModelsByIds(ProjectTable projectTable, List<Long> ids) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
 		return em//
 				.createQuery("""
                  SELECT pm FROM ProcessModelTable pm
                  WHERE pm.project = :project AND pm.id IN :ids
-                 """, ProcessModelTable.class)
-				.setParameter(PROJECT, projectTable)
-				.setParameter("ids", ids)
+                 """, ProcessModelTable.class)//
+				.setParameter(PROJECT, projectTable)//
+				.setParameter("ids", ids)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 	}
 
@@ -119,7 +127,7 @@ public class ProcessModelDao {
 						""", ProcessModelTable.class)//
 				.setParameter("name", name)//
 				.setParameter(PROJECT, projectTable)//
-				.setHint(FETCH_GRAPH, graph)
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 
 		processModels = em//
@@ -129,7 +137,7 @@ public class ProcessModelDao {
 						WHERE pm in :processModels
 						""", ProcessModelTable.class)//
 				.setParameter(PROCESS_MODELS, processModels)//
-				.setHint(FETCH_GRAPH, graph)
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 
 		return processModels;
@@ -160,8 +168,6 @@ public class ProcessModelDao {
 	@Transactional
 	public ProcessModelTable findWithParentsAndChildren(Long id) {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
-		graph.addSubgraph("parents");
-		graph.addSubgraph("children");
 
 		Map<String, Object> hints = new HashMap<>();
 		hints.put(LOAD_GRAPH, graph);
@@ -171,35 +177,45 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<ProcessModelTable> findWithRelatedProcessModels(Long id) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
 		return em//
 				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"LEFT JOIN FETCH p.relatedProcessModels r " + //
 						"WHERE p.id = :id OR r.relatedProcessModelId = :id", ProcessModelTable.class)
-				.setParameter("id", id)
+				.setParameter("id", id)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 	}
 
 	@Transactional
 	public List<ProcessEventTable> findEventsForProcessModels(List<ProcessModelTable> processModels) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
 		return em//
 				.createQuery("SELECT e FROM ProcessEventTable e " + //
-						"WHERE e.processModel IN :processModels", ProcessEventTable.class)
-				.setParameter(PROCESS_MODELS, processModels)
+						"WHERE e.processModel IN :processModels", ProcessEventTable.class)//
+				.setParameter(PROCESS_MODELS, processModels)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 	}
 
 	@Transactional
 	public List<CallActivityTable> findCallActivitiesForProcessModels(List<ProcessModelTable> processModels) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
 		return em//
 				.createQuery("SELECT ca FROM CallActivityTable ca " + //
-						"WHERE ca.processModel IN :processModels", CallActivityTable.class)
-				.setParameter(PROCESS_MODELS, processModels)
+						"WHERE ca.processModel IN :processModels", CallActivityTable.class)//
+				.setParameter(PROCESS_MODELS, processModels)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 	}
 
 	@Transactional
 	public ProcessModelTable find(Long id) {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+        graph.addSubgraph("parents");
 
 		Map<String, Object> hints = new HashMap<>();
 		hints.put(FETCH_GRAPH, graph);
@@ -211,12 +227,12 @@ public class ProcessModelDao {
 	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, ProjectTable projectTable) {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
 
-		List<ProcessModelTable> processModels = em //
+		List<ProcessModelTable> processModels = em//
 				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
-				.setParameter("bpmnProcessId", bpmnProcessId) //
-				.setParameter(PROJECT, projectTable) //
-				.setHint(FETCH_GRAPH, graph)
+				.setParameter("bpmnProcessId", bpmnProcessId)//
+				.setParameter(PROJECT, projectTable)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 
 		return !processModels.isEmpty() ? processModels.getFirst() : null;
@@ -227,12 +243,12 @@ public class ProcessModelDao {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
 		graph.addSubgraph("children");
 
-		List<ProcessModelTable> processModels = em //
+		List<ProcessModelTable> processModels = em//
 				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"WHERE p.bpmnProcessId = :bpmnProcessId AND p.project = :project", ProcessModelTable.class)
-				.setParameter("bpmnProcessId", bpmnProcessId) //
-				.setParameter(PROJECT, projectTable) //
-				.setHint(LOAD_GRAPH, graph)
+				.setParameter("bpmnProcessId", bpmnProcessId)//
+				.setParameter(PROJECT, projectTable)//
+				.setHint(LOAD_GRAPH, graph)//
 				.getResultList();
 
 		return !processModels.isEmpty() ? processModels.getFirst() : null;
@@ -253,12 +269,12 @@ public class ProcessModelDao {
 	public ProcessModelTable findByName(String name, ProjectTable projectTable) {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
 
-		List<ProcessModelTable> processModels = em //
+		List<ProcessModelTable> processModels = em//
 				.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE + //
 						"WHERE p.name = :name AND p.project = :project", ProcessModelTable.class)
-				.setParameter("name", name) //
-				.setParameter(PROJECT, projectTable) //
-				.setHint(FETCH_GRAPH, graph)
+				.setParameter("name", name)//
+				.setParameter(PROJECT, projectTable)//
+				.setHint(FETCH_GRAPH, graph)//
 				.getResultList();
 		return processModels.isEmpty() ? null : processModels.getFirst();
 	}

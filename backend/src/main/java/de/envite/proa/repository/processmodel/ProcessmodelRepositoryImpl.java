@@ -20,7 +20,7 @@ import de.envite.proa.repository.tables.ProcessDataStoreTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
-import de.envite.proa.usecases.RelatedProcessModelRepository;
+import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -98,12 +98,12 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
         ProjectTable projectTable = new ProjectTable();
         projectTable.setId(projectId);
 
-        List <Integer> levels = (levelParam == null || levelParam.isEmpty())
+        List<Integer> levels = (levelParam == null || levelParam.isEmpty())
                 ? null : Arrays.stream(levelParam.split(","))
                 .map(Integer::parseInt)
                 .toList();
 
-        return processModelDao.getProcessModels(projectTable, levels).stream()
+        return processModelDao.getProcessModelsWithParentsAndChildren(projectTable, levels).stream()
                 .map(model -> new ProcessInformation(
                         model.getId(), //
                         model.getBpmnProcessId(), //

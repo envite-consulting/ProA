@@ -133,7 +133,7 @@ class ProcessMapRepositoryTest {
 		processModelCollaboration.setId(PROCESS_MODEL_ID_3);
 		processModelCollaboration.setProcessType(PROCESS_TYPE_COLLABORATION);
 
-		when(processModelDao.getProcessModels(any(), isNull())).thenReturn(
+		when(processModelDao.getProcessModels(any())).thenReturn(
 				Arrays.asList(processModel1, processModel2, processModelCollaboration));
 
 		ProcessConnectionTable processConnectionTable = new ProcessConnectionTable();
