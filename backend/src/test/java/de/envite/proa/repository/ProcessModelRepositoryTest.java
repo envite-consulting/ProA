@@ -18,7 +18,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -345,7 +344,7 @@ class ProcessModelRepositoryTest {
         processModel.setDescription(PROCESS_DESCRIPTION);
         processModel.setCreatedAt(dateTime);
 
-        when(processModelDao.getProcessModelsWithParentsAndChildren(any(), any())).thenReturn(Arrays.asList(processModel));
+        when(processModelDao.getProcessModelsWithParentsAndChildren(any(), any())).thenReturn(List.of(processModel));
 
         ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
                 processModelDao, //
