@@ -103,6 +103,7 @@ public class ProcessModelDao {
 	@Transactional
 	public List<ProcessModelTable> getProcessModelsByIds(ProjectTable projectTable, List<Long> ids) {
 		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		graph.addSubgraph("parents");
 
 		return em//
 				.createQuery("""

@@ -129,7 +129,11 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
             throw new NoResultException("Process model not found.");
         }
 
-        if (!processModel.getParents().isEmpty()) {
+        if (relatedProcessModelIds.contains(id)) {
+            throw new IllegalArgumentException("Process model cannot be related to itself.");
+        }
+
+        if (allModels.stream().anyMatch(model -> !model.getParents().isEmpty()) || !processModel.getParents().isEmpty()) {
             throw new IllegalArgumentException("Process model with parents cannot be added to related process models.");
         }
 
