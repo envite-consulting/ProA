@@ -16,6 +16,7 @@
         <template
           v-if="
             currentProcessModel.parentsBpmnProcessIds?.length === 0 &&
+            currentProcessModel.relatedProcessModels.length === 0 &&
             availableProcessModelsToAdd.length > 0
           "
         >
