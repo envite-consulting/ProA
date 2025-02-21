@@ -238,6 +238,8 @@
   </v-container>
 </template>
 <style scoped>
+@import "@/styles/global.css";
+
 .active-card {
   box-shadow: 0 0 10px 3px rgba(24, 103, 192, 0.5);
 }
