@@ -7,13 +7,11 @@ import de.envite.proa.repository.user.UserDao;
 import de.envite.proa.usecases.project.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectRepositoryImpl implements ProjectRepository {
@@ -61,18 +59,18 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 				.getProjects()//
 				.stream()//
 				.map(this::map)//
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
 	public List<Project> getProjects(Long userId) {
 		UserTable user = new UserTable();
-		user.setId(userId);;
+		user.setId(userId);
 		return projectDao//
 				.getProjectsForUser(user)//
 				.stream()//
 				.map(this::map)//
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

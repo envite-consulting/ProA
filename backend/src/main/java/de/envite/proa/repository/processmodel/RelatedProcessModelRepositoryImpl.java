@@ -8,13 +8,13 @@ import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
 import de.envite.proa.repository.tables.RelatedProcessModelTable;
 import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
 
 import java.util.*;
 
-@ApplicationScoped
+@RequestScoped
 public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRepository {
 
     private final ProjectDao projectDao;

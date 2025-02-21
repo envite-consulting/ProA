@@ -12,7 +12,7 @@ import jakarta.transaction.Transactional;
 @ApplicationScoped
 public class ProjectDao {
 
-	private EntityManager em;
+	private final EntityManager em;
 
 	@Inject
 	public ProjectDao(EntityManager em) {
