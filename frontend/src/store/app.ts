@@ -1,5 +1,5 @@
 // Utilities
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia'
 import {
   ActiveProjectByGroup,
   Project
@@ -25,14 +25,14 @@ export interface Snackbar {
   timeout: number;
 }
 
-export const useAppStore = defineStore("app", {
+export const useAppStore = defineStore('app', {
   state: () => {
     return {
       selectedProjectId: null as number | null,
       activeProjectByGroup: {} as ActiveProjectByGroup,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
       portsInformationByProject: {} as {
-        [key: number]: { [key: string]: string[] };
+        [key: number]: { [key: string]: string[] }
       },
       paperLayoutByProject: {} as { [key: number]: string },
       filtersByProject: {} as { [key: number]: string },
@@ -40,22 +40,22 @@ export const useAppStore = defineStore("app", {
       hiddenPortsByProject: {} as { [key: number]: string },
       hiddenLinksByProject: {} as { [key: number]: { [key: string]: string } },
       processModelsChangeFlag: false as boolean,
-      selectedLanguage: "en" as LanguageCode,
+      selectedLanguage: 'en' as LanguageCode,
       areSettingsOpened: false as boolean,
-      operateConnectionError: "" as string,
-      operateClusterError: "" as string,
+      operateConnectionError: '' as string,
+      operateClusterError: '' as string,
       userToken: null as string | null,
       userRole: null as Role | null,
       selectedDialog: SelectedDialog.NONE as SelectedDialog,
       snackbar: {
         visible: false,
-        message: "",
-        type: "" as SnackbarType,
-        color: "",
-        icon: "",
+        message: '',
+        type: '' as SnackbarType,
+        color: '',
+        icon: '',
         timeout: 3000
       } as Snackbar
-    };
+    }
   },
   actions: {
     setSelectedProjectId(id: number | null) {
@@ -76,12 +76,9 @@ export const useAppStore = defineStore("app", {
     getGraphForProject(id: number): string {
       return this.graphByProject[id];
     },
-    setPortsInformationByProject(
-      id: number,
-      portsInformation: {
-        [key: string]: string[];
-      }
-    ) {
+    setPortsInformationByProject(id: number, portsInformation: {
+      [key: string]: string[]
+    }) {
       this.portsInformationByProject[id] = portsInformation;
     },
     getPortsInformationByProject(id: number): { [key: string]: string[] } {
@@ -111,10 +108,7 @@ export const useAppStore = defineStore("app", {
     getHiddenPortsForProject(id: number): string {
       return this.hiddenPortsByProject[id];
     },
-    setHiddenLinksForProject(
-      id: number,
-      hiddenLinks: { [key: string]: string }
-    ) {
+    setHiddenLinksForProject(id: number, hiddenLinks: { [key: string]: string }) {
       this.hiddenLinksByProject[id] = hiddenLinks;
     },
     getHiddenLinksForProject(id: number): { [key: string]: string } {
@@ -127,7 +121,7 @@ export const useAppStore = defineStore("app", {
       this.processModelsChangeFlag = false;
     },
     getProcessModelsChangeFlag() {
-      return this.processModelsChangeFlag;
+      return this.processModelsChangeFlag
     },
     setSelectedLanguage(language: LanguageCode) {
       this.selectedLanguage = language;
@@ -139,19 +133,19 @@ export const useAppStore = defineStore("app", {
       this.areSettingsOpened = opened;
     },
     getAreSettingsOpened() {
-      return this.areSettingsOpened;
+      return this.areSettingsOpened
     },
     setOperateConnectionError(error: string) {
-      this.operateConnectionError = error;
+      this.operateConnectionError = error
     },
     getOperateConnectionError() {
-      return this.operateConnectionError;
+      return this.operateConnectionError
     },
     setOperateClusterError(error: string) {
-      this.operateClusterError = error;
+      this.operateClusterError = error
     },
     getOperateClusterError() {
-      return this.operateClusterError;
+      return this.operateClusterError
     },
     setUserToken(userToken: string | null) {
       this.userToken = userToken;
@@ -184,23 +178,23 @@ export const useAppStore = defineStore("app", {
   persist: {
     storage: sessionStorage,
     paths: [
-      "selectedProjectId",
-      "activeProjectByGroup",
-      "graphByProject",
-      "paperLayoutByProject",
-      "filtersByProject",
-      "hiddenCellsByProject",
-      "hiddenPortsByProject",
-      "portsInformationByProject",
-      "hiddenLinksByProject",
-      "processModelsChangeFlag",
-      "selectedLanguage",
-      "areSettingsOpened",
-      "operateConnectionError",
-      "operateClusterError",
-      "userToken",
-      "userRole",
-      "selectedDialog"
+      'selectedProjectId',
+      'activeProjectByGroup',
+      'graphByProject',
+      'paperLayoutByProject',
+      'filtersByProject',
+      'hiddenCellsByProject',
+      'hiddenPortsByProject',
+      'portsInformationByProject',
+      'hiddenLinksByProject',
+      'processModelsChangeFlag',
+      'selectedLanguage',
+      'areSettingsOpened',
+      'operateConnectionError',
+      'operateClusterError',
+      'userToken',
+      'userRole',
+      'selectedDialog'
     ]
-  }
-});
+  },
+})
