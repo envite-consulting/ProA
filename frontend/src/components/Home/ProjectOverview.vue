@@ -429,8 +429,6 @@ export default defineComponent({
           this.projects = result.data.sort((project: Project) => {
             return project.id === this.store.selectedProjectId ? -1 : 0;
           });
-
-          this.updateProjects();
         } catch (error) {
           this.projects = [];
         }
@@ -444,8 +442,6 @@ export default defineComponent({
         this.projects = result.data.sort((project: Project) => {
           return project.id === this.store.selectedProjectId ? -1 : 0;
         });
-
-        this.updateProjects();
       } catch (error) {
         this.projects = [];
       }
