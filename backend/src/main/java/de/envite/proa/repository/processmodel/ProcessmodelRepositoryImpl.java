@@ -305,7 +305,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
     @Override
     public String getProcessModelXml(Long id) {
-        byte[] xmlBytes = processModelDao.find(id).getBpmnXml();
+        byte[] xmlBytes = processModelDao.getBpmnXml(id);
         return XmlConverter.bytesToString(xmlBytes);
     }
 

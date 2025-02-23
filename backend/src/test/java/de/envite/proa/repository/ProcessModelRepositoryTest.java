@@ -408,15 +408,12 @@ class ProcessModelRepositoryTest {
 
 	@Test
 	public void testGetProcessModelXml() {
-		ProcessModelTable processModel = new ProcessModelTable();
-		processModel.setBpmnXml(BPMN_XML);
-
-		when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(processModel);
+		when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_1)).thenReturn(BPMN_XML);
 
 		String result = repository.getProcessModelXml(PROCESS_MODEL_ID_1);
 
 		assertThat(result.getBytes()).isEqualTo(BPMN_XML);
-		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_1);
+		verify(processModelDao, times(1)).getBpmnXml(PROCESS_MODEL_ID_1);
 	}
 
 	@Test

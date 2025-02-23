@@ -140,6 +140,16 @@ public class ProcessModelDao {
 		
 		return em.find(ProcessModelTable.class, id, hints);
 	}
+	
+	@Transactional
+	public byte[] getBpmnXml(Long id) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+		
+		Map<String, Object> hints = new HashMap<String, Object>();
+		hints.put("jakarta.persistence.fetchgraph", graph);
+		
+		return em.find(ProcessModelTable.class, id, hints).getBpmnXml();
+	}
 
 	@Transactional
 	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, ProjectTable projectTable) {

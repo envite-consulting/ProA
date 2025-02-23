@@ -30,6 +30,7 @@ public class ProcessModelTable {
 	private String bpmnProcessId;
 
 	@Column(columnDefinition = "BYTEA")
+	@Basic(fetch = FetchType.LAZY)
 	private byte[] bpmnXml;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel")
