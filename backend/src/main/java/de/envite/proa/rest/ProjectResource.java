@@ -39,12 +39,19 @@ public class ProjectResource {
     @POST
     @Path("/project")
     @RolesAllowedIfWebVersion({"User", "Admin"})
-    public Project createProject(@RestForm String name, @RestForm String version) {
+    public Response createProject(@RestForm String name, @RestForm String version) {
         if (appMode.equals("web")) {
             Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
-            return usecase.createProject(userId, name, version);
+            Project project = usecase.createProject(userId, name, version);
+            return Response.status(Response.Status.CREATED)
+                    .entity(project)
+                    .build();
         }
-        return usecase.createProject(name, version);
+
+        Project project = usecase.createProject(name, version);
+        return Response.status(Response.Status.CREATED)
+                .entity(project)
+                .build();
     }
 
     /**

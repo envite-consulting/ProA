@@ -110,7 +110,6 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				.forEach(store -> {
 					connectProcessDataStore(store, table, projectTable);
 				});
-
 	}
 
 	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table,
@@ -278,11 +277,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		return processModelDao.find(id);
 	}
 
-	@Override
-	public String getProcessModelXml(Long id) {
-		byte[] xmlBytes = processModelDao.find(id).getBpmnXml();
-		return XmlConverter.bytesToString(xmlBytes);
-	}
+    @Override
+    public String getProcessModelXml(Long id) {
+        byte[] xmlBytes = processModelDao.getBpmnXml(id);
+        return XmlConverter.bytesToString(xmlBytes);
+    }
 
 	@Override
 	public void deleteProcessModel(Long id) {

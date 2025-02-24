@@ -59,7 +59,7 @@ public class ProcessModelTable {
 	private String bpmnProcessId;
 
 	@Column(columnDefinition = "BYTEA")
-	@EqualsAndHashCode.Include
+	@Basic(fetch = FetchType.LAZY)
 	private byte[] bpmnXml;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel", fetch = FetchType.LAZY)

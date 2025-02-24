@@ -9,7 +9,9 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequestScoped
 public class ProcessModelDao {
@@ -123,6 +125,16 @@ public class ProcessModelDao {
 				.setParameter("id", id)
 				.setHint("javax.persistence.loadgraph", graph)
 				.getSingleResult();
+	}
+
+	@Transactional
+	public byte[] getBpmnXml(Long id) {
+		EntityGraph<ProcessModelTable> graph = em.createEntityGraph(ProcessModelTable.class);
+
+		Map<String, Object> hints = new HashMap<>();
+		hints.put("jakarta.persistence.fetchgraph", graph);
+
+		return em.find(ProcessModelTable.class, id, hints).getBpmnXml();
 	}
 
 	@Transactional
