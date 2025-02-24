@@ -22,7 +22,7 @@ public interface ProcessOperations {
 
 	Set<ProcessEvent> getIntermediateCatchEvents(String xml);
 
-	Set<ProcessDataStore> getDataStores(String xml);
+	List<ProcessDataStore> getDataStores(String xml);
 
 	String getDescription(String xml);
 

@@ -275,7 +275,7 @@ public class BpmnOperations implements ProcessOperations {
 	}
 
 	@Override
-	public Set<ProcessDataStore> getDataStores(String processModel) {
+	public List<ProcessDataStore> getDataStores(String processModel) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
 
 		Collection<DataStoreReference> dataStores = processModelInstance
@@ -291,7 +291,7 @@ public class BpmnOperations implements ProcessOperations {
 					DataAccess access = getDataStoreAccess(dataAssociations, store);
 					return new ProcessDataStore(store.getId(), store.getName(), access);
 				})//
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 	}
 
 	private DataAccess getDataStoreAccess(Collection<DataAssociation> dataAssociations, DataStoreReference store) {

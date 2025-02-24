@@ -4,6 +4,7 @@ import de.envite.proa.XmlConverter;
 import de.envite.proa.entities.process.*;
 import de.envite.proa.repository.tables.*;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class ProcessmodelMapper {
 		return table;
 	}
 
-	private static Set<ProcessDataStoreTable> mapDataStore(Set<ProcessDataStore> dataStores,
+	private static List<ProcessDataStoreTable> mapDataStore(List<ProcessDataStore> dataStores,
 			ProcessModelTable table) {
 		return dataStores//
 				.stream()//
@@ -36,7 +37,7 @@ public class ProcessmodelMapper {
 					dataStoreTable.setProcessModel(table);
 					return dataStoreTable;
 				})//
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 	}
 
 	private static Set<CallActivityTable> map(Set<ProcessActivity> callActivities,

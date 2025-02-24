@@ -6,7 +6,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @NamedEntityGraph(
@@ -69,7 +71,7 @@ public class ProcessModelTable {
 	private Set<CallActivityTable> callActivites = new HashSet<>();
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "processModel", fetch = FetchType.LAZY)
-	private Set<ProcessDataStoreTable> dataStores = new HashSet<>();
+	private List<ProcessDataStoreTable> dataStores = new ArrayList<>();
 
 	@Lob
 	@Column

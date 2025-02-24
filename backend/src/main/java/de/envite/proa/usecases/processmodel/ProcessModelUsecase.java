@@ -127,7 +127,7 @@ public class ProcessModelUsecase {
 		events.addAll(intermediateCatchEvents);
 		events.addAll(endEvents);
 		Set<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
-		Set<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
+		List<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 
 		ProcessModel processModel = new ProcessModel();
