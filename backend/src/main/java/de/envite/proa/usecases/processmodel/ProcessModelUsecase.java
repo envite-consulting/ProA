@@ -1,5 +1,6 @@
 package de.envite.proa.usecases.processmodel;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -30,14 +31,19 @@ public class ProcessModelUsecase {
 
 	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration) {
 
+		System.out.println("findByNameOrBpmnProcessId 1 " + Instant.now().toString());
+		
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
 
+		System.out.println("findByNameOrBpmnProcessId 1 " + Instant.now().toString());
+		
 		if (existingProcessModel != null && isCollaboration) {
 			throw new IllegalArgumentException("Collaboration already exists: " + bpmnProcessId);
 		}
 
 		if (existingProcessModel != null && existingProcessModel.getProcessType() != ProcessType.COLLABORATION) {
+			System.out.println("replaceProcessModel");
 			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
 		}
 
@@ -45,24 +51,42 @@ public class ProcessModelUsecase {
 			xml = processOperations.addEmptyProcessRefs(xml);
 		}
 
+		
+		System.out.println("createProcessModel start " + Instant.now().toString());
 		ProcessModel processModel = createProcessModel(name, description, xml, isCollaboration);
-
+		System.out.println("createProcessModel end " + Instant.now().toString());
+		
 		if (!isCollaboration) {
+			System.out.println("saveProcessModel !isCollaboration "+ Instant.now().toString());
 			return repository.saveProcessModel(projectId, processModel);
 		}
 
+		System.out.println("getParticipants start " + Instant.now().toString());
 		List<ParticipantDetails> participants = processOperations.getParticipants(xml);
+		System.out.println("getParticipants end " + Instant.now().toString());
+		
+		System.out.println("saveProcessModel  " + Instant.now().toString());
 		Long collaborationId = repository.saveProcessModel(projectId, processModel);
-
+		System.out.println("saveProcessModel end  " + Instant.now().toString());
+		
 		Map<String, Long> bpmnIdToIdMap = new HashMap<>();
 
 		participants //
 				.forEach(participant -> { //
 					String participantBpmnProcessId = processOperations.getBpmnProcessId(participant.getXml());
+					
+					System.out.println("findByNameOrBpmnProcessId start  " + Instant.now().toString());
+					
 					ProcessModelTable duplicateProcessModel = repository.findByNameOrBpmnProcessId(
 							participant.getName(), participantBpmnProcessId, projectId);
+					
+					System.out.println("findByNameOrBpmnProcessId end " + Instant.now().toString());
+					
+					System.out.println("saveParticipant start " + Instant.now().toString());
 					Long participantId = saveParticipant(projectId, participant.getName(), participant.getXml(),
 							participant.getDescription(), processModel.getBpmnProcessId());
+					System.out.println("saveParticipant end  " + Instant.now().toString());
+					
 					if (duplicateProcessModel != null && duplicateProcessModel.getProcessType() != ProcessType.COLLABORATION) {
 						bpmnIdToIdMap.forEach((key, value) -> {
 							if (value.equals(duplicateProcessModel.getId())) {
@@ -74,8 +98,11 @@ public class ProcessModelUsecase {
 				});
 
 		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
+		
+		System.out.println("saveMessageFlows start " + Instant.now().toString());
 		repository.saveMessageFlows(messageFlows, projectId);
-
+		System.out.println("saveMessageFlows end " + Instant.now().toString());
+		
 		return collaborationId;
 	}
 

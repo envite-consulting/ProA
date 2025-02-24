@@ -19,6 +19,7 @@ import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -129,10 +130,17 @@ public class BpmnOperations implements ProcessOperations {
 
 	@Override
 	public List<ParticipantDetails> getParticipants(String xml) {
+		System.out.println("getProcessModelInstance start " + Instant.now().toString());
+		
 		BpmnModelInstance processModelInstance = getProcessModelInstance(xml);
+		
+		System.out.println("getModelElementsByType start " + Instant.now().toString());
 		Collection<Participant> participants = processModelInstance.getModelElementsByType(Participant.class);
 
+		System.out.println("convertToString start " + Instant.now().toString());
 		String updatedXml = Bpmn.convertToString(processModelInstance);
+		
+		System.out.println("stream start " + Instant.now().toString());
 		return participants //
 				.stream() //
 				.map(participant -> new ParticipantDetails( //
@@ -221,6 +229,8 @@ public class BpmnOperations implements ProcessOperations {
 	}
 
 	private String getParticipantDescription(Participant participant) {
+		System.out.println("getParticipantDescription start " + Instant.now().toString());
+		
 		Collection<Documentation> participantDocumentations = participant.getDocumentations();
 		if (!participantDocumentations.isEmpty()) {
 			return participantDocumentations.iterator().next().getTextContent();
@@ -234,13 +244,16 @@ public class BpmnOperations implements ProcessOperations {
 		if (!processDocumentations.isEmpty()) {
 			return processDocumentations.iterator().next().getTextContent();
 		}
-
+		System.out.println("getParticipantDescription end " + Instant.now().toString());
 		return null;
 	}
 
 	private String extractParticipantXml(String collaborationXml, String participantProcessRef) {
+		
+		System.out.println("getProcessModelInstance start " + Instant.now().toString());
 		BpmnModelInstance processModelInstance = getProcessModelInstance(collaborationXml);
 
+		System.out.println("getModelElementsByType Participant start " + Instant.now().toString());
 		Collection<Participant> participants = processModelInstance.getModelElementsByType(Participant.class);
 		participants.forEach(participant -> {
 			if (!participant.getAttributeValue("processRef").equals(participantProcessRef)) {
@@ -248,16 +261,26 @@ public class BpmnOperations implements ProcessOperations {
 			}
 		});
 
+		System.out.println("getProcessModelInstance Process start " + Instant.now().toString());
 		Collection<Process> processes = processModelInstance.getModelElementsByType(Process.class);
+		System.out.println("getProcessModelInstance Process end " + Instant.now().toString());
+
+		System.out.println(processes.size());
 		processes.forEach(process -> {
+			System.out.println("inside processes " + Instant.now().toString());
 			if (!process.getId().equals(participantProcessRef)) {
+				System.out.println("removeChildElement " + Instant.now().toString());
 				process.getParentElement().removeChildElement(process);
+				System.out.println("removeChildElement " + Instant.now().toString());
 			}
 		});
 
+		
+		System.out.println("getProcessModelInstance MessageFlow start " + Instant.now().toString());
 		Collection<MessageFlow> messageFlows = processModelInstance.getModelElementsByType(MessageFlow.class);
 		messageFlows.forEach(messageFlow -> messageFlow.getParentElement().removeChildElement(messageFlow));
 
+		System.out.println("convertToString start " + Instant.now().toString());
 		return Bpmn.convertToString(processModelInstance);
 	}
 
