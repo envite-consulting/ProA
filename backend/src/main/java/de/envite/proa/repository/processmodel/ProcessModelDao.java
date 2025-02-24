@@ -31,7 +31,7 @@ public class ProcessModelDao {
 				"WHERE p.project = :project";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("project", projectTable)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 	}
 
@@ -46,7 +46,7 @@ public class ProcessModelDao {
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("collaboration", ProcessType.COLLABORATION)
 				.setParameter("project", projectTable)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 	}
 
@@ -82,7 +82,7 @@ public class ProcessModelDao {
 				"WHERE p.id = :id";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("id", id)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getSingleResult();
 	}
 
@@ -94,7 +94,7 @@ public class ProcessModelDao {
 				"WHERE p.id = :id";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("id", id)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getSingleResult();
 	}
 
@@ -106,7 +106,7 @@ public class ProcessModelDao {
 				"WHERE p.id = :id";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("id", id)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getSingleResult();
 	}
 
@@ -123,7 +123,7 @@ public class ProcessModelDao {
 				"WHERE p.id = :id";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("id", id)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getSingleResult();
 	}
 
@@ -167,7 +167,7 @@ public class ProcessModelDao {
 				)
 				.setParameter("bpmnProcessId", bpmnProcessId)
 				.setParameter("project", projectTable)
-				.setHint("javax.persistence.loadgraph", graph)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 
 		return !processModels.isEmpty() ? processModels.getFirst() : null;
