@@ -211,9 +211,13 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        {{ $t('processList.uploadingProcessModel') }}: {{ currentlyUploadingProcessModel.name }}
-        ({{ currentUploadStatus }})
-        <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
+        {{ $t("processList.uploadingProcessModel") }}:
+        {{ currentlyUploadingProcessModel.name }} ({{ currentUploadStatus }})
+        <v-progress-linear
+          color="primary"
+          :model-value="progress"
+          :height="10"
+        ></v-progress-linear>
       </template>
 
       <v-card-actions>
@@ -261,31 +265,7 @@
       :title="$t('processList.error')"
     >
       <template v-slot:text>
-        <span v-if="errorType = ErrorType.ALREADY_EXISTING">
-          {{
-            $t(
-              "processList.alreadyExistsErrorMsg1." +
-                (alreadyExistingBpmnProcessIds.length > 1
-                  ? "plural"
-                  : "singular")
-            )
-          }}
-          <strong>{{ alreadyExistingBpmnProcessIds.join(", ") }}</strong>
-          {{
-            $t(
-              "processList.alreadyExistsErrorMsg2." +
-                (alreadyExistingBpmnProcessIds.length > 1
-                  ? "plural"
-                  : "singular")
-            )
-          }}
-        </span>
-        <span v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
-          {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
-        </span>
-        <span v-else-if="errorType === ErrorType.UNKNOWN">
-          {{ $t("processList.unknownErrorMsg") }}
-        </span>
+        {{ errorMessage }}
       </template>
       <template v-slot:actions>
         <div class="ms-auto">
@@ -310,8 +290,8 @@
 </style>
 
 <script lang="ts">
-import axios, { AxiosError } from 'axios';
-import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+import axios from "axios";
+import ProcessDetailDialog from "@/components/ProcessDetailDialog.vue";
 import { defineComponent } from "vue";
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
@@ -320,6 +300,7 @@ import { authHeader } from "@/components/Authentication/authHeader";
 import i18n from "@/i18n";
 import ProcessTreeNode from "@/components/ProcessList/ProcessTreeNode.vue";
 import { Settings } from "@/components/SettingsDrawer.vue";
+import { getErrorMessage } from "@/services/axiosErrorHandler";
 
 interface BPMNContent {
   name: string;
@@ -327,25 +308,18 @@ interface BPMNContent {
   isCollaboration: boolean;
 }
 
-export interface ProcessModelNode {
+interface ProcessModelInformation {
   id: number;
   bpmnProcessId: string;
   processName: string;
   description: string;
   createdAt: string;
-  parentsBpmnProcessIds: string[];
-  childrenBpmnProcessIds: string[];
-  children: ProcessModelNode[];
+  childrenIds: number[];
+  processType: string;
 }
 
-interface RawProcessModel {
-  id: number;
-  bpmnProcessId: string;
-  processName: string;
-  description: string;
-  createdAt: string;
-  parentsBpmnProcessIds: string[];
-  childrenBpmnProcessIds: string[];
+export interface ProcessModelNode extends ProcessModelInformation {
+  children: ProcessModelNode[];
 }
 
 enum UploadDialogMode {
@@ -362,21 +336,6 @@ interface ProcessModelToUpload {
   isCollaboration: boolean;
 }
 
-interface HttpError {
-  response: {
-    data: {
-      data: string;
-      message: string;
-    };
-  };
-}
-
-enum ErrorType {
-  ALREADY_EXISTING = "ALREADY_EXISTING",
-  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION",
-  UNKNOWN = "UNKNOWN",
-}
-
 export default defineComponent({
   components: {
     ProcessTreeNode,
@@ -386,9 +345,7 @@ export default defineComponent({
     appStore: useAppStore(),
     confirmDeleteDialog: false as boolean,
     errorDialog: false as boolean,
-    errorType: ErrorType.ALREADY_EXISTING as ErrorType,
-    ErrorType: ErrorType,
-    alreadyExistingBpmnProcessIds: [] as string[],
+    errorMessage: "" as string,
     uploadDialog: false as boolean,
     uploadDialogMode: UploadDialogMode.MULTIPLE as UploadDialogMode,
     processModelToBeReplacedId: null as number | null,
@@ -405,7 +362,7 @@ export default defineComponent({
     isFetching: false as boolean,
     descriptionErrors: {} as { [key: number]: string },
     currentlyUploadingProcessModel: {} as ProcessModelToUpload,
-    currentUploadStatus: "" as string,
+    currentUploadStatus: "" as string
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -444,10 +401,8 @@ export default defineComponent({
       processModelNode: ProcessModelNode,
       skipConfirm: boolean = false
     ) {
-      const isPartOfCollaboration =
-        processModelNode.parentsBpmnProcessIds.length > 0 ||
-        processModelNode.childrenBpmnProcessIds.length > 0;
-      if (!skipConfirm && isPartOfCollaboration) {
+      const isParticipant = processModelNode.processType === "PARTICIPANT";
+      if (!skipConfirm && isParticipant) {
         this.processModelToBeDeleted = processModelNode;
         this.confirmDeleteDialog = true;
         return;
@@ -475,28 +430,25 @@ export default defineComponent({
         });
     },
 
-    collectRoots(rawProcessModels: RawProcessModel[]): ProcessModelNode[] {
-      const modelMap = new Map<string, ProcessModelNode>();
-      rawProcessModels.forEach((model) =>
-        modelMap.set(model.bpmnProcessId, { ...model, children: [] })
-      );
-
-      const roots = [] as ProcessModelNode[];
-
-      rawProcessModels.forEach((model) => {
-        if (model.parentsBpmnProcessIds.length === 0) {
-          roots.push(modelMap.get(model.bpmnProcessId)!);
-        } else {
-          model.parentsBpmnProcessIds.forEach((parentId) => {
-            const parent = modelMap.get(parentId);
-            if (parent) {
-              parent.children.push(modelMap.get(model.bpmnProcessId)!);
-            }
-          });
-        }
-      });
-
-      return roots;
+    collectRoots(
+      processModelInformation: ProcessModelInformation[]
+    ): ProcessModelNode[] {
+      const modelMap = new Map<number, ProcessModelInformation>();
+      processModelInformation.forEach((model) => modelMap.set(model.id, model));
+      return processModelInformation
+        .filter((model) => model.processType !== "PARTICIPANT")
+        .map((model) => {
+          if (model.processType === "COLLABORATION") {
+            const children = model.childrenIds.map((id) => modelMap.get(id)!);
+            const childrenAsNodes = children.map((child) => ({
+              ...child,
+              children: []
+            }));
+            return { ...model, children: childrenAsNodes };
+          } else {
+            return { ...model, children: [] };
+          }
+        });
     },
 
     openSingleUploadDialog(modelId: number) {
@@ -587,7 +539,7 @@ export default defineComponent({
 
     async uploadProcessModel(
       processModel: ProcessModelToUpload
-    ): Promise<number | string> {
+    ): Promise<number> {
       const formData = this.createProcessModelFormData(processModel);
       const { data } = await axios.post(
         "/api/project/" + this.selectedProjectId + "/process-model",
@@ -618,9 +570,6 @@ export default defineComponent({
         this.progressDialog = true;
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
-        let error = false;
-        let errorType = ErrorType.ALREADY_EXISTING;
-        this.alreadyExistingBpmnProcessIds = [];
         const numProcessModels = this.processModelsToUpload.length;
         let i = 0;
         for (const processModel of this.processModelsToUpload) {
@@ -631,25 +580,17 @@ export default defineComponent({
 
           try {
             await this.uploadProcessModel(processModel);
-          } catch (e) {
-            if ((e as AxiosError).response?.status === 400) {
-              error = true;
-              this.alreadyExistingBpmnProcessIds.push(
-                (e as HttpError).response.data.data,
-              );
-            } else {
-              error = true;
-              errorType = ErrorType.UNKNOWN;
-            }
+          } catch (error) {
+            this.afterUploadActions();
+            this.errorMessage = getErrorMessage(error);
+            this.errorDialog = true;
+            return;
           }
 
           this.progress += progressSteps;
         }
+
         this.afterUploadActions();
-        if (error) {
-          this.errorType = errorType;
-          this.errorDialog = true;
-        }
       }
     },
 
@@ -671,12 +612,14 @@ export default defineComponent({
           formData,
           { headers: authHeader() }
         );
+      } catch (error) {
         this.afterUploadActions();
-      } catch (e) {
-        this.afterUploadActions();
-        this.errorType = ErrorType.CANT_REPLACE_WITH_COLLABORATION;
+        this.errorMessage = getErrorMessage(error);
         this.errorDialog = true;
+        return;
       }
+
+      this.afterUploadActions();
     },
 
     afterUploadActions() {

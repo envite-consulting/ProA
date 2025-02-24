@@ -146,9 +146,8 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	private List<ProcessDetails> getProcessDetailsWithoutCollaborations(ProjectTable projectTable) {
 
 		return processModelDao//
-				.getProcessModels(projectTable)//
+				.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(projectTable)//
 				.stream()//
-				.filter(pm -> pm.getProcessType() != ProcessType.COLLABORATION)//
 				.map(ProcessDetailsMapper::map)//
 				.collect(Collectors.toList());
 	}
@@ -284,29 +283,31 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		List<ProcessModelTable> oldParents = new ArrayList<>(oldProcess.getParents());
 		List<Long> newProcessParentIds = newProcess.getParents().stream().map(ProcessModelTable::getId).toList();
 		for (ProcessModelTable oldParent : oldParents) {
-			if (!newProcessParentIds.contains(oldParent.getId())) {
-				newProcess.getParents().add(oldParent);
-				oldParent.getChildren().add(newProcess);
+			ProcessModelTable oldParentWithChildren = processModelDao.findWithChildren(oldParent.getId());
+			if (!newProcessParentIds.contains(oldParentWithChildren.getId())) {
+				newProcess.getParents().add(oldParentWithChildren);
+				oldParentWithChildren.getChildren().add(newProcess);
 			}
 
-			oldProcess.getParents().remove(oldParent);
-			oldParent.getChildren().remove(oldProcess);
+			oldProcess.getParents().remove(oldParentWithChildren);
+			oldParentWithChildren.getChildren().remove(oldProcess);
 
-			processModelDao.merge(oldParent);
+			processModelDao.merge(oldParentWithChildren);
 		}
 
 		List<ProcessModelTable> oldChildren = new ArrayList<>(oldProcess.getChildren());
 		List<Long> newProcessChildrenIds = newProcess.getChildren().stream().map(ProcessModelTable::getId).toList();
 		for (ProcessModelTable oldChild : oldChildren) {
-			if (!newProcessChildrenIds.contains(oldChild.getId())) {
-				newProcess.getChildren().add(oldChild);
-				oldChild.getParents().add(newProcess);
+			ProcessModelTable oldChildWithParents = processModelDao.findWithParents(oldChild.getId());
+			if (!newProcessChildrenIds.contains(oldChildWithParents.getId())) {
+				newProcess.getChildren().add(oldChildWithParents);
+				oldChildWithParents.getParents().add(newProcess);
 			}
 
-			oldProcess.getChildren().remove(oldChild);
-			oldChild.getParents().remove(newProcess);
+			oldProcess.getChildren().remove(oldChildWithParents);
+			oldChildWithParents.getParents().remove(newProcess);
 
-			processModelDao.merge(oldChild);
+			processModelDao.merge(oldChildWithParents);
 		}
 
 		processModelDao.merge(newProcess);

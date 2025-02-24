@@ -19,10 +19,7 @@ import org.camunda.bpm.model.xml.instance.ModelElementInstance;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -47,27 +44,27 @@ public class BpmnOperations implements ProcessOperations {
 	}
 
 	@Override
-	public List<ProcessEvent> getStartEvents(String processModel) {
+	public Set<ProcessEvent> getStartEvents(String processModel) {
 		return getEvents(processModel, EventType.START, StartEvent.class);
 	}
 
 	@Override
-	public List<ProcessEvent> getIntermediateThrowEvents(String processModel) {
+	public Set<ProcessEvent> getIntermediateThrowEvents(String processModel) {
 		return getEvents(processModel, EventType.INTERMEDIATE_THROW, IntermediateThrowEvent.class);
 	}
 
 	@Override
-	public List<ProcessEvent> getIntermediateCatchEvents(String processModel) {
+	public Set<ProcessEvent> getIntermediateCatchEvents(String processModel) {
 		return getEvents(processModel, EventType.INTERMEDIATE_CATCH, IntermediateCatchEvent.class);
 	}
 
 	@Override
-	public List<ProcessEvent> getEndEvents(String processModel) {
+	public Set<ProcessEvent> getEndEvents(String processModel) {
 		return getEvents(processModel, EventType.END, EndEvent.class);
 	}
 
 	@Override
-	public List<ProcessActivity> getCallActivities(String processModel) {
+	public Set<ProcessActivity> getCallActivities(String processModel) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
 
 		Collection<CallActivity> callActivities = processModelInstance.getModelElementsByType(CallActivity.class);
@@ -75,7 +72,7 @@ public class BpmnOperations implements ProcessOperations {
 		return callActivities//
 				.stream()//
 				.map(activity -> new ProcessActivity(activity.getId(), activity.getName()))//
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
 	@Override
@@ -261,7 +258,7 @@ public class BpmnOperations implements ProcessOperations {
 		return Bpmn.convertToString(processModelInstance);
 	}
 
-	private <T extends Event> List<ProcessEvent> getEvents(String processModel, EventType eventType,
+	private <T extends Event> Set<ProcessEvent> getEvents(String processModel, EventType eventType,
 			Class<T> eventClass) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
 
@@ -269,7 +266,7 @@ public class BpmnOperations implements ProcessOperations {
 		return startEvents//
 				.stream()//
 				.map(event -> new ProcessEvent(event.getId(), event.getName(), eventType))//
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
 	private BpmnModelInstance getProcessModelInstance(String processModel) {
@@ -278,7 +275,7 @@ public class BpmnOperations implements ProcessOperations {
 	}
 
 	@Override
-	public List<ProcessDataStore> getDataStores(String processModel) {
+	public Set<ProcessDataStore> getDataStores(String processModel) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
 
 		Collection<DataStoreReference> dataStores = processModelInstance
@@ -294,7 +291,7 @@ public class BpmnOperations implements ProcessOperations {
 					DataAccess access = getDataStoreAccess(dataAssociations, store);
 					return new ProcessDataStore(store.getId(), store.getName(), access);
 				})//
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
 	private DataAccess getDataStoreAccess(Collection<DataAssociation> dataAssociations, DataStoreReference store) {
