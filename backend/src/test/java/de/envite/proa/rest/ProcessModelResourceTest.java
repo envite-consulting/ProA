@@ -3,6 +3,8 @@ package de.envite.proa.rest;
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +15,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,14 +29,10 @@ public class ProcessModelResourceTest {
 	private static final Long PROJECT_ID = 1L;
 	private static final Long PROCESS_ID = 54321L;
 	private static final boolean IS_COLLABORATION = true;
-	private static final boolean IS_NOT_COLLABORATION = false;
-	private static final String PARENT_BPMN_PROCESS_ID = null;
 	private static final String COLLABORATION_NAME = "collaboration123";
-	private static final String COLLABORATION_EXISTS_ERROR_MESSAGE =
-			"Collaboration already exists: " + COLLABORATION_NAME;
 	private static final Long NEW_PROCESS_ID = 123L;
 	private static final String TEST_DIAGRAM = "test-diagram.bpmn";
-	private static final int PROCESS_ID_AS_INT = Math.toIntExact(PROCESS_ID);
+	private static final String BPMN_ID = "bpmnId";
 
 	@Mock
 	private ProcessModelUsecase usecase;
@@ -52,7 +49,8 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModel() {
+	public void testUploadProcessModel()
+			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -73,7 +71,8 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModel_InternalError() {
+	public void testUploadProcessModel_InternalError()
+			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -141,13 +140,14 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModelIllegalArgument() {
+	public void testUploadProcessModel_CollaborationAlreadyExistsException()
+			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
 		File processModel = new File(
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
 		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION))
-				.thenThrow(new IllegalArgumentException(COLLABORATION_EXISTS_ERROR_MESSAGE));
+				.thenThrow(new CollaborationAlreadyExistsException(BPMN_ID, COLLABORATION_NAME));
 
 		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, DESCRIPTION,
 				IS_COLLABORATION);
@@ -155,15 +155,14 @@ public class ProcessModelResourceTest {
 		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
 
 		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-		@SuppressWarnings("unchecked")
-		Map<String, String> entity = (Map<String, String>) response.getEntity();
-		assertThat(entity).containsKeys("error", "data");
-		assertThat(entity.get("error")).isEqualTo(COLLABORATION_EXISTS_ERROR_MESSAGE);
-		assertThat(entity.get("data")).isEqualTo(COLLABORATION_NAME);
+		CollaborationAlreadyExistsException e = (CollaborationAlreadyExistsException) response.getEntity();
+		assertThat(e.getExceptionType()).isEqualTo("CollaborationAlreadyExistsException");
+		assertThat(e.getName()).isEqualTo(COLLABORATION_NAME);
+		assertThat(e.getMessage()).contains(BPMN_ID);
 	}
 
 	@Test
-	public void testReplaceProcessModel() {
+	public void testReplaceProcessModel() throws CantReplaceWithCollaborationException {
 		File processModel = new File(
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
@@ -171,9 +170,9 @@ public class ProcessModelResourceTest {
 		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION))
 				.thenReturn(NEW_PROCESS_ID);
 
-		Long response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION);
+		Response response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION);
 
-		assertThat(response).isEqualTo(NEW_PROCESS_ID);
+		assertThat(response.getEntity()).isEqualTo(NEW_PROCESS_ID);
 
 		verify(fileService).readFileToString(processModel);
 		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION);

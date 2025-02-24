@@ -42,7 +42,7 @@ public class ProcessModelDao {
 		String query = "SELECT p " +
 				"FROM ProcessModelTable p " +
 				"WHERE p.project = :project " +
-				"AND p.processType != :collaboration ";
+				"AND (p.processType != :collaboration OR p.processType IS NULL)";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("collaboration", ProcessType.COLLABORATION)
 				.setParameter("project", projectTable)

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,14 +58,6 @@ class ProcessModelDaoTest {
 	private void flushAndClear() {
 		em.flush();
 		em.clear();
-	}
-
-	@Test
-	@Transactional
-	void testGetProcessModels() {
-		List<ProcessModelTable> processModels = processModelDao.getProcessModels(project);
-		assertNotNull(processModels);
-		assertFalse(processModels.isEmpty());
 	}
 
 	@Test
@@ -180,7 +173,8 @@ class ProcessModelDaoTest {
 
 		assertNotNull(result);
 		assertEquals(processModel.getName(), result.getName());
-		assertEquals(processModel2.getName(), result.getChildren().getFirst().getName());
+		assertTrue(result.getChildren().stream().map(ProcessModelTable::getName).toList()
+				.contains(processModel2.getName()));
 	}
 
 	@Test
@@ -203,13 +197,7 @@ class ProcessModelDaoTest {
 
 	@Test
 	@Transactional
-	void testGetProcessModelsWithParentsAndChildren() {
-		ProcessModelTable parent = new ProcessModelTable();
-		parent.setProject(project);
-		parent.setName(PROCESS_MODEL_NAME_2);
-		parent.getChildren().add(processModel);
-		em.persist(parent);
-
+	void testGetProcessModelsWithChildren() {
 		ProcessModelTable child = new ProcessModelTable();
 		child.setProject(project);
 		child.setName(PROCESS_MODEL_NAME_3);
@@ -220,23 +208,22 @@ class ProcessModelDaoTest {
 
 		flushAndClear();
 
-		List<ProcessModelTable> result = processModelDao.getProcessModelsWithParentsAndChildren(project);
+		List<ProcessModelTable> result = processModelDao.getProcessModelsWithChildren(project);
 
 		assertNotNull(result);
-		assertEquals(3, result.size());
-		List<String> processModelNames = result.stream().map(ProcessModelTable::getName).toList();
-		assertTrue(processModelNames.contains(processModel.getName()));
-		assertTrue(processModelNames.contains(parent.getName()));
-		assertTrue(processModelNames.contains(child.getName()));
+		assertEquals(2, result.size());
+		assertTrue(result.stream().map(ProcessModelTable::getName).toList()
+				.containsAll(Stream.of(processModel, child).map(ProcessModelTable::getName).toList()));
 
 		for (ProcessModelTable pm : result) {
 			if (pm.getName().equals(processModel.getName())) {
-				assertEquals(parent.getName(), pm.getParents().getFirst().getName());
-				assertEquals(child.getName(), pm.getChildren().getFirst().getName());
-			} else if (pm.getName().equals(parent.getName())) {
-				assertEquals(processModel.getName(), pm.getChildren().getFirst().getName());
-			} else {
-				assertEquals(processModel.getName(), pm.getParents().getFirst().getName());
+				assertTrue(pm.getParents().isEmpty());
+				assertTrue(
+						pm.getChildren().stream().map(ProcessModelTable::getName).toList().contains(child.getName()));
+			} else if (pm.getName().equals(child.getName())) {
+				assertTrue(pm.getChildren().isEmpty());
+				assertTrue(pm.getParents().stream().map(ProcessModelTable::getName).toList()
+						.contains(processModel.getName()));
 			}
 		}
 	}

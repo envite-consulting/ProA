@@ -7,7 +7,7 @@ import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -67,7 +67,7 @@ class ProcessDetailsMapperTest {
 		endEvent.setLabel(END_EVENT_LABEL);
 		endEvent.setElementId(END_EVENT_ID);
 
-		table.setEvents(Arrays.asList(startEvent, intermediateThrowEvent, intermediateCatchEvent, endEvent));
+		table.setEvents(Set.of(startEvent, intermediateThrowEvent, intermediateCatchEvent, endEvent));
 
 		// Act
 		ProcessDetails processDetails = ProcessDetailsMapper.map(table);

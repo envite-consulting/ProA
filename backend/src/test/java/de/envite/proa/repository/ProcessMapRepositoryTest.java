@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -135,9 +134,6 @@ class ProcessMapRepositoryTest {
 		processModelCollaboration.setId(PROCESS_MODEL_ID_3);
 		processModelCollaboration.setProcessType(PROCESS_TYPE_COLLABORATION);
 
-		when(processModelDao.getProcessModels(any())).thenReturn(
-				Arrays.asList(processModel1, processModel2, processModelCollaboration));
-
 		ProcessConnectionTable processConnectionTable = new ProcessConnectionTable();
 		processConnectionTable.setCallingProcess(processModel1);
 		processConnectionTable.setCallingElement(CALLING_ELEMENT_ID);
@@ -186,6 +182,9 @@ class ProcessMapRepositoryTest {
 
 		when(dataStoreConnectionDao.getDataStoreConnections(any())).thenReturn(
 				List.of(dataStoreConnectionTable, dataStoreConnectionCollaboration));
+
+		when(processModelDao.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(
+				any(ProjectTable.class))).thenReturn(List.of(processModel1, processModel2));
 
 		// Act
 		ProcessMap processMap = repository.getProcessMap(anyLong());
@@ -255,6 +254,8 @@ class ProcessMapRepositoryTest {
 		oldProcess.getParents().addAll(oldParents);
 		newProcess.getParents().add(oldParent1);
 
+		when(processModelDao.findWithChildren(oldParent1.getId())).thenReturn(oldParent1);
+		when(processModelDao.findWithChildren(oldParent2.getId())).thenReturn(oldParent2);
 		doNothing().when(processModelDao).merge(oldParent1);
 		doNothing().when(processModelDao).merge(oldParent2);
 
@@ -267,6 +268,9 @@ class ProcessMapRepositoryTest {
 		List<ProcessModelTable> oldChildren = List.of(oldChild1, oldChild2);
 		oldProcess.getChildren().addAll(oldChildren);
 		newProcess.getChildren().add(oldChild1);
+
+		when(processModelDao.findWithParents(oldChild1.getId())).thenReturn(oldChild1);
+		when(processModelDao.findWithParents(oldChild2.getId())).thenReturn(oldChild2);
 
 		doNothing().when(processModelDao).merge(oldChild1);
 		doNothing().when(processModelDao).merge(oldChild2);
@@ -289,6 +293,13 @@ class ProcessMapRepositoryTest {
 		verify(processModelDao, times(1)).merge(oldChildren.get(1));
 		verify(processModelDao, times(1)).merge(newProcess);
 		verify(processModelDao, times(1)).merge(oldProcess);
+		verify(processModelDao, times(2)).findWithParents(any(Long.class));
+		verify(processModelDao, times(1)).findWithParents(oldChild1.getId());
+		verify(processModelDao, times(1)).findWithParents(oldChild2.getId());
+		verify(processModelDao, times(2)).findWithChildren(any(Long.class));
+		verify(processModelDao, times(1)).findWithChildren(oldParent1.getId());
+		verify(processModelDao, times(1)).findWithChildren(oldParent2.getId());
+		verifyNoMoreInteractions(processModelDao);
 	}
 
 	@Test
