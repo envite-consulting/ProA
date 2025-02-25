@@ -1,6 +1,6 @@
 package de.envite.proa.rest;
 
-import de.envite.proa.entities.process.RelatedProcessModelRequest;
+import de.envite.proa.dto.RelatedProcessModelRequest;
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
@@ -129,7 +129,7 @@ public class ProcessModelResource {
     @GET
     @Path("/project/{projectId}/process-model/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowedIfWebVersion({"User", "Admin"})
+    @RolesAllowedIfWebVersion({ "User", "Admin" })
     public ProcessInformation getProcessInformationById(@RestPath Long projectId, Long id) {
         return usecase.getProcessInformationById(projectId, id);
     }

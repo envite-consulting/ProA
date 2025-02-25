@@ -1,5 +1,4 @@
-package de.envite.proa.entities.process;
-
+package de.envite.proa.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
