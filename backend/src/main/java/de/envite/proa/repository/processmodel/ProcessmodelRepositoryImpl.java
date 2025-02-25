@@ -62,8 +62,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		if (parentBpmnProcessId != null) {
 			ProcessModelTable parent = processModelDao.findByBpmnProcessIdWithChildren(parentBpmnProcessId,
 					projectTable);
-			parent.getChildren().add(table);
-			processModelDao.merge(parent);
+			processModelDao.addChild(parent.getId(), table.getId());
 		}
 
 		connectEvents(processModel, table, projectTable);
