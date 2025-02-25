@@ -413,27 +413,30 @@ class ProcessModelRepositoryTest {
 
 	@Test
 	public void testSaveProcessModel_WithParent() {
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
 
 		ProcessModel processModel = new ProcessModel();
 		processModel.setName(PROCESS_MODEL_NAME);
 		processModel.setParentBpmnProcessId(PARENT_PROCESS_MODEL_ID);
 
-		doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
+		ArgumentCaptor<ProcessModelTable> processModelCaptor = ArgumentCaptor.forClass(ProcessModelTable.class);
+		doNothing().when(processModelDao).persist(processModelCaptor.capture());
 
 		ProcessModelTable parent = new ProcessModelTable();
-		when(processModelDao.findByBpmnProcessIdWithChildren(eq(PARENT_PROCESS_MODEL_ID), any())).thenReturn(parent);
+		parent.setId(PROCESS_MODEL_ID_1);
+		when(processModelDao.findByBpmnProcessIdWithChildren(PARENT_PROCESS_MODEL_ID, project)).thenReturn(parent);
 
 		doNothing().when(processModelDao).merge(any(ProcessModelTable.class));
 
 		repository.saveProcessModel(PROJECT_ID, processModel);
 
-		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
+		verify(processModelDao, times(1)).persist(processModelCaptor.capture());
 
-		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-		verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(eq(PARENT_PROCESS_MODEL_ID),
-				projectCaptor.capture());
-		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-		verify(processModelDao, times(1)).merge(any(ProcessModelTable.class));
+		verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(PARENT_PROCESS_MODEL_ID,
+				project);
+		verify(processModelDao, times(1)).addChild(PROCESS_MODEL_ID_1, processModelCaptor.getValue().getId());
+		verifyNoMoreInteractions(processModelDao);
 	}
 
 	@Test
