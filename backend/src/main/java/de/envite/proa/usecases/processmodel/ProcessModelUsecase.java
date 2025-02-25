@@ -28,13 +28,13 @@ public class ProcessModelUsecase {
 	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration)
 			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
+		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
+				bpmnProcessId, projectId);
 
-		if (existingProcessModel != null && isCollaboration) {
-			throw new CollaborationAlreadyExistsException(bpmnProcessId, name);
-		}
-
-		if (existingProcessModel != null && existingProcessModel.getProcessType() != ProcessType.COLLABORATION) {
+		if (existingProcessModel != null) {
+			if (isCollaboration) {
+				throw new CollaborationAlreadyExistsException(bpmnProcessId, name);
+			}
 			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
 		}
 
@@ -56,11 +56,11 @@ public class ProcessModelUsecase {
 		participants //
 				.forEach(participant -> { //
 					String participantBpmnProcessId = processOperations.getBpmnProcessId(participant.getXml());
-					ProcessModelTable duplicateProcessModel = repository.findByNameOrBpmnProcessId(
+					ProcessModelTable duplicateProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(
 							participant.getName(), participantBpmnProcessId, projectId);
 					Long participantId = saveParticipant(projectId, participant.getName(), participant.getXml(),
 							participant.getDescription(), processModel.getBpmnProcessId());
-					if (duplicateProcessModel != null && duplicateProcessModel.getProcessType() != ProcessType.COLLABORATION) {
+					if (duplicateProcessModel != null) {
 						bpmnIdToIdMap.forEach((key, value) -> {
 							if (value.equals(duplicateProcessModel.getId())) {
 								bpmnIdToIdMap.replace(key, participantId);
@@ -79,9 +79,9 @@ public class ProcessModelUsecase {
 	private Long saveParticipant(Long projectId, String name, String xml, String description,
 			String parentBpmnProcessId) {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
-
-		if (existingProcessModel != null && existingProcessModel.getProcessType() != ProcessType.COLLABORATION) {
+		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
+				bpmnProcessId, projectId);
+		if (existingProcessModel != null) {
 			return replaceParticipant(projectId, existingProcessModel.getId(), name, xml, description,
 					parentBpmnProcessId);
 		}

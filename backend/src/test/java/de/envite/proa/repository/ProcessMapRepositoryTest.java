@@ -278,6 +278,8 @@ class ProcessMapRepositoryTest {
 		doNothing().when(processModelDao).merge(newProcess);
 		doNothing().when(processModelDao).merge(oldProcess);
 
+		doNothing().when(processModelDao).flushAndClear();
+
 		repository.copyMessageFlowsAndRelations(PROJECT_ID, PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2);
 
 		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
@@ -299,6 +301,7 @@ class ProcessMapRepositoryTest {
 		verify(processModelDao, times(2)).findWithChildren(any(Long.class));
 		verify(processModelDao, times(1)).findWithChildren(oldParent1.getId());
 		verify(processModelDao, times(1)).findWithChildren(oldParent2.getId());
+		verify(processModelDao, times(1)).flushAndClear();
 		verifyNoMoreInteractions(processModelDao);
 	}
 

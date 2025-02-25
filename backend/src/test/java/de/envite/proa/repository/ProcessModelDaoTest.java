@@ -99,31 +99,18 @@ class ProcessModelDaoTest {
 
 	@Test
 	@Transactional
-	void testFindByBpmnProcessId() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByBpmnProcessId(BPMN_PROCESS_ID_1, project);
+	void testFindByNameOrBpmnProcessIdWithoutCollaborations() {
+		ProcessModelTable retrievedProcessModel = processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(
+				PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, project);
 		assertNotNull(retrievedProcessModel);
 		assertEquals(BPMN_PROCESS_ID_1, retrievedProcessModel.getBpmnProcessId());
 	}
 
 	@Test
 	@Transactional
-	void testFindByBpmnProcessIdNotFound() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByBpmnProcessId(BPMN_PROCESS_ID_2, project);
-		assertNull(retrievedProcessModel);
-	}
-
-	@Test
-	@Transactional
-	void testFindByName() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByName(PROCESS_MODEL_NAME_1, project);
-		assertNotNull(retrievedProcessModel);
-		assertEquals(PROCESS_MODEL_NAME_1, retrievedProcessModel.getName());
-	}
-
-	@Test
-	@Transactional
-	void testFindByNameNotFound() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByName(PROCESS_MODEL_NAME_2, project);
+	void testFindByNameOrBpmnProcessIdWithoutCollaborations_NotFound() {
+		ProcessModelTable retrievedProcessModel = processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(
+				PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, project);
 		assertNull(retrievedProcessModel);
 	}
 

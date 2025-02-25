@@ -138,23 +138,6 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public ProcessModelTable findByBpmnProcessId(String bpmnProcessId, ProjectTable projectTable) {
-		List<ProcessModelTable> processModels = em
-				.createQuery(
-						"SELECT p " +
-								"FROM ProcessModelTable p " +
-								"WHERE p.bpmnProcessId = :bpmnProcessId " +
-								"AND p.project = :project",
-						ProcessModelTable.class
-				)
-				.setParameter("bpmnProcessId", bpmnProcessId)
-				.setParameter("project", projectTable)
-				.getResultList();
-
-		return !processModels.isEmpty() ? processModels.getFirst() : null;
-	}
-
-	@Transactional
 	public ProcessModelTable findByBpmnProcessIdWithChildren(String bpmnProcessId, ProjectTable projectTable) {
 		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withChildren");
 		List<ProcessModelTable> processModels = em
@@ -185,19 +168,29 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public ProcessModelTable findByName(String name, ProjectTable projectTable) {
-
+	public ProcessModelTable findByNameOrBpmnProcessIdWithoutCollaborations(String name, String bpmnProcessId,
+			ProjectTable projectTable) {
 		List<ProcessModelTable> processModels = em
 				.createQuery(
 						"SELECT p " +
 								"FROM ProcessModelTable p " +
-								"WHERE p.name = :name AND p.project = :project",
+								"WHERE (p.name = :name OR p.bpmnProcessId = :bpmnProcessId) " +
+								"AND (p.processType != :collaboration OR p.processType IS NULL) " +
+								"AND p.project = :project",
 						ProcessModelTable.class
 				)
 				.setParameter("name", name)
+				.setParameter("bpmnProcessId", bpmnProcessId)
+				.setParameter("collaboration", ProcessType.COLLABORATION)
 				.setParameter("project", projectTable)
 				.getResultList();
 
 		return processModels.isEmpty() ? null : processModels.getFirst();
+	}
+
+	@Transactional
+	public void flushAndClear() {
+		em.flush();
+		em.clear();
 	}
 }

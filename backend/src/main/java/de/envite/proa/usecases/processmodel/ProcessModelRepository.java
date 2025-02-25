@@ -22,7 +22,7 @@ public interface ProcessModelRepository {
 
 	void saveMessageFlows(List<MessageFlowDetails> messageFlows, Long projectId);
 
-	ProcessModelTable findByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId);
+	ProcessModelTable findByNameOrBpmnProcessIdWithoutCollaborations(String name, String bpmnProcessId, Long projectId);
 
 	ProcessModelTable getProcessModel(Long id);
 }
