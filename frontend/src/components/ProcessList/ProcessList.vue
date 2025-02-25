@@ -487,25 +487,40 @@ export default defineComponent({
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
-      const semanticParticipants = xmlDoc.getElementsByTagName("participant");
-      const bpmnParticipants = xmlDoc.getElementsByTagName("bpmn:participant");
-      const isCollaboration =
-        semanticParticipants.length > 1 || bpmnParticipants.length > 1;
+      const participants = xmlDoc.getElementsByTagName("participant");
+      const isCollaboration = participants?.length > 1;
 
-      const name =
-        xmlDoc.querySelector("bpmn\\:process")?.getAttribute("name") ||
-        xmlDoc.querySelector("process")?.getAttribute("name");
+      if (isCollaboration) {
+        const collaboration =
+          xmlDoc.querySelector("bpmn\\:collaboration") ||
+          xmlDoc.querySelector("semantic\\:collaboration") ||
+          xmlDoc.querySelector("collaboration");
+
+        const name = collaboration?.getAttribute("name") || "";
+        const documentation =
+          collaboration?.querySelector("bpmn\\:documentation") ||
+          collaboration?.querySelector("semantic\\:documentation") ||
+          collaboration?.querySelector("documentation");
+
+        const description = documentation?.getAttribute("textContent") || "";
+        return { name, description, isCollaboration };
+      }
+
+      const process =
+        xmlDoc.querySelector("bpmn\\:process") ||
+        xmlDoc.querySelector("semantic\\:process") ||
+        xmlDoc.querySelector("process");
+
+      const name = process?.getAttribute("name") || "";
+
       const documentation =
-        xmlDoc
-          .querySelector("bpmn\\:documentation")
-          ?.getAttribute("textContent") ||
-        xmlDoc.querySelector("documentation")?.getAttribute("textContent");
+        process?.querySelector("bpmn\\:documentation") ||
+        process?.querySelector("semantic\\:documentation") ||
+        process?.querySelector("documentation");
 
-      return {
-        name: name || "",
-        description: documentation || "",
-        isCollaboration
-      };
+      const description = documentation?.getAttribute("textContent") || "";
+
+      return { name, description, isCollaboration };
     },
 
     async handleFileSelection() {
