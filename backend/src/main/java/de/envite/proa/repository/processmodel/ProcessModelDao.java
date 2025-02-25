@@ -189,8 +189,18 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public void flushAndClear() {
-		em.flush();
-		em.clear();
+	public void addChild(Long parentId, Long childId) {
+		ProcessModelTable parent = em.find(ProcessModelTable.class, parentId);
+		ProcessModelTable child = em.find(ProcessModelTable.class, childId);
+		parent.getChildren().add(child);
+		em.merge(parent);
+	}
+
+	@Transactional
+	public void removeChild(Long parentId, Long childId) {
+		ProcessModelTable parent = em.find(ProcessModelTable.class, parentId);
+		ProcessModelTable child = em.find(ProcessModelTable.class, childId);
+		parent.getChildren().remove(child);
+		em.merge(parent);
 	}
 }

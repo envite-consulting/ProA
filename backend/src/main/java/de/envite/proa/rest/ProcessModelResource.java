@@ -58,8 +58,10 @@ public class ProcessModelResource {
 					)) //
 					.build();
 		} catch (CollaborationAlreadyExistsException | CantReplaceWithCollaborationException e) {
+			e.printStackTrace();
 			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
 		} catch (Exception e) {
+			e.printStackTrace();
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
