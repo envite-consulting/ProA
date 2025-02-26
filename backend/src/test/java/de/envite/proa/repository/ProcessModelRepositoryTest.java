@@ -17,8 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -78,7 +77,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testEndEvent() {
-
         // Arrange
         ProcessEventTable processEventTable = new ProcessEventTable();
         processEventTable.setEventType(EventType.START);
@@ -136,7 +134,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testStartEvent() {
-
         // Arrange
         ProcessEventTable processEventTable = new ProcessEventTable();
         processEventTable.setEventType(EventType.END);
@@ -194,7 +191,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testCallActivity() {
-
         // Arrange
         ProcessModelTable processModelTable = new ProcessModelTable();
         processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
@@ -243,7 +239,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testProcessCalledByActivity() {
-
         // Arrange
         ProcessModelTable processModelTable = new ProcessModelTable();
         processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
@@ -334,7 +329,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testGetProcessInformation() {
-
         // Arrange
         LocalDateTime dateTime = LocalDateTime.now();
 
@@ -369,6 +363,69 @@ class ProcessModelRepositoryTest {
         ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
         verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture(), isNull());
         assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
+    }
+
+    @Test
+    void testGetProcessInformationWithLevels() {
+        // Arrange
+        LocalDateTime dateTime = LocalDateTime.now();
+        String levelParam = "1,2";
+        List<Integer> expectedLevels = List.of(1, 2);
+
+        ProcessModelTable processModel1 = new ProcessModelTable();
+        processModel1.setId(PROCESS_MODEL_ID_1);
+        processModel1.setName(EXISTING_PROCESS_MODEL_NAME);
+        processModel1.setDescription(PROCESS_DESCRIPTION);
+        processModel1.setCreatedAt(dateTime);
+        processModel1.setLevel(1);
+
+        ProcessModelTable processModel2 = new ProcessModelTable();
+        processModel2.setId(PROCESS_MODEL_ID_2);
+        processModel2.setName("TestProcessModel2");
+        processModel2.setDescription("Description2");
+        processModel2.setCreatedAt(dateTime);
+        processModel2.setLevel(2);
+
+        ProcessModelTable processModel3 = new ProcessModelTable();
+        processModel3.setId(PROCESS_MODEL_ID_3);
+        processModel3.setName("TestProcessModel3");
+        processModel3.setDescription("Description3");
+        processModel3.setCreatedAt(dateTime);
+        processModel3.setLevel(3);
+
+        when(processModelDao.getProcessModelsWithParentsAndChildren(any(), any())).thenReturn(List.of(processModel1, processModel2));
+
+        ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(
+                processModelDao,
+                dataStoreDao,
+                dataStoreConnectionDao,
+                callActivityDao,
+                processConnectionDao,
+                processEventDao,
+                messageFlowDao,
+                relatedProcessModelDao,
+                relatedProcessModelRepository
+        );
+
+        // Act
+        List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID, levelParam);
+
+        // Assert
+        assertThat(processInformation)
+                .hasSize(2)
+                .extracting("id", "processName", "description", "createdAt", "level")
+                .containsExactlyInAnyOrder(
+                        tuple(PROCESS_MODEL_ID_1, EXISTING_PROCESS_MODEL_NAME, PROCESS_DESCRIPTION, dateTime, 1),
+                        tuple(PROCESS_MODEL_ID_2, "TestProcessModel2", "Description2", dateTime, 2)
+                );
+
+        ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
+        ArgumentCaptor<List<Integer>> levelsCaptor = ArgumentCaptor.forClass(List.class);
+
+        verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture(), levelsCaptor.capture());
+
+        assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
+        assertThat(levelsCaptor.getValue()).isEqualTo(expectedLevels);
     }
 
     @Test
@@ -449,7 +506,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testSaveProcessModel_WithParent() {
-
         ProcessModel processModel = new ProcessModel();
         processModel.setName(PROCESS_MODEL_NAME);
         processModel.setParentBpmnProcessId(PARENT_PROCESS_MODEL_ID);
@@ -529,7 +585,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testSaveProcessModel_UnknownEventType() {
-
         ProcessModel processModel = new ProcessModel();
 
         ProcessEvent event = new ProcessEvent();
@@ -582,7 +637,6 @@ class ProcessModelRepositoryTest {
 
     @Test
     void testSaveProcessModel_ConnectIntermediateThrowEvent() {
-
         doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
 
         ProcessModel processModel = new ProcessModel();

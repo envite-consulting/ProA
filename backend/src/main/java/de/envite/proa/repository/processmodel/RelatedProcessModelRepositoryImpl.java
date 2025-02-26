@@ -2,7 +2,6 @@ package de.envite.proa.repository.processmodel;
 
 import de.envite.proa.entities.process.EventType;
 import de.envite.proa.entities.process.RelatedProcessModel;
-import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
@@ -17,13 +16,11 @@ import java.util.*;
 @RequestScoped
 public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRepository {
 
-    private final ProjectDao projectDao;
     private final ProcessModelDao processModelDao;
     private final RelatedProcessModelDao relatedProcessModelDao;
 
     @Inject
-    public RelatedProcessModelRepositoryImpl(ProjectDao projectDao, ProcessModelDao processModelDao, RelatedProcessModelDao relatedProcessModelDao) {
-        this.projectDao = projectDao;
+    public RelatedProcessModelRepositoryImpl(ProcessModelDao processModelDao, RelatedProcessModelDao relatedProcessModelDao) {
         this.processModelDao = processModelDao;
         this.relatedProcessModelDao = relatedProcessModelDao;
     }
@@ -116,13 +113,10 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 
     @Override
     public void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds) {
-        ProjectTable projectTable = projectDao.findById(projectId);
+        ProjectTable projectTable = new ProjectTable();
+        projectTable.setId(projectId);
 
-        if (projectTable == null) {
-            throw new NoResultException("Project not found.");
-        }
-
-        List<ProcessModelTable> allModels = processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds);
+        List<ProcessModelTable> allModels = new ArrayList<>(processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds));
         ProcessModelTable processModel = processModelDao.find(id);
 
         if (allModels.isEmpty() || processModel == null) {

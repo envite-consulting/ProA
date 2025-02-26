@@ -2,6 +2,7 @@ package de.envite.proa.rest;
 
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
+import de.envite.proa.dto.RelatedProcessModelRequest;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,14 +28,11 @@ class ProcessModelResourceTest {
 	private static final Long PROJECT_ID = 1L;
 	private static final Long PROCESS_ID = 54321L;
 	private static final boolean IS_COLLABORATION = true;
-	private static final boolean IS_NOT_COLLABORATION = false;
-	private static final String PARENT_BPMN_PROCESS_ID = null;
 	private static final String COLLABORATION_NAME = "collaboration123";
 	private static final String COLLABORATION_EXISTS_ERROR_MESSAGE =
 			"Collaboration already exists: " + COLLABORATION_NAME;
 	private static final Long NEW_PROCESS_ID = 123L;
 	private static final String TEST_DIAGRAM = "test-diagram.bpmn";
-	private static final int PROCESS_ID_AS_INT = Math.toIntExact(PROCESS_ID);
 
 	@Mock
 	private ProcessModelUsecase usecase;
@@ -92,6 +90,18 @@ class ProcessModelResourceTest {
 	}
 
 	@Test
+	void testAddRelatedProcessModel() {
+		RelatedProcessModelRequest request = new RelatedProcessModelRequest();
+		request.setRelatedProcessModelIds(List.of(1L, 2L));
+
+		Response response = resource.addRelatedProcessModel(PROJECT_ID, PROCESS_ID, request);
+
+		assertThat(response.getStatus()).isEqualTo(201);
+
+		verify(usecase).addRelatedProcessModel(PROJECT_ID, PROCESS_ID, request.getRelatedProcessModelIds());
+	}
+
+	@Test
 	void testGetProcessModel() {
 		when(usecase.getProcessModel(PROCESS_ID)).thenReturn(PROCESS_XML);
 
@@ -128,6 +138,33 @@ class ProcessModelResourceTest {
 	}
 
 	@Test
+	void testGetProcessInformationWithLevels() {
+		String levels = "1,2";
+		List<ProcessInformation> expectedResultList = List.of(new ProcessInformation());
+
+		when(usecase.getProcessInformation(PROJECT_ID, levels)).thenReturn(expectedResultList);
+
+		List<ProcessInformation> result = resource.getProcessInformation(PROJECT_ID, levels);
+
+		assertThat(result).isEqualTo(expectedResultList);
+
+		verify(usecase).getProcessInformation(PROJECT_ID, levels);
+	}
+
+	@Test
+	void testGetProcessInformationById() {
+		ProcessInformation expectedProcess = new ProcessInformation();
+
+		when(usecase.getProcessInformationById(PROJECT_ID, PROCESS_ID)).thenReturn(expectedProcess);
+
+		ProcessInformation result = resource.getProcessInformationById(PROJECT_ID, PROCESS_ID);
+
+		assertThat(result).isEqualTo(expectedProcess);
+
+		verify(usecase).getProcessInformationById(PROJECT_ID, PROCESS_ID);
+	}
+
+	@Test
 	void testGetProcessDetails() {
 		ProcessDetails expected = new ProcessDetails();
 
@@ -142,7 +179,7 @@ class ProcessModelResourceTest {
 	@Test
 	void testUploadProcessModelIllegalArgument() {
 		File processModel = new File(
-				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
+				Objects.requireNonNull(getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
 		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION))
@@ -165,7 +202,7 @@ class ProcessModelResourceTest {
 	@Test
 	void testReplaceProcessModel() {
 		File processModel = new File(
-				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
+				Objects.requireNonNull(getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
 		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION))

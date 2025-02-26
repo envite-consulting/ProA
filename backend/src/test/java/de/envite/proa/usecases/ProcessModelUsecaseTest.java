@@ -296,6 +296,18 @@ class ProcessModelUsecaseTest {
 	}
 
 	@Test
+	void testGetProcessDetailsWithAggregationOfEvents() {
+		ProcessDetails processDetails = new ProcessDetails();
+
+		when(repository.getProcessDetails(TEST_PROCESS_MODEL_ID, true)).thenReturn(processDetails);
+
+		ProcessDetails result = processModelUsecase.getProcessDetails(TEST_PROCESS_MODEL_ID, true);
+
+		assertEquals(processDetails, result);
+		verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, true);
+	}
+
+	@Test
 	void testSaveProcessModel_Collaboration() {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
 		when(repository.findByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID, TEST_PROJECT_ID)).thenReturn(
