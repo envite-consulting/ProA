@@ -1,12 +1,5 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.util.Collections;
-import java.util.List;
-
 import de.envite.proa.entities.authentication.User;
 import de.envite.proa.entities.datastore.DataAccess;
 import de.envite.proa.entities.process.*;
@@ -18,14 +11,19 @@ import de.envite.proa.repository.processmodel.ProcessmodelRepositoryImpl;
 import de.envite.proa.repository.project.ProjectRepositoryImpl;
 import de.envite.proa.repository.user.UserRepositoryImpl;
 import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.*;
 
 @QuarkusTest
 class RepositoryIntegrationTest {
@@ -75,12 +73,12 @@ class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-		model.setEvents(Collections.singletonList(startEvent));
+		model.setEvents(Set.of(startEvent));
 
 		ProcessActivity activity = new ProcessActivity();
 		activity.setElementId(ACTIVITY_ID);
 		activity.setLabel(ACTIVITY_LABEL);
-		model.setCallActivities(Collections.singletonList(activity));
+		model.setCallActivities(Set.of(activity));
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
@@ -106,7 +104,7 @@ class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-		model1.setEvents(Collections.singletonList(startEvent));
+		model1.setEvents(Set.of(startEvent));
 
 		ProcessModel model2 = new ProcessModel();
 		model2.setName(PROCESS_MODEL_NAME_2);
@@ -115,7 +113,7 @@ class RepositoryIntegrationTest {
 		endEvent.setElementId(EVENT_ID);
 		endEvent.setLabel(EVENT_LABEL);
 		endEvent.setEventType(EventType.END);
-		model2.setEvents(Collections.singletonList(endEvent));
+		model2.setEvents(Set.of(endEvent));
 
 		ProcessDataStore dataStore = new ProcessDataStore();
 		dataStore.setAccess(DataAccess.READ);
@@ -166,7 +164,7 @@ class RepositoryIntegrationTest {
 		startEvent.setElementId(EVENT_ID);
 		startEvent.setLabel(EVENT_LABEL);
 		startEvent.setEventType(EventType.START);
-		model1.setEvents(Collections.singletonList(startEvent));
+		model1.setEvents(Set.of(startEvent));
 
 		ProcessModel model2 = new ProcessModel();
 		model2.setName(PROCESS_MODEL_NAME_2);
@@ -175,7 +173,7 @@ class RepositoryIntegrationTest {
 		endEvent.setElementId(EVENT_ID);
 		endEvent.setLabel(EVENT_LABEL);
 		endEvent.setEventType(EventType.END);
-		model2.setEvents(Collections.singletonList(endEvent));
+		model2.setEvents(Set.of(endEvent));
 
 		ProcessDataStore dataStore = new ProcessDataStore();
 		dataStore.setAccess(DataAccess.READ);
@@ -353,6 +351,7 @@ class RepositoryIntegrationTest {
 
 	/**
 	 * There is no quarkus feature to clean up the database
+	 *
 	 * @see <a href="https://stackoverflow.com/questions/71857904/quarkus-clean-h2-db-after-every-test"</a>
 	 * @see <a href="https://github.com/quarkusio/quarkus/issues/14240"</a>
 	 */

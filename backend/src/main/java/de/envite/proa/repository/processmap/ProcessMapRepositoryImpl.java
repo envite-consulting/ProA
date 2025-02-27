@@ -16,7 +16,6 @@ import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -146,9 +145,8 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	private List<ProcessDetails> getProcessDetailsWithoutCollaborations(ProjectTable projectTable) {
 
 		return processModelDao//
-				.getProcessModels(projectTable)//
+				.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(projectTable)//
 				.stream()//
-				.filter(pm -> pm.getProcessType() != ProcessType.COLLABORATION)//
 				.map(ProcessDetailsMapper::map)//
 				.collect(Collectors.toList());
 	}
@@ -268,8 +266,10 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	public void copyMessageFlowsAndRelations(Long projectId, Long oldProcessId, Long newProcessId) {
 		ProjectTable project = new ProjectTable();
 		project.setId(projectId);
+
 		ProcessModelTable oldProcess = processModelDao.findWithParentsAndChildren(oldProcessId);
-		ProcessModelTable newProcess = processModelDao.findWithParentsAndChildren(newProcessId);
+		ProcessModelTable newProcess = processModelDao.find(newProcessId);
+
 		List<MessageFlowTable> messageFlows = messageFlowDao.getMessageFlows(project, oldProcess);
 		for (MessageFlowTable messageFlow : messageFlows) {
 			if (messageFlow.getCalledProcess().getId().equals(oldProcessId)) {
@@ -281,35 +281,16 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 			messageFlowDao.merge(messageFlow);
 		}
 
-		List<ProcessModelTable> oldParents = new ArrayList<>(oldProcess.getParents());
-		List<Long> newProcessParentIds = newProcess.getParents().stream().map(ProcessModelTable::getId).toList();
+		Set<ProcessModelTable> oldParents = new HashSet<>(oldProcess.getParents());
 		for (ProcessModelTable oldParent : oldParents) {
-			if (!newProcessParentIds.contains(oldParent.getId())) {
-				newProcess.getParents().add(oldParent);
-				oldParent.getChildren().add(newProcess);
-			}
-
-			oldProcess.getParents().remove(oldParent);
-			oldParent.getChildren().remove(oldProcess);
-
-			processModelDao.merge(oldParent);
+			processModelDao.addChild(oldParent.getId(), newProcess.getId());
+			processModelDao.removeChild(oldParent.getId(), oldProcess.getId());
 		}
 
-		List<ProcessModelTable> oldChildren = new ArrayList<>(oldProcess.getChildren());
-		List<Long> newProcessChildrenIds = newProcess.getChildren().stream().map(ProcessModelTable::getId).toList();
+		Set<ProcessModelTable> oldChildren = new HashSet<>(oldProcess.getChildren());
 		for (ProcessModelTable oldChild : oldChildren) {
-			if (!newProcessChildrenIds.contains(oldChild.getId())) {
-				newProcess.getChildren().add(oldChild);
-				oldChild.getParents().add(newProcess);
-			}
-
-			oldProcess.getChildren().remove(oldChild);
-			oldChild.getParents().remove(newProcess);
-
-			processModelDao.merge(oldChild);
+			processModelDao.addChild(newProcess.getId(), oldChild.getId());
+			processModelDao.removeChild(oldProcess.getId(), oldChild.getId());
 		}
-
-		processModelDao.merge(newProcess);
-		processModelDao.merge(oldProcess);
 	}
 }

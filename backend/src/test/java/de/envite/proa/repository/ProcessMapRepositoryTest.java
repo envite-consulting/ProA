@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -133,9 +132,6 @@ class ProcessMapRepositoryTest {
 		processModelCollaboration.setId(PROCESS_MODEL_ID_3);
 		processModelCollaboration.setProcessType(PROCESS_TYPE_COLLABORATION);
 
-		when(processModelDao.getProcessModels(any())).thenReturn(
-				Arrays.asList(processModel1, processModel2, processModelCollaboration));
-
 		ProcessConnectionTable processConnectionTable = new ProcessConnectionTable();
 		processConnectionTable.setCallingProcess(processModel1);
 		processConnectionTable.setCallingElement(CALLING_ELEMENT_ID);
@@ -185,6 +181,9 @@ class ProcessMapRepositoryTest {
 		when(dataStoreConnectionDao.getDataStoreConnections(any())).thenReturn(
 				List.of(dataStoreConnectionTable, dataStoreConnectionCollaboration));
 
+		when(processModelDao.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(
+				any(ProjectTable.class))).thenReturn(List.of(processModel1, processModel2));
+
 		// Act
 		ProcessMap processMap = repository.getProcessMap(1L);
 
@@ -217,11 +216,12 @@ class ProcessMapRepositoryTest {
 	void testCopyMessageFlowsAndRelations() {
 		ProcessModelTable oldProcess = new ProcessModelTable();
 		oldProcess.setId(PROCESS_MODEL_ID_1);
-		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_1)).thenReturn(oldProcess);
 
 		ProcessModelTable newProcess = new ProcessModelTable();
 		newProcess.setId(PROCESS_MODEL_ID_2);
-		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_2)).thenReturn(newProcess);
+
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_1)).thenReturn(oldProcess);
+		when(processModelDao.find(PROCESS_MODEL_ID_2)).thenReturn(newProcess);
 
 		ProcessModelTable thirdProcess = new ProcessModelTable();
 		thirdProcess.setId(PROCESS_MODEL_ID_3);
@@ -253,9 +253,6 @@ class ProcessMapRepositoryTest {
 		oldProcess.getParents().addAll(oldParents);
 		newProcess.getParents().add(oldParent1);
 
-		doNothing().when(processModelDao).merge(oldParent1);
-		doNothing().when(processModelDao).merge(oldParent2);
-
 		ProcessModelTable oldChild1 = new ProcessModelTable();
 		oldChild1.setId(OLD_CHILD_ID_1);
 		oldChild1.setName(OLD_CHILD_NAME_1);
@@ -266,27 +263,39 @@ class ProcessMapRepositoryTest {
 		oldProcess.getChildren().addAll(oldChildren);
 		newProcess.getChildren().add(oldChild1);
 
-		doNothing().when(processModelDao).merge(oldChild1);
-		doNothing().when(processModelDao).merge(oldChild2);
+		doNothing().when(processModelDao).addChild(oldParent1.getId(), newProcess.getId());
+		doNothing().when(processModelDao).removeChild(oldParent1.getId(), oldProcess.getId());
 
-		doNothing().when(processModelDao).merge(newProcess);
-		doNothing().when(processModelDao).merge(oldProcess);
+		doNothing().when(processModelDao).addChild(oldParent2.getId(), newProcess.getId());
+		doNothing().when(processModelDao).removeChild(oldParent2.getId(), oldProcess.getId());
+
+		doNothing().when(processModelDao).addChild(newProcess.getId(), oldChild1.getId());
+		doNothing().when(processModelDao).removeChild(oldProcess.getId(), oldChild1.getId());
+
+		doNothing().when(processModelDao).addChild(newProcess.getId(), oldChild2.getId());
+		doNothing().when(processModelDao).removeChild(oldProcess.getId(), oldChild2.getId());
 
 		repository.copyMessageFlowsAndRelations(PROJECT_ID, PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2);
 
 		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
-		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_2);
+		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_2);
 
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
 		verify(messageFlowDao, times(1)).getMessageFlows(projectCaptor.capture(), eq(oldProcess));
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
 		messageFlows.forEach(messageFlow -> verify(messageFlowDao, times(1)).merge(messageFlow));
-		verify(processModelDao, times(1)).merge(oldParents.get(0));
-		verify(processModelDao, times(1)).merge(oldParents.get(1));
-		verify(processModelDao, times(1)).merge(oldChildren.get(0));
-		verify(processModelDao, times(1)).merge(oldChildren.get(1));
-		verify(processModelDao, times(1)).merge(newProcess);
-		verify(processModelDao, times(1)).merge(oldProcess);
+
+		verify(processModelDao, times(1)).addChild(oldParent1.getId(), newProcess.getId());
+		verify(processModelDao, times(1)).removeChild(oldParent1.getId(), oldProcess.getId());
+		verify(processModelDao, times(1)).addChild(oldParent2.getId(), newProcess.getId());
+		verify(processModelDao, times(1)).removeChild(oldParent2.getId(), oldProcess.getId());
+		verify(processModelDao, times(1)).addChild(newProcess.getId(), oldChild1.getId());
+		verify(processModelDao, times(1)).removeChild(oldProcess.getId(), oldChild1.getId());
+		verify(processModelDao, times(1)).addChild(newProcess.getId(), oldChild2.getId());
+		verify(processModelDao, times(1)).removeChild(oldProcess.getId(), oldChild2.getId());
+
+		verifyNoMoreInteractions(messageFlowDao);
+		verifyNoMoreInteractions(processModelDao);
 	}
 
 	@Test

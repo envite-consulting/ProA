@@ -5,6 +5,8 @@ import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -13,9 +15,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.RestPath;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Path("/api")
 public class ProcessModelResource {
@@ -57,14 +57,11 @@ public class ProcessModelResource {
 							isCollaboration //
 					)) //
 					.build();
-		} catch (IllegalArgumentException e) {
-			Map<String, String> errorResponse = new HashMap<>();
-			String errorMessage = e.getMessage();
-			String[] splitMessage = errorMessage.split(" ");
-			errorResponse.put("error", errorMessage);
-			errorResponse.put("data", splitMessage[splitMessage.length - 1]);
-			return Response.status(Response.Status.BAD_REQUEST).entity(errorResponse).build();
+		} catch (CollaborationAlreadyExistsException | CantReplaceWithCollaborationException e) {
+			e.printStackTrace();
+			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
 		} catch (Exception e) {
+			e.printStackTrace();
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
@@ -72,24 +69,31 @@ public class ProcessModelResource {
 	@Path("project/{projectId}/process-model/{oldProcessId}")
 	@POST
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
-	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId, @RestForm File processModel,
+	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId,
+			@RestForm File processModel,
 			@RestForm String fileName, @RestForm String description) {
 		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
-		return Response
-				.status(Response.Status.CREATED)
-				.entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description))
-				.build();
+		try {
+            return Response
+                    .status(Response.Status.CREATED)
+                    .entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description))
+                    .build();
+		} catch (CantReplaceWithCollaborationException e) {
+			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+		}
 	}
 
-	@POST
-	@Path("/project/{projectId}/process-model/{id}/related-process-model")
-	@RolesAllowedIfWebVersion({"User", "Admin"})
-	public Response addRelatedProcessModel(@RestPath Long projectId, Long id,
-										   RelatedProcessModelRequest request) {
-		usecase.addRelatedProcessModel(projectId, id, request.getRelatedProcessModelIds());
-		return Response.status(Response.Status.CREATED).build();
-	}
+    @POST
+    @Path("/project/{projectId}/process-model/{id}/related-process-model")
+    @RolesAllowedIfWebVersion({"User", "Admin"})
+    public Response addRelatedProcessModel(@RestPath Long projectId, Long id,
+                                           RelatedProcessModelRequest request) {
+        usecase.addRelatedProcessModel(projectId, id, request.getRelatedProcessModelIds());
+        return Response.status(Response.Status.CREATED).build();
+    }
 
 	/**
 	 * Gets the xml representations of the bpmn file the id corresponds to. This method is called from the process model

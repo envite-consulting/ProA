@@ -1,7 +1,5 @@
 package de.envite.proa.repository.processmodel;
 
-import java.util.List;
-
 import de.envite.proa.entities.process.EventType;
 import de.envite.proa.entities.process.ProcessActivity;
 import de.envite.proa.entities.process.ProcessDetails;
@@ -10,6 +8,9 @@ import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import jakarta.persistence.NoResultException;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ProcessDetailsMapper {
 
@@ -27,10 +28,10 @@ public class ProcessDetailsMapper {
 		return details;
 	}
 
-	public static ProcessDetails mapWithAggregation(Long id, //
-													List<ProcessModelTable> processModels, //
-													List<ProcessEventTable> events, //
-													List<CallActivityTable> activities) {
+	public static ProcessDetails mapWithAggregation(Long id,
+													Set<ProcessModelTable> processModels,
+													Set<ProcessEventTable> events,
+													Set<CallActivityTable> activities) {
 		ProcessModelTable mainProcess = processModels.stream()
 				.filter(p -> p.getId().equals(id))
 				.findFirst()
@@ -49,19 +50,19 @@ public class ProcessDetailsMapper {
 		return details;
 	}
 
-	private static List<ProcessActivity> map(List<CallActivityTable> callActivities) {
-		return callActivities//
+	private static Set<ProcessActivity> map(Set<CallActivityTable> callActivites) {
+		return callActivites//
 				.stream()//
 				.map(activity -> new ProcessActivity(activity.getElementId(), activity.getLabel()))//
-				.toList();
+				.collect(Collectors.toSet());
 	}
 
-	private static List<ProcessEvent> map(List<ProcessEventTable> events, EventType eventType) {
+	private static Set<ProcessEvent> map(Set<ProcessEventTable> events, EventType eventType) {
 		return events//
 				.stream()//
 				.filter(event -> event.getEventType().equals(eventType))//
 				.map(ProcessDetailsMapper::map)//
-				.toList();
+				.collect(Collectors.toSet());
 	}
 
 	private static ProcessEvent map(ProcessEventTable table) {

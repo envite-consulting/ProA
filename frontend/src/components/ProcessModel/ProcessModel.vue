@@ -25,7 +25,7 @@
     >
       <div>
         <v-chip
-          v-if="parentsBpmnProcessIds.length === 0"
+          v-if="!processType.PARTICIPANT"
           prepend-icon="mdi-file"
           class="ma-1"
           variant="tonal"
@@ -155,6 +155,12 @@ import { Canvas } from "bpmn-js/lib/features/context-pad/ContextPadProvider";
 import { useAppStore } from "@/store/app";
 import { authHeader } from "@/components/Authentication/authHeader";
 
+enum ProcessType {
+  COLLABORATION = "COLLABORATION",
+  PARTICIPANT = "PARTICIPANT",
+  PROCESS = "PROCESS"
+}
+
 export default defineComponent({
   data: () => ({
     canvas: null as Canvas | null,
@@ -164,8 +170,8 @@ export default defineComponent({
     zoomOutMultiplier: 0.9,
     isFetching: false as boolean,
     level: 0 as number,
-    parentsBpmnProcessIds: [] as Array<{}>,
     processName: "" as string,
+    processType: ProcessType,
     relatedProcessModels: [] as Array<{
       relatedProcessModelId: number;
       processName: string;
@@ -208,7 +214,7 @@ export default defineComponent({
 
       this.processName = processModel.processName;
       this.level = processModel.level;
-      this.parentsBpmnProcessIds = processModel.parentsBpmnProcessIds;
+      this.processType = processModel.processType;
       this.relatedProcessModels = processModel.relatedProcessModels.map(
         (relatedProcessModel: any) => ({
           relatedProcessModelId: relatedProcessModel.relatedProcessModelId,

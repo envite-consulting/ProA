@@ -68,8 +68,10 @@ class ProjectResourceTest {
 
 		when(usecase.createProject(USER_ID, PROJECT_NAME_1, PROJECT_VERSION_1)).thenReturn(expectedProject1);
 
-		Project result = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Response response = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Project result = response.readEntity(Project.class);
 
+		assertEquals(201, response.getStatus());
 		assertEquals(expectedProject1, result);
 		verify(jwt, times(1)).getClaim("userId");
 		verify(usecase, times(1)).createProject(USER_ID, PROJECT_NAME_1, PROJECT_VERSION_1);
@@ -81,8 +83,10 @@ class ProjectResourceTest {
 
 		when(usecase.createProject(PROJECT_NAME_1, PROJECT_VERSION_1)).thenReturn(expectedProject1);
 
-		Project result = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Response response = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Project result = response.readEntity(Project.class);
 
+		assertEquals(201, response.getStatus());
 		assertEquals(expectedProject1, result);
 		verify(jwt, never()).getClaim("userId");
 		verify(usecase, times(1)).createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
@@ -100,7 +104,7 @@ class ProjectResourceTest {
 		when(usecase.getProjects(USER_ID)).thenReturn(expectedProjects);
 
 		List<Project> result = resource.getProjects();
-
+		
 		assertEquals(expectedProjects, result);
 		verify(jwt, times(1)).getClaim("userId");
 		verify(usecase, times(1)).getProjects(USER_ID);

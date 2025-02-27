@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 class RelatedProcessModelRepositoryTest {
@@ -70,12 +69,14 @@ class RelatedProcessModelRepositoryTest {
         ProcessEventTable endEventModelLevel2 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
 
         modelLevel1.setProject(project);
-        modelLevel1.setEvents(List.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
         modelLevel2.setProject(project);
-        modelLevel2.setEvents(List.of(startEventModelLevel2, endEventModelLevel2));
+        modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
 
-        when(processModelDao.getProcessModelsWithParentsAndChildren(eq(project), isNull()))
+        when(processModelDao.getProcessModelsWithParentsAndEvents(project))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
+        when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_1)).thenReturn(new byte[8]);
+        when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_2)).thenReturn(new byte[18]);
 
         // Act
         repository.calculateAndSaveRelatedProcessModels(project);
@@ -124,7 +125,7 @@ class RelatedProcessModelRepositoryTest {
         modelLevel1.setProject(project);
         modelLevel2.setProject(project);
 
-        when(processModelDao.getProcessModelsWithParentsAndChildren(eq(project), isNull()))
+        when(processModelDao.getProcessModelsWithParentsAndEvents(project))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
 
         // Act
@@ -159,15 +160,18 @@ class RelatedProcessModelRepositoryTest {
         ProcessEventTable endEventModelLevel3 = createProcessEvent(END_EVENT_LABEL_2, EventType.END);
 
         modelLevel1.setProject(project);
-        modelLevel1.setEvents(List.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
         modelLevel2.setProject(project);
-        modelLevel2.setEvents(List.of(startEventModelLevel2, endEventModelLevel2));
+        modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
         modelLevel3.setProject(project);
-        modelLevel3.setEvents(List.of(startEventModelLevel3, endEventModelLevel3));
+        modelLevel3.setEvents(Set.of(startEventModelLevel3, endEventModelLevel3));
 
-        when(processModelDao.find(PROCESS_MODEL_ID_3)).thenReturn(modelLevel3);
+        when(processModelDao.findWithParents(PROCESS_MODEL_ID_3)).thenReturn(modelLevel3);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
+        when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_1)).thenReturn(new byte[8]);
+        when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_2)).thenReturn(new byte[18]);
+        when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_3)).thenReturn(new byte[36]);
 
         // Act
         repository.addRelatedProcessModel(PROJECT_ID, PROCESS_MODEL_ID_3, List.of(PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2));
@@ -231,11 +235,11 @@ class RelatedProcessModelRepositoryTest {
         ProcessEventTable endEventModelLevel2 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
 
         modelLevel1.setProject(project);
-        modelLevel1.setEvents(List.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
         modelLevel2.setProject(project);
-        modelLevel2.setEvents(List.of(startEventModelLevel2, endEventModelLevel2));
+        modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
 
-        when(processModelDao.find(PROCESS_MODEL_ID_3)).thenReturn(null);
+        when(processModelDao.findWithParents(PROCESS_MODEL_ID_3)).thenReturn(null);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
 
@@ -257,9 +261,9 @@ class RelatedProcessModelRepositoryTest {
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
 
         modelLevel1.setProject(project);
-        modelLevel1.setEvents(List.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
 
-        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of());
 
@@ -281,7 +285,7 @@ class RelatedProcessModelRepositoryTest {
         modelLevel1.setProject(project);
         modelLevel2.setProject(project);
 
-        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
 
@@ -306,12 +310,12 @@ class RelatedProcessModelRepositoryTest {
         ProcessEventTable endEventModelLevel2 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
 
         modelLevel1.setProject(project);
-        modelLevel1.setEvents(List.of(startEventModelLevel1, endEventModelLevel1));
-        modelLevel1.setParents(List.of(new ProcessModelTable()));
+        modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel1.setParents(Set.of(new ProcessModelTable()));
         modelLevel2.setProject(project);
-        modelLevel2.setEvents(List.of(startEventModelLevel2, endEventModelLevel2));
+        modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
 
-        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel2));
 
@@ -336,12 +340,12 @@ class RelatedProcessModelRepositoryTest {
         ProcessEventTable endEventModelLevel2 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
 
         modelLevel1.setProject(project);
-        modelLevel1.setEvents(List.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
         modelLevel2.setProject(project);
-        modelLevel2.setEvents(List.of(startEventModelLevel2, endEventModelLevel2));
-        modelLevel2.setParents(List.of(new ProcessModelTable()));
+        modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
+        modelLevel2.setParents(Set.of(new ProcessModelTable()));
 
-        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel2));
 

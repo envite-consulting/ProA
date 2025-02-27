@@ -287,33 +287,7 @@
       :title="$t('processList.error')"
     >
       <template v-slot:text>
-        <span v-if="(errorType = ErrorType.ALREADY_EXISTING)">
-          {{
-            $t(
-              "processList.alreadyExistsErrorMsg1." +
-                (alreadyExistingBpmnProcessIds.length > 1
-                  ? "plural"
-                  : "singular")
-            )
-          }}
-          <strong>{{ alreadyExistingBpmnProcessIds.join(", ") }}</strong>
-          {{
-            $t(
-              "processList.alreadyExistsErrorMsg2." +
-                (alreadyExistingBpmnProcessIds.length > 1
-                  ? "plural"
-                  : "singular")
-            )
-          }}
-        </span>
-        <span
-          v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION"
-        >
-          {{ $t("processList.cantReplaceWithCollaborationErrorMsg") }}
-        </span>
-        <span v-else-if="errorType === ErrorType.UNKNOWN">
-          {{ $t("processList.unknownErrorMsg") }}
-        </span>
+        {{ errorMessage }}
       </template>
       <template v-slot:actions>
         <div class="ms-auto">
@@ -338,9 +312,9 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from "vue";
 import axios from "axios";
 import ProcessDetailDialog from "@/components/ProcessDetailDialog.vue";
+import { defineComponent } from "vue";
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -348,6 +322,7 @@ import { authHeader } from "@/components/Authentication/authHeader";
 import i18n from "@/i18n";
 import ProcessTreeNode from "@/components/ProcessList/ProcessTreeNode.vue";
 import { Settings } from "@/components/SettingsDrawer.vue";
+import { getErrorMessage } from "@/services/axiosErrorHandler";
 
 interface BPMNContent {
   name: string;
@@ -355,14 +330,17 @@ interface BPMNContent {
   isCollaboration: boolean;
 }
 
-export interface ProcessModelNode {
+interface ProcessModelInformation {
   id: number;
   bpmnProcessId: string;
   processName: string;
   description: string;
   createdAt: string;
-  parentsBpmnProcessIds: string[];
-  childrenBpmnProcessIds: string[];
+  childrenIds: number[];
+  processType: string;
+}
+
+export interface ProcessModelNode extends ProcessModelInformation {
   children: ProcessModelNode[];
 }
 
@@ -391,21 +369,6 @@ interface ProcessModelToUpload {
   isCollaboration: boolean;
 }
 
-interface HttpError {
-  response: {
-    data: {
-      data: string;
-      message: string;
-    };
-  };
-}
-
-enum ErrorType {
-  ALREADY_EXISTING = "ALREADY_EXISTING",
-  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION",
-  UNKNOWN = "UNKNOWN"
-}
-
 export default defineComponent({
   components: {
     ProcessTreeNode,
@@ -416,9 +379,7 @@ export default defineComponent({
     availableLevels: [] as number[],
     confirmDeleteDialog: false as boolean,
     errorDialog: false as boolean,
-    errorType: ErrorType.ALREADY_EXISTING as ErrorType,
-    ErrorType: ErrorType,
-    alreadyExistingBpmnProcessIds: [] as string[],
+    errorMessage: "" as string,
     uploadDialog: false as boolean,
     uploadDialogMode: UploadDialogMode.MULTIPLE as UploadDialogMode,
     processModelToBeReplacedId: null as number | null,
@@ -478,10 +439,8 @@ export default defineComponent({
       processModelNode: ProcessModelNode,
       skipConfirm: boolean = false
     ) {
-      const isPartOfCollaboration =
-        processModelNode.parentsBpmnProcessIds.length > 0 ||
-        processModelNode.childrenBpmnProcessIds.length > 0;
-      if (!skipConfirm && isPartOfCollaboration) {
+      const isParticipant = processModelNode.processType === "PARTICIPANT";
+      if (!skipConfirm && isParticipant) {
         this.processModelToBeDeleted = processModelNode;
         this.confirmDeleteDialog = true;
         return;
@@ -534,28 +493,25 @@ export default defineComponent({
       this.isFetching = false;
     },
 
-    collectRoots(rawProcessModels: RawProcessModel[]): ProcessModelNode[] {
-      const modelMap = new Map<string, ProcessModelNode>();
-      rawProcessModels.forEach((model) =>
-        modelMap.set(model.bpmnProcessId, { ...model, children: [] })
-      );
-
-      const roots = [] as ProcessModelNode[];
-
-      rawProcessModels.forEach((model) => {
-        if (model.parentsBpmnProcessIds.length === 0) {
-          roots.push(modelMap.get(model.bpmnProcessId)!);
-        } else {
-          model.parentsBpmnProcessIds.forEach((parentId) => {
-            const parent = modelMap.get(parentId);
-            if (parent) {
-              parent.children.push(modelMap.get(model.bpmnProcessId)!);
-            }
-          });
-        }
-      });
-
-      return roots;
+    collectRoots(
+      processModelInformation: ProcessModelInformation[]
+    ): ProcessModelNode[] {
+      const modelMap = new Map<number, ProcessModelInformation>();
+      processModelInformation.forEach((model) => modelMap.set(model.id, model));
+      return processModelInformation
+        .filter((model) => model.processType !== "PARTICIPANT")
+        .map((model) => {
+          if (model.processType === "COLLABORATION") {
+            const children = model.childrenIds.map((id) => modelMap.get(id)!);
+            const childrenAsNodes = children.map((child) => ({
+              ...child,
+              children: []
+            }));
+            return { ...model, children: childrenAsNodes };
+          } else {
+            return { ...model, children: [] };
+          }
+        });
     },
 
     openSingleUploadDialog(modelId: number) {
@@ -594,25 +550,40 @@ export default defineComponent({
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
-      const semanticParticipants = xmlDoc.getElementsByTagName("participant");
-      const bpmnParticipants = xmlDoc.getElementsByTagName("bpmn:participant");
-      const isCollaboration =
-        semanticParticipants.length > 1 || bpmnParticipants.length > 1;
+      const participants = xmlDoc.getElementsByTagName("participant");
+      const isCollaboration = participants?.length > 1;
 
-      const name =
-        xmlDoc.querySelector("bpmn\\:process")?.getAttribute("name") ||
-        xmlDoc.querySelector("process")?.getAttribute("name");
+      if (isCollaboration) {
+        const collaboration =
+          xmlDoc.querySelector("bpmn\\:collaboration") ||
+          xmlDoc.querySelector("semantic\\:collaboration") ||
+          xmlDoc.querySelector("collaboration");
+
+        const name = collaboration?.getAttribute("name") || "";
+        const documentation =
+          collaboration?.querySelector("bpmn\\:documentation") ||
+          collaboration?.querySelector("semantic\\:documentation") ||
+          collaboration?.querySelector("documentation");
+
+        const description = documentation?.getAttribute("textContent") || "";
+        return { name, description, isCollaboration };
+      }
+
+      const process =
+        xmlDoc.querySelector("bpmn\\:process") ||
+        xmlDoc.querySelector("semantic\\:process") ||
+        xmlDoc.querySelector("process");
+
+      const name = process?.getAttribute("name") || "";
+
       const documentation =
-        xmlDoc
-          .querySelector("bpmn\\:documentation")
-          ?.getAttribute("textContent") ||
-        xmlDoc.querySelector("documentation")?.getAttribute("textContent");
+        process?.querySelector("bpmn\\:documentation") ||
+        process?.querySelector("semantic\\:documentation") ||
+        process?.querySelector("documentation");
 
-      return {
-        name: name || "",
-        description: documentation || "",
-        isCollaboration
-      };
+      const description = documentation?.getAttribute("textContent") || "";
+
+      return { name, description, isCollaboration };
     },
 
     async handleFileSelection() {
@@ -646,7 +617,7 @@ export default defineComponent({
 
     async uploadProcessModel(
       processModel: ProcessModelToUpload
-    ): Promise<number | string> {
+    ): Promise<number> {
       const formData = this.createProcessModelFormData(processModel);
       const { data } = await axios.post(
         "/api/project/" + this.selectedProjectId + "/process-model",
@@ -679,9 +650,6 @@ export default defineComponent({
         this.progressDialog = true;
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
-        let error = false;
-        let errorType = ErrorType.ALREADY_EXISTING;
-        this.alreadyExistingBpmnProcessIds = [];
         const numProcessModels = this.processModelsToUpload.length;
         let i = 0;
         for (const processModel of this.processModelsToUpload) {
@@ -692,20 +660,17 @@ export default defineComponent({
 
           try {
             await this.uploadProcessModel(processModel);
-          } catch (e) {
-            error = true;
-            this.alreadyExistingBpmnProcessIds.push(
-              (e as HttpError).response.data.data
-            );
+          } catch (error) {
+            this.afterUploadActions();
+            this.errorMessage = getErrorMessage(error);
+            this.errorDialog = true;
+            return;
           }
 
           this.progress += progressSteps;
         }
+
         this.afterUploadActions();
-        if (error) {
-          this.errorType = errorType;
-          this.errorDialog = true;
-        }
       }
     },
 
@@ -727,12 +692,14 @@ export default defineComponent({
           formData,
           { headers: authHeader() }
         );
+      } catch (error) {
         this.afterUploadActions();
-      } catch (e) {
-        this.afterUploadActions();
-        this.errorType = ErrorType.CANT_REPLACE_WITH_COLLABORATION;
+        this.errorMessage = getErrorMessage(error);
         this.errorDialog = true;
+        return;
       }
+
+      this.afterUploadActions();
     },
 
     afterUploadActions() {

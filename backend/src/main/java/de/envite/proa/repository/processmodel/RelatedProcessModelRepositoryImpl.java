@@ -46,7 +46,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
     }
 
     private List<ProcessModelTable> getAllRootProcessModels(ProjectTable projectTable) {
-        return processModelDao.getProcessModelsWithParentsAndChildren(projectTable, null)
+        return processModelDao.getProcessModelsWithParentsAndEvents(projectTable)
                 .stream()
                 .filter(model -> model.getParents() == null || model.getParents().isEmpty())
                 .toList();
@@ -67,7 +67,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
                     return startEventName.stream().anyMatch(otherStartEventNames::contains) &&
                             endEventName.stream().anyMatch(otherEndEventNames::contains);
                 })
-                .sorted(Comparator.comparingInt(otherModel -> otherModel.getBpmnXml().length))
+                .sorted(Comparator.comparingInt(otherModel -> processModelDao.getBpmnXml(otherModel.getId()).length))
                 .toList();
     }
 
@@ -117,7 +117,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
         projectTable.setId(projectId);
 
         List<ProcessModelTable> allModels = new ArrayList<>(processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds));
-        ProcessModelTable processModel = processModelDao.find(id);
+        ProcessModelTable processModel = processModelDao.findWithParents(id);
 
         if (allModels.isEmpty() || processModel == null) {
             throw new NoResultException("Process model not found.");
@@ -133,7 +133,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 
         allModels.add(processModel);
         allModels = allModels.stream()
-                .sorted(Comparator.comparingInt(model -> model.getBpmnXml().length))
+                .sorted(Comparator.comparingInt(model -> processModelDao.getBpmnXml(model.getId()).length))
                 .toList();
 
         Map<Long, Integer> modelLevels = new HashMap<>();

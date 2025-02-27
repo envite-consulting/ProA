@@ -17,7 +17,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -109,7 +111,7 @@ class ProcessModelRepositoryTest {
         endEvent.setElementId(NEW_EVENT_ID);
         endEvent.setLabel(COMMON_EVENT_LABEL);
         endEvent.setEventType(EventType.END);
-        model.setEvents(List.of(endEvent));
+        model.setEvents(Set.of(endEvent));
 
         // Act
         repository.saveProcessModel(PROJECT_ID, model);
@@ -166,7 +168,7 @@ class ProcessModelRepositoryTest {
         startEvent.setElementId(NEW_EVENT_ID);
         startEvent.setLabel(COMMON_EVENT_LABEL);
         startEvent.setEventType(EventType.START);
-        model.setEvents(List.of(startEvent));
+        model.setEvents(Set.of(startEvent));
 
         // Act
         repository.saveProcessModel(PROJECT_ID, model);
@@ -194,6 +196,7 @@ class ProcessModelRepositoryTest {
         // Arrange
         ProcessModelTable processModelTable = new ProcessModelTable();
         processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
+
         when(processModelDao.getProcessModelsForName(eq(EXISTING_PROCESS_MODEL_NAME), any()))
                 .thenReturn(List.of(processModelTable));
 
@@ -214,7 +217,7 @@ class ProcessModelRepositoryTest {
         ProcessActivity activity = new ProcessActivity();
         activity.setElementId(NEW_ACTIVITY_ID);
         activity.setLabel(EXISTING_PROCESS_MODEL_NAME);
-        model.setCallActivities(List.of(activity));
+        model.setCallActivities(Set.of(activity));
 
         // Act
         repository.saveProcessModel(PROJECT_ID, model);
@@ -338,7 +341,7 @@ class ProcessModelRepositoryTest {
         processModel.setDescription(PROCESS_DESCRIPTION);
         processModel.setCreatedAt(dateTime);
 
-        when(processModelDao.getProcessModelsWithParentsAndChildren(any(), any())).thenReturn(List.of(processModel));
+		when(processModelDao.getProcessModelsWithChildren(any())).thenReturn(List.of(processModel));
 
         ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
                 processModelDao, //
@@ -361,7 +364,7 @@ class ProcessModelRepositoryTest {
                 .contains(tuple(PROCESS_MODEL_ID_1, EXISTING_PROCESS_MODEL_NAME, PROCESS_DESCRIPTION, dateTime));
 
         ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-        verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture(), isNull());
+        verify(processModelDao, times(1)).getProcessModelsWithChildren(projectCaptor.capture());
         assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
     }
 
@@ -370,7 +373,6 @@ class ProcessModelRepositoryTest {
         // Arrange
         LocalDateTime dateTime = LocalDateTime.now();
         String levelParam = "1,2";
-        List<Integer> expectedLevels = List.of(1, 2);
 
         ProcessModelTable processModel1 = new ProcessModelTable();
         processModel1.setId(PROCESS_MODEL_ID_1);
@@ -393,7 +395,8 @@ class ProcessModelRepositoryTest {
         processModel3.setCreatedAt(dateTime);
         processModel3.setLevel(3);
 
-        when(processModelDao.getProcessModelsWithParentsAndChildren(any(), any())).thenReturn(List.of(processModel1, processModel2));
+        when(processModelDao.getProcessModelsWithChildren(any()))
+                .thenReturn(List.of(processModel1, processModel2, processModel3));
 
         ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(
                 processModelDao,
@@ -420,48 +423,27 @@ class ProcessModelRepositoryTest {
                 );
 
         ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-        ArgumentCaptor<List<Integer>> levelsCaptor = ArgumentCaptor.forClass(List.class);
-
-        verify(processModelDao, times(1)).getProcessModelsWithParentsAndChildren(projectCaptor.capture(), levelsCaptor.capture());
-
+        verify(processModelDao, times(1)).getProcessModelsWithChildren(projectCaptor.capture());
         assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-        assertThat(levelsCaptor.getValue()).isEqualTo(expectedLevels);
     }
 
     @Test
-    void testFindByNameOrBpmnProcessId_FindById() {
+    void testFindByNameOrBpmnProcessIdWithoutCollaborations() {
         ProcessModelTable process = new ProcessModelTable();
+        ProjectTable project = new ProjectTable();
+        project.setId(PROJECT_ID);
 
-        when(processModelDao.findByName(eq(NEW_PROCESS_MODEL_NAME), any())).thenReturn(null);
-        when(processModelDao.findByBpmnProcessId(eq(BPMN_PROCESS_ID), any())).thenReturn(process);
+        when(processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(NEW_PROCESS_MODEL_NAME, BPMN_PROCESS_ID,
+                project)).thenReturn(process);
 
-        ProcessModelTable result = repository.findByNameOrBpmnProcessId(NEW_PROCESS_MODEL_NAME, BPMN_PROCESS_ID,
+        ProcessModelTable result = repository.findByNameOrBpmnProcessIdWithoutCollaborations(NEW_PROCESS_MODEL_NAME,
+                BPMN_PROCESS_ID,
                 PROJECT_ID);
 
         assertThat(result).isEqualTo(process);
-        ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
 
-        verify(processModelDao, times(1)).findByName(eq(NEW_PROCESS_MODEL_NAME), projectCaptor.capture());
-        verify(processModelDao, times(1)).findByBpmnProcessId(eq(BPMN_PROCESS_ID), projectCaptor.capture());
-
-        assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
-    }
-
-    @Test
-    void testFindByNameOrBpmnProcessId_FindByName() {
-        ProcessModelTable process = new ProcessModelTable();
-
-        when(processModelDao.findByName(eq(EXISTING_PROCESS_MODEL_NAME), any())).thenReturn(process);
-
-        ProcessModelTable result = repository.findByNameOrBpmnProcessId(EXISTING_PROCESS_MODEL_NAME, BPMN_PROCESS_ID,
-                PROJECT_ID);
-
-        assertThat(result).isEqualTo(process);
-        ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-        verify(processModelDao, times(1)).findByName(eq(EXISTING_PROCESS_MODEL_NAME), projectCaptor.capture());
-        assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-
-        verify(processModelDao, never()).findByBpmnProcessId(any(), any());
+        verify(processModelDao, times(1)).findByNameOrBpmnProcessIdWithoutCollaborations(NEW_PROCESS_MODEL_NAME,
+                BPMN_PROCESS_ID, project);
     }
 
     @Test
@@ -476,18 +458,15 @@ class ProcessModelRepositoryTest {
         verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_1);
     }
 
-    @Test
-    void testGetProcessModelXml() {
-        ProcessModelTable processModel = new ProcessModelTable();
-        processModel.setBpmnXml(BPMN_XML);
+	@Test
+	void testGetProcessModelXml() {
+		when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_1)).thenReturn(BPMN_XML);
 
-        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(processModel);
+		String result = repository.getProcessModelXml(PROCESS_MODEL_ID_1);
 
-        String result = repository.getProcessModelXml(PROCESS_MODEL_ID_1);
-
-        assertThat(result.getBytes()).isEqualTo(BPMN_XML);
-        verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_1);
-    }
+		assertThat(result.getBytes()).isEqualTo(BPMN_XML);
+		verify(processModelDao, times(1)).getBpmnXml(PROCESS_MODEL_ID_1);
+	}
 
     @Test
     void testSaveMessageFlows() {
@@ -504,92 +483,110 @@ class ProcessModelRepositoryTest {
         verify(messageFlowDao, times(3)).persist(any(MessageFlowTable.class));
     }
 
-    @Test
-    void testSaveProcessModel_WithParent() {
-        ProcessModel processModel = new ProcessModel();
-        processModel.setName(PROCESS_MODEL_NAME);
-        processModel.setParentBpmnProcessId(PARENT_PROCESS_MODEL_ID);
+	@Test
+	void testSaveProcessModel_WithParent() {
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
 
-        doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
+		ProcessModel processModel = new ProcessModel();
+		processModel.setName(PROCESS_MODEL_NAME);
+		processModel.setParentBpmnProcessId(PARENT_PROCESS_MODEL_ID);
 
-        ProcessModelTable parent = new ProcessModelTable();
-        when(processModelDao.findByBpmnProcessIdWithChildren(eq(PARENT_PROCESS_MODEL_ID), any())).thenReturn(parent);
+		ArgumentCaptor<ProcessModelTable> processModelCaptor = ArgumentCaptor.forClass(ProcessModelTable.class);
+		doNothing().when(processModelDao).persist(processModelCaptor.capture());
 
-        doNothing().when(processModelDao).merge(any(ProcessModelTable.class));
+		ProcessModelTable parent = new ProcessModelTable();
+		parent.setId(PROCESS_MODEL_ID_1);
+		when(processModelDao.findByBpmnProcessIdWithChildren(PARENT_PROCESS_MODEL_ID, project)).thenReturn(parent);
 
-        repository.saveProcessModel(PROJECT_ID, processModel);
+		doNothing().when(processModelDao).merge(any(ProcessModelTable.class));
 
-        verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
+		repository.saveProcessModel(PROJECT_ID, processModel);
 
-        ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-        verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(eq(PARENT_PROCESS_MODEL_ID),
-                projectCaptor.capture());
-        assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
-        verify(processModelDao, times(1)).merge(any(ProcessModelTable.class));
-    }
+		verify(processModelDao, times(1)).persist(processModelCaptor.capture());
 
-    @Test
-    void testDeleteProcessModel_DeleteParentsAndChildren() {
+		verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(PARENT_PROCESS_MODEL_ID,
+				project);
+		verify(processModelDao, times(1)).addChild(PROCESS_MODEL_ID_1, processModelCaptor.getValue().getId());
+		verifyNoMoreInteractions(processModelDao);
+	}
+
+	@Test
+	void testDeleteProcessModel_DeleteParentsAndChildren() {
         ProjectTable project = new ProjectTable();
         project.setId(PROJECT_ID);
 
         ProcessModelTable processModel = new ProcessModelTable();
-        processModel.setId(PROCESS_MODEL_ID_1);
+		processModel.setId(PROCESS_MODEL_ID_1);
         processModel.setProject(project);
 
-        ProcessModelTable parent = new ProcessModelTable();
-        parent.setId(PROCESS_MODEL_ID_2);
-        parent.setChildren(List.of(processModel));
-        processModel.setParents(List.of(parent));
+		ProcessModelTable parent = new ProcessModelTable();
+		parent.setId(PROCESS_MODEL_ID_2);
+		parent.setChildren(Set.of(processModel));
+		processModel.setParents(Set.of(parent));
 
-        ProcessModelTable child1 = new ProcessModelTable();
-        child1.setId(PROCESS_MODEL_ID_3);
-        child1.setParents(List.of(processModel));
-        ProcessModelTable child2 = new ProcessModelTable();
-        child2.setId(PROCESS_MODEL_ID_4);
-        ProcessModelTable otherParent = new ProcessModelTable();
-        otherParent.setId(PROCESS_MODEL_ID_5);
-        child2.setParents(List.of(processModel, otherParent));
+		ProcessModelTable child1 = new ProcessModelTable();
+		child1.setId(PROCESS_MODEL_ID_3);
+		child1.setParents(Set.of(processModel));
+		ProcessModelTable child2 = new ProcessModelTable();
+		child2.setId(PROCESS_MODEL_ID_4);
+		ProcessModelTable otherParent = new ProcessModelTable();
+		otherParent.setId(PROCESS_MODEL_ID_5);
+		child2.setParents(Set.of(processModel, otherParent));
 
-        processModel.setChildren(List.of(child1, child2));
+		processModel.setChildren(Set.of(child1, child2));
 
         when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(processModel);
-        when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_1)).thenReturn(processModel);
-        when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_2)).thenReturn(parent);
-        when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_3)).thenReturn(child1);
-        when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_4)).thenReturn(child2);
-        when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_5)).thenReturn(otherParent);
+		when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(processModel);
+		when(processModelDao.findWithParents(PROCESS_MODEL_ID_3)).thenReturn(child1);
+		when(processModelDao.findWithParents(PROCESS_MODEL_ID_4)).thenReturn(child2);
 
-        doNothing().when(dataStoreConnectionDao).deleteForProcessModel(any(Long.class));
-        doNothing().when(processConnectionDao).deleteForProcessModel(any(Long.class));
-        List<Long> expectedIds = List.of(PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_3, PROCESS_MODEL_ID_2);
-        doNothing().when(processModelDao).delete(expectedIds);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_1)).thenReturn(processModel);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_2)).thenReturn(parent);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_3)).thenReturn(child1);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_4)).thenReturn(child2);
+		when(processModelDao.findWithParentsAndChildren(PROCESS_MODEL_ID_5)).thenReturn(otherParent);
 
-        repository.deleteProcessModel(PROCESS_MODEL_ID_1);
+		doNothing().when(dataStoreConnectionDao).deleteForProcessModel(any(Long.class));
+		doNothing().when(processConnectionDao).deleteForProcessModel(any(Long.class));
+		List<Long> expectedIds = List.of(PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_3, PROCESS_MODEL_ID_2);
+		doNothing().when(processModelDao).delete(expectedIds);
 
-        verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
-        verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_2);
-        verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_3);
+		repository.deleteProcessModel(PROCESS_MODEL_ID_1);
 
-        verify(dataStoreConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_1);
-        verify(dataStoreConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_3);
-        verify(dataStoreConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_2);
+		verify(processModelDao, times(1)).findWithParents(PROCESS_MODEL_ID_1);
+		verify(processModelDao, times(1)).findWithParents(PROCESS_MODEL_ID_3);
+		verify(processModelDao, times(1)).findWithParents(PROCESS_MODEL_ID_4);
 
-        verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_1);
-        verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_3);
-        verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_2);
+		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
+		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_2);
+		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_3);
 
-        verify(processModelDao, times(1)).delete(expectedIds);
+		verify(dataStoreConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_1);
+		verify(dataStoreConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_3);
+		verify(dataStoreConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_2);
+
+		verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_1);
+		verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_3);
+		verify(processConnectionDao, times(1)).deleteForProcessModel(PROCESS_MODEL_ID_2);
+
+        verify(relatedProcessModelDao, times(1)).deleteByRelatedProcessModelId(PROCESS_MODEL_ID_1);
+        verify(relatedProcessModelDao, times(1)).deleteByRelatedProcessModelId(PROCESS_MODEL_ID_2);
+        verify(relatedProcessModelDao, times(1)).deleteByRelatedProcessModelId(PROCESS_MODEL_ID_3);
+
+		verify(processModelDao, times(1)).delete(expectedIds);
         verify(relatedProcessModelRepository, times(1)).calculateAndSaveRelatedProcessModels(project);
-    }
 
-    @Test
-    void testSaveProcessModel_UnknownEventType() {
-        ProcessModel processModel = new ProcessModel();
+		verifyNoMoreInteractions(dataStoreConnectionDao);
+		verifyNoMoreInteractions(processConnectionDao);
+	}
 
-        ProcessEvent event = new ProcessEvent();
-        event.setEventType(EventType.INVALID);
-        processModel.setEvents(List.of(event));
+	@Test
+	void testSaveProcessModel_UnknownEventType() {
+		ProcessModel processModel = new ProcessModel();
+		ProcessEvent event = new ProcessEvent();
+		event.setEventType(EventType.INVALID);
+		processModel.setEvents(Set.of(event));
 
         doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
 
@@ -602,13 +599,13 @@ class ProcessModelRepositoryTest {
     void testSaveProcessModel_ConnectIntermediateCatchEvent() {
         doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
 
-        ProcessModel processModel = new ProcessModel();
+		ProcessModel processModel = new ProcessModel();
 
         ProcessEvent event = new ProcessEvent();
-        event.setElementId(PROCESS_EVENT_ID);
-        event.setEventType(EventType.INTERMEDIATE_CATCH);
-        event.setLabel(PROCESS_EVENT_LABEL);
-        processModel.setEvents(List.of(event));
+		event.setElementId(PROCESS_EVENT_ID);
+		event.setEventType(EventType.INTERMEDIATE_CATCH);
+		event.setLabel(PROCESS_EVENT_LABEL);
+		processModel.setEvents(Set.of(event));
 
         ProcessEventTable eventToConnect = new ProcessEventTable();
 
@@ -639,13 +636,13 @@ class ProcessModelRepositoryTest {
     void testSaveProcessModel_ConnectIntermediateThrowEvent() {
         doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
 
-        ProcessModel processModel = new ProcessModel();
+		ProcessModel processModel = new ProcessModel();
 
         ProcessEvent event = new ProcessEvent();
-        event.setElementId(PROCESS_EVENT_ID);
-        event.setEventType(EventType.INTERMEDIATE_THROW);
-        event.setLabel(PROCESS_EVENT_LABEL);
-        processModel.setEvents(List.of(event));
+		event.setElementId(PROCESS_EVENT_ID);
+		event.setEventType(EventType.INTERMEDIATE_THROW);
+		event.setLabel(PROCESS_EVENT_LABEL);
+		processModel.setEvents(Set.of(event));
 
         ProcessEventTable eventToConnect = new ProcessEventTable();
 

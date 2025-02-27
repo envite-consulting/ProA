@@ -87,7 +87,7 @@ class BpmnOperationsTest {
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
 
 		// Act
-		List<ProcessEvent> startEvents = bpmnOperations.getStartEvents(bpmnXml);
+		Set<ProcessEvent> startEvents = bpmnOperations.getStartEvents(bpmnXml);
 
 		// Assert
 		assertThat(startEvents)//
@@ -105,7 +105,7 @@ class BpmnOperationsTest {
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
 
 		// Act
-		List<ProcessEvent> intermediateCatchEvents = bpmnOperations.getIntermediateCatchEvents(bpmnXml);
+		Set<ProcessEvent> intermediateCatchEvents = bpmnOperations.getIntermediateCatchEvents(bpmnXml);
 
 		// Assert
 		assertThat(intermediateCatchEvents)//
@@ -121,7 +121,7 @@ class BpmnOperationsTest {
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
 
 		// Act
-		List<ProcessEvent> intermediateThrowEvents = bpmnOperations.getIntermediateThrowEvents(bpmnXml);
+		Set<ProcessEvent> intermediateThrowEvents = bpmnOperations.getIntermediateThrowEvents(bpmnXml);
 
 		// Assert
 		assertThat(intermediateThrowEvents)//
@@ -137,7 +137,7 @@ class BpmnOperationsTest {
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
 
 		// Act
-		List<ProcessEvent> endEvents = bpmnOperations.getEndEvents(bpmnXml);
+		Set<ProcessEvent> endEvents = bpmnOperations.getEndEvents(bpmnXml);
 
 		// Assert
 		assertThat(endEvents)//
@@ -155,7 +155,7 @@ class BpmnOperationsTest {
 				getClass().getClassLoader().getResourceAsStream("test-diagram.bpmn").readAllBytes());
 
 		// Act
-		List<ProcessActivity> intermediateThrowEvents = bpmnOperations.getCallActivities(bpmnXml);
+		Set<ProcessActivity> intermediateThrowEvents = bpmnOperations.getCallActivities(bpmnXml);
 
 		// Assert
 		assertThat(intermediateThrowEvents)//

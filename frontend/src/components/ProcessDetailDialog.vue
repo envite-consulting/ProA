@@ -5,7 +5,7 @@
         <span class="text-h5 text-wrap">
           <strong
             >{{
-              currentProcessModel.parentsBpmnProcessIds?.length === 0
+              currentProcessModel.processType === processType.PROCESS
                 ? $t("general.processModel")
                 : $t("general.participant")
             }}:
@@ -15,7 +15,7 @@
         <v-spacer></v-spacer>
         <template
           v-if="
-            currentProcessModel.parentsBpmnProcessIds?.length === 0 &&
+            currentProcessModel.processType === processType.PROCESS &&
             currentProcessModel.relatedProcessModels.length === 0 &&
             availableProcessModelsToAdd.length > 0
           "
@@ -382,12 +382,18 @@ interface ProcessModel {
   processName: string;
   description: string;
   level: number;
-  parentsBpmnProcessIds: string[];
+  processType: ProcessType;
   relatedProcessModels: {
     relatedProcessModelId: number;
     processName: string;
     level: number;
   }[];
+}
+
+enum ProcessType {
+  COLLABORATION = "COLLABORATION",
+  PARTICIPANT = "PARTICIPANT",
+  PROCESS = "PROCESS"
 }
 
 interface RelatedProcessModel {
@@ -409,6 +415,7 @@ export default defineComponent({
     showProcessLevels: false,
     store: useAppStore(),
     currentProcessModel: {} as ProcessModel,
+    processType: ProcessType,
     details: {} as Process,
     relatedProcessModels: [] as RelatedProcessModel[],
     selectedProcessModel: null as number | null,
@@ -511,8 +518,7 @@ export default defineComponent({
       const response = await axios.get(url, { headers: authHeader() });
       this.availableProcessModelsToAdd = response.data.filter(
         (process: ProcessModel) =>
-          (!process.parentsBpmnProcessIds ||
-            process.parentsBpmnProcessIds.length === 0) &&
+          process.processType === ProcessType.PROCESS &&
           process.id !== this.currentProcessModel.id &&
           !this.currentProcessModel.relatedProcessModels.some(
             (related) => related.relatedProcessModelId === process.id
