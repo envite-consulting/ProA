@@ -74,6 +74,8 @@ router.beforeEach(async (to, from, next) => {
   const isAdmin = store.getUserRole() === Role.ADMIN;
   const isWebVersion = import.meta.env.VITE_APP_MODE === "web";
 
+  store.snackbar.visible = false;
+
   if (to.meta.requiresWebVersion && !isWebVersion) {
     window.history.back();
     return;
