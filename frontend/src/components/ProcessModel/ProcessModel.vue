@@ -272,7 +272,7 @@ export default defineComponent({
   methods: {
     onProcessModelChange(selectedProcessModelId: number) {
       if (selectedProcessModelId) {
-        window.location.href = "/ProcessView/" + selectedProcessModelId;
+        this.$router.push("/ProcessView/" + selectedProcessModelId);
       }
     },
     translateToCenter(port: any) {
