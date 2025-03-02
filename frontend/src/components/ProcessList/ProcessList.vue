@@ -336,23 +336,13 @@ interface ProcessModelInformation {
   processName: string;
   description: string;
   createdAt: string;
+  level: number;
   childrenIds: number[];
   processType: string;
 }
 
 export interface ProcessModelNode extends ProcessModelInformation {
   children: ProcessModelNode[];
-}
-
-interface RawProcessModel {
-  id: number;
-  bpmnProcessId: string;
-  processName: string;
-  description: string;
-  createdAt: string;
-  level: number;
-  parentsBpmnProcessIds: string[];
-  childrenBpmnProcessIds: string[];
 }
 
 enum UploadDialogMode {
@@ -467,7 +457,7 @@ export default defineComponent({
       );
 
       const levelsSet = new Set<number>();
-      response.data.forEach((model: RawProcessModel) => {
+      response.data.forEach((model: ProcessModelInformation) => {
         if (model.level !== null) {
           levelsSet.add(model.level);
         }
@@ -551,9 +541,9 @@ export default defineComponent({
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
       const isCollaboration =
-          xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
-          xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
-          xmlDoc.getElementsByTagName("participant")?.length > 1;
+        xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
+        xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
+        xmlDoc.getElementsByTagName("participant")?.length > 1;
 
       if (isCollaboration) {
         const collaboration =
