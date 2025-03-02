@@ -8,7 +8,6 @@ import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
-import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -70,7 +69,7 @@ class ProcessModelUsecaseTest {
 
 	@Test
 	void testSaveProcessModel_NewProcessModel()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
 		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID))
@@ -116,32 +115,6 @@ class ProcessModelUsecaseTest {
 	}
 
 	@Test
-	void testSaveProcessModel_ExistingCollaboration() {
-		ProcessModelTable processModel = new ProcessModelTable();
-		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
-		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
-				TEST_PROJECT_ID))
-				.thenReturn(processModel);
-
-		CollaborationAlreadyExistsException exception = assertThrows(CollaborationAlreadyExistsException.class,
-				() -> processModelUsecase.saveProcessModel(TEST_PROJECT_ID, TEST_PROCESS_NAME, TEST_PROCESS_XML,
-						TEST_DESCRIPTION,
-						IS_COLLABORATION));
-
-		assertEquals("CollaborationAlreadyExistsException", exception.getExceptionType());
-		assertEquals(TEST_PROCESS_NAME, exception.getName());
-		assertTrue(exception.getMessage().contains(TEST_BPMN_PROCESS_ID));
-
-		verify(processOperations, times(1)).getBpmnProcessId(TEST_PROCESS_XML);
-		verify(repository, times(1)).findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME,
-				TEST_BPMN_PROCESS_ID,
-				TEST_PROJECT_ID);
-
-		verifyNoMoreInteractions(processOperations);
-		verifyNoMoreInteractions(repository);
-	}
-
-	@Test
 	void testGetProcessModel() {
 		when(repository.getProcessModelXml(TEST_PROCESS_MODEL_ID)).thenReturn(TEST_PROCESS_XML);
 
@@ -162,7 +135,7 @@ class ProcessModelUsecaseTest {
 
 	@Test
 	void testSaveProcessModel_Replace()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
 		ProcessModelTable existingProcessModel = new ProcessModelTable();
 		existingProcessModel.setId(TEST_OLD_PROCESS_ID);
@@ -259,21 +232,21 @@ class ProcessModelUsecaseTest {
 		verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, false);
 	}
 
-	@Test
-	void testGetProcessDetailsWithAggregationOfEvents() {
-		ProcessDetails processDetails = new ProcessDetails();
+    @Test
+    void testGetProcessDetails_AggregationOfEventsAndCallActivities() {
+        ProcessDetails processDetails = new ProcessDetails();
 
-		when(repository.getProcessDetails(TEST_PROCESS_MODEL_ID, true)).thenReturn(processDetails);
+        when(repository.getProcessDetails(TEST_PROCESS_MODEL_ID, true)).thenReturn(processDetails);
 
-		ProcessDetails result = processModelUsecase.getProcessDetails(TEST_PROCESS_MODEL_ID, true);
+        ProcessDetails result = processModelUsecase.getProcessDetails(TEST_PROCESS_MODEL_ID, true);
 
-		assertEquals(processDetails, result);
-		verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, true);
-	}
+        assertEquals(processDetails, result);
+        verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, true);
+    }
 
 	@Test
 	void testSaveProcessModel_Collaboration()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
 		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID)).thenReturn(
@@ -403,7 +376,7 @@ class ProcessModelUsecaseTest {
 
 	@Test
 	void testSaveProcessModel_ReplaceParticipant()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
 		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID)).thenReturn(

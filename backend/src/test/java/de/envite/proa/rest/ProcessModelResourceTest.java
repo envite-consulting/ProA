@@ -5,7 +5,6 @@ import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
-import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +28,8 @@ class ProcessModelResourceTest {
 	private static final Long PROJECT_ID = 1L;
 	private static final Long PROCESS_ID = 54321L;
 	private static final boolean IS_COLLABORATION = true;
-	private static final String COLLABORATION_NAME = "collaboration123";
 	private static final Long NEW_PROCESS_ID = 123L;
 	private static final String TEST_DIAGRAM = "test-diagram.bpmn";
-	private static final String BPMN_ID = "bpmnId";
 
 	@Mock
 	private ProcessModelUsecase usecase;
@@ -50,7 +47,7 @@ class ProcessModelResourceTest {
 
 	@Test
 	void testUploadProcessModel()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -72,7 +69,7 @@ class ProcessModelResourceTest {
 
 	@Test
 	void testUploadProcessModel_InternalError()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -176,28 +173,6 @@ class ProcessModelResourceTest {
 
 		assertThat(result).isEqualTo(expected);
 		verify(usecase).getProcessDetails(PROCESS_ID, false);
-	}
-
-	@Test
-	void testUploadProcessModel_CollaborationAlreadyExistsException()
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
-		File processModel = new File(
-				Objects.requireNonNull(getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
-
-		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
-		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION))
-				.thenThrow(new CollaborationAlreadyExistsException(BPMN_ID, COLLABORATION_NAME));
-
-		try (Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, DESCRIPTION,
-				IS_COLLABORATION)) {
-			verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
-			assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-
-			CollaborationAlreadyExistsException e = (CollaborationAlreadyExistsException) response.getEntity();
-			assertThat(e.getExceptionType()).isEqualTo("CollaborationAlreadyExistsException");
-			assertThat(e.getName()).isEqualTo(COLLABORATION_NAME);
-			assertThat(e.getMessage()).contains(BPMN_ID);
-		}
 	}
 
 	@Test
