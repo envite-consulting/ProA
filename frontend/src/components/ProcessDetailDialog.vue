@@ -3,11 +3,13 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <span class="text-h5 text-wrap">
-          <strong
-            >{{
-              currentProcessModel.processType === processType.PROCESS
-                ? $t("general.processModel")
-                : $t("general.participant")
+          <strong>
+            {{
+              currentProcessModel.processType === processType.COLLABORATION
+                ? $t("processList.collaboration")
+                : currentProcessModel.processType === processType.PARTICIPANT
+                  ? $t("processList.participant")
+                  : $t("general.processModel")
             }}:
           </strong>
           {{ currentProcessModel.processName }}
@@ -15,7 +17,8 @@
         <v-spacer></v-spacer>
         <template
           v-if="
-            currentProcessModel.processType === processType.PROCESS &&
+            currentProcessModel.processType &&
+            currentProcessModel.processType !== processType.PARTICIPANT &&
             currentProcessModel.relatedProcessModels.length === 0 &&
             availableProcessModelsToAdd.length > 0
           "
@@ -518,7 +521,7 @@ export default defineComponent({
       const response = await axios.get(url, { headers: authHeader() });
       this.availableProcessModelsToAdd = response.data.filter(
         (process: ProcessModel) =>
-          process.processType === ProcessType.PROCESS &&
+          process.processType !== ProcessType.PARTICIPANT &&
           process.id !== this.currentProcessModel.id &&
           !this.currentProcessModel.relatedProcessModels.some(
             (related) => related.relatedProcessModelId === process.id
