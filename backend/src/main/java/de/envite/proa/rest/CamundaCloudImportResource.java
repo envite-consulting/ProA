@@ -6,7 +6,6 @@ import de.envite.proa.camundacloud.CamundaCloudImportUsecase;
 import de.envite.proa.camundacloud.CloudCredentials;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
-import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -42,7 +41,7 @@ public class CamundaCloudImportResource {
 	@Path("/project/{projectId}/import")
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public void importProcessModels(@RestPath Long projectId, CamundaCloudImportConfiguration config)
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		usecase.importProcessModels(projectId, config);
 	}
 }

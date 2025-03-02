@@ -7,7 +7,6 @@ import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
-import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -25,26 +24,26 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessMapRespository processMapRepository;
 
-	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isCollaboration)
-			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
+	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isUploadedProcessCollaboration)
+			throws CantReplaceWithCollaborationException {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
 				bpmnProcessId, projectId);
 
 		if (existingProcessModel != null) {
-			if (isCollaboration) {
-				throw new CollaborationAlreadyExistsException(bpmnProcessId, name);
+			if (!isUploadedProcessCollaboration) {
+				return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
 			}
-			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
 		}
 
-		if (isCollaboration) {
+		if (isUploadedProcessCollaboration) {
 			xml = processOperations.addEmptyProcessRefs(xml);
 		}
 
-		ProcessModel processModel = createProcessModel(name, description, xml, isCollaboration);
+		ProcessModel processModel = createProcessModel(name, description, xml, isUploadedProcessCollaboration);
 
-		if (!isCollaboration) {
+		if (!isUploadedProcessCollaboration) {
+			System.out.println("is not collaboration");
 			return repository.saveProcessModel(projectId, processModel);
 		}
 

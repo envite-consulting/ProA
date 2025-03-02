@@ -5,7 +5,6 @@ import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
-import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -57,7 +56,7 @@ public class ProcessModelResource {
 							isCollaboration //
 					)) //
 					.build();
-		} catch (CollaborationAlreadyExistsException | CantReplaceWithCollaborationException e) {
+		} catch (CantReplaceWithCollaborationException e) {
 			e.printStackTrace();
 			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
 		} catch (Exception e) {

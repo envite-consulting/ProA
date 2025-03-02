@@ -3,7 +3,6 @@ package de.envite.proa.camundacloud;
 import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
-import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -58,7 +57,7 @@ public class CamundaCloudImportUsecase {
 	}
 
 	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config)
-			throws CollaborationAlreadyExistsException, CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException {
 		for (String id : config.getSelectedProcessModelIds()) {
 			CamundaProcessModelResponse processModel = camundaModelerService
 					.getProcessModel("Bearer " + config.getToken(), id);
