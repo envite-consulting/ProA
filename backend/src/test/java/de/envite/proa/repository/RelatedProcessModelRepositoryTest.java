@@ -142,7 +142,6 @@ class RelatedProcessModelRepositoryTest {
         assertEquals(0, relatedModelsOfLevel2Process.size());
     }
 
-    // TODO
     @Test
     void testAddRelatedProcessModel_validCase() {
         // Arrange

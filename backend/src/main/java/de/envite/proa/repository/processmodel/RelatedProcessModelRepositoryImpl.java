@@ -1,6 +1,7 @@
 package de.envite.proa.repository.processmodel;
 
 import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessType;
 import de.envite.proa.entities.process.RelatedProcessModel;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
@@ -27,11 +28,11 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 
     @Override
     public void calculateAndSaveRelatedProcessModels(ProjectTable projectTable) {
-        List<ProcessModelTable> allModels = getAllRootProcessModels(projectTable);
+        List<ProcessModelTable> allModels = getAllProcessModelsWithoutParticipants(projectTable);
 
         for (ProcessModelTable model : allModels) {
             if (!hasValidStartAndEndEvents(model)) {
-                return;
+                continue;
             }
 
             List<ProcessModelTable> matchingModels = findMatchingModels(model, allModels);
@@ -45,10 +46,10 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
         }
     }
 
-    private List<ProcessModelTable> getAllRootProcessModels(ProjectTable projectTable) {
+    private List<ProcessModelTable> getAllProcessModelsWithoutParticipants(ProjectTable projectTable) {
         return processModelDao.getProcessModelsWithParentsAndEvents(projectTable)
                 .stream()
-                .filter(model -> model.getParents() == null || model.getParents().isEmpty())
+                .filter(model -> model.getProcessType() != ProcessType.PARTICIPANT)
                 .toList();
     }
 
