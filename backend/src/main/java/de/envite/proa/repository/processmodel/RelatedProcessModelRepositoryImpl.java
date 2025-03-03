@@ -21,7 +21,8 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
     private final RelatedProcessModelDao relatedProcessModelDao;
 
     @Inject
-    public RelatedProcessModelRepositoryImpl(ProcessModelDao processModelDao, RelatedProcessModelDao relatedProcessModelDao) {
+    public RelatedProcessModelRepositoryImpl(ProcessModelDao processModelDao,
+                                             RelatedProcessModelDao relatedProcessModelDao) {
         this.processModelDao = processModelDao;
         this.relatedProcessModelDao = relatedProcessModelDao;
     }
@@ -47,7 +48,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
     }
 
     private List<ProcessModelTable> getAllProcessModelsWithoutParticipants(ProjectTable projectTable) {
-        return processModelDao.getProcessModelsWithParentsAndEvents(projectTable)
+        return processModelDao.getProcessModelsWithEvents(projectTable)
                 .stream()
                 .filter(model -> model.getProcessType() != ProcessType.PARTICIPANT)
                 .toList();
@@ -74,7 +75,9 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 
     private void processSingleModel(ProcessModelTable model) {
         model = processModelDao.findWithRelatedProcessModels(model.getId()).stream().findFirst().orElse(model);
-        model.setLevel((model.getLevel() != null && !model.getRelatedProcessModels().isEmpty()) ? model.getLevel() : null);
+        model.setLevel((model.getLevel() != null && !model.getRelatedProcessModels().isEmpty())
+                ? model.getLevel()
+                : null);
 
         processModelDao.merge(model);
     }
@@ -102,7 +105,9 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
         relatedProcessModels.forEach(relatedProcessModelDao::merge);
     }
 
-    private RelatedProcessModelTable createRelatedModel(ProcessModelTable model, ProcessModelTable otherModel, int level) {
+    private RelatedProcessModelTable createRelatedModel(ProcessModelTable model,
+                                                        ProcessModelTable otherModel,
+                                                        int level) {
         RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
         relatedProcessModel.setProcessModel(model);
         relatedProcessModel.setRelatedProcessModelId(otherModel.getId());
@@ -117,8 +122,9 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
         ProjectTable projectTable = new ProjectTable();
         projectTable.setId(projectId);
 
-        List<ProcessModelTable> allModels = new ArrayList<>(processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds));
-        ProcessModelTable processModel = processModelDao.findWithParents(id);
+        List<ProcessModelTable> allModels =
+                new ArrayList<>(processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds));
+        ProcessModelTable processModel = processModelDao.find(id);
 
         if (allModels.isEmpty() || processModel == null) {
             throw new NoResultException("Process model not found.");
@@ -128,8 +134,9 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
             throw new IllegalArgumentException("Process model cannot be related to itself.");
         }
 
-        if (allModels.stream().anyMatch(model -> !model.getParents().isEmpty()) || !processModel.getParents().isEmpty()) {
-            throw new IllegalArgumentException("Process model with parents cannot be added to related process models.");
+        if (allModels.stream().anyMatch(model -> model.getProcessType() == ProcessType.PARTICIPANT) ||
+                processModel.getProcessType() == ProcessType.PARTICIPANT) {
+            throw new IllegalArgumentException("Participants cannot be added to related process models.");
         }
 
         allModels.add(processModel);
@@ -154,7 +161,8 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
             for (ProcessModelTable otherModel : allModels) {
                 if (!otherModel.equals(model)) {
                     boolean wasManuallyAdded = relatedProcessModelDao.existsManuallyAddedRelation(model, otherModel);
-                    boolean isManuallyAdded = wasManuallyAdded || model.equals(processModel) || otherModel.equals(processModel);
+                    boolean isManuallyAdded =
+                            wasManuallyAdded || model.equals(processModel) || otherModel.equals(processModel);
 
                     RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
                     relatedProcessModel.setProcessModel(model);

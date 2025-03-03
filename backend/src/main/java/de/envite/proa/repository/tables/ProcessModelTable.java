@@ -25,15 +25,14 @@ import java.util.Set;
 		name = "ProcessModel.withChildrenAndParents",
 		attributeNodes = {
 				@NamedAttributeNode("children"),
-				@NamedAttributeNode("parents"),
+				@NamedAttributeNode("parents")
 		}
 )
 
 @NamedEntityGraph(
-		name = "ProcessModel.withParentsAndEvents",
+		name = "ProcessModel.withEvents",
 		attributeNodes = {
-				@NamedAttributeNode("parents"),
-				@NamedAttributeNode("events"),
+				@NamedAttributeNode("events")
 		}
 )
 
@@ -41,7 +40,7 @@ import java.util.Set;
 		name = "ProcessModel.withEventsAndActivities",
 		attributeNodes = {
 				@NamedAttributeNode("events"),
-				@NamedAttributeNode("callActivites"),
+				@NamedAttributeNode("callActivites")
 		}
 )
 

@@ -43,8 +43,8 @@ public class ProcessModelDao {
     }
 
 	@Transactional
-	public List<ProcessModelTable> getProcessModelsWithParentsAndEvents(ProjectTable projectTable) {
-		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withParentsAndEvents");
+	public List<ProcessModelTable> getProcessModelsWithEvents(ProjectTable projectTable) {
+		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withEvents");
 
 		return em.createQuery(SELECT_FROM_PROCESS_MODEL_TABLE_WHERE +
 						PROJECT_PROJECT, ProcessModelTable.class)

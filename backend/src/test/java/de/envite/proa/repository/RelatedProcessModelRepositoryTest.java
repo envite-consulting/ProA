@@ -1,6 +1,7 @@
 package de.envite.proa.repository;
 
 import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessType;
 import de.envite.proa.entities.process.RelatedProcessModel;
 import de.envite.proa.repository.processmodel.ProcessModelDao;
 import de.envite.proa.repository.processmodel.RelatedProcessModelDao;
@@ -60,8 +61,10 @@ class RelatedProcessModelRepositoryTest {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
 
         ProcessEventTable startEventModelLevel1 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
@@ -73,7 +76,7 @@ class RelatedProcessModelRepositoryTest {
         modelLevel2.setProject(project);
         modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
 
-        when(processModelDao.getProcessModelsWithParentsAndEvents(project))
+        when(processModelDao.getProcessModelsWithEvents(project))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
         when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_1)).thenReturn(new byte[8]);
         when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_2)).thenReturn(new byte[18]);
@@ -101,13 +104,15 @@ class RelatedProcessModelRepositoryTest {
                 .toList();
         assertEquals(1, relatedModelsOfLevel2Process.size());
 
-        Optional<RelatedProcessModelTable> relatedModelLevel1Process = relatedModelsOfLevel1Process.stream().findFirst();
+        Optional<RelatedProcessModelTable> relatedModelLevel1Process =
+                relatedModelsOfLevel1Process.stream().findFirst();
         assertTrue(relatedModelLevel1Process.isPresent());
         assertEquals(PROCESS_MODEL_ID_2, relatedModelLevel1Process.get().getRelatedProcessModelId());
         assertEquals(PROCESS_MODEL_NAME_2, relatedModelLevel1Process.get().getProcessName());
         assertEquals(2, relatedModelLevel1Process.get().getLevel());
 
-        Optional<RelatedProcessModelTable> relatedModelLevel2Process = relatedModelsOfLevel2Process.stream().findFirst();
+        Optional<RelatedProcessModelTable> relatedModelLevel2Process =
+                relatedModelsOfLevel2Process.stream().findFirst();
         assertTrue(relatedModelLevel2Process.isPresent());
         assertEquals(PROCESS_MODEL_ID_1, relatedModelLevel2Process.get().getRelatedProcessModelId());
         assertEquals(PROCESS_MODEL_NAME_1, relatedModelLevel2Process.get().getProcessName());
@@ -119,13 +124,15 @@ class RelatedProcessModelRepositoryTest {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
 
         modelLevel1.setProject(project);
         modelLevel2.setProject(project);
 
-        when(processModelDao.getProcessModelsWithParentsAndEvents(project))
+        when(processModelDao.getProcessModelsWithEvents(project))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
 
         // Act
@@ -147,9 +154,12 @@ class RelatedProcessModelRepositoryTest {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
-        ProcessModelTable modelLevel3 = createProcessModel(PROCESS_MODEL_ID_3, PROCESS_MODEL_NAME_3, BPMN_PROCESS_ID_3, new byte[36]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel3 = createProcessModel(
+                PROCESS_MODEL_ID_3, PROCESS_MODEL_NAME_3, BPMN_PROCESS_ID_3, new byte[36]);
 
         ProcessEventTable startEventModelLevel1 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
@@ -165,7 +175,7 @@ class RelatedProcessModelRepositoryTest {
         modelLevel3.setProject(project);
         modelLevel3.setEvents(Set.of(startEventModelLevel3, endEventModelLevel3));
 
-        when(processModelDao.findWithParents(PROCESS_MODEL_ID_3)).thenReturn(modelLevel3);
+        when(processModelDao.find(PROCESS_MODEL_ID_3)).thenReturn(modelLevel3);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
         when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_1)).thenReturn(new byte[8]);
@@ -173,7 +183,8 @@ class RelatedProcessModelRepositoryTest {
         when(processModelDao.getBpmnXml(PROCESS_MODEL_ID_3)).thenReturn(new byte[36]);
 
         // Act
-        repository.addRelatedProcessModel(PROJECT_ID, PROCESS_MODEL_ID_3, List.of(PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2));
+        repository.addRelatedProcessModel(
+                PROJECT_ID, PROCESS_MODEL_ID_3, List.of(PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2));
 
         // Assert
         ArgumentCaptor<RelatedProcessModelTable> captor = ArgumentCaptor.forClass(RelatedProcessModelTable.class);
@@ -225,8 +236,10 @@ class RelatedProcessModelRepositoryTest {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
 
         ProcessEventTable startEventModelLevel1 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
@@ -238,7 +251,7 @@ class RelatedProcessModelRepositoryTest {
         modelLevel2.setProject(project);
         modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
 
-        when(processModelDao.findWithParents(PROCESS_MODEL_ID_3)).thenReturn(null);
+        when(processModelDao.find(PROCESS_MODEL_ID_3)).thenReturn(null);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
 
@@ -254,7 +267,8 @@ class RelatedProcessModelRepositoryTest {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
 
         ProcessEventTable startEventModelLevel1 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
@@ -262,7 +276,7 @@ class RelatedProcessModelRepositoryTest {
         modelLevel1.setProject(project);
         modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
 
-        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of());
 
@@ -278,13 +292,15 @@ class RelatedProcessModelRepositoryTest {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
 
         modelLevel1.setProject(project);
         modelLevel2.setProject(project);
 
-        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel1, modelLevel2));
 
@@ -296,25 +312,27 @@ class RelatedProcessModelRepositoryTest {
     }
 
     @Test
-    void testAddRelatedProcessModel_processModelWithParentsNotAllowed() {
+    void testAddRelatedProcessModel_processModelWithProcessTypeParticipantNotAllowed() {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
 
         ProcessEventTable startEventModelLevel1 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
         ProcessEventTable startEventModelLevel2 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel2 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
 
+        modelLevel1.setProcessType(ProcessType.PARTICIPANT);
         modelLevel1.setProject(project);
         modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
-        modelLevel1.setParents(Set.of(new ProcessModelTable()));
         modelLevel2.setProject(project);
         modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
 
-        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel2));
 
@@ -326,12 +344,14 @@ class RelatedProcessModelRepositoryTest {
     }
 
     @Test
-    void testAddRelatedProcessModel_relatedProcessModelWithParentsNotAllowed() {
+    void testAddRelatedProcessModel_relatedProcessModelWithProcessTypeParticipantNotAllowed() {
         // Arrange
         ProjectTable project = createProject();
 
-        ProcessModelTable modelLevel1 = createProcessModel(PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
-        ProcessModelTable modelLevel2 = createProcessModel(PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
+        ProcessModelTable modelLevel1 = createProcessModel(
+                PROCESS_MODEL_ID_1, PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, new byte[8]);
+        ProcessModelTable modelLevel2 = createProcessModel(
+                PROCESS_MODEL_ID_2, PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, new byte[18]);
 
         ProcessEventTable startEventModelLevel1 = createProcessEvent(START_EVENT_LABEL_1, EventType.START);
         ProcessEventTable endEventModelLevel1 = createProcessEvent(END_EVENT_LABEL_1, EventType.END);
@@ -340,11 +360,11 @@ class RelatedProcessModelRepositoryTest {
 
         modelLevel1.setProject(project);
         modelLevel1.setEvents(Set.of(startEventModelLevel1, endEventModelLevel1));
+        modelLevel2.setProcessType(ProcessType.PARTICIPANT);
         modelLevel2.setProject(project);
         modelLevel2.setEvents(Set.of(startEventModelLevel2, endEventModelLevel2));
-        modelLevel2.setParents(Set.of(new ProcessModelTable()));
 
-        when(processModelDao.findWithParents(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
+        when(processModelDao.find(PROCESS_MODEL_ID_1)).thenReturn(modelLevel1);
         when(processModelDao.getProcessModelsByIds(eq(project), any()))
                 .thenReturn(List.of(modelLevel2));
 
