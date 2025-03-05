@@ -43,7 +43,6 @@ public class ProcessModelUsecase {
 		ProcessModel processModel = createProcessModel(name, description, xml, isUploadedProcessCollaboration);
 
 		if (!isUploadedProcessCollaboration) {
-			System.out.println("is not collaboration");
 			return repository.saveProcessModel(projectId, processModel);
 		}
 
