@@ -16,6 +16,7 @@
     "emailAlreadyRegistered": "This email is already registered",
     "firstName": "First Name",
     "forgotPwQuestion": "Forgot your password?",
+    "id": "ID",
     "lastName": "Last Name",
     "name": "Name",
     "newPassword": "New Password",
@@ -69,13 +70,19 @@
     "myProfile": "My Profile",
     "processModel": "Process Model",
     "save": "Save",
+    "search": "Search",
     "settings": "Settings",
     "signOut": "Sign Out"
+  },
+  "manageUsers": {
+    "saveChanges": "Save changes",
+    "editProfile": "Edit profile"
   },
   "navigation": {
     "c8Import": "C8 Import",
     "createAccount": "Create Account",
     "camundaCloudImport": "C8 Import",
+    "manageUsers": "Manage Users",
     "pageNotFound": "Page Not Found",
     "processList": "Process List",
     "processMap": "Process Map",
@@ -90,16 +97,9 @@
     "startEvents": "Start Events"
   },
   "processList": {
-    "alreadyExistsErrorMsg1": {
-      "singular": "Collaboration with the ID ",
-      "plural": "Collaborations with the IDs "
-    },
-    "alreadyExistsErrorMsg2": {
-      "singular": " already exists.",
-      "plural": " already exist."
-    },
     "cantReplaceWithCollaborationErrorMsg": "It is not possible to replace processes with collaborations.",
     "collaboration": "Collaboration",
+    "collaborationAlreadyExistsErrorMsg": "A collaboration with the same BPMN ID or name «{name}» already exists.",
     "confirm": "Confirm",
     "confirmDeletion": "Confirm deletion",
     "confirmDeletionText1": "Are you sure you want to delete ",
@@ -109,12 +109,14 @@
     "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "navigateToC8Import": "Navigate to C8 Import",
+    "noApiKeyError": "No API key found. Please set an API key in the settings to enable AI generation.",
     "noProcessModelsFound": "No process models found.",
+    "noResponseErrorMsg": "No response from server. Please check your connection.",
     "participant": "Participant",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
     "toTheProcessMap": "To the Process Map",
-    "unknownErrorMsg": "Unknown error while uploading process models.",
+    "unexpectedErrorMsg": "An unexpected error occured.",
     "uploadProcessModels": "Upload Process Models",
     "uploadingProcessModel": "Uploading Process Model",
     "uploadingProcessModels": "Uploading Process Models..."
@@ -143,13 +145,21 @@
   },
   "projectOverview": {
     "active": "ACTIVE",
+    "confirm": "Confirm",
+    "confirmDeletion": "Confirm deletion",
+    "confirmDeletionText1": "Are you sure you want to delete ",
+    "confirmDeletionText2": "? This action will delete all process models of version ",
+    "confirmDeletionText3": " of the project.",
     "create": "Create",
     "createProject": "Create Project",
+    "errorMessage": "An error has occurred!",
     "newProject": "New Project",
     "newVersion": "New Version",
     "newVersionFor": "New Version for",
     "open": "Open",
     "projectNameRequired": "Project Name is required",
+    "projectSuccessfullyCreated": "Project successfully created",
+    "projectSuccessfullyDeleted": "Project successfully deleted",
     "projectVersionRequired": "Project Version is required",
     "versionNameExists": "Version Name already exists",
     "versionNameRequired": "Version Name is required",

@@ -1,12 +1,12 @@
 package de.envite.proa.camundacloud;
 
 import de.envite.proa.usecases.ProcessOperations;
-import org.eclipse.microprofile.rest.client.RestClientBuilder;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
-import de.envite.proa.usecases.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.net.URI;
 
@@ -32,16 +32,20 @@ public class CamundaCloudImportUsecase {
 		return camundaModelerService.getProcessModels("Bearer " + configuration.getToken(), search);
 	}
 
+	protected CamundaOperateService createOperateService(String baseUri) {
+		return RestClientBuilder
+				.newBuilder()
+				.baseUri(URI.create(baseUri))
+				.build(CamundaOperateService.class);
+	}
+
 	public Object getProcessInstances(CamundaCloudFetchConfiguration configuration) {
 		String operateUri = "https://" + //
 				configuration.getRegionId() + //
 				".operate.camunda.io/" + //
 				configuration.getClusterId();
 
-		CamundaOperateService camundaOperateService = RestClientBuilder //
-				.newBuilder() //
-				.baseUri(URI.create(operateUri)) //
-				.build(CamundaOperateService.class);
+		CamundaOperateService camundaOperateService = createOperateService(operateUri);
 
 		String bpmnProcessId = configuration.getBpmnProcessId();
 
@@ -52,16 +56,17 @@ public class CamundaCloudImportUsecase {
 		return camundaOperateService.getProcessInstances("Bearer " + configuration.getToken(), filter);
 	}
 
-	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config) {
+	public void importProcessModels(Long projectId, CamundaCloudImportConfiguration config)
+			throws CantReplaceWithCollaborationException {
 		for (String id : config.getSelectedProcessModelIds()) {
 			CamundaProcessModelResponse processModel = camundaModelerService
 					.getProcessModel("Bearer " + config.getToken(), id);
 			String xml = getProcessXml(processModel);
 			String description = processOperations.getDescription(xml);
-			String isCollaboration = processOperations.getIsCollaboration(xml) ? "true" : "false";
+			boolean isCollaboration = processOperations.getIsCollaboration(xml);
 
-			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), xml, description, isCollaboration,
-					null);
+			usecase.saveProcessModel(projectId, processModel.getMetadata().getName(), xml, description,
+					isCollaboration);
 		}
 	}
 

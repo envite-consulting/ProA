@@ -1,6 +1,6 @@
 package de.envite.proa.usecases.settings;
 
-import de.envite.proa.entities.Settings;
+import de.envite.proa.entities.settings.Settings;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 

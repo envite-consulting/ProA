@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.Role;
+import de.envite.proa.entities.authentication.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,7 +26,7 @@ public class UserTable {
 	@OneToMany
 	private List<ProjectTable> projects;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	private SettingsTable settings;
 
 	private Integer failedLoginAttempts = 0;

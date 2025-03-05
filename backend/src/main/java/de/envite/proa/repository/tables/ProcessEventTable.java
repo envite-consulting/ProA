@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.EventType;
+import de.envite.proa.entities.process.EventType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,6 +22,6 @@ public class ProcessEventTable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	private ProcessModelTable processModel;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }

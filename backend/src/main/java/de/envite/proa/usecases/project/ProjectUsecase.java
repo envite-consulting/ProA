@@ -2,7 +2,7 @@ package de.envite.proa.usecases.project;
 
 import java.util.List;
 
-import de.envite.proa.entities.Project;
+import de.envite.proa.entities.project.Project;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -34,5 +34,13 @@ public class ProjectUsecase {
 
 	public Project getProject(Long userId, Long projectId) {
 		return repository.getProject(userId, projectId);
+	}
+
+	public void deleteProject(Long projectId) {
+		repository.deleteProject(projectId);
+	}
+
+	public void deleteProject(Long userId, Long projectId) {
+		repository.deleteProject(userId, projectId);
 	}
 }

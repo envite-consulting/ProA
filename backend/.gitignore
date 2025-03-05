@@ -47,4 +47,3 @@ src/main/resources/META-INF/resources
 # JWT keys
 **/privateKey.pem
 **/publicKey.pem
-**/rsaPrivateKey.pem

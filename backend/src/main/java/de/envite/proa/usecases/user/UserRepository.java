@@ -1,6 +1,8 @@
 package de.envite.proa.usecases.user;
 
-import de.envite.proa.entities.User;
+import de.envite.proa.entities.authentication.User;
+
+import java.util.List;
 
 public interface UserRepository {
     User findByEmail(String email);
@@ -8,4 +10,8 @@ public interface UserRepository {
     User patchUser(Long userId, User user);
 
     User findById(Long id);
+
+    List<User> getAllUsers();
+
+    void deleteById(Long id);
 }

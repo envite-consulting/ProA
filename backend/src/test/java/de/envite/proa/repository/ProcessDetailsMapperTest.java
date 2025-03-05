@@ -1,18 +1,19 @@
 package de.envite.proa.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
-import java.util.Arrays;
-
-import org.junit.jupiter.api.Test;
-
-import de.envite.proa.entities.EventType;
-import de.envite.proa.entities.ProcessDetails;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessDetails;
+import de.envite.proa.repository.processmodel.ProcessDetailsMapper;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+import org.junit.jupiter.api.Test;
 
-public class ProcessDetailsMapperTest {
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+class ProcessDetailsMapperTest {
 
 	private static final long PROCESS_ID = 1L;
 	private static final String PROCESS_NAME = "processName";
@@ -29,6 +30,12 @@ public class ProcessDetailsMapperTest {
 
 	private static final String END_EVENT_LABEL = "End Event Label";
 	private static final String END_EVENT_ID = "end-event-id";
+
+	@Test
+	public void testClassInitialization() {
+		ProcessDetailsMapper mapper = new ProcessDetailsMapper();
+		assertNotNull(mapper);
+	}
 
 	@Test
 	public void testMap() {
@@ -60,7 +67,7 @@ public class ProcessDetailsMapperTest {
 		endEvent.setLabel(END_EVENT_LABEL);
 		endEvent.setElementId(END_EVENT_ID);
 
-		table.setEvents(Arrays.asList(startEvent, intermediateThrowEvent, intermediateCatchEvent, endEvent));
+		table.setEvents(Set.of(startEvent, intermediateThrowEvent, intermediateCatchEvent, endEvent));
 
 		// Act
 		ProcessDetails processDetails = ProcessDetailsMapper.map(table);

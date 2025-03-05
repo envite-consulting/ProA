@@ -8,23 +8,35 @@
         <v-list-item-title>
           {{ modelNode.processName }}
           <span class="text-body-2 text-grey-darken-1">
-            {{ $t('processList.collaboration') }}
+            {{ $t("processList.collaboration") }}
           </span>
         </v-list-item-title>
 
         <v-list-item-subtitle>
-          {{ getLocaleDate(modelNode.createdAt) }} {{ !!modelNode.description ? '-' : '' }} {{ modelNode.description }}
+          {{ getLocaleDate(modelNode.createdAt) }}
+          {{ !!modelNode.description ? "-" : "" }} {{ modelNode.description }}
         </v-list-item-subtitle>
 
         <template v-slot:append>
-          <v-btn color="grey-lighten-1"
-                 icon="mdi-delete"
-                 variant="text"
-                 @click.stop="$emit('delete-process', modelNode)">
+          <v-btn
+            color="grey-lighten-1"
+            icon="mdi-delete"
+            variant="text"
+            @click.stop="$emit('delete-process', modelNode)"
+          >
           </v-btn>
-          <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + modelNode.id"></v-btn>
-          <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
-                 @click.stop="$emit('more-info', modelNode.id)"></v-btn>
+          <v-btn
+            color="grey-lighten-1"
+            icon="mdi-more"
+            variant="text"
+            :to="'/ProcessView/' + modelNode.id"
+          ></v-btn>
+          <v-btn
+            color="grey-lighten-1"
+            icon="mdi-information"
+            variant="text"
+            @click.stop="$emit('more-info', modelNode.id)"
+          ></v-btn>
         </template>
       </v-list-item>
     </template>
@@ -50,22 +62,45 @@
     <v-list-item-title>
       {{ modelNode.processName }}
       <span class="text-body-2 text-grey-darken-1">
-            {{ modelNode.parentsBpmnProcessIds.length > 0 ? $t('processList.participant') : "" }}
+        {{
+          modelNode.processType === "PARTICIPANT"
+            ? $t("processList.participant")
+            : ""
+        }}
       </span>
     </v-list-item-title>
 
     <v-list-item-subtitle>
-      {{ getLocaleDate(modelNode.createdAt) }} {{ !!modelNode.description ? '-' : '' }} {{ modelNode.description }}
+      {{ getLocaleDate(modelNode.createdAt) }}
+      {{ !!modelNode.description ? "-" : "" }} {{ modelNode.description }}
     </v-list-item-subtitle>
 
     <template v-slot:append>
-      <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text"
-             @click="$emit('delete-process', modelNode)"></v-btn>
-      <v-btn v-if="modelNode.parentsBpmnProcessIds.length == 0" color="grey-lighten-1" icon="mdi-upload" variant="text"
-             @click="$emit('upload-process', modelNode.id)"></v-btn>
-      <v-btn color="grey-lighten-1" icon="mdi-more" variant="text" :to="'/ProcessView/' + modelNode.id"></v-btn>
-      <v-btn color="grey-lighten-1" icon="mdi-information" variant="text"
-             @click="$emit('more-info', modelNode.id)"></v-btn>
+      <v-btn
+        color="grey-lighten-1"
+        icon="mdi-delete"
+        variant="text"
+        @click="$emit('delete-process', modelNode)"
+      ></v-btn>
+      <v-btn
+        v-if="modelNode.processType !== 'PARTICIPANT'"
+        color="grey-lighten-1"
+        icon="mdi-upload"
+        variant="text"
+        @click="$emit('upload-process', modelNode.id)"
+      ></v-btn>
+      <v-btn
+        color="grey-lighten-1"
+        icon="mdi-more"
+        variant="text"
+        :to="'/ProcessView/' + modelNode.id"
+      ></v-btn>
+      <v-btn
+        color="grey-lighten-1"
+        icon="mdi-information"
+        variant="text"
+        @click="$emit('more-info', modelNode.id)"
+      ></v-btn>
     </template>
   </v-list-item>
 </template>
@@ -81,7 +116,7 @@ import { ProcessModelNode } from "@/components/ProcessList/ProcessList.vue";
 import { useAppStore } from "@/store/app";
 
 export default {
-  name: 'ProcessTreeNode',
+  name: "ProcessTreeNode",
   props: {
     model: Object
   },
@@ -89,14 +124,14 @@ export default {
     return {
       appStore: useAppStore(),
       modelNode: this.model as ProcessModelNode
-    }
+    };
   },
   methods: {
     getLocaleDate(date: string): string {
-      const locales = this.appStore.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      const locales =
+        this.appStore.getSelectedLanguage() === "de" ? "de-DE" : "en-US";
       return new Date(date).toLocaleString(locales);
     }
   }
 };
 </script>
-

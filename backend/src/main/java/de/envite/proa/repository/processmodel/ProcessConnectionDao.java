@@ -1,0 +1,67 @@
+package de.envite.proa.repository.processmodel;
+
+import java.util.List;
+
+import de.envite.proa.repository.tables.*;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+
+@RequestScoped
+public class ProcessConnectionDao {
+
+	private EntityManager em;
+
+	@Inject
+	public ProcessConnectionDao(EntityManager em) {
+		this.em = em;
+	}
+
+	@Transactional
+	public void persist(ProcessConnectionTable table) {
+		em.persist(table);
+	}
+
+	@Transactional
+	public List<ProcessConnectionTable> getProcessConnections(ProjectTable projectTable) {
+		return em//
+				.createQuery("SELECT pc FROM ProcessConnectionTable pc WHERE pc.project = :project",
+						ProcessConnectionTable.class)//
+				.setParameter("project", projectTable).getResultList();
+	}
+
+	@Transactional
+	public List<ProcessConnectionTable> getProcessConnections(ProjectTable projectTable,
+			ProcessModelTable processModel) {
+		return em //
+				.createQuery("SELECT pc " + //
+						"FROM ProcessConnectionTable pc " + //
+						"WHERE pc.project = :project " + //
+						"AND (pc.callingProcess = :processModel OR pc.calledProcess = :processModel)", //
+						ProcessConnectionTable.class) //
+				.setParameter("project", projectTable) //
+				.setParameter("processModel", processModel).getResultList();
+	}
+
+	@Transactional
+	public void deleteForProcessModel(Long id) {
+		ProcessModelTable processModel = em.find(ProcessModelTable.class, id);
+		em.createQuery(
+				"DELETE FROM ProcessConnectionTable pc WHERE pc.callingProcess = :processModel OR pc.calledProcess = :processModel")
+				.setParameter("processModel", processModel)//
+				.executeUpdate();
+	}
+
+	@Transactional
+	public void addConnection(ProcessConnectionTable processConnection) {
+		em.persist(processConnection);
+	}
+
+	@Transactional
+	public void deleteConnection(Long connectionId) {
+		ProcessConnectionTable processConnection = em.find(ProcessConnectionTable.class, connectionId);
+		em.remove(processConnection);
+	}
+}

@@ -26,6 +26,7 @@
     <bpmn:sequenceFlow id="Flow_13j8f7l" sourceRef="Activity_0defd74" targetRef="Activity_Call" />
     <bpmn:dataStoreReference id="DataStoreReference_WriteStore" name="WriteStore" />
     <bpmn:dataStoreReference id="DataStoreReference_ReadStore" name="ReadStore" />
+    <bpmn:dataStoreReference id="DataStoreReference_NoAccessStore" name="NoAccessStore" />
     <bpmn:userTask id="Activity_0defd74" name="Activity 1">
       <bpmn:incoming>Flow_02xpjfh</bpmn:incoming>
       <bpmn:outgoing>Flow_13j8f7l</bpmn:outgoing>

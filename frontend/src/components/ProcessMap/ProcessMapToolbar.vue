@@ -24,7 +24,7 @@
         </v-btn>
       </template>
 
-      <Legend/>
+      <ProcessMapLegend/>
     </v-menu>
 
     <v-menu location="bottom" :close-on-content-click="false">
@@ -77,13 +77,12 @@
 import { defineComponent } from 'vue'
 
 import getProject from "@/components/projectService";
-import Legend from "@/components/ProcessMap/Legend.vue";
-import LegendItem from "@/components/ProcessMap/LegendItem.vue";
+import ProcessMapLegend from "@/components/ProcessMap/ProcessMapLegend.vue";
 import { useAppStore } from "@/store/app";
 
 export default defineComponent({
   name: "ProcessMapToolbar",
-  components: { Legend, LegendItem },
+  components: { ProcessMapLegend },
 
   props: {
     selectedProjectId: {

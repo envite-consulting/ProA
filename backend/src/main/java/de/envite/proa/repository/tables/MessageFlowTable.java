@@ -1,6 +1,6 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.ProcessElementType;
+import de.envite.proa.entities.process.ProcessElementType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -30,6 +30,6 @@ public class MessageFlowTable {
 	@Enumerated(EnumType.STRING)
 	private ProcessElementType calledElementType;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private ProjectTable project;
 }
