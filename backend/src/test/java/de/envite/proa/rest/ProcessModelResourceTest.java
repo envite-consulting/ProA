@@ -181,10 +181,10 @@ class ProcessModelResourceTest {
 				Objects.requireNonNull(getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
-		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION))
+		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, false))
 				.thenReturn(NEW_PROCESS_ID);
 
-		try (Response response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION)) {
+		try (Response response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION, false)) {
 			Long returnedProcessId = (Long) response.getEntity();
 
 			assertThat(response.getStatus()).isEqualTo(201);
@@ -192,6 +192,6 @@ class ProcessModelResourceTest {
 		}
 
 		verify(fileService).readFileToString(processModel);
-		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION);
+		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, false);
 	}
 }

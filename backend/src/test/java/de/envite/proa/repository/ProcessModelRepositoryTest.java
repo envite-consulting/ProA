@@ -9,6 +9,7 @@ import de.envite.proa.repository.messageflow.MessageFlowDao;
 import de.envite.proa.repository.processmodel.*;
 import de.envite.proa.repository.tables.*;
 import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
+import de.envite.proa.usecases.settings.SettingsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -71,6 +72,8 @@ class ProcessModelRepositoryTest {
     private RelatedProcessModelDao relatedProcessModelDao;
     @Mock
     private RelatedProcessModelRepository relatedProcessModelRepository;
+    @Mock
+    private SettingsRepository settingsRepository;
 
     @BeforeEach
     void setup() {
@@ -102,7 +105,8 @@ class ProcessModelRepositoryTest {
                 processEventDao, //
                 messageFlowDao, //
                 relatedProcessModelDao, //
-                relatedProcessModelRepository);
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         ProcessModel model = new ProcessModel();
         model.setName(NEW_PROCESS_MODEL_NAME);
@@ -159,7 +163,8 @@ class ProcessModelRepositoryTest {
                 processEventDao, //
                 messageFlowDao, //
                 relatedProcessModelDao, //
-                relatedProcessModelRepository);
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         ProcessModel model = new ProcessModel();
         model.setName(NEW_PROCESS_MODEL_NAME);
@@ -209,7 +214,8 @@ class ProcessModelRepositoryTest {
                 processEventDao, //
                 messageFlowDao, //
                 relatedProcessModelDao, //
-                relatedProcessModelRepository);
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         ProcessModel model = new ProcessModel();
         model.setName(NEW_PROCESS_MODEL_NAME);
@@ -263,7 +269,8 @@ class ProcessModelRepositoryTest {
                 processEventDao, //
                 messageFlowDao, //
                 relatedProcessModelDao, //
-                relatedProcessModelRepository);
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         ProcessModel model = new ProcessModel();
         model.setName(NEW_PROCESS_MODEL_NAME);
@@ -306,7 +313,8 @@ class ProcessModelRepositoryTest {
                 processEventDao, //
                 messageFlowDao, //
                 relatedProcessModelDao, //
-                relatedProcessModelRepository);
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         ProcessModel model = new ProcessModel();
         model.setName(NEW_PROCESS_MODEL_NAME);
@@ -352,7 +360,8 @@ class ProcessModelRepositoryTest {
                 processEventDao, //
                 messageFlowDao, //
                 relatedProcessModelDao, //
-                relatedProcessModelRepository);
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         // Act
         List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID, null);
@@ -398,17 +407,17 @@ class ProcessModelRepositoryTest {
         when(processModelDao.getProcessModelsWithChildren(any()))
                 .thenReturn(List.of(processModel1, processModel2, processModel3));
 
-        ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(
-                processModelDao,
-                dataStoreDao,
-                dataStoreConnectionDao,
-                callActivityDao,
-                processConnectionDao,
-                processEventDao,
-                messageFlowDao,
-                relatedProcessModelDao,
-                relatedProcessModelRepository
-        );
+        ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
+                processModelDao, //
+                dataStoreDao, //
+                dataStoreConnectionDao, //
+                callActivityDao, //
+                processConnectionDao, //
+                processEventDao, //
+                messageFlowDao, //
+                relatedProcessModelDao, //
+                relatedProcessModelRepository, //
+                settingsRepository);
 
         // Act
         List<ProcessInformation> processInformation = repository.getProcessInformation(PROJECT_ID, levelParam);

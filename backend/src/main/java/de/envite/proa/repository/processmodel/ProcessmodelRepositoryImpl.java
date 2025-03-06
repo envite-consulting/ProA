@@ -1,5 +1,10 @@
 package de.envite.proa.repository.processmodel;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.envite.proa.XmlConverter;
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.process.*;
@@ -10,15 +15,20 @@ import de.envite.proa.repository.messageflow.MessageFlowMapper;
 import de.envite.proa.repository.tables.*;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
+import de.envite.proa.usecases.settings.SettingsRepository;
+import io.vertx.ext.web.handler.sockjs.impl.StringEscapeUtils;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Logger;
 
 @RequestScoped
 public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
@@ -32,6 +42,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
     private final MessageFlowDao messageFlowDao;
     private final RelatedProcessModelDao relatedProcessModelDao;
     private final RelatedProcessModelRepository relatedProcessModelRepository;
+	private final SettingsRepository settingsRepository;
+	private static final String CONTENTS = "contents";
+	private static final String PARTS = "parts";
+	private static final String TEXT = "text";
+	Logger logger = Logger.getLogger(getClass().getName());
 
     @Inject
     public ProcessmodelRepositoryImpl(ProcessModelDao processModelDao, //
@@ -42,7 +57,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
                                       ProcessEventDao processEventDao, //
                                       MessageFlowDao messageFlowDao, //
                                       RelatedProcessModelDao relatedProcessModelDao, //
-                                      RelatedProcessModelRepository relatedProcessModelRepository) {
+                                      RelatedProcessModelRepository relatedProcessModelRepository, //
+									  SettingsRepository settingsRepository) {
         this.processModelDao = processModelDao;
         this.dataStoreDao = dataStoreDao;
         this.dataStoreConnectionDao = dataStoreConnectionDao;
@@ -52,6 +68,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
         this.messageFlowDao = messageFlowDao;
         this.relatedProcessModelDao = relatedProcessModelDao;
         this.relatedProcessModelRepository = relatedProcessModelRepository;
+		this.settingsRepository = settingsRepository;
     }
 
 	@Override
@@ -70,7 +87,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 					projectTable);
 			processModelDao.addChild(parent.getId(), table.getId());
 		}
-
+		
         relatedProcessModelRepository.calculateAndSaveRelatedProcessModels(projectTable);
 
 		connectEvents(processModel, table, projectTable);
@@ -100,7 +117,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		return processModelDao.getProcessModelsWithChildren(projectTable)
 				.stream()
 				.filter(model -> levels == null || levels.contains(model.getLevel()))
-				.map(model -> ProcessmodelMapper.map(model, relatedProcessModelDao, relatedProcessModelRepository)) // Pass dependencies
+				.map(model -> ProcessmodelMapper.map(model, relatedProcessModelDao, relatedProcessModelRepository))
 				.toList();
     }
 
@@ -118,7 +135,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
         if (aggregate) {
             Set<ProcessModelTable> relatedProcessModels = processModelDao.findWithRelatedProcessModels(id);
             Set<ProcessEventTable> allEvents = processModelDao.findEventsForProcessModels(relatedProcessModels);
-            Set<CallActivityTable> allCallActivities = processModelDao.findCallActivitiesForProcessModels(relatedProcessModels);
+            Set<CallActivityTable> allCallActivities =
+					processModelDao.findCallActivitiesForProcessModels(relatedProcessModels);
             return ProcessDetailsMapper.mapWithAggregation(id, relatedProcessModels, allEvents, allCallActivities);
         } else {
             ProcessModelTable table = processModelDao.findWithEventsAndActivities(id);
@@ -352,5 +370,141 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		ProjectTable project = new ProjectTable();
 		project.setId(projectId);
 		return processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(name, bpmnProcessId, project);
+	}
+
+	@Override
+	public void handleProcessChangeAnalysis(Long oldProcessId, String newContent) {
+		if (settingsRepository.getSettings() == null || settingsRepository.getSettings().getGeminiApiKey() == null) {
+			throw new IllegalArgumentException("Settings not defined. Aborting process change analysis.");
+		}
+
+		String geminiApiKey = settingsRepository.getSettings().getGeminiApiKey();
+
+		if (!geminiApiKey.startsWith("AIza") || geminiApiKey.length() != 39) {
+			throw new IllegalArgumentException("Invalid Gemini API key. Aborting process change analysis.");
+		}
+
+		ProcessModelTable processModel = processModelDao.find(oldProcessId);
+		List<RelatedProcessModelTable> relatedProcessModels =
+				relatedProcessModelDao.getRelatedProcessModels(processModel);
+
+		if (!relatedProcessModels.isEmpty()) {
+			for (RelatedProcessModelTable relatedProcessModel : relatedProcessModels) {
+				try {
+					String geminiRequest =
+							generateGeminiRequest(oldProcessId, newContent, relatedProcessModel);
+					String geminiResponse = sendGeminiRequest(geminiApiKey, geminiRequest);
+					handleGeminiResponse(geminiResponse, relatedProcessModel.getRelatedProcessModelId());
+				} catch (Exception e) {
+					throw new RuntimeException(e.getMessage());
+				}
+			}
+		}
+	}
+
+	private String generateGeminiRequest(Long processModelId, String newContent,
+										 RelatedProcessModelTable relatedProcessModel) throws Exception {
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, Object> requestBodyMap = new HashMap<>();
+		List<Map<String, Object>> contentsList = new ArrayList<>();
+		Map<String, Object> contentMap = new HashMap<>();
+		List<Map<String, Object>> partsList = new ArrayList<>();
+
+		String prompt =
+				"Process model with id " + processModelId + ":\n\n" + getProcessModelXml(processModelId) + "\n\n" +
+				"Related process model with id " + relatedProcessModel.getRelatedProcessModelId() + ":\n" +
+				getProcessModelXml(relatedProcessModel.getRelatedProcessModelId()) + "\n\n" +
+				"Changed process model with id " + processModelId + ":\n\n" + newContent + "\n\n" +
+				"This is the context:" + "\n" +
+				"There has been a change in process model with id " + processModelId + ". " +
+				"Please analyse this change and what the differences are. " +
+				"Process model with id " + relatedProcessModel.getRelatedProcessModelId() +
+				" is the same process, but at a different level of abstraction. " +
+				"Therefore, there should also be a change in process model with id " +
+				relatedProcessModel.getRelatedProcessModelId() + " based on the change in process model with id " +
+				processModelId + ". " + "Please give me the customised XML file of process model with id " +
+				relatedProcessModel.getRelatedProcessModelId() + ". " +
+				"The output must be a valid BPMN XML file according to OMG. " +
+				"Please make sure that only the valid XML code is returned. " +
+				"I do not need an explanation. If no change is necessary, simply return 'No'. " +
+				"If no automatic change is possible or the changed process does not reflect the original process, " +
+				"please return your analysis.";
+
+		Map<String, Object> partMap = new HashMap<>();
+		partMap.put(TEXT, prompt);
+		partsList.add(partMap);
+		contentMap.put(PARTS, partsList);
+		contentsList.add(contentMap);
+		requestBodyMap.put(CONTENTS, contentsList);
+
+		return StringEscapeUtils.unescapeJavaScript(objectMapper.writeValueAsString(requestBodyMap));
+	}
+
+	private String sendGeminiRequest(String geminiApiKey, String requestBody) throws JsonProcessingException {
+		String geminiModel = "gemini-2.0-flash-thinking-exp-01-21";
+
+		ObjectMapper mapper = new ObjectMapper();
+		Client client = ClientBuilder.newClient();
+
+		ObjectNode payload = mapper.createObjectNode();
+		ArrayNode contentsArray = mapper.createArrayNode();
+		ObjectNode contentObject = mapper.createObjectNode();
+		ArrayNode partsArray = mapper.createArrayNode();
+		ObjectNode textObject = mapper.createObjectNode();
+
+		textObject.put(TEXT, requestBody);
+		partsArray.add(textObject);
+		contentObject.set(PARTS, partsArray);
+		contentsArray.add(contentObject);
+		payload.set(CONTENTS, contentsArray);
+
+		try (Response response = client.target("https://generativelanguage.googleapis.com/v1beta/models/" +
+						geminiModel + ":generateContent?key=" + geminiApiKey)
+						.request(MediaType.APPLICATION_JSON)
+						.post(Entity.json(mapper.writeValueAsString(payload)))) {
+			return response.readEntity(String.class);
+		} finally {
+			client.close();
+		}
+
+	}
+
+	private void handleGeminiResponse(String geminiResponse, Long relatedProcessModelId) throws Exception {
+		ObjectMapper objectMapper = new ObjectMapper();
+		JsonNode rootNode = objectMapper.readTree(geminiResponse);
+		JsonNode textNode = rootNode
+				.path("candidates").path(0)
+				.path("content")
+				.path(PARTS).path(0)
+				.path(TEXT);
+		String responseText = textNode.asText();
+
+		if (responseText.startsWith("```xml")) {
+			String cleanedBpmnXml = cleanupBpmnXml(responseText);
+
+			ProcessModelTable relatedProcessModel = processModelDao.find(relatedProcessModelId);
+			if (relatedProcessModel != null) {
+				relatedProcessModel.setBpmnXml(XmlConverter.stringToBytes(cleanedBpmnXml));
+				processModelDao.merge(relatedProcessModel);
+				logger.info("Process model updated.");
+			} else {
+				logger.info("Process model not updated because relatedProcessModel is null.");
+			}
+		} else if (responseText.toLowerCase().startsWith("no")) {
+			logger.info("No change necessary.");
+		} else {
+			logger.info("Manual analysis necessary.");
+		}
+	}
+
+	private String cleanupBpmnXml(String responseText) throws Exception {
+		String xmlContent = responseText
+				.replace("```xml", "") // remove the starting marker
+				.replace("```", "") // remove the closing marker
+				.trim(); // remove any extra leading/trailing whitespace
+
+		// Unescape Java string literals to convert \n into actual newlines, \" into quotes, etc.
+		xmlContent = StringEscapeUtils.unescapeJava(xmlContent);
+		return xmlContent;
 	}
 }

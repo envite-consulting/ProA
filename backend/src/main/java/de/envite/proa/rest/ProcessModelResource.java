@@ -19,11 +19,14 @@ import java.util.List;
 @Path("/api")
 public class ProcessModelResource {
 
-	@Inject
-	private ProcessModelUsecase usecase;
+	private final ProcessModelUsecase usecase;
+	private final FileService fileService;
 
 	@Inject
-	FileService fileService;
+	public ProcessModelResource(ProcessModelUsecase usecase, FileService fileService) {
+		this.usecase = usecase;
+		this.fileService = fileService;
+	}
 
 	/**
 	 * Creates a new process model
@@ -57,10 +60,8 @@ public class ProcessModelResource {
 					)) //
 					.build();
 		} catch (CantReplaceWithCollaborationException e) {
-			e.printStackTrace();
 			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
 		} catch (Exception e) {
-			e.printStackTrace();
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
@@ -69,14 +70,16 @@ public class ProcessModelResource {
 	@POST
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId,
-			@RestForm File processModel,
-			@RestForm String fileName, @RestForm String description) {
+										@RestForm File processModel, @RestForm String fileName,
+										@RestForm String description, @RestForm boolean startProcessChangeAnalysis) {
 		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
+
 		try {
-            return Response
+			return Response
                     .status(Response.Status.CREATED)
-                    .entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description))
+                    .entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description,
+							startProcessChangeAnalysis))
                     .build();
 		} catch (CantReplaceWithCollaborationException e) {
 			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
@@ -125,7 +128,8 @@ public class ProcessModelResource {
 	@Path("/project/{projectId}/process-model")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
-    public List<ProcessInformation> getProcessInformation(@RestPath Long projectId, @QueryParam("levels") String levels) {
+    public List<ProcessInformation> getProcessInformation(@RestPath Long projectId,
+														  @QueryParam("levels") String levels) {
 		return usecase.getProcessInformation(projectId, levels);
 	}
 
@@ -141,7 +145,8 @@ public class ProcessModelResource {
 	@Path("/process-model/{id}/details")
 	@Produces(MediaType.APPLICATION_JSON)
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
-    public ProcessDetails getProcessDetails(@RestPath Long id, @QueryParam("aggregate") @DefaultValue("false") boolean aggregate) {
+    public ProcessDetails getProcessDetails(@RestPath Long id,
+											@QueryParam("aggregate") @DefaultValue("false") boolean aggregate) {
 		return usecase.getProcessDetails(id, aggregate);
 	}
 }

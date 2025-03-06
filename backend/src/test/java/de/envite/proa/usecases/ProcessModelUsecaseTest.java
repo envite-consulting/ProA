@@ -202,7 +202,7 @@ class ProcessModelUsecaseTest {
 
 		CantReplaceWithCollaborationException exception = assertThrows(CantReplaceWithCollaborationException.class,
 				() -> processModelUsecase.replaceProcessModel(TEST_PROJECT_ID, TEST_OLD_PROCESS_ID,
-						REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION));
+						REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION, false));
 
 		assertEquals("CantReplaceWithCollaborationException", exception.getExceptionType());
 		assertTrue(exception.getMessage().contains(TEST_OLD_PROCESS_ID.toString()));

@@ -29,4 +29,6 @@ public interface ProcessModelRepository {
 	ProcessModelTable findByNameOrBpmnProcessIdWithoutCollaborations(String name, String bpmnProcessId, Long projectId);
 
 	ProcessModelTable getProcessModel(Long id);
+
+	void handleProcessChangeAnalysis(Long oldProcessId, String newContent);
 }

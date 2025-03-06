@@ -28,16 +28,14 @@ public class ProcessModelUsecase {
 		this.processMapRepository = processMapRepository;
 	}
 
-	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isUploadedProcessCollaboration)
-			throws CantReplaceWithCollaborationException {
+	public Long saveProcessModel(Long projectId, String name, String xml, String description,
+								 boolean isUploadedProcessCollaboration) throws CantReplaceWithCollaborationException {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
 				bpmnProcessId, projectId);
 
-		if (existingProcessModel != null) {
-			if (!isUploadedProcessCollaboration) {
-				return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
-			}
+		if (existingProcessModel != null && !isUploadedProcessCollaboration) {
+			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description, false);
 		}
 
 		if (isUploadedProcessCollaboration) {
@@ -47,7 +45,6 @@ public class ProcessModelUsecase {
 		ProcessModel processModel = createProcessModel(name, description, xml, isUploadedProcessCollaboration);
 
 		if (!isUploadedProcessCollaboration) {
-			System.out.println("is not collaboration");
 			return repository.saveProcessModel(projectId, processModel);
 		}
 
@@ -84,6 +81,7 @@ public class ProcessModelUsecase {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
 				bpmnProcessId, projectId);
+
 		if (existingProcessModel != null) {
 			return replaceParticipant(projectId, existingProcessModel.getId(), name, xml, description,
 					parentBpmnProcessId);
@@ -169,10 +167,15 @@ public class ProcessModelUsecase {
 	}
 
 	public Long replaceProcessModel(Long projectId, Long oldProcessId, String fileName, String content,
-			String description) throws CantReplaceWithCollaborationException {
+			String description, boolean startProcessChangeAnalysis) throws CantReplaceWithCollaborationException {
 		boolean isCollaboration = processOperations.getIsCollaboration(content);
+
 		if (isCollaboration) {
 			throw new CantReplaceWithCollaborationException(oldProcessId);
+		}
+
+		if (startProcessChangeAnalysis) {
+			repository.handleProcessChangeAnalysis(oldProcessId, content);
 		}
 
 		ProcessModel processModel = createProcessModel(fileName, description, content, false);
