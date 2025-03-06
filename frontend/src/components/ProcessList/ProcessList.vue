@@ -118,6 +118,23 @@
       </v-card-title>
       <v-card-text>
         <v-container>
+          <v-row v-if="uploadDialogMode === 'single'">
+            <v-col
+              v-if="showProcessChangeAnalysisCheckbox"
+              cols="12"
+              sm="12"
+              md="12"
+              class="pt-0"
+            >
+              <v-checkbox
+                v-model="performProcessChangeAnalysis"
+                color="primary"
+                hide-details
+                :disabled="isPerformingProcessChangeAnalysis"
+                :label="$t('processList.performProcessChangeAnalysis')"
+              ></v-checkbox>
+            </v-col>
+          </v-row>
           <v-row class="pb-5">
             <v-col cols="12" sm="12" md="12" class="pt-0">
               <v-file-input
@@ -131,6 +148,7 @@
               ></v-file-input>
               <v-file-input
                 v-if="uploadDialogMode === 'single'"
+                :disabled="isPerformingProcessChangeAnalysis"
                 :label="$t('general.processModel')"
                 v-model="processModelFiles"
                 chips
@@ -154,6 +172,7 @@
             </div>
             <v-col cols="12" sm="12" md="12" class="py-1">
               <v-text-field
+                :disabled="isPerformingProcessChangeAnalysis"
                 hide-details
                 label="Name"
                 v-model="file.name"
@@ -164,6 +183,7 @@
                 <v-col style="position: relative">
                   <v-textarea
                     rows="3"
+                    :disabled="isPerformingProcessChangeAnalysis"
                     :label="$t('general.description')"
                     v-model="file.description"
                     :error-messages="descriptionErrors[index]"
@@ -185,6 +205,7 @@
                 </v-col>
                 <v-col class="d-flex justify-end" cols="auto">
                   <v-tooltip
+                    :disabled="isPerformingProcessChangeAnalysis"
                     :text="$t('processList.generateDescriptionWithAI')"
                     location="bottom"
                   >
@@ -193,7 +214,11 @@
                         v-bind="props"
                         color="grey"
                         class="ms-2 hover-icon"
-                        @click="generateDescription(file, index)"
+                        @click="
+                          isPerformingProcessChangeAnalysis
+                            ? null
+                            : generateDescription(file, index)
+                        "
                       >
                         mdi-auto-fix
                       </v-icon>
@@ -207,7 +232,31 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" variant="text" @click="closeUploadDialog">
+        <v-container>
+          <v-row>
+            <v-col cols="12" md="8" lg="6" class="mx-auto">
+              <v-alert
+                v-if="isPerformingProcessChangeAnalysis"
+                type="info"
+                variant="tonal"
+              >
+                <v-progress-circular
+                  color="primary"
+                  size="24"
+                  class="mr-2"
+                  indeterminate
+                ></v-progress-circular>
+                {{ $t("processList.isPerformingProcessChangeAnalysis") }}
+              </v-alert>
+            </v-col>
+          </v-row>
+        </v-container>
+        <v-btn
+          color="blue-darken-1"
+          variant="text"
+          :disabled="isPerformingProcessChangeAnalysis"
+          @click="closeUploadDialog"
+        >
           {{ $t("general.cancel") }}
         </v-btn>
         <v-btn
@@ -222,6 +271,7 @@
           v-if="uploadDialogMode === 'single'"
           color="blue-darken-1"
           variant="text"
+          :disabled="isPerformingProcessChangeAnalysis"
           @click="replaceProcessModel"
         >
           {{ $t("general.save") }}
@@ -345,6 +395,12 @@ export interface ProcessModelNode extends ProcessModelInformation {
   children: ProcessModelNode[];
 }
 
+interface RelatedProcessModel {
+  relatedProcessModelId: number;
+  processName: string;
+  level: number;
+}
+
 enum UploadDialogMode {
   SINGLE = "single",
   MULTIPLE = "multiple"
@@ -378,6 +434,7 @@ export default defineComponent({
     progress: 0,
     processModelFiles: [] as File[],
     processModelsToUpload: [] as ProcessModelToUpload[],
+    relatedProcessModels: [] as RelatedProcessModel[],
     rootProcessModels: [] as ProcessModelNode[],
     selectedLevels: [] as number[],
     selectedProjectId: null as number | null,
@@ -385,9 +442,12 @@ export default defineComponent({
     selectedVersionName: "" as string,
     fileExtensionMatcher: /.[^/.]+$/,
     isFetching: false as boolean,
+    isPerformingProcessChangeAnalysis: false as boolean,
     descriptionErrors: {} as { [key: number]: string },
     currentlyUploadingProcessModel: {} as ProcessModelToUpload,
-    currentUploadStatus: "" as string
+    currentUploadStatus: "" as string,
+    performProcessChangeAnalysis: false,
+    showProcessChangeAnalysisCheckbox: false
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -483,6 +543,18 @@ export default defineComponent({
       this.isFetching = false;
     },
 
+    async fetchProcessModel(processModelId: number) {
+      const response = await axios.get(
+        "/api/project/" +
+          this.selectedProjectId +
+          "/process-model/" +
+          processModelId,
+        { headers: authHeader() }
+      );
+
+      this.relatedProcessModels = response.data.relatedProcessModels;
+    },
+
     collectRoots(
       processModelInformation: ProcessModelInformation[]
     ): ProcessModelNode[] {
@@ -504,10 +576,18 @@ export default defineComponent({
         });
     },
 
-    openSingleUploadDialog(modelId: number) {
+    async openSingleUploadDialog(modelId: number) {
       this.uploadDialog = true;
       this.uploadDialogMode = UploadDialogMode.SINGLE;
       this.processModelToBeReplacedId = modelId;
+
+      await this.fetchProcessModel(modelId);
+      const settings = (
+        await axios.get("api/settings", { headers: authHeader() })
+      ).data;
+      const apiKey = settings.geminiApiKey;
+      this.showProcessChangeAnalysisCheckbox =
+        this.relatedProcessModels.length > 0 && apiKey;
     },
 
     openMultipleUploadDialog() {
@@ -633,6 +713,9 @@ export default defineComponent({
         "isCollaboration",
         processModel.isCollaboration ? "true" : "false"
       );
+      if (this.performProcessChangeAnalysis) {
+        formData.append("startProcessChangeAnalysis", "true");
+      }
 
       return formData;
     },
@@ -676,6 +759,10 @@ export default defineComponent({
       );
 
       try {
+        if (this.performProcessChangeAnalysis) {
+          this.isPerformingProcessChangeAnalysis = true;
+        }
+
         await axios.post(
           "/api/project/" +
             this.selectedProjectId +
@@ -684,6 +771,11 @@ export default defineComponent({
           formData,
           { headers: authHeader() }
         );
+
+        if (this.performProcessChangeAnalysis) {
+          this.isPerformingProcessChangeAnalysis = false;
+          this.performProcessChangeAnalysis = false;
+        }
       } catch (error) {
         this.afterUploadActions();
         this.errorMessage = getErrorMessage(error);
@@ -696,6 +788,8 @@ export default defineComponent({
 
     afterUploadActions() {
       this.fetchProcessModels();
+      this.isPerformingProcessChangeAnalysis = false;
+      this.performProcessChangeAnalysis = false;
       this.progressDialog = false;
       this.progress = 0;
       this.closeUploadDialog();
@@ -704,6 +798,7 @@ export default defineComponent({
 
     closeUploadDialog() {
       this.uploadDialog = false;
+      this.performProcessChangeAnalysis = false;
     },
 
     resetUploadDialog() {
