@@ -401,8 +401,8 @@ export default defineComponent({
       processModelNode: ProcessModelNode,
       skipConfirm: boolean = false
     ) {
-      const isParticipant = processModelNode.processType === "PARTICIPANT";
-      if (!skipConfirm && isParticipant) {
+      const isProcess = processModelNode.processType === "PROCESS";
+      if (!skipConfirm && !isProcess) {
         this.processModelToBeDeleted = processModelNode;
         this.confirmDeleteDialog = true;
         return;
@@ -488,9 +488,9 @@ export default defineComponent({
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
       const isCollaboration =
-          xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
-          xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
-          xmlDoc.getElementsByTagName("participant")?.length > 1;
+        xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
+        xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
+        xmlDoc.getElementsByTagName("participant")?.length > 1;
 
       if (isCollaboration) {
         const collaboration =
