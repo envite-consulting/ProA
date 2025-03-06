@@ -391,8 +391,8 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		if (!relatedProcessModels.isEmpty()) {
 			for (RelatedProcessModelTable relatedProcessModel : relatedProcessModels) {
 				try {
-					String geminiRequest =
-							generateGeminiRequest(oldProcessId, newContent, relatedProcessModel);
+					String geminiRequest = generateGeminiRequest(oldProcessId, newContent,
+							relatedProcessModel.getRelatedProcessModelId());
 					String geminiResponse = sendGeminiRequest(geminiApiKey, geminiRequest);
 					handleGeminiResponse(geminiResponse, relatedProcessModel.getRelatedProcessModelId());
 				} catch (Exception e) {
@@ -403,7 +403,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	private String generateGeminiRequest(Long processModelId, String newContent,
-										 RelatedProcessModelTable relatedProcessModel) throws Exception {
+										 Long relatedProcessModelId) throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> requestBodyMap = new HashMap<>();
 		List<Map<String, Object>> contentsList = new ArrayList<>();
@@ -412,18 +412,18 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 		String prompt =
 				"Process model with id " + processModelId + ":\n\n" + getProcessModelXml(processModelId) + "\n\n" +
-				"Related process model with id " + relatedProcessModel.getRelatedProcessModelId() + ":\n" +
-				getProcessModelXml(relatedProcessModel.getRelatedProcessModelId()) + "\n\n" +
+				"Related process model with id " + relatedProcessModelId + ":\n" +
+				getProcessModelXml(relatedProcessModelId) + "\n\n" +
 				"Changed process model with id " + processModelId + ":\n\n" + newContent + "\n\n" +
 				"This is the context:" + "\n" +
 				"There has been a change in process model with id " + processModelId + ". " +
 				"Please analyse this change and what the differences are. " +
-				"Process model with id " + relatedProcessModel.getRelatedProcessModelId() +
+				"Process model with id " + relatedProcessModelId +
 				" is the same process, but at a different level of abstraction. " +
-				"Therefore, there should also be a change in process model with id " +
-				relatedProcessModel.getRelatedProcessModelId() + " based on the change in process model with id " +
+				"Therefore, there should also be a change in process model with id " + relatedProcessModelId +
+				" based on the change in process model with id " +
 				processModelId + ". " + "Please give me the customised XML file of process model with id " +
-				relatedProcessModel.getRelatedProcessModelId() + ". " +
+				relatedProcessModelId + ". " +
 				"The output must be a valid BPMN XML file according to OMG. " +
 				"Please make sure that only the valid XML code is returned. " +
 				"I do not need an explanation. If no change is necessary, simply return 'No'. " +
@@ -483,13 +483,10 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			String cleanedBpmnXml = cleanupBpmnXml(responseText);
 
 			ProcessModelTable relatedProcessModel = processModelDao.find(relatedProcessModelId);
-			if (relatedProcessModel != null) {
-				relatedProcessModel.setBpmnXml(XmlConverter.stringToBytes(cleanedBpmnXml));
-				processModelDao.merge(relatedProcessModel);
-				logger.info("Process model updated.");
-			} else {
-				logger.info("Process model not updated because relatedProcessModel is null.");
-			}
+			relatedProcessModel.setBpmnXml(XmlConverter.stringToBytes(cleanedBpmnXml));
+			processModelDao.merge(relatedProcessModel);
+
+			logger.info("Process model updated.");
 		} else if (responseText.toLowerCase().startsWith("no")) {
 			logger.info("No change necessary.");
 		} else {
