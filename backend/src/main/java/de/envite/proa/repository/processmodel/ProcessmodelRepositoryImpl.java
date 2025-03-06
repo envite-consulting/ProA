@@ -374,6 +374,10 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public void handleProcessChangeAnalysis(Long oldProcessId, String newContent) {
+		if (getProcessModelXml(oldProcessId).equals(newContent)) {
+			return;
+		}
+
 		if (settingsRepository.getSettings() == null || settingsRepository.getSettings().getGeminiApiKey() == null) {
 			throw new IllegalArgumentException("Settings not defined. Aborting process change analysis.");
 		}
