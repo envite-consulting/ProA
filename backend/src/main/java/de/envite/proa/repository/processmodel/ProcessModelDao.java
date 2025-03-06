@@ -189,6 +189,23 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
+	public List<ProcessModelTable> getByNameOrBpmnProcessId(String name, String bpmnProcessId,
+			ProjectTable projectTable) {
+		return em
+				.createQuery(
+						"SELECT p " +
+								"FROM ProcessModelTable p " +
+								"WHERE (p.name = :name OR p.bpmnProcessId = :bpmnProcessId) " +
+								"AND p.project = :project",
+						ProcessModelTable.class
+				)
+				.setParameter("name", name)
+				.setParameter("bpmnProcessId", bpmnProcessId)
+				.setParameter("project", projectTable)
+				.getResultList();
+	}
+
+	@Transactional
 	public void addChild(Long parentId, Long childId) {
 		ProcessModelTable parent = em.find(ProcessModelTable.class, parentId);
 		ProcessModelTable child = em.find(ProcessModelTable.class, childId);

@@ -5,6 +5,7 @@ import de.envite.proa.camundacloud.CamundaCloudImportConfiguration;
 import de.envite.proa.camundacloud.CamundaCloudImportUsecase;
 import de.envite.proa.camundacloud.CloudCredentials;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -68,7 +69,7 @@ public class CamundaCloudImportResourceTest {
 
 	@Test
 	public void testImportProcessModels()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		doNothing().when(usecase).importProcessModels(PROJECT_ID, IMPORT_CONFIGURATION);
 
 		resource.importProcessModels(PROJECT_ID, IMPORT_CONFIGURATION);
