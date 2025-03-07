@@ -35,7 +35,7 @@ public class ProcessModelUsecase {
 				bpmnProcessId, projectId);
 
 		if (existingProcessModel != null && !isUploadedProcessCollaboration) {
-			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description, false);
+			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description, false, null);
 		}
 
 		if (isUploadedProcessCollaboration) {
@@ -167,7 +167,8 @@ public class ProcessModelUsecase {
 	}
 
 	public Long replaceProcessModel(Long projectId, Long oldProcessId, String fileName, String content,
-			String description, boolean startProcessChangeAnalysis) throws CantReplaceWithCollaborationException {
+			String description, boolean startProcessChangeAnalysis, String geminiApiKey)
+			throws CantReplaceWithCollaborationException {
 		boolean isCollaboration = processOperations.getIsCollaboration(content);
 
 		if (isCollaboration) {
@@ -175,7 +176,7 @@ public class ProcessModelUsecase {
 		}
 
 		if (startProcessChangeAnalysis) {
-			repository.handleProcessChangeAnalysis(oldProcessId, content);
+			repository.handleProcessChangeAnalysis(oldProcessId, content, geminiApiKey);
 		}
 
 		ProcessModel processModel = createProcessModel(fileName, description, content, false);

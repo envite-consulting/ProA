@@ -373,16 +373,19 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	@Override
-	public void handleProcessChangeAnalysis(Long oldProcessId, String newContent) {
+	public void handleProcessChangeAnalysis(Long oldProcessId, String newContent, String geminiApiKey) {
 		if (getProcessModelXml(oldProcessId).equals(newContent)) {
 			return;
 		}
 
-		if (settingsRepository.getSettings() == null || settingsRepository.getSettings().getGeminiApiKey() == null) {
-			throw new IllegalArgumentException("Settings not defined. Aborting process change analysis.");
-		}
+		if (geminiApiKey == null) {
+			if (settingsRepository.getSettings() == null ||
+					settingsRepository.getSettings().getGeminiApiKey() == null) {
+				throw new IllegalArgumentException("Gemini API key not defined. Aborting process change analysis.");
+			}
 
-		String geminiApiKey = settingsRepository.getSettings().getGeminiApiKey();
+			geminiApiKey = settingsRepository.getSettings().getGeminiApiKey();
+		}
 
 		if (!geminiApiKey.startsWith("AIza") || geminiApiKey.length() != 39) {
 			throw new IllegalArgumentException("Invalid Gemini API key. Aborting process change analysis.");

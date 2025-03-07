@@ -582,12 +582,17 @@ export default defineComponent({
       this.processModelToBeReplacedId = modelId;
 
       await this.fetchProcessModel(modelId);
+
       const settings = (
         await axios.get("api/settings", { headers: authHeader() })
       ).data;
-      const apiKey = settings.geminiApiKey;
+      const validApiKey =
+        (settings.geminiApiKey?.startsWith("AIza") ||
+          import.meta.env.VITE_GEMINI_API_KEY.startsWith("AIza")) &&
+        (settings.geminiApiKey?.length === 39 ||
+          import.meta.env.VITE_GEMINI_API_KEY.length === 39);
       this.showProcessChangeAnalysisCheckbox =
-        this.relatedProcessModels.length > 0 && apiKey;
+        this.relatedProcessModels.length > 0 && validApiKey;
     },
 
     openMultipleUploadDialog() {
@@ -706,6 +711,8 @@ export default defineComponent({
       const fileName =
         processModel.name ||
         processModel.file.name.replace(this.fileExtensionMatcher, "");
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
       formData.append("processModel", processModel.file);
       formData.append("fileName", fileName);
       formData.append("description", processModel.description);
@@ -715,6 +722,9 @@ export default defineComponent({
       );
       if (this.performProcessChangeAnalysis) {
         formData.append("startProcessChangeAnalysis", "true");
+      }
+      if (apiKey.startsWith("AIza") && apiKey.length === 39) {
+        formData.append("geminiApiKey", apiKey);
       }
 
       return formData;
@@ -799,6 +809,7 @@ export default defineComponent({
     closeUploadDialog() {
       this.uploadDialog = false;
       this.performProcessChangeAnalysis = false;
+      this.resetDescriptionErrors();
     },
 
     resetUploadDialog() {
@@ -816,6 +827,10 @@ export default defineComponent({
       processModelToUpload.aiLoading = true;
       const content = processModelToUpload.content;
 
+      function validApiKey(apiKey: string): boolean {
+        return apiKey.startsWith("AIza") && apiKey.length === 39;
+      }
+
       const settings: Settings = (
         await axios.get("api/settings", { headers: authHeader() })
       ).data;
@@ -823,6 +838,13 @@ export default defineComponent({
         settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         this.descriptionErrors[index] = this.$t("processList.noApiKeyError");
+        processModelToUpload.aiLoading = false;
+        return;
+      }
+      if (!validApiKey(apiKey)) {
+        this.descriptionErrors[index] = this.$t(
+          "processList.invalidApiKeyError"
+        );
         processModelToUpload.aiLoading = false;
         return;
       }

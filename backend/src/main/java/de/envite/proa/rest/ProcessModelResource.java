@@ -71,7 +71,8 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId,
 										@RestForm File processModel, @RestForm String fileName,
-										@RestForm String description, @RestForm boolean startProcessChangeAnalysis) {
+										@RestForm String description, @RestForm boolean startProcessChangeAnalysis,
+										@RestForm String geminiApiKey) {
 		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
 
@@ -79,7 +80,7 @@ public class ProcessModelResource {
 			return Response
                     .status(Response.Status.CREATED)
                     .entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description,
-							startProcessChangeAnalysis))
+							startProcessChangeAnalysis, geminiApiKey))
                     .build();
 		} catch (CantReplaceWithCollaborationException e) {
 			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();

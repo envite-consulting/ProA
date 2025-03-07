@@ -115,6 +115,7 @@
     "filterByLevels": "Nach Prozessebene filtern",
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
+    "invalidApiKeyError": "Kein gültiger API-Key gefunden. Bitte setzen Sie einen gültigen API-Key in den Einstellungen, um die KI-Generierung zu aktivieren.",
     "isPerformingProcessChangeAnalysis": "Prozessänderungsanalyse wird durchgeführt. Bitte warten...",
     "navigateToC8Import": "Zu C8 Import navigieren",
     "noApiKeyError": "Kein API-Key gefunden. Bitte setzen Sie einen API-Key in den Einstellungen, um die KI-Generierung zu aktivieren.",

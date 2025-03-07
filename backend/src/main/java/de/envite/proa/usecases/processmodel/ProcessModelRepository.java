@@ -30,5 +30,5 @@ public interface ProcessModelRepository {
 
 	ProcessModelTable getProcessModel(Long id);
 
-	void handleProcessChangeAnalysis(Long oldProcessId, String newContent);
+	void handleProcessChangeAnalysis(Long oldProcessId, String newContent, String geminiApiKey);
 }
