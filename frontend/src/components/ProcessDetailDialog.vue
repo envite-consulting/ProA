@@ -1,5 +1,10 @@
 <template>
-  <v-dialog v-model="infoDialog" persistent width="600">
+  <v-dialog
+    v-model="infoDialog"
+    persistent
+    width="600"
+    @after-leave="$emit('closed')"
+  >
     <v-card>
       <v-card-title class="d-flex align-center">
         <span class="text-h5 text-wrap">
@@ -413,6 +418,7 @@ interface RouteObject {
 }
 
 export default defineComponent({
+  emits: ["closed"],
   data: () => ({
     infoDialog: false,
     showProcessLevels: false,

@@ -9,7 +9,10 @@
       </div>
     </v-toolbar-title>
   </v-toolbar>
-  <ProcessDetailDialog ref="processDetailDialog" />
+  <ProcessDetailDialog
+    ref="processDetailDialog"
+    @closed="fetchProcessModels(true)"
+  />
   <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
     <div class="d-flex flex-column align-center justify-center">
       <span class="mb-2">{{ $t("processList.fetchingProcessModels") }}</span>
