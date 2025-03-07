@@ -315,7 +315,13 @@ interface ProcessModelInformation {
   description: string;
   createdAt: string;
   childrenIds: number[];
-  processType: string;
+  processType: ProcessType;
+}
+
+enum ProcessType {
+  COLLABORATION = "COLLABORATION",
+  PARTICIPANT = "PARTICIPANT",
+  PROCESS = "PROCESS"
 }
 
 export interface ProcessModelNode extends ProcessModelInformation {
@@ -401,7 +407,7 @@ export default defineComponent({
       processModelNode: ProcessModelNode,
       skipConfirm: boolean = false
     ) {
-      const isProcess = processModelNode.processType === "PROCESS";
+      const isProcess = processModelNode.processType === ProcessType.PROCESS;
       if (!skipConfirm && !isProcess) {
         this.processModelToBeDeleted = processModelNode;
         this.confirmDeleteDialog = true;
@@ -436,9 +442,9 @@ export default defineComponent({
       const modelMap = new Map<number, ProcessModelInformation>();
       processModelInformation.forEach((model) => modelMap.set(model.id, model));
       return processModelInformation
-        .filter((model) => model.processType !== "PARTICIPANT")
+        .filter((model) => model.processType !== ProcessType.PARTICIPANT)
         .map((model) => {
-          if (model.processType === "COLLABORATION") {
+          if (model.processType === ProcessType.COLLABORATION) {
             const children = model.childrenIds.map((id) => modelMap.get(id)!);
             const childrenAsNodes = children.map((child) => ({
               ...child,
