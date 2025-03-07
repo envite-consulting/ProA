@@ -33,6 +33,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 
         for (ProcessModelTable model : allModels) {
             if (!hasValidStartAndEndEvents(model)) {
+                processSingleModel(model);
                 continue;
             }
 
