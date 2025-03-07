@@ -726,7 +726,11 @@ export default defineComponent({
       if (this.performProcessChangeAnalysis) {
         formData.append("startProcessChangeAnalysis", "true");
       }
-      if (apiKey.startsWith("AIza") && apiKey.length === 39) {
+      if (
+        this.performProcessChangeAnalysis &&
+        apiKey.startsWith("AIza") &&
+        apiKey.length === 39
+      ) {
         formData.append("geminiApiKey", apiKey);
       }
 

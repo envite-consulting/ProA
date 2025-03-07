@@ -444,7 +444,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		contentsList.add(contentMap);
 		requestBodyMap.put(CONTENTS, contentsList);
 
-		return StringEscapeUtils.unescapeJavaScript(objectMapper.writeValueAsString(requestBodyMap));
+		return StringEscapeUtils.unescapeJava(objectMapper.writeValueAsString(requestBodyMap));
 	}
 
 	private String sendGeminiRequest(String geminiApiKey, String requestBody) throws JsonProcessingException {
@@ -484,13 +484,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 				.path("content")
 				.path(PARTS).path(0)
 				.path(TEXT);
-		String responseText = textNode.asText();
+		String responseText = cleanupResponseText(textNode.asText());
 
-		if (responseText.startsWith("```xml")) {
-			String cleanedBpmnXml = cleanupBpmnXml(responseText);
-
+		if (responseText.startsWith("<?xml")) {
 			ProcessModelTable relatedProcessModel = processModelDao.find(relatedProcessModelId);
-			relatedProcessModel.setBpmnXml(XmlConverter.stringToBytes(cleanedBpmnXml));
+			relatedProcessModel.setBpmnXml(XmlConverter.stringToBytes(responseText));
 			processModelDao.merge(relatedProcessModel);
 
 			logger.info("Process model updated.");
@@ -501,14 +499,12 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		}
 	}
 
-	private String cleanupBpmnXml(String responseText) throws Exception {
-		String xmlContent = responseText
-				.replace("```xml", "") // remove the starting marker
-				.replace("```", "") // remove the closing marker
-				.trim(); // remove any extra leading/trailing whitespace
-
-		// Unescape Java string literals to convert \n into actual newlines, \" into quotes, etc.
-		xmlContent = StringEscapeUtils.unescapeJava(xmlContent);
-		return xmlContent;
+	private String cleanupResponseText(String responseText) throws Exception {
+		// unescape Java string literals to convert \n into actual newlines, \" into quotes, etc.
+		return StringEscapeUtils.unescapeJava(responseText
+				.replace("```xml", "") // remove starting marker
+				.replace("```text", "") // remove starting marker
+				.replace("```", "") // remove closing marker
+				.trim()); // remove any extra leading/trailing whitespace
 	}
 }
