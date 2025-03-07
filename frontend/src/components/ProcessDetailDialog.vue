@@ -516,7 +516,9 @@ export default defineComponent({
       this.resetProcessModel();
       await this.fetchProcessModel(processId);
       await this.fetchProcessDetails(processId);
-      await this.fetchAvailableProcessModelsToAdd();
+      if (this.relatedProcessModels.length === 0) {
+        await this.fetchAvailableProcessModelsToAdd();
+      }
     },
     async openAddDialog() {
       this.addDialog = true;
@@ -551,7 +553,6 @@ export default defineComponent({
       this.addDialog = false;
       this.resetProcessModel();
       await this.fetchProcessModel(this.currentProcessModel.id);
-      await this.fetchAvailableProcessModelsToAdd();
     },
     async fetchProcessDetails(processId: number) {
       const url = this.showProcessLevels
