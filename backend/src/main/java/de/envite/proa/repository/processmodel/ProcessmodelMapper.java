@@ -42,8 +42,8 @@ public class ProcessmodelMapper {
 				.toList();
 	}
 
-	private static Set<CallActivityTable> map(Set<ProcessActivity> callActivities,
-			ProcessModelTable processModelTable, ProjectTable projectTable) {
+	private static Set<CallActivityTable> map(Set<ProcessActivity> callActivities, ProcessModelTable processModelTable,
+			ProjectTable projectTable) {
 		return callActivities//
 				.stream()//
 				.map(activity -> {
@@ -77,8 +77,8 @@ public class ProcessmodelMapper {
 	}
 
 	public static ProcessInformation map(ProcessModelTable table, //
-										 RelatedProcessModelDao relatedProcessModelDao, //
-										 RelatedProcessModelRepository relatedProcessModelRepository) {
+			RelatedProcessModelDao relatedProcessModelDao, //
+			RelatedProcessModelRepository relatedProcessModelRepository) {
 		ProcessInformation processInformation = new ProcessInformation();
 		processInformation.setId(table.getId());
 		processInformation.setBpmnProcessId(table.getBpmnProcessId());
@@ -86,17 +86,15 @@ public class ProcessmodelMapper {
 		processInformation.setDescription(table.getDescription());
 		processInformation.setCreatedAt(table.getCreatedAt());
 		processInformation.setLevel(table.getLevel());
-		processInformation.setChildrenIds(table
-				.getChildren()
+		processInformation.setChildrenIds(table.getChildren()
 				.stream()
 				.map(ProcessModelTable::getId)
 				.toList());
 		processInformation.setProcessType(table.getProcessType());
-		processInformation.setRelatedProcessModels(
-				relatedProcessModelDao.getRelatedProcessModels(table)
-						.stream()
-						.map(relatedProcessModelRepository::mapToRelatedProcessModel)
-						.toList());
+		processInformation.setRelatedProcessModels(relatedProcessModelDao.getRelatedProcessModels(table)
+				.stream()
+				.map(relatedProcessModelRepository::mapToRelatedProcessModel)
+				.toList());
 
 		return processInformation;
 	}

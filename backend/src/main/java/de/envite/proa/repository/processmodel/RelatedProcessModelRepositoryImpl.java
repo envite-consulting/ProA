@@ -17,199 +17,199 @@ import java.util.*;
 @RequestScoped
 public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRepository {
 
-    private final ProcessModelDao processModelDao;
-    private final RelatedProcessModelDao relatedProcessModelDao;
+	private final ProcessModelDao processModelDao;
+	private final RelatedProcessModelDao relatedProcessModelDao;
 
-    @Inject
-    public RelatedProcessModelRepositoryImpl(ProcessModelDao processModelDao,
-                                             RelatedProcessModelDao relatedProcessModelDao) {
-        this.processModelDao = processModelDao;
-        this.relatedProcessModelDao = relatedProcessModelDao;
-    }
+	@Inject
+	public RelatedProcessModelRepositoryImpl(ProcessModelDao processModelDao,
+			RelatedProcessModelDao relatedProcessModelDao) {
+		this.processModelDao = processModelDao;
+		this.relatedProcessModelDao = relatedProcessModelDao;
+	}
 
-    @Override
-    public void calculateAndSaveRelatedProcessModels(ProjectTable projectTable) {
-        List<ProcessModelTable> allModels = getAllProcessModelsWithoutParticipants(projectTable);
+	@Override
+	public void calculateAndSaveRelatedProcessModels(ProjectTable projectTable) {
+		List<ProcessModelTable> allModels = getAllProcessModelsWithoutParticipants(projectTable);
 
-        for (ProcessModelTable model : allModels) {
-            if (!hasValidStartAndEndEvents(model)) {
-                processSingleModel(model);
-                continue;
-            }
+		for (ProcessModelTable model : allModels) {
+			if (!hasValidStartAndEndEvents(model)) {
+				processSingleModel(model);
+				continue;
+			}
 
-            List<ProcessModelTable> matchingModels = findMatchingModels(model, allModels);
+			List<ProcessModelTable> matchingModels = findMatchingModels(model, allModels);
 
-            if (matchingModels.size() <= 1) {
-                processSingleModel(model);
-                return;
-            }
+			if (matchingModels.size() <= 1) {
+				processSingleModel(model);
+				return;
+			}
 
-            updateModelLevelsAndSave(model, matchingModels);
-        }
-    }
+			updateModelLevelsAndSave(model, matchingModels);
+		}
+	}
 
-    private List<ProcessModelTable> getAllProcessModelsWithoutParticipants(ProjectTable projectTable) {
-        return processModelDao.getProcessModelsWithEvents(projectTable)
-                .stream()
-                .filter(model -> model.getProcessType() != ProcessType.PARTICIPANT)
-                .toList();
-    }
+	private List<ProcessModelTable> getAllProcessModelsWithoutParticipants(ProjectTable projectTable) {
+		return processModelDao.getProcessModelsWithEvents(projectTable)
+				.stream()
+				.filter(model -> model.getProcessType() != ProcessType.PARTICIPANT)
+				.toList();
+	}
 
-    private boolean hasValidStartAndEndEvents(ProcessModelTable model) {
-        return !getStartEventNameFromBpmn(model).isEmpty() && !getEndEventNameFromBpmn(model).isEmpty();
-    }
+	private boolean hasValidStartAndEndEvents(ProcessModelTable model) {
+		return !getStartEventNameFromBpmn(model).isEmpty() && !getEndEventNameFromBpmn(model).isEmpty();
+	}
 
-    private List<ProcessModelTable> findMatchingModels(ProcessModelTable model, List<ProcessModelTable> allModels) {
-        List<String> startEventName = getStartEventNameFromBpmn(model);
-        List<String> endEventName = getEndEventNameFromBpmn(model);
+	private List<ProcessModelTable> findMatchingModels(ProcessModelTable model, List<ProcessModelTable> allModels) {
+		List<String> startEventName = getStartEventNameFromBpmn(model);
+		List<String> endEventName = getEndEventNameFromBpmn(model);
 
-        return allModels.stream()
-                .filter(otherModel -> {
-                    List<String> otherStartEventNames = getStartEventNameFromBpmn(otherModel);
-                    List<String> otherEndEventNames = getEndEventNameFromBpmn(otherModel);
-                    return startEventName.stream().anyMatch(otherStartEventNames::contains) &&
-                            endEventName.stream().anyMatch(otherEndEventNames::contains);
-                })
-                .sorted(Comparator.comparingInt(otherModel -> processModelDao.getBpmnXml(otherModel.getId()).length))
-                .toList();
-    }
+		return allModels.stream()
+				.filter(otherModel -> {
+					List<String> otherStartEventNames = getStartEventNameFromBpmn(otherModel);
+					List<String> otherEndEventNames = getEndEventNameFromBpmn(otherModel);
+					return startEventName.stream().anyMatch(otherStartEventNames::contains) && endEventName.stream()
+							.anyMatch(otherEndEventNames::contains);
+				})
+				.sorted(Comparator.comparingInt(otherModel -> processModelDao.getBpmnXml(otherModel.getId()).length))
+				.toList();
+	}
 
-    private void processSingleModel(ProcessModelTable model) {
-        model = processModelDao.findWithRelatedProcessModels(model.getId()).stream().findFirst().orElse(model);
-        model.setLevel((model.getLevel() != null && !model.getRelatedProcessModels().isEmpty())
-                ? model.getLevel()
-                : null);
+	private void processSingleModel(ProcessModelTable model) {
+		model = processModelDao.findWithRelatedProcessModels(model.getId()).stream().findFirst().orElse(model);
+		model.setLevel(
+				(model.getLevel() != null && !model.getRelatedProcessModels().isEmpty()) ? model.getLevel() : null);
 
-        processModelDao.merge(model);
-    }
+		processModelDao.merge(model);
+	}
 
-    private void updateModelLevelsAndSave(ProcessModelTable model, List<ProcessModelTable> matchingModels) {
-        int rootLevel = 1;
-        List<RelatedProcessModelTable> relatedProcessModels = new ArrayList<>();
-        List<RelatedProcessModelTable> manuallyAddedRelations = relatedProcessModelDao.getManuallyAddedRelations(model);
+	private void updateModelLevelsAndSave(ProcessModelTable model, List<ProcessModelTable> matchingModels) {
+		int rootLevel = 1;
+		List<RelatedProcessModelTable> relatedProcessModels = new ArrayList<>();
+		List<RelatedProcessModelTable> manuallyAddedRelations = relatedProcessModelDao.getManuallyAddedRelations(model);
 
-        for (int i = 0; i < matchingModels.size(); i++) {
-            ProcessModelTable otherModel = matchingModels.get(i);
-            int level = rootLevel + i;
+		for (int i = 0; i < matchingModels.size(); i++) {
+			ProcessModelTable otherModel = matchingModels.get(i);
+			int level = rootLevel + i;
 
-            if (otherModel.equals(model)) {
-                model.setLevel(level);
-                processModelDao.merge(model);
-            } else {
-                relatedProcessModels.add(createRelatedModel(model, otherModel, level));
-            }
-        }
+			if (otherModel.equals(model)) {
+				model.setLevel(level);
+				processModelDao.merge(model);
+			} else {
+				relatedProcessModels.add(createRelatedModel(model, otherModel, level));
+			}
+		}
 
-        relatedProcessModelDao.deleteAutoGeneratedByProcessModel(model);
+		relatedProcessModelDao.deleteAutoGeneratedByProcessModel(model);
 
-        relatedProcessModels.addAll(manuallyAddedRelations);
-        relatedProcessModels.forEach(relatedProcessModelDao::merge);
-    }
+		relatedProcessModels.addAll(manuallyAddedRelations);
+		relatedProcessModels.forEach(relatedProcessModelDao::merge);
+	}
 
-    private RelatedProcessModelTable createRelatedModel(ProcessModelTable model,
-                                                        ProcessModelTable otherModel,
-                                                        int level) {
-        RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
-        relatedProcessModel.setProcessModel(model);
-        relatedProcessModel.setRelatedProcessModelId(otherModel.getId());
-        relatedProcessModel.setProcessName(otherModel.getName());
-        relatedProcessModel.setLevel(level);
-        relatedProcessModel.setManuallyAdded(false);
-        return relatedProcessModel;
-    }
+	private RelatedProcessModelTable createRelatedModel(ProcessModelTable model,
+			ProcessModelTable otherModel,
+			int level) {
+		RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
+		relatedProcessModel.setProcessModel(model);
+		relatedProcessModel.setRelatedProcessModelId(otherModel.getId());
+		relatedProcessModel.setProcessName(otherModel.getName());
+		relatedProcessModel.setLevel(level);
+		relatedProcessModel.setManuallyAdded(false);
+		return relatedProcessModel;
+	}
 
-    @Override
-    public void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds) {
-        ProjectTable projectTable = new ProjectTable();
-        projectTable.setId(projectId);
+	@Override
+	public void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds) {
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(projectId);
 
-        List<ProcessModelTable> allModels =
-                new ArrayList<>(processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds));
-        ProcessModelTable processModel = processModelDao.find(id);
+		List<ProcessModelTable> allModels = new ArrayList<>(
+				processModelDao.getProcessModelsByIds(projectTable, relatedProcessModelIds));
+		ProcessModelTable processModel = processModelDao.find(id);
 
-        if (allModels.isEmpty() || processModel == null) {
-            throw new NoResultException("Process model not found.");
-        }
+		if (allModels.isEmpty() || processModel == null) {
+			throw new NoResultException("Process model not found.");
+		}
 
-        if (relatedProcessModelIds.contains(id)) {
-            throw new IllegalArgumentException("Process model cannot be related to itself.");
-        }
+		if (relatedProcessModelIds.contains(id)) {
+			throw new IllegalArgumentException("Process model cannot be related to itself.");
+		}
 
-        if (allModels.stream().anyMatch(model -> model.getProcessType() == ProcessType.PARTICIPANT) ||
-                processModel.getProcessType() == ProcessType.PARTICIPANT) {
-            throw new IllegalArgumentException("Participants cannot be added to related process models.");
-        }
+		if (allModels.stream().anyMatch(
+				model -> model.getProcessType() == ProcessType.PARTICIPANT) ||
+				processModel.getProcessType() == ProcessType.PARTICIPANT) {
+			throw new IllegalArgumentException("Participants cannot be added to related process models.");
+		}
 
-        allModels.add(processModel);
-        allModels = allModels.stream()
-                .sorted(Comparator.comparingInt(model -> processModelDao.getBpmnXml(model.getId()).length))
-                .toList();
+		allModels.add(processModel);
+		allModels = allModels.stream()
+				.sorted(Comparator.comparingInt(model -> processModelDao.getBpmnXml(model.getId()).length))
+				.toList();
 
-        Map<Long, Integer> modelLevels = new HashMap<>();
-        int rootLevel = 1;
+		Map<Long, Integer> modelLevels = new HashMap<>();
+		int rootLevel = 1;
 
-        for (int i = 0; i < allModels.size(); i++) {
-            ProcessModelTable model = allModels.get(i);
-            int level = rootLevel + i;
-            model.setLevel(level);
-            modelLevels.put(model.getId(), level);
-            processModelDao.merge(model);
-        }
+		for (int i = 0; i < allModels.size(); i++) {
+			ProcessModelTable model = allModels.get(i);
+			int level = rootLevel + i;
+			model.setLevel(level);
+			modelLevels.put(model.getId(), level);
+			processModelDao.merge(model);
+		}
 
-        for (ProcessModelTable model : allModels) {
-            List<RelatedProcessModelTable> relatedProcessModels = new ArrayList<>();
+		for (ProcessModelTable model : allModels) {
+			List<RelatedProcessModelTable> relatedProcessModels = new ArrayList<>();
 
-            for (ProcessModelTable otherModel : allModels) {
-                if (!otherModel.equals(model)) {
-                    boolean wasManuallyAdded = relatedProcessModelDao.existsManuallyAddedRelation(model, otherModel);
-                    boolean isManuallyAdded =
-                            wasManuallyAdded || model.equals(processModel) || otherModel.equals(processModel);
+			for (ProcessModelTable otherModel : allModels) {
+				if (!otherModel.equals(model)) {
+					boolean wasManuallyAdded = relatedProcessModelDao.existsManuallyAddedRelation(model, otherModel);
+					boolean isManuallyAdded = wasManuallyAdded || model.equals(processModel) || otherModel.equals(
+							processModel);
 
-                    RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
-                    relatedProcessModel.setProcessModel(model);
-                    relatedProcessModel.setRelatedProcessModelId(otherModel.getId());
-                    relatedProcessModel.setProcessName(otherModel.getName());
-                    relatedProcessModel.setLevel(modelLevels.get(otherModel.getId()));
-                    relatedProcessModel.setManuallyAdded(isManuallyAdded);
-                    relatedProcessModels.add(relatedProcessModel);
-                }
-            }
+					RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
+					relatedProcessModel.setProcessModel(model);
+					relatedProcessModel.setRelatedProcessModelId(otherModel.getId());
+					relatedProcessModel.setProcessName(otherModel.getName());
+					relatedProcessModel.setLevel(modelLevels.get(otherModel.getId()));
+					relatedProcessModel.setManuallyAdded(isManuallyAdded);
+					relatedProcessModels.add(relatedProcessModel);
+				}
+			}
 
-            relatedProcessModelDao.deleteByProcessModel(model);
-            relatedProcessModels.forEach(relatedProcessModelDao::merge);
-        }
-    }
+			relatedProcessModelDao.deleteByProcessModel(model);
+			relatedProcessModels.forEach(relatedProcessModelDao::merge);
+		}
+	}
 
-    private List<String> getStartEventNameFromBpmn(ProcessModelTable model) {
-        if (model != null && !model.getEvents().isEmpty()) {
-            return model.getEvents().stream()
-                    .filter(event -> event.getEventType() == EventType.START)
-                    .map(ProcessEventTable::getLabel)
-                    .filter(label -> label != null && !label.isEmpty())
-                    .toList();
-        }
-        return Collections.emptyList();
-    }
+	private List<String> getStartEventNameFromBpmn(ProcessModelTable model) {
+		if (model != null && !model.getEvents().isEmpty()) {
+			return model.getEvents().stream()
+					.filter(event -> event.getEventType() == EventType.START)
+					.map(ProcessEventTable::getLabel)
+					.filter(label -> label != null && !label.isEmpty())
+					.toList();
+		}
+		return Collections.emptyList();
+	}
 
-    private List<String> getEndEventNameFromBpmn(ProcessModelTable model) {
-        if (model != null && !model.getEvents().isEmpty()) {
-            return model.getEvents().stream()
-                    .filter(event -> event.getEventType() == EventType.END)
-                    .map(ProcessEventTable::getLabel)
-                    .filter(label -> label != null && !label.isEmpty())
-                    .toList();
-        }
-        return Collections.emptyList();
-    }
+	private List<String> getEndEventNameFromBpmn(ProcessModelTable model) {
+		if (model != null && !model.getEvents().isEmpty()) {
+			return model.getEvents().stream()
+					.filter(event -> event.getEventType() == EventType.END)
+					.map(ProcessEventTable::getLabel)
+					.filter(label -> label != null && !label.isEmpty())
+					.toList();
+		}
+		return Collections.emptyList();
+	}
 
-    @Override
-    public RelatedProcessModel mapToRelatedProcessModel(RelatedProcessModelTable relatedProcessModelTable) {
-        RelatedProcessModel relatedProcessModel = new RelatedProcessModel();
-        relatedProcessModel.setRelatedProcessModelId(relatedProcessModelTable.getRelatedProcessModelId());
-        relatedProcessModel.setProcessName(relatedProcessModelTable.getProcessName());
-        relatedProcessModel.setLevel(relatedProcessModelTable.getLevel());
-        relatedProcessModel.setManuallyAdded(relatedProcessModelTable.isManuallyAdded());
+	@Override
+	public RelatedProcessModel mapToRelatedProcessModel(RelatedProcessModelTable relatedProcessModelTable) {
+		RelatedProcessModel relatedProcessModel = new RelatedProcessModel();
+		relatedProcessModel.setRelatedProcessModelId(relatedProcessModelTable.getRelatedProcessModelId());
+		relatedProcessModel.setProcessName(relatedProcessModelTable.getProcessName());
+		relatedProcessModel.setLevel(relatedProcessModelTable.getLevel());
+		relatedProcessModel.setManuallyAdded(relatedProcessModelTable.isManuallyAdded());
 
-        return relatedProcessModel;
-    }
+		return relatedProcessModel;
+	}
 }

@@ -28,10 +28,8 @@ public class ProcessDetailsMapper {
 		return details;
 	}
 
-	public static ProcessDetails mapWithAggregation(Long id,
-													Set<ProcessModelTable> processModels,
-													Set<ProcessEventTable> events,
-													Set<CallActivityTable> activities) {
+	public static ProcessDetails mapWithAggregation(Long id, Set<ProcessModelTable> processModels,
+			Set<ProcessEventTable> events, Set<CallActivityTable> activities) {
 		ProcessModelTable mainProcess = processModels.stream()
 				.filter(p -> p.getId().equals(id))
 				.findFirst()
