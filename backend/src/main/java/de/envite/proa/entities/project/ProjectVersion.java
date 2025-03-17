@@ -1,19 +1,14 @@
 package de.envite.proa.entities.project;
 
-import de.envite.proa.entities.authentication.User;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Data
-public class Project {
+public class ProjectVersion {
 
 	private Long id;
 	private String name;
-	private Set<ProjectVersion> versions;
 	private LocalDateTime createdAt;
 	private LocalDateTime modifiedAt;
-	private User owner;
-	private Set<User> contributors;
 }

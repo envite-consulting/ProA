@@ -3,7 +3,7 @@ package de.envite.proa.repository;
 import de.envite.proa.repository.processmodel.ProcessConnectionDao;
 import de.envite.proa.repository.tables.ProcessConnectionTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -31,14 +31,14 @@ class ProcessConnectionDaoTest {
 	@Inject
 	ProcessConnectionDao processConnectionDao;
 
-	private ProjectTable project;
+	private ProjectVersionTable project;
 	private ProcessModelTable processModel;
 	private ProcessConnectionTable connection1;
 
 	@BeforeEach
 	@Transactional
 	void setUp() {
-		project = new ProjectTable();
+		project = new ProjectVersionTable();
 		project.setName(PROJECT_NAME);
 		em.persist(project);
 
@@ -65,7 +65,7 @@ class ProcessConnectionDaoTest {
 	void cleanup() {
 		em.createQuery("DELETE FROM ProcessConnectionTable").executeUpdate();
 		em.createQuery("DELETE FROM ProcessModelTable").executeUpdate();
-		em.createQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 	}
 
 	private void flushAndClear() {

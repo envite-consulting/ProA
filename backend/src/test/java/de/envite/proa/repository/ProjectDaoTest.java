@@ -2,6 +2,7 @@ package de.envite.proa.repository;
 
 import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -19,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProjectDaoTest {
 
 	private static final String USER_EMAIL = "user@example.com";
-	private static final String PROJECT_NAME_1 = "Project 1";
-	private static final String PROJECT_NAME_2 = "Project 2";
+	private static final String PROJECT_NAME = "Project 1";
+	private static final String VERSION_NAME = "Version 1";
 
 	@Inject
 	EntityManager em;
@@ -29,7 +30,7 @@ class ProjectDaoTest {
 	ProjectDao projectDao;
 
 	private UserTable user;
-	private ProjectTable project1;
+	private ProjectTable project;
 
 	@BeforeEach
 	@Transactional
@@ -38,30 +39,32 @@ class ProjectDaoTest {
 		user.setEmail(USER_EMAIL);
 		em.persist(user);
 
-		project1 = new ProjectTable();
-		project1.setName(PROJECT_NAME_1);
-		project1.setUser(user);
-		em.persist(project1);
+		project = new ProjectTable();
+		project.setName(PROJECT_NAME);
+		project.setOwner(user);
 
-		ProjectTable project2 = new ProjectTable();
-		project2.setName(PROJECT_NAME_2);
-		project2.setUser(user);
-		em.persist(project2);
+		ProjectVersionTable projectVersion = new ProjectVersionTable();
+		projectVersion.setName(VERSION_NAME);
+		em.persist(projectVersion);
+
+		project.getVersions().add(projectVersion);
+
+		em.persist(project);
 	}
 
 	@AfterEach
 	@Transactional
 	void cleanup() {
-		em.createQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 		em.createQuery("DELETE FROM UserTable").executeUpdate();
 	}
 
 	@Test
 	@Transactional
 	void testPersistProject() {
-		ProjectTable savedProject = em.find(ProjectTable.class, project1.getId());
+		ProjectVersionTable savedProject = em.find(ProjectVersionTable.class, project.getId());
 		assertNotNull(savedProject);
-		assertEquals(PROJECT_NAME_1, savedProject.getName());
+		assertEquals(PROJECT_NAME, savedProject.getName());
 	}
 
 	@Test
@@ -78,22 +81,14 @@ class ProjectDaoTest {
 		List<ProjectTable> projects = projectDao.getProjectsForUser(user);
 		assertNotNull(projects);
 		assertFalse(projects.isEmpty());
-		assertEquals(PROJECT_NAME_1, projects.getFirst().getName());
+		assertEquals(PROJECT_NAME, projects.getFirst().getName());
 	}
 
 	@Test
 	@Transactional
-	void testFindById() {
-		ProjectTable foundProject = projectDao.findById(project1.getId());
-		assertNotNull(foundProject);
-		assertEquals(PROJECT_NAME_1, foundProject.getName());
-	}
-
-	@Test
-	@Transactional
-	void testFindByUserAndId() {
-		ProjectTable foundProject = projectDao.findByUserAndId(user, project1.getId());
-		assertNotNull(foundProject);
-		assertEquals(PROJECT_NAME_1, foundProject.getName());
+	void testFindVersionById() {
+		ProjectVersionTable foundProjectVersion = projectDao.findVersionById(project.getId());
+		assertNotNull(foundProjectVersion);
+		assertEquals(PROJECT_NAME, foundProjectVersion.getName());
 	}
 }

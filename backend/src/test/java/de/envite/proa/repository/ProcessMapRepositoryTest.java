@@ -184,7 +184,7 @@ class ProcessMapRepositoryTest {
 				List.of(dataStoreConnectionTable, dataStoreConnectionCollaboration));
 
 		when(processModelDao.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(
-				any(ProjectTable.class))).thenReturn(List.of(processModel1, processModel2));
+				any(ProjectVersionTable.class))).thenReturn(List.of(processModel1, processModel2));
 
 		// Act
 		ProcessMap processMap = repository.getProcessMap(anyLong());
@@ -282,7 +282,7 @@ class ProcessMapRepositoryTest {
 		verify(processModelDao, times(1)).findWithParentsAndChildren(PROCESS_MODEL_ID_1);
 		verify(processModelDao, times(1)).find(PROCESS_MODEL_ID_2);
 
-		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
+		ArgumentCaptor<ProjectVersionTable> projectCaptor = ArgumentCaptor.forClass(ProjectVersionTable.class);
 		verify(messageFlowDao, times(1)).getMessageFlows(projectCaptor.capture(), eq(oldProcess));
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
 		messageFlows.forEach(messageFlow -> verify(messageFlowDao, times(1)).merge(messageFlow));
@@ -333,8 +333,8 @@ class ProcessMapRepositoryTest {
 
 	@Test
 	public void testCopyConnections() {
-		ProjectTable project = new ProjectTable();
-		when(projectDao.findById(PROJECT_ID)).thenReturn(project);
+		ProjectVersionTable project = new ProjectVersionTable();
+		when(projectDao.findVersionById(PROJECT_ID)).thenReturn(project);
 
 		ProcessModelTable oldProcess = new ProcessModelTable();
 		oldProcess.setId(PROCESS_MODEL_ID_1);

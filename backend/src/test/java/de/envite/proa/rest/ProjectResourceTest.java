@@ -48,12 +48,10 @@ public class ProjectResourceTest {
 		expectedProject1 = new Project();
 		expectedProject1.setId(PROJECT_ID_1);
 		expectedProject1.setName(PROJECT_NAME_1);
-		expectedProject1.setVersion(PROJECT_VERSION_1);
 
 		expectedProject2 = new Project();
 		expectedProject2.setId(PROJECT_ID_2);
 		expectedProject2.setName(PROJECT_NAME_2);
-		expectedProject2.setVersion(PROJECT_VERSION_2);
 	}
 
 	@BeforeEach
@@ -104,7 +102,7 @@ public class ProjectResourceTest {
 		when(usecase.getProjects(USER_ID)).thenReturn(expectedProjects);
 
 		List<Project> result = resource.getProjects();
-		
+
 		assertEquals(expectedProjects, result);
 		verify(jwt, times(1)).getClaim("userId");
 		verify(usecase, times(1)).getProjects(USER_ID);
@@ -227,23 +225,23 @@ public class ProjectResourceTest {
 	@Test
 	public void testDeleteProject_DesktopMode() {
 		resource.appMode = APP_MODE_DESKTOP;
-		doNothing().when(usecase).deleteProject(PROJECT_ID_1);
+		doNothing().when(usecase).deleteProjectVersion(PROJECT_ID_1);
 
-		resource.deleteProject(PROJECT_ID_1);
+		resource.deleteProjectVersion(PROJECT_ID_1);
 
 		verify(jwt, never()).getClaim("userId");
-		verify(usecase, times(1)).deleteProject(PROJECT_ID_1);
+		verify(usecase, times(1)).deleteProjectVersion(PROJECT_ID_1);
 	}
 
 	@Test
 	public void testDeleteProject_WebMode() {
 		resource.appMode = APP_MODE_WEB;
-		doNothing().when(usecase).deleteProject(USER_ID, PROJECT_ID_1);
+		doNothing().when(usecase).deleteProjectVersion(USER_ID, PROJECT_ID_1);
 		when(jwt.getClaim("userId")).thenReturn(USER_ID);
 
-		resource.deleteProject(PROJECT_ID_1);
+		resource.deleteProjectVersion(PROJECT_ID_1);
 
 		verify(jwt, times(1)).getClaim("userId");
-		verify(usecase, times(1)).deleteProject(USER_ID, PROJECT_ID_1);
+		verify(usecase, times(1)).deleteProjectVersion(USER_ID, PROJECT_ID_1);
 	}
 }

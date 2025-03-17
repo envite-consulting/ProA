@@ -19,5 +19,5 @@ public class CallActivityTable {
 	private ProcessModelTable processModel;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	private ProjectTable project;
+	private ProjectVersionTable project;
 }

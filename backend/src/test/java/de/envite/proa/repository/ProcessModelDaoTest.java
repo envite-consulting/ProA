@@ -2,7 +2,7 @@ package de.envite.proa.repository;
 
 import de.envite.proa.repository.processmodel.ProcessModelDao;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -32,13 +32,13 @@ class ProcessModelDaoTest {
 	@Inject
 	ProcessModelDao processModelDao;
 
-	private ProjectTable project;
+	private ProjectVersionTable project;
 	private ProcessModelTable processModel;
 
 	@BeforeEach
 	@Transactional
 	void setUp() {
-		project = new ProjectTable();
+		project = new ProjectVersionTable();
 		em.persist(project);
 
 		processModel = new ProcessModelTable();
@@ -52,7 +52,7 @@ class ProcessModelDaoTest {
 	@Transactional
 	void cleanup() {
 		em.createQuery("DELETE FROM ProcessModelTable").executeUpdate();
-		em.createQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 	}
 
 	private void flushAndClear() {

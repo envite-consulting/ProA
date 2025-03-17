@@ -2,7 +2,7 @@ package de.envite.proa.repository.processmodel;
 
 import de.envite.proa.entities.process.ProcessType;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityGraph;
@@ -24,20 +24,20 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public List<ProcessModelTable> getProcessModelsWithChildren(ProjectTable projectTable) {
+	public List<ProcessModelTable> getProcessModelsWithChildren(ProjectVersionTable projectVersionTable) {
 		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withChildren");
 		String query = "SELECT p " +
 				"FROM ProcessModelTable p " +
 				"WHERE p.project = :project";
 		return em.createQuery(query, ProcessModelTable.class)
-				.setParameter("project", projectTable)
+				.setParameter("project", projectVersionTable)
 				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 	}
 
 	@Transactional
 	public List<ProcessModelTable> getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(
-			ProjectTable projectTable) {
+			ProjectVersionTable projectVersionTable) {
 		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withEventsAndActivities");
 		String query = "SELECT p " +
 				"FROM ProcessModelTable p " +
@@ -45,13 +45,13 @@ public class ProcessModelDao {
 				"AND (p.processType != :collaboration OR p.processType IS NULL)";
 		return em.createQuery(query, ProcessModelTable.class)
 				.setParameter("collaboration", ProcessType.COLLABORATION)
-				.setParameter("project", projectTable)
+				.setParameter("project", projectVersionTable)
 				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 	}
 
 	@Transactional
-	public List<ProcessModelTable> getProcessModelsForName(String name, ProjectTable projectTable) {
+	public List<ProcessModelTable> getProcessModelsForName(String name, ProjectVersionTable projectVersionTable) {
 		return em
 				.createQuery(
 						"SELECT p " +
@@ -60,7 +60,7 @@ public class ProcessModelDao {
 								"AND p.project = :project",
 						ProcessModelTable.class)
 				.setParameter("name", name)
-				.setParameter("project", projectTable)
+				.setParameter("project", projectVersionTable)
 				.getResultList();
 	}
 
@@ -138,7 +138,8 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
-	public ProcessModelTable findByBpmnProcessIdWithChildren(String bpmnProcessId, ProjectTable projectTable) {
+	public ProcessModelTable findByBpmnProcessIdWithChildren(String bpmnProcessId,
+			ProjectVersionTable projectVersionTable) {
 		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withChildren");
 		List<ProcessModelTable> processModels = em
 				.createQuery(
@@ -149,7 +150,7 @@ public class ProcessModelDao {
 						ProcessModelTable.class
 				)
 				.setParameter("bpmnProcessId", bpmnProcessId)
-				.setParameter("project", projectTable)
+				.setParameter("project", projectVersionTable)
 				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 
@@ -169,7 +170,7 @@ public class ProcessModelDao {
 
 	@Transactional
 	public ProcessModelTable findByNameOrBpmnProcessIdWithoutCollaborations(String name, String bpmnProcessId,
-			ProjectTable projectTable) {
+			ProjectVersionTable projectVersionTable) {
 		List<ProcessModelTable> processModels = em
 				.createQuery(
 						"SELECT p " +
@@ -182,7 +183,7 @@ public class ProcessModelDao {
 				.setParameter("name", name)
 				.setParameter("bpmnProcessId", bpmnProcessId)
 				.setParameter("collaboration", ProcessType.COLLABORATION)
-				.setParameter("project", projectTable)
+				.setParameter("project", projectVersionTable)
 				.getResultList();
 
 		return processModels.isEmpty() ? null : processModels.getFirst();

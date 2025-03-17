@@ -34,7 +34,7 @@ public class ProcessConnectionTable {
 	private String calledElement;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	private ProjectTable project;
+	private ProjectVersionTable project;
 
 	private Boolean userCreated;
 }

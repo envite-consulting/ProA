@@ -1,14 +1,14 @@
 package de.envite.proa.repository.processmodel;
 
-import java.util.List;
-
 import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @RequestScoped
 public class CallActivityDao {
@@ -26,12 +26,12 @@ public class CallActivityDao {
 	}
 
 	@Transactional
-	public List<CallActivityTable> getCallActivitiesForName(String name, ProjectTable projectTable) {
+	public List<CallActivityTable> getCallActivitiesForName(String name, ProjectVersionTable project) {
 		return em //
 				.createQuery("SELECT c FROM CallActivityTable c WHERE c.label = :label AND c.project = :project",
 						CallActivityTable.class)
 				.setParameter("label", name)//
-				.setParameter("project", projectTable)//
+				.setParameter("project", project)//
 				.getResultList();
 	}
 

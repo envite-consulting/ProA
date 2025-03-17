@@ -31,5 +31,5 @@ public class MessageFlowTable {
 	private ProcessElementType calledElementType;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	private ProjectTable project;
+	private ProjectVersionTable project;
 }

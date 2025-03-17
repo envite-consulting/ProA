@@ -22,5 +22,5 @@ public class DataStoreConnectionTable {
 	private DataAccess access;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	private ProjectTable project;
+	private ProjectVersionTable project;
 }

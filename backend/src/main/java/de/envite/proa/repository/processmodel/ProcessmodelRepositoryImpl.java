@@ -50,37 +50,37 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public Long saveProcessModel(Long projectId, ProcessModel processModel) {
-		ProjectTable projectTable = new ProjectTable();
-		projectTable.setId(projectId);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		projectVersionTable.setId(projectId);
 
-		ProcessModelTable table = ProcessmodelMapper.map(processModel, projectTable);
+		ProcessModelTable table = ProcessmodelMapper.map(processModel, projectVersionTable);
 		table.setCreatedAt(LocalDateTime.now());
-		table.setProject(projectTable);
+		table.setProject(projectVersionTable);
 
 		String parentBpmnProcessId = processModel.getParentBpmnProcessId();
 		processModelDao.persist(table);
 		if (parentBpmnProcessId != null) {
 			ProcessModelTable parent = processModelDao.findByBpmnProcessIdWithChildren(parentBpmnProcessId,
-					projectTable);
+					projectVersionTable);
 			processModelDao.addChild(parent.getId(), table.getId());
 		}
 
-		connectEvents(processModel, table, projectTable);
+		connectEvents(processModel, table, projectVersionTable);
 
-		connectCallActivities(processModel, table, projectTable);
+		connectCallActivities(processModel, table, projectVersionTable);
 
-		connectDataStores(table, projectTable);
+		connectDataStores(table, projectVersionTable);
 
 		return table.getId();
 	}
 
 	@Override
 	public List<ProcessInformation> getProcessInformation(Long projectId) {
-		ProjectTable projectTable = new ProjectTable();
-		projectTable.setId(projectId);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		projectVersionTable.setId(projectId);
 
 		return processModelDao //
-				.getProcessModelsWithChildren(projectTable) //
+				.getProcessModelsWithChildren(projectVersionTable) //
 				.stream() //
 				.map(ProcessmodelMapper::map) //
 				.toList();
@@ -94,33 +94,32 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public void saveMessageFlows(List<MessageFlowDetails> messageFlows, Long projectId) {
-		ProjectTable projectTable = new ProjectTable();
-		projectTable.setId(projectId);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		projectVersionTable.setId(projectId);
 
 		messageFlows.forEach(messageFlow -> {
-			messageFlowDao.persist(MessageFlowMapper.map(messageFlow, projectTable));
+			messageFlowDao.persist(MessageFlowMapper.map(messageFlow, projectVersionTable));
 		});
 	}
 
-	private void connectDataStores(ProcessModelTable table, ProjectTable projectTable) {
+	private void connectDataStores(ProcessModelTable table, ProjectVersionTable projectVersionTable) {
 		table//
 				.getDataStores()//
 				.stream()//
 				.forEach(store -> {
-					connectProcessDataStore(store, table, projectTable);
+					connectProcessDataStore(store, table, projectVersionTable);
 				});
 	}
 
 	private void connectProcessDataStore(ProcessDataStoreTable store, ProcessModelTable table,
-			ProjectTable projectTable) {
+			ProjectVersionTable projectVersionTable) {
 		DataStoreTable dataStoreTable;
 		try {
-
-			dataStoreTable = dataStoreDao.getDataStoreForLabel(store.getLabel(), projectTable);
+			dataStoreTable = dataStoreDao.getDataStoreForLabel(store.getLabel(), projectVersionTable);
 		} catch (NoResultException e) {
 			dataStoreTable = new DataStoreTable();
 			dataStoreTable.setLabel(store.getLabel());
-			dataStoreTable.setProject(projectTable);
+			dataStoreTable.setProject(projectVersionTable);
 			dataStoreDao.persist(dataStoreTable);
 		}
 
@@ -128,24 +127,25 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		connectionTable.setAccess(store.getAccess());
 		connectionTable.setProcess(table);
 		connectionTable.setDataStore(dataStoreTable);
-		connectionTable.setProject(projectTable);
+		connectionTable.setProject(projectVersionTable);
 
 		dataStoreConnectionDao.persist(connectionTable);
 	}
 
-	private void connectCallActivities(ProcessModel processModel, ProcessModelTable table, ProjectTable projectTable) {
+	private void connectCallActivities(ProcessModel processModel, ProcessModelTable table,
+			ProjectVersionTable projectVersionTable) {
 		processModel//
 				.getCallActivities()//
 				.forEach(activity -> {
-					connectCallActivityWithProcess(table, activity, projectTable);
+					connectCallActivityWithProcess(table, activity, projectVersionTable);
 				});
 
-		connectProcessWithCallActivity(table, projectTable);
+		connectProcessWithCallActivity(table, projectVersionTable);
 	}
 
-	private void connectProcessWithCallActivity(ProcessModelTable table, ProjectTable projectTable) {
+	private void connectProcessWithCallActivity(ProcessModelTable table, ProjectVersionTable projectVersionTable) {
 		List<CallActivityTable> callActivityTables = callActivityDao.getCallActivitiesForName(table.getName(),
-				projectTable);
+				projectVersionTable);
 
 		callActivityTables.forEach(callActivityTable -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -157,7 +157,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			// called element remains empty
 			connection.setLabel(callActivityTable.getLabel());
-			connection.setProject(projectTable);
+			connection.setProject(projectVersionTable);
 			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
@@ -165,9 +165,9 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	private void connectCallActivityWithProcess(ProcessModelTable table, ProcessActivity activity,
-			ProjectTable projectTable) {
+			ProjectVersionTable projectVersionTable) {
 		List<ProcessModelTable> processModelTable = processModelDao.getProcessModelsForName(activity.getLabel(),
-				projectTable);
+				projectVersionTable);
 
 		processModelTable.forEach(process -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -180,31 +180,32 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			connection.setCalledElementType(ProcessElementType.START_EVENT);
 			// called element remains empty
 			connection.setLabel(process.getName());
-			connection.setProject(projectTable);
+			connection.setProject(projectVersionTable);
 			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
 	}
 
-	private void connectEvents(ProcessModel processModel, ProcessModelTable table, ProjectTable projecTable) {
+	private void connectEvents(ProcessModel processModel, ProcessModelTable table,
+			ProjectVersionTable projectVersionTable) {
 		processModel//
 				.getEvents()//
 				.forEach(event -> {
-					connectEvents(table, event, projecTable);
+					connectEvents(table, event, projectVersionTable);
 				});
 	}
 
-	private void connectEvents(ProcessModelTable table, ProcessEvent event, ProjectTable projectTable) {
+	private void connectEvents(ProcessModelTable table, ProcessEvent event, ProjectVersionTable projectVersionTable) {
 		switch (event.getEventType()) {
 			case START:
 			case INTERMEDIATE_CATCH:
-				connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectTable);
-				connectWithThrowEvents(table, event, EventType.END, projectTable);
+				connectWithThrowEvents(table, event, EventType.INTERMEDIATE_THROW, projectVersionTable);
+				connectWithThrowEvents(table, event, EventType.END, projectVersionTable);
 				break;
 			case INTERMEDIATE_THROW:
 			case END:
-				connectWithCatchEvents(table, event, EventType.START, projectTable);
-				connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectTable);
+				connectWithCatchEvents(table, event, EventType.START, projectVersionTable);
+				connectWithCatchEvents(table, event, EventType.INTERMEDIATE_CATCH, projectVersionTable);
 				break;
 			default:
 				throw new IllegalArgumentException("Unknown event type: " + event.getEventType());
@@ -212,9 +213,9 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	private void connectWithCatchEvents(ProcessModelTable newTable, ProcessEvent newThrowEvent,
-			EventType eventTypeToConnectTo, ProjectTable projectTable) {
+			EventType eventTypeToConnectTo, ProjectVersionTable projectVersionTable) {
 		List<ProcessEventTable> startEventsWithSameLabel = processEventDao
-				.getEventsForLabelAndType(newThrowEvent.getLabel(), eventTypeToConnectTo, projectTable);
+				.getEventsForLabelAndType(newThrowEvent.getLabel(), eventTypeToConnectTo, projectVersionTable);
 
 		startEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -235,16 +236,16 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			}
 
 			connection.setLabel(event.getLabel());
-			connection.setProject(projectTable);
+			connection.setProject(projectVersionTable);
 			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
 	}
 
 	private void connectWithThrowEvents(ProcessModelTable newTable, ProcessEvent newEvent,
-			EventType eventTypeForConnectionFrom, ProjectTable projectTable) {
+			EventType eventTypeForConnectionFrom, ProjectVersionTable projectVersionTable) {
 		List<ProcessEventTable> endEventsWithSameLabel = processEventDao.getEventsForLabelAndType(newEvent.getLabel(),
-				eventTypeForConnectionFrom, projectTable);
+				eventTypeForConnectionFrom, projectVersionTable);
 
 		endEventsWithSameLabel.forEach(event -> {
 			ProcessConnectionTable connection = new ProcessConnectionTable();
@@ -265,7 +266,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			}
 
 			connection.setLabel(event.getLabel());
-			connection.setProject(projectTable);
+			connection.setProject(projectVersionTable);
 			connection.setUserCreated(false);
 			processConnectionDao.persist(connection);
 		});
@@ -322,7 +323,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	@Override
 	public ProcessModelTable findByNameOrBpmnProcessIdWithoutCollaborations(String name, String bpmnProcessId,
 			Long projectId) {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		project.setId(projectId);
 		return processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(name, bpmnProcessId, project);
 	}

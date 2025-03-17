@@ -4,6 +4,7 @@ import de.envite.proa.entities.project.Project;
 import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.project.ProjectRepositoryImpl;
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import de.envite.proa.repository.user.UserDao;
 import jakarta.ws.rs.ForbiddenException;
@@ -43,15 +44,14 @@ class ProjectRepositoryImplTest {
 
 	@Test
 	void testCreateProject() {
-		doNothing().when(projectDao).persist(any(ProjectTable.class));
+		doNothing().when(projectDao).persist(any(ProjectVersionTable.class));
 
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 
 		assertNotNull(project);
 		assertEquals(PROJECT_NAME, project.getName());
-		assertEquals(PROJECT_VERSION, project.getVersion());
 
-		verify(projectDao).persist(any(ProjectTable.class));
+		verify(projectDao).persist(any(ProjectVersionTable.class));
 	}
 
 	@Test
@@ -60,18 +60,16 @@ class ProjectRepositoryImplTest {
 		user.setId(USER_ID);
 
 		when(userDao.findById(USER_ID)).thenReturn(user);
-		doNothing().when(projectDao).persist(any(ProjectTable.class));
+		doNothing().when(projectDao).persist(any(ProjectVersionTable.class));
 
 		Project project = projectRepository.createProject(USER_ID, PROJECT_NAME, PROJECT_VERSION);
 
 		assertNotNull(project);
 		assertEquals(PROJECT_NAME, project.getName());
-		assertEquals(PROJECT_VERSION, project.getVersion());
 
 		ProjectTable projectArgument = new ProjectTable();
-		projectArgument.setUser(user);
+		projectArgument.setOwner(user);
 		projectArgument.setName(PROJECT_NAME);
-		projectArgument.setVersion(PROJECT_VERSION);
 		projectArgument.setCreatedAt(project.getCreatedAt());
 		projectArgument.setModifiedAt(project.getModifiedAt());
 
@@ -138,18 +136,14 @@ class ProjectRepositoryImplTest {
 		projectTable.setId(PROJECT_ID);
 
 		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
-		when(projectDao.findByUserAndId(any(), any())).thenReturn(projectTable);
 
 		Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
 		assertNotNull(retrievedProject);
 		assertEquals(projectTable.getId(), retrievedProject.getId());
 
-		
 		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
 		ArgumentCaptor<Long> projectIdCaptor = ArgumentCaptor.forClass(Long.class);
-		
-		verify(projectDao).findByUserAndId(userCaptor.capture(), projectIdCaptor.capture());
-		
+
 		assertEquals(USER_ID, userCaptor.getValue().getId());
 		assertEquals(PROJECT_ID, projectIdCaptor.getValue());
 	}
@@ -157,17 +151,15 @@ class ProjectRepositoryImplTest {
 	@Test
 	void testGetProjectByUserAndId_Forbidden() {
 
-		ProjectTable projectTable = new ProjectTable();
-		projectTable.setId(PROJECT_ID);
-		when(projectDao.findByUserAndId(any(), any())).thenReturn(null);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		projectVersionTable.setId(PROJECT_ID);
 
-		assertThrows(ForbiddenException.class, () -> projectRepository.getProject(USER_ID, projectTable.getId()));
+		assertThrows(ForbiddenException.class,
+				() -> projectRepository.getProject(USER_ID, projectVersionTable.getId()));
 
 		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
 		ArgumentCaptor<Long> projectIdCaptor = ArgumentCaptor.forClass(Long.class);
-		
-		verify(projectDao).findByUserAndId(userCaptor.capture(), projectIdCaptor.capture());
-		
+
 		assertEquals(USER_ID, userCaptor.getValue().getId());
 		assertEquals(PROJECT_ID, projectIdCaptor.getValue());
 	}

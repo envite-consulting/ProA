@@ -1,11 +1,11 @@
 package de.envite.proa.rest;
 
+import de.envite.proa.entities.authentication.User;
+import de.envite.proa.usecases.authentication.AuthenticationUsecase;
 import de.envite.proa.usecases.authentication.exceptions.AccountLockedException;
 import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredException;
 import de.envite.proa.usecases.authentication.exceptions.EmailNotFoundException;
 import de.envite.proa.usecases.authentication.exceptions.InvalidPasswordException;
-import de.envite.proa.entities.authentication.User;
-import de.envite.proa.usecases.authentication.AuthenticationUsecase;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -37,7 +37,7 @@ public class AuthenticationResource {
 
 	@POST
 	@Path("/register")
-	@RolesAllowed({"Admin"})
+	@RolesAllowed({ "Admin" })
 	@RateLimited(bucket = "register")
 	public Response register(User user) {
 		try {

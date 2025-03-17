@@ -349,7 +349,7 @@ class ProcessModelRepositoryTest {
 				.extracting("id", "processName", "description", "createdAt")//
 				.contains(tuple(PROCESS_MODEL_ID_1, EXISTING_PROCESS_MODEL_NAME, PROCESS_DESCRIPTION, dateTime));
 
-		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
+		ArgumentCaptor<ProjectVersionTable> projectCaptor = ArgumentCaptor.forClass(ProjectVersionTable.class);
 		verify(processModelDao, times(1)).getProcessModelsWithChildren(projectCaptor.capture());
 		assertThat(projectCaptor.getValue().getId()).isEqualTo(PROJECT_ID);
 
@@ -358,7 +358,7 @@ class ProcessModelRepositoryTest {
 	@Test
 	public void testFindByNameOrBpmnProcessIdWithoutCollaborations() {
 		ProcessModelTable process = new ProcessModelTable();
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		project.setId(PROJECT_ID);
 
 		when(processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(NEW_PROCESS_MODEL_NAME, BPMN_PROCESS_ID,
@@ -413,7 +413,7 @@ class ProcessModelRepositoryTest {
 
 	@Test
 	public void testSaveProcessModel_WithParent() {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		project.setId(PROJECT_ID);
 
 		ProcessModel processModel = new ProcessModel();
@@ -539,7 +539,7 @@ class ProcessModelRepositoryTest {
 
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
 
-		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
+		ArgumentCaptor<ProjectVersionTable> projectCaptor = ArgumentCaptor.forClass(ProjectVersionTable.class);
 
 		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.END),
 				projectCaptor.capture());
@@ -576,13 +576,13 @@ class ProcessModelRepositoryTest {
 
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
 
-		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
+		ArgumentCaptor<ProjectVersionTable> projectVersionCaptor = ArgumentCaptor.forClass(ProjectVersionTable.class);
 		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.START),
-				projectCaptor.capture());
+				projectVersionCaptor.capture());
 		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL),
 				eq(EventType.INTERMEDIATE_CATCH),
-				projectCaptor.capture());
-		assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
+				projectVersionCaptor.capture());
+		assertThat(projectVersionCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
 
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
 	}

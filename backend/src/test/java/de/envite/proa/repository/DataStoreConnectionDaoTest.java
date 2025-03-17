@@ -4,7 +4,7 @@ import de.envite.proa.repository.datastore.DataStoreConnectionDao;
 import de.envite.proa.repository.tables.DataStoreConnectionTable;
 import de.envite.proa.repository.tables.DataStoreTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -31,13 +31,13 @@ class DataStoreConnectionDaoTest {
 		em.createQuery("DELETE FROM DataStoreConnectionTable").executeUpdate();
 		em.createQuery("DELETE FROM DataStoreTable").executeUpdate();
 		em.createQuery("DELETE FROM ProcessModelTable").executeUpdate();
-		em.createQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 	}
 
 	@Test
 	@Transactional
 	void testPersist() {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		em.persist(project);
 
 		DataStoreTable dataStore = new DataStoreTable();
@@ -66,7 +66,7 @@ class DataStoreConnectionDaoTest {
 	@Test
 	@Transactional
 	void testGetDataStoreConnections() {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		em.persist(project);
 
 		DataStoreConnectionTable connection = new DataStoreConnectionTable();
@@ -82,7 +82,7 @@ class DataStoreConnectionDaoTest {
 	@Test
 	@Transactional
 	void testDeleteForProcessModel() {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		em.persist(project);
 
 		DataStoreTable dataStore = new DataStoreTable();
@@ -113,7 +113,7 @@ class DataStoreConnectionDaoTest {
 	@Test
 	@Transactional
 	void testDeleteForProcessModel_DontDeleteDataStoreWhenConnectionExists() {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		em.persist(project);
 
 		DataStoreTable dataStore = new DataStoreTable();
@@ -154,7 +154,7 @@ class DataStoreConnectionDaoTest {
 	@Test
 	@Transactional
 	void testDeleteConnection() {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		em.persist(project);
 
 		DataStoreTable dataStore = new DataStoreTable();

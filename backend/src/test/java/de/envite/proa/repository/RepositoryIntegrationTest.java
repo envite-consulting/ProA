@@ -233,11 +233,10 @@ class RepositoryIntegrationTest {
 		// Assert
 		assertThat(project.getId()).isEqualTo(projectId);
 		assertThat(project.getName()).isEqualTo(PROJECT_NAME);
-		assertThat(project.getVersion()).isEqualTo(PROJECT_VERSION);
 	}
 
 	@Test
-	void testDeleteProjectsWithoutUser() {
+	void testDeleteProjectVersionsWithoutUser() {
 
 		// Arrange
 		ProcessModel model = new ProcessModel();
@@ -255,8 +254,8 @@ class RepositoryIntegrationTest {
 		processModelRepository.saveProcessModel(projectId1, model);
 
 		// Act
-		projectRepository.deleteProject(projectId1);
-		projectRepository.deleteProject(projectId2);
+		projectRepository.deleteProjectVersion(projectId1);
+		projectRepository.deleteProjectVersion(projectId2);
 
 		// Assert
 		assertThat(processMapRepository.getProcessMap(projectId1).getDataStores()).isEmpty();
@@ -265,18 +264,18 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	void testDeleteProjectWithoutUserNonExistentProject() {
+	void testDeleteProjectVersionWithoutUserNonExistentProject() {
 
 		// Arrange
 		Long nonExistentProjectId = 1L;
 
 		// Act & Assert
-		assertThatThrownBy(() -> projectRepository.deleteProject(nonExistentProjectId))
+		assertThatThrownBy(() -> projectRepository.deleteProjectVersion(nonExistentProjectId))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
-	void testDeleteProjectWithUser() throws EmailAlreadyRegisteredException {
+	void testDeleteProjectVersionWithUser() throws EmailAlreadyRegisteredException {
 		// Arrange
 		ProcessModel model = new ProcessModel();
 		model.setName(PROCESS_MODEL_NAME);
@@ -301,7 +300,7 @@ class RepositoryIntegrationTest {
 		processModelRepository.saveProcessModel(projectId, model);
 
 		// Act
-		projectRepository.deleteProject(userId, projectId);
+		projectRepository.deleteProjectVersion(userId, projectId);
 
 		// Assert
 		assertThat(processMapRepository.getProcessMap(projectId).getDataStores()).isEmpty();
@@ -310,19 +309,19 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	void testDeleteProjectWithUserNonExistentProject() {
+	void testDeleteProjectVersionWithUserNonExistentProject() {
 
 		// Arrange
 		Long userId = 1L;
 		Long nonExistentProjectId = 1L;
 
 		// Act & Assert
-		assertThatThrownBy(() -> projectRepository.deleteProject(userId, nonExistentProjectId))
+		assertThatThrownBy(() -> projectRepository.deleteProjectVersion(userId, nonExistentProjectId))
 				.isInstanceOf(NoResultException.class);
 	}
 
 	@Test
-	void testDeleteProjectWithProjectNotBelongingToUser() throws EmailAlreadyRegisteredException {
+	void testDeleteProjectVersionWithProjectNotBelongingToUser() throws EmailAlreadyRegisteredException {
 		// Arrange
 		User user1 = new User();
 		user1.setEmail(USER_EMAIL_1);
@@ -343,7 +342,7 @@ class RepositoryIntegrationTest {
 		Long projectId = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION).getId();
 
 		// Act & Assert
-		assertThatThrownBy(() -> projectRepository.deleteProject(userId2, projectId))
+		assertThatThrownBy(() -> projectRepository.deleteProjectVersion(userId2, projectId))
 				.isInstanceOf(NoResultException.class);
 		assertThat(projectRepository.getProjects(userId1)).hasSize(1);
 	}
@@ -364,6 +363,7 @@ class RepositoryIntegrationTest {
 		entityManager.createNativeQuery("DELETE FROM ProcessDataStoreTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM DataStoreTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessModelTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProjectTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM UserTable").executeUpdate();
 	}

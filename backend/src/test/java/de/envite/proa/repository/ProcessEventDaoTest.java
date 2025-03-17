@@ -4,7 +4,7 @@ import de.envite.proa.entities.process.EventType;
 import de.envite.proa.repository.processmodel.ProcessEventDao;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -30,13 +30,13 @@ public class ProcessEventDaoTest {
 	@Inject
 	EntityManager em;
 
-	private ProjectTable project;
+	private ProjectVersionTable project;
 	private ProcessModelTable processModel;
 
 	@BeforeEach
 	@Transactional
 	void setUp() {
-		project = new ProjectTable();
+		project = new ProjectVersionTable();
 		project.setName(PROJECT_NAME);
 		em.persist(project);
 
@@ -50,7 +50,7 @@ public class ProcessEventDaoTest {
 	void cleanupDatabase() {
 		em.createQuery("DELETE FROM ProcessEventTable").executeUpdate();
 		em.createQuery("DELETE FROM ProcessModelTable").executeUpdate();
-		em.createQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 	}
 
 	@Test

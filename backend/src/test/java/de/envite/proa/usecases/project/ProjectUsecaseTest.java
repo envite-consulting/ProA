@@ -34,7 +34,6 @@ public class ProjectUsecaseTest {
 		expectedProject = new Project();
 		expectedProject.setId(PROJECT_ID);
 		expectedProject.setName(PROJECT_NAME);
-		expectedProject.setVersion(PROJECT_VERSION);
 	}
 
 	@Test
@@ -101,19 +100,19 @@ public class ProjectUsecaseTest {
 
 	@Test
 	public void testDeleteProject_DesktopMode() {
-		doNothing().when(repository).deleteProject(USER_ID);
+		doNothing().when(repository).deleteProjectVersion(USER_ID);
 
-		projectUsecase.deleteProject(USER_ID);
+		projectUsecase.deleteProjectVersion(USER_ID);
 
-		verify(repository, times(1)).deleteProject(USER_ID);
+		verify(repository, times(1)).deleteProjectVersion(USER_ID);
 	}
 
 	@Test
 	public void testDeleteProject_WebMode() {
-		doNothing().when(repository).deleteProject(USER_ID, PROJECT_ID);
+		doNothing().when(repository).deleteProjectVersion(USER_ID, PROJECT_ID);
 
-		projectUsecase.deleteProject(USER_ID, PROJECT_ID);
+		projectUsecase.deleteProjectVersion(USER_ID, PROJECT_ID);
 
-		verify(repository, times(1)).deleteProject(USER_ID, PROJECT_ID);
+		verify(repository, times(1)).deleteProjectVersion(USER_ID, PROJECT_ID);
 	}
 }

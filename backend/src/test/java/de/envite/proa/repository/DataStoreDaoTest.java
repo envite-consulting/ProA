@@ -2,7 +2,7 @@ package de.envite.proa.repository;
 
 import de.envite.proa.repository.datastore.DataStoreDao;
 import de.envite.proa.repository.tables.DataStoreTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -31,18 +31,18 @@ class DataStoreDaoTest {
 	@Transactional
 	void cleanupDatabase() {
 		em.createQuery("DELETE FROM DataStoreTable").executeUpdate();
-		em.createQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 	}
 
 	@Test
 	@Transactional
 	void testPersist() {
-		ProjectTable projectTable = new ProjectTable();
-		em.persist(projectTable);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		em.persist(projectVersionTable);
 
 		DataStoreTable dataStoreTable = new DataStoreTable();
 		dataStoreTable.setLabel(DATA_STORE_LABEL_1);
-		dataStoreTable.setProject(projectTable);
+		dataStoreTable.setProject(projectVersionTable);
 
 		dataStoreDao.persist(dataStoreTable);
 
@@ -56,20 +56,20 @@ class DataStoreDaoTest {
 	@Test
 	@Transactional
 	void testGetDataStores() {
-		ProjectTable projectTable = new ProjectTable();
-		em.persist(projectTable);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		em.persist(projectVersionTable);
 
 		DataStoreTable dataStore1 = new DataStoreTable();
 		dataStore1.setLabel(DATA_STORE_LABEL_1);
-		dataStore1.setProject(projectTable);
+		dataStore1.setProject(projectVersionTable);
 		em.persist(dataStore1);
 
 		DataStoreTable dataStore2 = new DataStoreTable();
 		dataStore2.setLabel(DATA_STORE_LABEL_2);
-		dataStore2.setProject(projectTable);
+		dataStore2.setProject(projectVersionTable);
 		em.persist(dataStore2);
 
-		List<DataStoreTable> result = dataStoreDao.getDataStores(projectTable);
+		List<DataStoreTable> result = dataStoreDao.getDataStores(projectVersionTable);
 		assertNotNull(result);
 		assertEquals(2, result.size());
 		assertEquals(DATA_STORE_LABEL_1, result.get(0).getLabel());
@@ -79,15 +79,15 @@ class DataStoreDaoTest {
 	@Test
 	@Transactional
 	void testGetDataStoreForLabel() {
-		ProjectTable projectTable = new ProjectTable();
-		em.persist(projectTable);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		em.persist(projectVersionTable);
 
 		DataStoreTable dataStore = new DataStoreTable();
 		dataStore.setLabel(DATA_STORE_LABEL_1);
-		dataStore.setProject(projectTable);
+		dataStore.setProject(projectVersionTable);
 		em.persist(dataStore);
 
-		DataStoreTable result = dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL_1, projectTable);
+		DataStoreTable result = dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL_1, projectVersionTable);
 		assertNotNull(result);
 		assertEquals(DATA_STORE_LABEL_1, result.getLabel());
 	}

@@ -2,7 +2,7 @@ package de.envite.proa.repository.messageflow;
 
 import de.envite.proa.repository.tables.MessageFlowTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -31,29 +31,30 @@ public class MessageFlowDao {
 	}
 
 	@Transactional
-	public List<MessageFlowTable> getMessageFlows(ProjectTable projectTable) {
+	public List<MessageFlowTable> getMessageFlows(ProjectVersionTable projectVersionTable) {
 		return em.createQuery( //
-				"SELECT mf " + //
-						"FROM MessageFlowTable mf " + //
-						"WHERE mf.project = :project", //
-				MessageFlowTable.class //
-		) //
-				.setParameter("project", projectTable) //
+						"SELECT mf " + //
+								"FROM MessageFlowTable mf " + //
+								"WHERE mf.project = :project", //
+						MessageFlowTable.class //
+				) //
+				.setParameter("project", projectVersionTable) //
 				.getResultList(); //
 	}
 
 	@Transactional
-	public List<MessageFlowTable> getMessageFlows(ProjectTable projectTable, ProcessModelTable processModel) {
+	public List<MessageFlowTable> getMessageFlows(ProjectVersionTable projectVersionTable,
+			ProcessModelTable processModel) {
 		return em.createQuery( //
-				"SELECT mf " + //
-						"FROM MessageFlowTable mf " + //
-						"WHERE (mf.callingProcess = :processModel " + //
-						"OR mf.calledProcess = :processModel) " + //
-						"AND mf.project = :project", //
-				MessageFlowTable.class //
-		) //
+						"SELECT mf " + //
+								"FROM MessageFlowTable mf " + //
+								"WHERE (mf.callingProcess = :processModel " + //
+								"OR mf.calledProcess = :processModel) " + //
+								"AND mf.project = :project", //
+						MessageFlowTable.class //
+				) //
 				.setParameter("processModel", processModel) //
-				.setParameter("project", projectTable) //
+				.setParameter("project", projectVersionTable) //
 				.getResultList(); //
 	}
 

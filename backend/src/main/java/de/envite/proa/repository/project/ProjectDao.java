@@ -1,13 +1,14 @@
 package de.envite.proa.repository.project;
 
-import java.util.List;
-
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @ApplicationScoped
 public class ProjectDao {
@@ -25,6 +26,16 @@ public class ProjectDao {
 	}
 
 	@Transactional
+	public void persist(ProjectVersionTable table) {
+		em.persist(table);
+	}
+
+	@Transactional
+	public void merge(ProjectTable table) {
+		em.merge(table);
+	}
+
+	@Transactional
 	public List<ProjectTable> getProjects() {
 		return em//
 				.createQuery("SELECT p FROM ProjectTable p", ProjectTable.class)//
@@ -33,9 +44,9 @@ public class ProjectDao {
 
 	@Transactional
 	public List<ProjectTable> getProjectsForUser(UserTable user) {
-		return em//
-				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user", ProjectTable.class)//
-				.setParameter("user", user)//
+		return em.createQuery(
+						"SELECT DISTINCT p FROM ProjectTable p JOIN p.contributors c WHERE c = :user", ProjectTable.class)
+				.setParameter("user", user)
 				.getResultList();
 	}
 
@@ -45,29 +56,13 @@ public class ProjectDao {
 	}
 
 	@Transactional
-	public ProjectTable findByUserAndId(UserTable user, Long id) {
-		return em//
-				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user AND p.id = :id", ProjectTable.class)//
-				.setParameter("user", user)//
-				.setParameter("id", id)//
-				.getResultStream() //
-				.findFirst() //
-				.orElse(null);
+	public ProjectVersionTable findVersionById(Long id) {
+		return em.find(ProjectVersionTable.class, id);
 	}
 
 	@Transactional
-	public void deleteProject(Long id) {
-		ProjectTable table = em.find(ProjectTable.class, id);
-		em.remove(table);
-	}
-
-	@Transactional
-	public void deleteProject(UserTable user, Long id) {
-		ProjectTable table = em//
-				.createQuery("SELECT p FROM ProjectTable p WHERE p.user = :user AND p.id = :id", ProjectTable.class)//
-				.setParameter("user", user)//
-				.setParameter("id", id)//
-				.getSingleResult();
+	public void deleteProjectVersion(Long id) {
+		ProjectVersionTable table = em.find(ProjectVersionTable.class, id);
 		em.remove(table);
 	}
 }

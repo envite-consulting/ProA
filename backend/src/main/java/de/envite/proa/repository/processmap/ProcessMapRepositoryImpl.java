@@ -55,13 +55,14 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 	@Override
 	public ProcessMap getProcessMap(Long projectId) {
 
-		ProjectTable projectTable = new ProjectTable();
-		projectTable.setId(projectId);
-		List<ProcessDetails> processModelInformation = getProcessDetailsWithoutCollaborations(projectTable);
-		List<ProcessConnection> processConnections = getProcessConnectionsWithoutCollaborations(projectTable);
-		List<MessageFlowDetails> messageFlows = getMessageFlows(projectTable);
-		List<DataStore> dataStores = getDataStores(projectTable);
-		List<DataStoreConnection> dataStoreConnections = getDataStoreConnectionsWithoutCollaborations(projectTable);
+		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
+		projectVersionTable.setId(projectId);
+		List<ProcessDetails> processModelInformation = getProcessDetailsWithoutCollaborations(projectVersionTable);
+		List<ProcessConnection> processConnections = getProcessConnectionsWithoutCollaborations(projectVersionTable);
+		List<MessageFlowDetails> messageFlows = getMessageFlows(projectVersionTable);
+		List<DataStore> dataStores = getDataStores(projectVersionTable);
+		List<DataStoreConnection> dataStoreConnections = getDataStoreConnectionsWithoutCollaborations(
+				projectVersionTable);
 
 		ProcessMap map = new ProcessMap();
 		map.setConnections(processConnections);
@@ -81,11 +82,13 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	@Override
 	public void copyConnections(Long projectId, Long oldProcessId, Long newProcessId) {
-		ProjectTable project = projectDao.findById(projectId);
+		ProjectVersionTable projectVersion = projectDao.findVersionById(projectId);
 		ProcessModelTable oldProcess = processModelDao.find(oldProcessId);
 		ProcessModelTable newProcess = processModelDao.find(newProcessId);
-		List<ProcessConnectionTable> oldConnections = processConnectionDao.getProcessConnections(project, oldProcess);
-		List<ProcessConnectionTable> newConnections = processConnectionDao.getProcessConnections(project, newProcess);
+		List<ProcessConnectionTable> oldConnections = processConnectionDao.getProcessConnections(projectVersion,
+				oldProcess);
+		List<ProcessConnectionTable> newConnections = processConnectionDao.getProcessConnections(projectVersion,
+				newProcess);
 
 		Set<Long> newConnectionSources = new HashSet<>();
 		Set<Long> newConnectionTargets = new HashSet<>();
@@ -142,18 +145,19 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		dataStoreConnectionDao.deleteConnection(connectionId);
 	}
 
-	private List<ProcessDetails> getProcessDetailsWithoutCollaborations(ProjectTable projectTable) {
+	private List<ProcessDetails> getProcessDetailsWithoutCollaborations(ProjectVersionTable projectVersionTable) {
 
 		return processModelDao//
-				.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(projectTable)//
+				.getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(projectVersionTable)//
 				.stream()//
 				.map(ProcessDetailsMapper::map)//
 				.collect(Collectors.toList());
 	}
 
-	private List<ProcessConnection> getProcessConnectionsWithoutCollaborations(ProjectTable projectTable) {
+	private List<ProcessConnection> getProcessConnectionsWithoutCollaborations(
+			ProjectVersionTable projectVersionTable) {
 		return processConnectionDao//
-				.getProcessConnections(projectTable)//
+				.getProcessConnections(projectVersionTable)//
 				.stream()//
 				.filter(pc -> pc.getCallingProcess().getProcessType() != ProcessType.COLLABORATION//
 						&& pc.getCalledProcess().getProcessType() != ProcessType.COLLABORATION)//
@@ -161,25 +165,26 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 				.collect(Collectors.toList());
 	}
 
-	private List<MessageFlowDetails> getMessageFlows(ProjectTable projectTable) {
+	private List<MessageFlowDetails> getMessageFlows(ProjectVersionTable projectVersionTable) {
 		return messageFlowDao//
-				.getMessageFlows(projectTable)//
+				.getMessageFlows(projectVersionTable)//
 				.stream()//
 				.map(MessageFlowMapper::map)//
 				.collect(Collectors.toList());
 	}
 
-	private List<DataStore> getDataStores(ProjectTable projectTable) {
+	private List<DataStore> getDataStores(ProjectVersionTable projectVersionTable) {
 		return dataStoreDao//
-				.getDataStores(projectTable)//
+				.getDataStores(projectVersionTable)//
 				.stream()//
 				.map(this::map)//
 				.collect(Collectors.toList());
 	}
 
-	private List<DataStoreConnection> getDataStoreConnectionsWithoutCollaborations(ProjectTable projectTable) {
+	private List<DataStoreConnection> getDataStoreConnectionsWithoutCollaborations(
+			ProjectVersionTable projectVersionTable) {
 		return dataStoreConnectionDao//
-				.getDataStoreConnections(projectTable)//
+				.getDataStoreConnections(projectVersionTable)//
 				.stream()//
 				.filter(dsc -> dsc.getProcess().getProcessType() != ProcessType.COLLABORATION)//
 				.map(this::map)//
@@ -231,7 +236,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 		table.setCalledElementType(calledElementType);
 		table.setCallingElement(callingElement);
 		table.setCalledElement(calledElement);
-		table.setProject(projectDao.findById(projectId));
+		table.setProject(projectDao.findVersionById(projectId));
 		table.setUserCreated(connection.getUserCreated());
 		return table;
 	}
@@ -264,7 +269,7 @@ public class ProcessMapRepositoryImpl implements ProcessMapRespository {
 
 	@Override
 	public void copyMessageFlowsAndRelations(Long projectId, Long oldProcessId, Long newProcessId) {
-		ProjectTable project = new ProjectTable();
+		ProjectVersionTable project = new ProjectVersionTable();
 		project.setId(projectId);
 
 		ProcessModelTable oldProcess = processModelDao.findWithParentsAndChildren(oldProcessId);

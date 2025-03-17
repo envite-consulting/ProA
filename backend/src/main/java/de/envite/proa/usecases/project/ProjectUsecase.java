@@ -1,10 +1,10 @@
 package de.envite.proa.usecases.project;
 
-import java.util.List;
-
 import de.envite.proa.entities.project.Project;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.List;
 
 @ApplicationScoped
 public class ProjectUsecase {
@@ -36,11 +36,11 @@ public class ProjectUsecase {
 		return repository.getProject(userId, projectId);
 	}
 
-	public void deleteProject(Long projectId) {
-		repository.deleteProject(projectId);
+	public void deleteProjectVersion(Long projectVersionId) {
+		repository.deleteProjectVersion(projectVersionId);
 	}
 
-	public void deleteProject(Long userId, Long projectId) {
-		repository.deleteProject(userId, projectId);
+	public void deleteProjectVersion(Long userId, Long projectVersionId) {
+		repository.deleteProjectVersion(userId, projectVersionId);
 	}
 }

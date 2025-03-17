@@ -10,15 +10,15 @@ import java.util.stream.Collectors;
 
 public class ProcessmodelMapper {
 
-	public static ProcessModelTable map(ProcessModel processModel, ProjectTable projectTable) {
+	public static ProcessModelTable map(ProcessModel processModel, ProjectVersionTable projectVersionTable) {
 		ProcessModelTable table = new ProcessModelTable();
 		table.setName(processModel.getName());
 
-		table.setEvents(mapEvents(processModel.getEvents(), table, projectTable));
-		table.setCallActivites(map(processModel.getCallActivities(), table, projectTable));
+		table.setEvents(mapEvents(processModel.getEvents(), table, projectVersionTable));
+		table.setCallActivites(map(processModel.getCallActivities(), table, projectVersionTable));
 		table.setDataStores(mapDataStore(processModel.getDataStores(), table));
 		table.setDescription(processModel.getDescription());
-		table.setProject(projectTable);
+		table.setProject(projectVersionTable);
 		table.setBpmnProcessId(processModel.getBpmnProcessId());
 		table.setBpmnXml(XmlConverter.stringToBytes(processModel.getBpmnXml()));
 		table.setProcessType(processModel.getProcessType());
@@ -40,8 +40,8 @@ public class ProcessmodelMapper {
 				.collect(Collectors.toList());
 	}
 
-	private static Set<CallActivityTable> map(Set<ProcessActivity> callActivities,
-			ProcessModelTable processModelTable, ProjectTable projectTable) {
+	public static Set<CallActivityTable> map(Set<ProcessActivity> callActivities,
+			ProcessModelTable processModelTable, ProjectVersionTable projectVersionTable) {
 		return callActivities//
 				.stream()//
 				.map(activity -> {
@@ -49,28 +49,28 @@ public class ProcessmodelMapper {
 					callActivityTable.setElementId(activity.getElementId());
 					callActivityTable.setLabel(activity.getLabel());
 					callActivityTable.setProcessModel(processModelTable);
-					callActivityTable.setProject(projectTable);
+					callActivityTable.setProject(projectVersionTable);
 					return callActivityTable;
 				})//
 				.collect(Collectors.toSet());
 	}
 
-	private static Set<ProcessEventTable> mapEvents(Set<ProcessEvent> events, ProcessModelTable processModelTable,
-			ProjectTable projectTable) {
+	public static Set<ProcessEventTable> mapEvents(Set<ProcessEvent> events, ProcessModelTable processModelTable,
+			ProjectVersionTable projectVersionTable) {
 		return events//
 				.stream()//
-				.map(event -> map(event, event.getEventType(), processModelTable, projectTable))//
+				.map(event -> map(event, event.getEventType(), processModelTable, projectVersionTable))//
 				.collect(Collectors.toSet());
 	}
 
 	private static ProcessEventTable map(ProcessEvent event, EventType eventType, ProcessModelTable processModelTable,
-			ProjectTable projectTable) {
+			ProjectVersionTable projectVersionTable) {
 		ProcessEventTable processEventtable = new ProcessEventTable();
 		processEventtable.setElementId(event.getElementId());
 		processEventtable.setLabel(event.getLabel());
 		processEventtable.setEventType(eventType);
 		processEventtable.setProcessModel(processModelTable);
-		processEventtable.setProject(projectTable);
+		processEventtable.setProject(projectVersionTable);
 		return processEventtable;
 	}
 

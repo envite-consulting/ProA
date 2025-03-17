@@ -14,5 +14,5 @@ public class DataStoreTable {
 	private String label;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	private ProjectTable project;
+	private ProjectVersionTable project;
 }

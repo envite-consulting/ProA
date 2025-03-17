@@ -1,18 +1,17 @@
 package de.envite.proa.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
-
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.process.ProcessElementType;
 import de.envite.proa.repository.messageflow.MessageFlowMapper;
 import de.envite.proa.repository.tables.MessageFlowTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class MessageFlowMapperTest {
 
@@ -25,12 +24,12 @@ class MessageFlowMapperTest {
 	private static final ProcessElementType CALLING_ELEMENT_TYPE = ProcessElementType.END_EVENT;
 	private static final ProcessElementType CALLED_ELEMENT_TYPE = ProcessElementType.START_EVENT;
 
-	private ProjectTable project;
+	private ProjectVersionTable project;
 
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		project = new ProjectTable();
+		project = new ProjectVersionTable();
 		project.setId(PROJECT_ID);
 	}
 

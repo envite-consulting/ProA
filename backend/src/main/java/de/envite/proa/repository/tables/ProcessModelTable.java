@@ -84,7 +84,7 @@ public class ProcessModelTable {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@EqualsAndHashCode.Include
-	private ProjectTable project;
+	private ProjectVersionTable project;
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable( //

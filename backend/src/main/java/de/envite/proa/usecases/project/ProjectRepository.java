@@ -1,8 +1,8 @@
 package de.envite.proa.usecases.project;
 
-import java.util.List;
-
 import de.envite.proa.entities.project.Project;
+
+import java.util.List;
 
 public interface ProjectRepository {
 
@@ -18,7 +18,7 @@ public interface ProjectRepository {
 
 	Project getProject(Long userId, Long projectId);
 
-	void deleteProject(Long projectId);
+	void deleteProjectVersion(Long id);
 
-	void deleteProject(Long userId, Long projectId);
+	void deleteProjectVersion(Long userId, Long id);
 }

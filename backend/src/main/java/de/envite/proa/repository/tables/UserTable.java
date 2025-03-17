@@ -24,7 +24,7 @@ public class UserTable {
 	private Role role;
 
 	@OneToMany
-	private List<ProjectTable> projects;
+	private List<ProjectVersionTable> projects;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	private SettingsTable settings;

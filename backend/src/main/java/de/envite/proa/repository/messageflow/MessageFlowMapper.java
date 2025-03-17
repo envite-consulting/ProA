@@ -1,14 +1,13 @@
 package de.envite.proa.repository.messageflow;
 
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
-import de.envite.proa.repository.processmodel.ProcessModelDao;
 import de.envite.proa.repository.tables.MessageFlowTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
-import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectVersionTable;
 
 public class MessageFlowMapper {
 
-	static public MessageFlowTable map(MessageFlowDetails messageFlowDetails, ProjectTable project) {
+	static public MessageFlowTable map(MessageFlowDetails messageFlowDetails, ProjectVersionTable project) {
 		MessageFlowTable table = new MessageFlowTable();
 		table.setBpmnId(messageFlowDetails.getBpmnId());
 		table.setName(messageFlowDetails.getName());
