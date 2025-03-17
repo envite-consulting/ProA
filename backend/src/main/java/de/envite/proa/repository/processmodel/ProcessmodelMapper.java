@@ -40,7 +40,7 @@ public class ProcessmodelMapper {
 				.collect(Collectors.toList());
 	}
 
-	private static Set<CallActivityTable> map(Set<ProcessActivity> callActivities,
+	public static Set<CallActivityTable> map(Set<ProcessActivity> callActivities,
 			ProcessModelTable processModelTable, ProjectTable projectTable) {
 		return callActivities//
 				.stream()//
@@ -55,7 +55,7 @@ public class ProcessmodelMapper {
 				.collect(Collectors.toSet());
 	}
 
-	private static Set<ProcessEventTable> mapEvents(Set<ProcessEvent> events, ProcessModelTable processModelTable,
+	public static Set<ProcessEventTable> mapEvents(Set<ProcessEvent> events, ProcessModelTable processModelTable,
 			ProjectTable projectTable) {
 		return events//
 				.stream()//
@@ -88,5 +88,15 @@ public class ProcessmodelMapper {
 				.collect(Collectors.toList()));
 		processInformation.setProcessType(table.getProcessType());
 		return processInformation;
+	}
+
+	public static ProcessElementType map(EventType eventType) {
+		return switch (eventType) {
+			case START -> ProcessElementType.START_EVENT;
+			case INTERMEDIATE_THROW -> ProcessElementType.INTERMEDIATE_THROW_EVENT;
+			case INTERMEDIATE_CATCH -> ProcessElementType.INTERMEDIATE_CATCH_EVENT;
+			case END -> ProcessElementType.END_EVENT;
+			default -> null;
+		};
 	}
 }

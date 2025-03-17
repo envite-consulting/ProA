@@ -1,16 +1,15 @@
 package de.envite.proa.repository.processmodel;
 
-import java.util.List;
-
 import de.envite.proa.entities.process.EventType;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectTable;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @RequestScoped
 public class ProcessEventDao {
@@ -39,13 +38,25 @@ public class ProcessEventDao {
 	@Transactional
 	public ProcessEventTable findForProcessModelAndEventType(ProcessModelTable processModel, EventType eventType) {
 		return em.createQuery(
-				"SELECT e FROM ProcessEventTable e WHERE e.processModel = :processModel AND e.eventType = :eventType",
-				ProcessEventTable.class) //
+						"SELECT e FROM ProcessEventTable e WHERE e.processModel = :processModel AND e.eventType = :eventType",
+						ProcessEventTable.class) //
 				.setParameter("processModel", processModel) //
 				.setParameter("eventType", eventType) //
 				.getResultList() //
 				.stream() //
 				.findFirst() //
 				.orElse(null);
+	}
+
+	@Transactional
+	public List<ProcessEventTable> getEvents(ProjectTable project) {
+		return em
+				.createQuery(
+						"SELECT e " +
+								"FROM ProcessEventTable e " +
+								"WHERE e.project=:project",
+						ProcessEventTable.class)
+				.setParameter("project", project)
+				.getResultList();
 	}
 }

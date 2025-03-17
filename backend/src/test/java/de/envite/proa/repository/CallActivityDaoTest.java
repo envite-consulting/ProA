@@ -12,8 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
@@ -21,7 +19,6 @@ public class CallActivityDaoTest {
 
 	private static final String PROJECT_NAME = "Test Project";
 	private static final String ACTIVITY_LABEL_1 = "Test Activity 1";
-	private static final String ACTIVITY_LABEL_2 = "Test Activity 2";
 
 	@Inject
 	CallActivityDao callActivityDao;
@@ -66,35 +63,6 @@ public class CallActivityDaoTest {
 		CallActivityTable persistedActivity = em.find(CallActivityTable.class, activity.getId());
 		assertNotNull(persistedActivity);
 		assertEquals(ACTIVITY_LABEL_1, persistedActivity.getLabel());
-	}
-
-	@Test
-	@Transactional
-	void testGetCallActivitiesForName() {
-		CallActivityTable activity1 = new CallActivityTable();
-		activity1.setLabel(ACTIVITY_LABEL_1);
-		activity1.setProject(project);
-		activity1.setProcessModel(processModel);
-		em.persist(activity1);
-
-		CallActivityTable activity2 = new CallActivityTable();
-		activity2.setLabel(ACTIVITY_LABEL_2);
-		activity2.setProject(project);
-		activity2.setProcessModel(processModel);
-		em.persist(activity2);
-
-		List<CallActivityTable> activities = callActivityDao.getCallActivitiesForName(ACTIVITY_LABEL_1, project);
-		assertNotNull(activities);
-		assertEquals(1, activities.size());
-		assertEquals(ACTIVITY_LABEL_1, activities.getFirst().getLabel());
-	}
-
-	@Test
-	@Transactional
-	void testGetCallActivitiesForNameNotFound() {
-		List<CallActivityTable> activities = callActivityDao.getCallActivitiesForName(ACTIVITY_LABEL_1, project);
-		assertNotNull(activities);
-		assertTrue(activities.isEmpty());
 	}
 
 	@Test

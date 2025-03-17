@@ -36,6 +36,16 @@ public class ProcessModelDao {
 	}
 
 	@Transactional
+	public List<ProcessModelTable> getProcessModels(ProjectTable projectTable) {
+		String query = "SELECT p " +
+				"FROM ProcessModelTable p " +
+				"WHERE p.project = :project";
+		return em.createQuery(query, ProcessModelTable.class)
+				.setParameter("project", projectTable)
+				.getResultList();
+	}
+
+	@Transactional
 	public List<ProcessModelTable> getProcessModelsWithoutCollaborationsAndWithEventsAndActivities(
 			ProjectTable projectTable) {
 		EntityGraph<?> graph = em.getEntityGraph("ProcessModel.withEventsAndActivities");
@@ -47,20 +57,6 @@ public class ProcessModelDao {
 				.setParameter("collaboration", ProcessType.COLLABORATION)
 				.setParameter("project", projectTable)
 				.setHint("jakarta.persistence.loadgraph", graph)
-				.getResultList();
-	}
-
-	@Transactional
-	public List<ProcessModelTable> getProcessModelsForName(String name, ProjectTable projectTable) {
-		return em
-				.createQuery(
-						"SELECT p " +
-								"FROM ProcessModelTable p " +
-								"WHERE p.name = :name " +
-								"AND p.project = :project",
-						ProcessModelTable.class)
-				.setParameter("name", name)
-				.setParameter("project", projectTable)
 				.getResultList();
 	}
 

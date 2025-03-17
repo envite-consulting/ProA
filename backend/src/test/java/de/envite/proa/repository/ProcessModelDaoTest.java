@@ -25,6 +25,7 @@ class ProcessModelDaoTest {
 	private static final String PROCESS_MODEL_NAME_1 = "process-model-name-1";
 	private static final String PROCESS_MODEL_NAME_2 = "process-model-name-2";
 	private static final String PROCESS_MODEL_NAME_3 = "process-model-name-3";
+	private static final String BPMN_XML_STRING = "<?xml version=\"1.0\"?>";
 
 	@Inject
 	EntityManager em;
@@ -45,6 +46,7 @@ class ProcessModelDaoTest {
 		processModel.setProject(project);
 		processModel.setName(PROCESS_MODEL_NAME_1);
 		processModel.setBpmnProcessId(BPMN_PROCESS_ID_1);
+		processModel.setBpmnXml(BPMN_XML_STRING.getBytes());
 		em.persist(processModel);
 	}
 
@@ -58,14 +60,6 @@ class ProcessModelDaoTest {
 	private void flushAndClear() {
 		em.flush();
 		em.clear();
-	}
-
-	@Test
-	@Transactional
-	void testGetProcessModelsForName() {
-		List<ProcessModelTable> processModels = processModelDao.getProcessModelsForName(PROCESS_MODEL_NAME_1, project);
-		assertNotNull(processModels);
-		assertFalse(processModels.isEmpty());
 	}
 
 	@Test
@@ -213,5 +207,84 @@ class ProcessModelDaoTest {
 						.contains(processModel.getName()));
 			}
 		}
+	}
+
+	@Test
+	@Transactional
+	void testAddChild() {
+		ProcessModelTable child = new ProcessModelTable();
+		child.setProject(project);
+		child.setName(PROCESS_MODEL_NAME_2);
+		child.setBpmnProcessId(BPMN_PROCESS_ID_2);
+		em.persist(child);
+
+		processModelDao.addChild(processModel.getId(), child.getId());
+
+		flushAndClear();
+
+		ProcessModelTable fetchedParent = processModelDao.findWithChildren(processModel.getId());
+		ProcessModelTable fetchedChild = processModelDao.findWithParents(child.getId());
+
+		assertTrue(fetchedParent.getChildren().stream().map(ProcessModelTable::getId).toList().contains(child.getId()));
+		assertTrue(fetchedChild.getParents().stream().map(ProcessModelTable::getId).toList()
+				.contains(processModel.getId()));
+	}
+
+	@Test
+	@Transactional
+	void testRemoveChild() {
+		ProcessModelTable child = new ProcessModelTable();
+		child.setProject(project);
+		child.setName(PROCESS_MODEL_NAME_2);
+		child.setBpmnProcessId(BPMN_PROCESS_ID_2);
+		em.persist(child);
+
+		processModelDao.addChild(processModel.getId(), child.getId());
+
+		flushAndClear();
+
+		processModelDao.removeChild(processModel.getId(), child.getId());
+
+		flushAndClear();
+
+		ProcessModelTable fetchedParent = processModelDao.findWithChildren(processModel.getId());
+		ProcessModelTable fetchedChild = processModelDao.findWithParents(child.getId());
+
+		assertFalse(
+				fetchedParent.getChildren().stream().map(ProcessModelTable::getId).toList().contains(child.getId()));
+		assertFalse(fetchedChild.getParents().stream().map(ProcessModelTable::getId).toList()
+				.contains(processModel.getId()));
+	}
+
+	@Test
+	@Transactional
+	void testGetBpmnXml() {
+		byte[] actualBpmnXml = processModelDao.getBpmnXml(processModel.getId());
+		byte[] expectedBpmnXml = processModel.getBpmnXml();
+
+		assertArrayEquals(expectedBpmnXml, actualBpmnXml);
+	}
+
+	@Test
+	@Transactional
+	void testFindWithParents() {
+		ProcessModelTable parent = new ProcessModelTable();
+		em.persist(parent);
+
+		processModelDao.addChild(parent.getId(), processModel.getId());
+
+		flushAndClear();
+
+		processModelDao.findWithParents(processModel.getId());
+
+		flushAndClear();
+
+		ProcessModelTable fetchedParent = processModelDao.findWithChildren(parent.getId());
+		ProcessModelTable fetchedChild = processModelDao.findWithParents(processModel.getId());
+
+		assertTrue(fetchedParent.getChildren().stream().map(ProcessModelTable::getId).toList()
+				.contains(processModel.getId()));
+		assertTrue(fetchedChild.getParents().stream().map(ProcessModelTable::getId).toList()
+				.contains(parent.getId()));
 	}
 }
