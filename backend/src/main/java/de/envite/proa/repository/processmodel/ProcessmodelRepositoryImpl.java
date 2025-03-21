@@ -371,7 +371,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 	@Override
 	public void handleProcessChangeAnalysis(Long oldProcessId, String newContent, String geminiApiKey) {
-		if (getProcessModelXml(oldProcessId).equals(newContent)) {
+		ProcessModelTable processModel = processModelDao.find(oldProcessId);
+		List<RelatedProcessModelTable> relatedProcessModels = relatedProcessModelDao.getRelatedProcessModels(
+				processModel);
+
+		if (getProcessModelXml(oldProcessId).equals(newContent) || relatedProcessModels.isEmpty()) {
 			return;
 		}
 
@@ -388,22 +392,17 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			throw new IllegalArgumentException("Invalid Gemini API key. Aborting process change analysis.");
 		}
 
-		ProcessModelTable processModel = processModelDao.find(oldProcessId);
-		List<RelatedProcessModelTable> relatedProcessModels =
-				relatedProcessModelDao.getRelatedProcessModels(processModel);
-
-		if (!relatedProcessModels.isEmpty()) {
-			for (RelatedProcessModelTable relatedProcessModel : relatedProcessModels) {
-				try {
-					String geminiRequest = generateGeminiRequest(oldProcessId, newContent,
-							relatedProcessModel.getRelatedProcessModelId());
-					String geminiResponse = sendGeminiRequest(geminiApiKey, geminiRequest);
-					handleGeminiResponse(geminiResponse, relatedProcessModel.getRelatedProcessModelId());
-				} catch (Exception e) {
-					throw new RuntimeException(e.getMessage());
-				}
+		for (RelatedProcessModelTable relatedProcessModel : relatedProcessModels) {
+			try {
+				String geminiRequest = generateGeminiRequest(oldProcessId, newContent,
+						relatedProcessModel.getRelatedProcessModelId());
+				String geminiResponse = sendGeminiRequest(geminiApiKey, geminiRequest);
+				handleGeminiResponse(geminiResponse, relatedProcessModel.getRelatedProcessModelId());
+			} catch (Exception e) {
+				throw new RuntimeException(e.getMessage());
 			}
 		}
+
 	}
 
 	private String generateGeminiRequest(Long processModelId, String newContent, Long relatedProcessModelId)
