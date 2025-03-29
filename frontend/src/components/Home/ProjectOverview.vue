@@ -29,58 +29,68 @@
     </v-snackbar>
 
     <v-card
-      v-for="(group, index) in projectGroups"
+      v-for="(project, index) in projects"
       :key="index"
       width="310px"
-      height="310px"
+      height="265px"
       style="float: left; margin: 16px"
       :class="{
-        'active-card':
-          activeProjectByGroup[group.name]?.id === store.selectedProjectId
+        'active-card': store.getSelectedProjectId() === project.id
       }"
     >
-      <div class="d-flex flex-row justify-space-between align-center">
-        <v-card-title>
-          {{ group.name }}
+      <div
+        class="d-flex flex-row justify-space-between align-center"
+        style="width: 100%; overflow: hidden"
+      >
+        <v-card-title class="text-truncate" style="flex: 1; min-width: 0">
+          {{ project.name }}
         </v-card-title>
 
-        <p
-          v-if="
-            activeProjectByGroup[group.name]?.id === store.selectedProjectId
-          "
-          class="active-text"
-        >
-          {{ $t("projectOverview.active") }}
-        </p>
+        <v-btn
+          class="ma-1 flex-shrink-0"
+          icon="mdi-cog"
+          variant="plain"
+          size="small"
+          @click="editProject(project.id)"
+        ></v-btn>
       </div>
-
+      <div class="d-flex flex-row justify-space-between align-center">
+        <v-card-subtitle class="mb-3"
+          >{{
+            $t("projectOverview.owner") +
+            ": " +
+            (project.owner.id === user.id
+              ? `(${$t("projectOverview.you")})`
+              : `${project.owner.firstName} ${project.owner.lastName}`)
+          }}
+        </v-card-subtitle>
+        <span
+          v-if="project.id === store.getSelectedProjectId()"
+          class="mb-3 px-4 active-text"
+          >{{ $t("projectOverview.active") }}</span
+        >
+      </div>
       <v-card-text class="pt-0">
         <v-select
           label="Version"
-          density="compact"
-          v-model="activeProjectByGroup[group.name]"
-          :items="group.projects"
-          item-title="version"
+          v-model="store.getActiveVersionForProject(project.id).name"
+          :items="project.versions"
+          item-title="name"
           item-value="id"
           hide-details
-          @update:model-value="setActiveProject(group.name, $event)"
+          @update:model-value="
+            setActiveVersionFromSelect(project.id, $event, project.versions)
+          "
         ></v-select>
         <v-btn
-          variant="plain"
-          class="pa-0"
-          @click="openNewVersionDialog(group)"
-        >
-          <v-icon icon="mdi-plus" size="large"></v-icon>
-          {{ $t("projectOverview.newVersion") }}
-        </v-btn>
-        <div class="text-dots">
-          {{ $t("general.createdOn") }}:
-          {{ formatDate(activeProjectByGroup[group.name].createdAt) }}
-        </div>
-        <div class="text-dots">
-          {{ $t("general.lastModifiedOn") }}:
-          {{ formatDate(activeProjectByGroup[group.name].modifiedAt) }}
-        </div>
+          class="mt-3"
+          append-icon="mdi-plus"
+          lines="two"
+          :text="$t('projectOverview.addVersion')"
+          link
+          @click="openNewVersionDialog(project)"
+          variant="tonal"
+        ></v-btn>
       </v-card-text>
       <v-divider></v-divider>
       <v-list-item
@@ -88,17 +98,22 @@
         lines="two"
         :subtitle="$t('projectOverview.open')"
         link
-        @click="() => openProject(activeProjectByGroup[group.name].id)"
+        @click="() => openProject(project.id)"
       ></v-list-item>
-      <v-card-actions class="justify-end">
-        <v-btn
-          icon
-          color="grey"
-          @click="openDeleteDialog(activeProjectByGroup[group.name])"
-        >
-          <v-icon>mdi-delete</v-icon>
-        </v-btn>
-      </v-card-actions>
+      <!--      <v-card-actions class="justify-end">
+              <v-btn
+                icon
+                color="grey"
+                @click="
+                  openDeleteDialog(
+                    project,
+                    store.getActiveVersionForProject(project.id)
+                  )
+                "
+              >
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </v-card-actions>-->
     </v-card>
 
     <v-dialog v-model="confirmDeleteDialog" max-width="400">
@@ -107,11 +122,14 @@
         :title="$t('projectOverview.confirmDeletion')"
       >
         <template v-slot:text>
-          {{ $t("projectOverview.confirmDeletionText1")
-          }}<strong>{{ projectToBeDeleted?.name }}</strong
-          >{{ $t("projectOverview.confirmDeletionText2")
-          }}<strong>{{ projectToBeDeleted?.version }}</strong
-          >{{ $t("projectOverview.confirmDeletionText3") }}
+          <div
+            v-html="
+              $t('projectOverview.confirmDeletionText', {
+                version: `<b>${projectVersionToBeDeleted!.name}</b>`,
+                project: `<b>${projectForDeletingVersion!.name}</b>`
+              })
+            "
+          ></div>
         </template>
         <template v-slot:actions>
           <div class="ms-auto">
@@ -130,112 +148,108 @@
 
     <v-card
       width="310px"
-      height="310px"
+      height="265px"
       style="float: left; margin: 16px"
       class="d-flex flex-column"
+      @click="handleOpenNewProjectDialog"
     >
-      <v-card-title>
-        <div style="text-align: center; margin-top: 25px">
-          <v-icon icon="mdi-plus" size="x-large"> </v-icon>
-        </div>
-        <div style="text-align: center">
-          {{ $t("projectOverview.newProject") }}
-        </div>
+      <v-card-title
+        class="d-flex flex-column justify-center align-center flex-grow-1"
+      >
+        <v-icon icon="mdi-plus" size="x-large"></v-icon>
+        <div>{{ $t("projectOverview.newProject") }}</div>
       </v-card-title>
-      <v-spacer></v-spacer>
-      <v-card-actions>
-        <v-btn
-          color="primary"
-          :text="$t('projectOverview.create')"
-          block
-          @click="handleOpenNewProjectDialog"
-        ></v-btn>
-      </v-card-actions>
     </v-card>
     <v-dialog v-model="projectDialog" persistent width="600">
       <v-card>
-        <v-card-title>
-          <span class="text-h5">{{ $t("projectOverview.createProject") }}</span>
-        </v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" sm="12" md="12">
-                <v-text-field
-                  label="Name"
-                  v-model="newProjectName"
-                  :rules="[
-                    () =>
-                      !!newProjectName ||
-                      $t('projectOverview.projectNameRequired')
-                  ]"
-                  ref="newProjectNameInput"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" sm="12" md="12">
-                <v-text-field
-                  label="Version"
-                  v-model="newVersionName"
-                  placeholder="1.0"
-                  :rules="versionRules"
-                  ref="newVersionNameInput"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="closeNewProjectOrVersionDialog"
-          >
-            {{ $t("general.cancel") }}
-          </v-btn>
-          <v-btn color="blue-darken-1" variant="text" @click="createProject()">
-            {{ $t("general.save") }}
-          </v-btn>
-        </v-card-actions>
+        <v-container>
+          <v-card-title
+            >{{ $t("projectOverview.createProject") }}
+          </v-card-title>
+          <v-card-text>
+            <v-text-field
+              label="Name"
+              v-model="newProjectName"
+              :rules="[
+                () =>
+                  !!newProjectName || $t('projectOverview.projectNameRequired')
+              ]"
+              ref="newProjectNameInput"
+            ></v-text-field>
+            <v-text-field
+              label="Version"
+              v-model="newProjectVersionName"
+              placeholder="1.0"
+              :rules="newProjectVersionRules"
+              ref="newProjectVersionNameInput"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue-darken-1"
+              variant="text"
+              @click="closeNewProjectOrVersionDialog"
+            >
+              {{ $t("general.cancel") }}
+            </v-btn>
+            <v-btn
+              color="blue-darken-1"
+              variant="text"
+              @click="createProject()"
+            >
+              {{ $t("general.save") }}
+            </v-btn>
+          </v-card-actions>
+        </v-container>
       </v-card>
     </v-dialog>
     <v-dialog v-model="showNewVersionDialog" persistent width="600">
       <v-card>
-        <v-card-title class="pt-4 pb-0 px-5">
-          {{ $t("projectOverview.newVersionFor") }} {{ newProjectName }}
-        </v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12" sm="12" md="12">
-                <v-text-field
-                  ref="newVersionInput"
-                  :label="$t('projectOverview.newVersion')"
-                  v-model="newVersionName"
-                  :rules="versionRules"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="blue-darken-1"
-            variant="text"
-            @click="closeNewProjectOrVersionDialog"
-          >
-            {{ $t("general.cancel") }}
-          </v-btn>
-          <v-btn color="blue-darken-1" variant="text" @click="createProject()">
-            {{ $t("general.save") }}
-          </v-btn>
-        </v-card-actions>
+        <v-container>
+          <v-card-title>
+            {{ $t("projectOverview.newVersionFor") }}
+            {{ projectForNewVersion!.name }}
+          </v-card-title>
+          <v-card-text>
+            <v-text-field
+              ref="newVersionVersionNameInput"
+              :label="$t('projectOverview.newVersion')"
+              v-model="newVersionName"
+              :rules="newVersionVersionRules"
+            ></v-text-field>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue-darken-1"
+              variant="text"
+              @click="closeNewProjectOrVersionDialog"
+            >
+              {{ $t("general.cancel") }}
+            </v-btn>
+            <v-btn
+              color="blue-darken-1"
+              variant="text"
+              @click="createVersion()"
+            >
+              {{ $t("general.save") }}
+            </v-btn>
+          </v-card-actions>
+        </v-container>
       </v-card>
     </v-dialog>
   </v-container>
+
+  <ProjectDetailDialog
+    :show-project-detail-dialog="showProjectDetailDialog"
+    :project-detail-id="projectDetailId"
+    :user-id="user.id"
+    :project-changed-flag="projectChangedFlag"
+    @close="closeProjectDetailDialog"
+    @delete-version="openDeleteDialog"
+    @reset-project-changed-flag="resetProjectChangedFlag"
+  />
 </template>
 <style scoped>
 @import "@/styles/global.css";
@@ -245,16 +259,9 @@
 }
 
 .active-text {
-  padding: 8px 16px;
   color: #1867c0;
   font-weight: 500;
   font-size: 0.875rem;
-}
-
-.text-dots {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>
 <script lang="ts">
@@ -265,22 +272,27 @@ import { useAppStore } from "@/store/app";
 import { VTextField } from "vuetify/components";
 import { authHeader } from "@/components/Authentication/authHeader";
 import getUser from "@/components/userService";
+import ProjectDetailDialog from "@/components/Home/ProjectDetailDialog.vue";
 
 export interface Project {
   id: number;
   name: string;
-  version: string;
+  versions: ProjectVersion[];
+  createdAt: string;
+  modifiedAt: string;
+  owner: UserData;
+  contributors: UserData[];
+}
+
+export interface ProjectVersion {
+  id: number;
+  name: string;
   createdAt: string;
   modifiedAt: string;
 }
 
-interface ProjectGroup {
-  name: string;
-  projects: Project[];
-}
-
-export interface ActiveProjectByGroup {
-  [key: string]: Project;
+export interface ActiveVersionByProject {
+  [key: number]: ProjectVersion;
 }
 
 export interface UserData {
@@ -294,19 +306,24 @@ export interface UserData {
 }
 
 export default defineComponent({
+  components: { ProjectDetailDialog },
   data: () => {
     const store = useAppStore();
     return {
       store: store,
+      projectDetailId: -1 as number,
       projects: [] as Project[],
       projectDialog: false as boolean,
+      projectForNewVersion: null as Project | null,
       confirmDeleteDialog: false,
-      projectToBeDeleted: null as Project | null,
+      projectChangedFlag: false as boolean,
+      projectForDeletingVersion: null as Project | null,
+      projectVersionToBeDeleted: null as ProjectVersion | null,
       showNewVersionDialog: false as boolean,
+      showProjectDetailDialog: false as boolean,
       newProjectName: "" as string,
-      activeProjectByGroup: {} as ActiveProjectByGroup,
+      newProjectVersionName: "" as string,
       newVersionName: "" as string,
-      newVersionInitialProject: {} as Project,
       showLoggedInBanner: false as boolean,
       webVersion: (import.meta.env.VITE_APP_MODE === "web") as boolean,
       user: {} as UserData
@@ -317,43 +334,39 @@ export default defineComponent({
     isUserLoggedIn() {
       return this.store.getUserToken() != null;
     },
-    versionRules() {
+    newProjectVersionRules() {
       return [
         (): boolean | string =>
-          !this.versionNameExists ||
+          !this.newProjectVersionNameExists ||
+          this.$t("projectOverview.versionNameExists"),
+        (): boolean | string =>
+          !!this.newProjectVersionName ||
+          this.$t("projectOverview.versionNameRequired")
+      ];
+    },
+    newVersionVersionRules() {
+      return [
+        (): boolean | string =>
+          !this.newVersionVersionNameExists ||
           this.$t("projectOverview.versionNameExists"),
         (): boolean | string =>
           !!this.newVersionName ||
           this.$t("projectOverview.versionNameRequired")
       ];
     },
-    versionNameExists() {
+    newProjectVersionNameExists() {
       return !!this.projects.find(
         (project) =>
-          project.version === this.newVersionName &&
+          project.versions
+            .map((version) => version.name)
+            .includes(this.newProjectVersionName) &&
           project.name === this.newProjectName
       );
     },
-    projectGroups(): ProjectGroup[] {
-      const groupedProjects: { [key: string]: Project[] } = {};
-      for (const project of this.projects) {
-        if (!groupedProjects[project.name]) {
-          groupedProjects[project.name] = [];
-        }
-        groupedProjects[project.name].push(project);
-      }
-
-      return Object.keys(groupedProjects).map((name) => {
-        return {
-          name: name,
-          projects: groupedProjects[name].sort((a, b) => {
-            return (
-              new Date(b.modifiedAt).getTime() -
-              new Date(a.modifiedAt).getTime()
-            );
-          })
-        };
-      });
+    newVersionVersionNameExists() {
+      return this.projectForNewVersion?.versions
+        .map((version) => version.name)
+        .includes(this.newVersionName);
     }
   },
 
@@ -361,15 +374,6 @@ export default defineComponent({
     isUserLoggedIn(newValue) {
       if (!newValue) {
         window.location.reload();
-      }
-    },
-    projectGroups(newGroups) {
-      for (const group of newGroups) {
-        const persistedActiveProject = this.store.getActiveProjectForGroup(
-          group.name
-        );
-        this.activeProjectByGroup[group.name] =
-          persistedActiveProject ?? group.projects[0];
       }
     }
   },
@@ -387,51 +391,29 @@ export default defineComponent({
     await this.fetchProjects();
   },
   methods: {
-    openNewVersionDialog(projectGroup: ProjectGroup) {
+    openNewVersionDialog(project: Project) {
       this.newVersionName = "";
-      this.newProjectName = projectGroup.name;
+      this.projectForNewVersion = project;
       this.showNewVersionDialog = true;
-      this.newVersionInitialProject =
-        this.activeProjectByGroup[projectGroup.name];
     },
     handleOpenNewProjectDialog() {
       this.openNewProjectDialog();
     },
     openNewProjectDialog() {
       this.newProjectName = "";
-      this.newVersionName = "";
+      this.newProjectVersionName = "";
       this.projectDialog = true;
     },
-    setActiveProject(groupName: string, projectId: number) {
-      this.activeProjectByGroup[groupName] = this.projects.find(
-        (project) => project.id === projectId
-      )!;
-      this.store.setActiveProjectForGroup(
-        groupName,
-        this.activeProjectByGroup[groupName]
-      );
-    },
-    formatDate(dateString: string) {
-      const locales =
-        useAppStore().getSelectedLanguage() === "de" ? "de-DE" : "en-US";
-      return new Date(dateString).toLocaleString(locales);
+    setActiveVersionFromSelect(
+      projectId: number,
+      versionId: number,
+      versions: ProjectVersion[]
+    ) {
+      const version = versions.find((version) => version.id === versionId);
+      this.store.setActiveVersionForProject(projectId, version!);
     },
     async fetchProjects() {
       if (this.webVersion && !this.isUserLoggedIn) {
-        return;
-      }
-
-      if (this.webVersion && this.isUserLoggedIn) {
-        try {
-          const result = await axios.get("/api/project", {
-            headers: authHeader()
-          });
-          this.projects = result.data.sort((project: Project) => {
-            return project.id === this.store.selectedProjectId ? -1 : 0;
-          });
-        } catch (error) {
-          this.projects = [];
-        }
         return;
       }
 
@@ -440,34 +422,56 @@ export default defineComponent({
           headers: authHeader()
         });
         this.projects = result.data.sort((project: Project) => {
-          return project.id === this.store.selectedProjectId ? -1 : 0;
+          return project.id === this.store.getSelectedProjectId() ? -1 : 0;
         });
+        this.syncActiveVersions();
       } catch (error) {
         this.projects = [];
       }
     },
+    syncActiveVersions() {
+      for (const project of this.projects) {
+        const currentActiveVersion = this.store.getActiveVersionForProject(
+          project.id
+        );
+        if (
+          !currentActiveVersion ||
+          !project.versions.includes(currentActiveVersion)
+        ) {
+          this.store.setActiveVersionForProject(
+            project.id,
+            project.versions[0]
+          );
+        }
+      }
+    },
     async createProject() {
       const newProjectNameInput = this.$refs.newProjectNameInput as VTextField;
-      const newVersionNameInput = this.$refs.newVersionNameInput as VTextField;
-      const newVersionInput = this.$refs.newVersionInput as VTextField;
+      const newProjectVersionNameInput = this.$refs
+        .newProjectVersionNameInput as VTextField;
 
       let errors: string[] = [];
-      if (this.showNewVersionDialog) {
-        errors = errors.concat(await newVersionInput.validate());
-      } else {
-        errors = errors.concat(await newProjectNameInput.validate());
-        errors = errors.concat(await newVersionNameInput.validate());
-      }
+      errors = errors.concat(await newProjectNameInput.validate());
+      errors = errors.concat(await newProjectVersionNameInput.validate());
       if (errors.length > 0) {
         return;
       }
 
-      const projectName = this.newProjectName;
-      const projectVersion = this.newVersionName;
+      const newProjectName = this.newProjectName;
+      const newProjectVersionName = this.newProjectVersionName;
+
+      for (const project of this.projects) {
+        if (project.name === newProjectName) {
+          this.projectForNewVersion = project;
+          this.newVersionName = newProjectVersionName;
+          await this.createVersion();
+          return;
+        }
+      }
 
       let formData = new FormData();
-      formData.append("name", projectName);
-      formData.append("version", projectVersion);
+      formData.append("name", newProjectName);
+      formData.append("version", newProjectVersionName);
 
       try {
         const result = await axios.post("api/project", formData, {
@@ -475,56 +479,103 @@ export default defineComponent({
         });
 
         this.projectDialog = false;
-        this.showNewVersionDialog = false;
-        this.setActiveProject(result.data.name, result.data.id);
+        this.store.setActiveVersionForProject(
+          result.data.id,
+          result.data.versions[0]
+        );
         this.projects.push(result.data);
 
-        this.store.showSnackbar(
+        await this.store.showSnackbar(
           this.$t("projectOverview.projectSuccessfullyCreated"),
           SnackbarType.SUCCESS
         );
       } catch (error) {
-        this.store.showSnackbar(
+        await this.store.showSnackbar(
           this.$t("projectOverview.errorMessage"),
           SnackbarType.ERROR
         );
       }
     },
-    openDeleteDialog(project: Project) {
-      this.projectToBeDeleted = project;
+    async createVersion() {
+      const newVersionVersionNameInput = this.$refs
+        .newVersionVersionNameInput as VTextField;
+
+      const errors = newVersionVersionNameInput
+        ? await newVersionVersionNameInput.validate()
+        : [];
+      if (errors.length > 0) {
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("versionName", this.newVersionName);
+
+      const projectId = this.projectForNewVersion!.id;
+      const url = `/api/project/${projectId}`;
+
+      try {
+        const { data } = await axios.post(url, formData, {
+          headers: authHeader()
+        });
+        this.store.setActiveVersionForProject(projectId, data);
+        for (const project of this.projects) {
+          if (project.id === projectId) {
+            project.versions.push(data);
+          }
+        }
+
+        this.showNewVersionDialog = false;
+        this.projectDialog = false;
+
+        await this.store.showSnackbar(
+          this.$t("projectOverview.versionSuccessfullyCreated"),
+          SnackbarType.SUCCESS
+        );
+      } catch (error) {
+        await this.store.showSnackbar(
+          this.$t("projectOverview.errorMessage"),
+          SnackbarType.ERROR
+        );
+      }
+    },
+    openDeleteDialog(project: Project, projectVersion: ProjectVersion) {
+      this.projectForDeletingVersion = project;
+      this.projectVersionToBeDeleted = projectVersion;
       this.confirmDeleteDialog = true;
     },
     async confirmDelete() {
-      if (this.projectToBeDeleted) {
-        try {
-          await this.deleteProject(this.projectToBeDeleted.id);
-
-          this.projects = this.projects.filter(
-            (project) => project.id !== this.projectToBeDeleted?.id
-          );
-          this.updateProjects();
-          this.handleSelectedProjectAfterDelete();
-          this.confirmDeleteDialog = false;
-          this.projectToBeDeleted = null;
-
-          this.projects = this.projects.sort((project: Project) => {
-            return project.id === this.store.selectedProjectId ? -1 : 0;
-          });
-
-          this.store.showSnackbar(
-            this.$t("projectOverview.projectSuccessfullyDeleted"),
-            SnackbarType.SUCCESS
-          );
-        } catch (error) {
-          this.store.showSnackbar(
-            this.$t("projectOverview.errorMessage"),
-            SnackbarType.ERROR
-          );
+      try {
+        await this.deleteProjectVersion(
+          this.projectForDeletingVersion!.id,
+          this.projectVersionToBeDeleted!.id
+        );
+        await this.fetchProjects();
+        await this.store.showSnackbar(
+          this.$t("projectOverview.projectSuccessfullyDeleted"),
+          SnackbarType.SUCCESS
+        );
+      } catch (error) {
+        await this.store.showSnackbar(
+          this.$t("projectOverview.errorMessage"),
+          SnackbarType.ERROR
+        );
+      } finally {
+        this.confirmDeleteDialog = false;
+        if (this.showProjectDetailDialog) {
+          if (
+            !this.projects
+              .map((project) => project.id)
+              .includes(this.projectForDeletingVersion!.id)
+          ) {
+            this.showProjectDetailDialog = false;
+          } else {
+            this.projectChangedFlag = true;
+          }
         }
       }
     },
-    async deleteProject(projectId: number) {
-      await axios.delete(`/api/project/${projectId}`, {
+    async deleteProjectVersion(projectId: number, versionId: number) {
+      await axios.delete(`/api/project/${projectId}/${versionId}`, {
         headers: authHeader()
       });
     },
@@ -536,56 +587,15 @@ export default defineComponent({
       this.projectDialog = false;
       this.showNewVersionDialog = false;
     },
-    updateProjects() {
-      this.projectGroups.forEach((group) => {
-        const persistedActiveProject = this.store.getActiveProjectForGroup(
-          group.name
-        );
-
-        const validProject = group.projects.find(
-          (project) => project.id === persistedActiveProject?.id
-        );
-
-        if (validProject) {
-          this.activeProjectByGroup[group.name] = validProject;
-        } else {
-          this.activeProjectByGroup[group.name] = group.projects[0] || null;
-        }
-
-        if (this.activeProjectByGroup[group.name]) {
-          this.setActiveProject(
-            group.name,
-            this.activeProjectByGroup[group.name].id
-          );
-        }
-      });
+    editProject(id: number) {
+      this.projectDetailId = id;
+      this.showProjectDetailDialog = true;
     },
-    handleSelectedProjectAfterDelete() {
-      if (this.projectToBeDeleted) {
-        const groupName = this.projectToBeDeleted.name;
-        const remainingProjects = this.projects
-          .filter((project) => project.name === groupName)
-          .sort(
-            (a, b) =>
-              new Date(b.modifiedAt).getTime() -
-              new Date(a.modifiedAt).getTime()
-          );
-        const nextActiveProject =
-          remainingProjects.length > 0 ? remainingProjects[0] : null;
-        const currentSelectedProjectId = this.store.getSelectedProjectId();
-        const belongsToGroup =
-          this.projectToBeDeleted &&
-          this.projectToBeDeleted.id === currentSelectedProjectId;
-
-        if (currentSelectedProjectId && nextActiveProject && belongsToGroup) {
-          this.setActiveProject(groupName, nextActiveProject.id);
-          this.store.setSelectedProjectId(nextActiveProject.id);
-        } else if (currentSelectedProjectId && !belongsToGroup) {
-          this.store.setSelectedProjectId(currentSelectedProjectId);
-        } else {
-          this.store.setSelectedProjectId(null);
-        }
-      }
+    closeProjectDetailDialog() {
+      this.showProjectDetailDialog = false;
+    },
+    resetProjectChangedFlag() {
+      this.projectChangedFlag = false;
     }
   }
 });

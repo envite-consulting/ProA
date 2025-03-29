@@ -19,10 +19,6 @@ public class ProjectVersionTable {
 	private LocalDateTime createdAt;
 	private LocalDateTime modifiedAt;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "project_id", nullable = false)
-	private ProjectTable project;
-
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
 	private List<CallActivityTable> callActivities = new ArrayList<>();
 

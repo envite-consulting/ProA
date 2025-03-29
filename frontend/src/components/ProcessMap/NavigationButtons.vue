@@ -1,49 +1,82 @@
 <template>
-  <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px;">
+  <div class="ma-4" style="position: absolute; bottom: 8px; right: 8px">
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-left"
-             @click="goLeft"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-chevron-left"
+        @click="goLeft"
+        size="large"
+      />
     </v-fab-transition>
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-right"
-             @click="goRight"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-chevron-right"
+        @click="goRight"
+        size="large"
+      />
     </v-fab-transition>
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-up"
-             @click="goUp"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-chevron-up"
+        @click="goUp"
+        size="large"
+      />
     </v-fab-transition>
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-chevron-down"
-             @click="goDown"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-chevron-down"
+        @click="goDown"
+        size="large"
+      />
     </v-fab-transition>
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-plus"
-             @click="zoomIn"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-magnify-plus"
+        @click="zoomIn"
+        size="large"
+      />
     </v-fab-transition>
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-magnify-minus"
-             @click="zoomOut"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-magnify-minus"
+        @click="zoomOut"
+        size="large"
+      />
     </v-fab-transition>
     <v-fab-transition style="margin-right: 5px">
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-fit-to-screen"
-             @click="fitToScreen"
-             size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-fit-to-screen"
+        @click="fitToScreen"
+        size="large"
+      />
     </v-fab-transition>
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
 import { paper } from "@/components/ProcessMap/jointjs/JointJSDiagram";
 import { useAppStore } from "@/store/app";
@@ -51,10 +84,10 @@ import { dia } from "@joint/core";
 import TransformToFitContentOptions = dia.Paper.TransformToFitContentOptions;
 
 const transformFitToContentOptions: TransformToFitContentOptions = {
-  horizontalAlign: 'middle',
+  horizontalAlign: "middle",
   padding: 20,
-  verticalAlign: 'middle'
-}
+  verticalAlign: "middle"
+};
 
 export default defineComponent({
   name: "NavigationButtons",
@@ -71,21 +104,21 @@ export default defineComponent({
       scrollStep: 20,
       zoomInMultiplier: 1.1,
       zoomOutMultiplier: 0.9
-    }
+    };
   },
 
   mounted() {
     const savePaperLayout = this.savePaperLayout;
     this.addKeydownListener();
 
-    paper.on('paper:pinch', function (evt, x, y, sx) {
+    paper.on("paper:pinch", function (evt, x, y, sx) {
       evt.preventDefault();
       const { sx: sx0 } = paper.scale();
       paper.scaleUniformAtPoint(sx0 * sx, { x, y });
       savePaperLayout();
     });
 
-    paper.on('paper:pan', function (evt, tx, ty) {
+    paper.on("paper:pan", function (evt, tx, ty) {
       evt.preventDefault();
       evt.stopPropagation();
       const { tx: tx0, ty: ty0 } = paper.translate();
@@ -134,39 +167,42 @@ export default defineComponent({
       this.savePaperLayout();
     },
     savePaperLayout() {
-      useAppStore().setPaperLayoutForProject(this.selectedProjectId, JSON.stringify({
-        sx: paper.scale().sx,
-        tx: paper.translate().tx,
-        ty: paper.translate().ty
-      }));
+      useAppStore().setPaperLayoutForProject(
+        this.selectedProjectId,
+        JSON.stringify({
+          sx: paper.scale().sx,
+          tx: paper.translate().tx,
+          ty: paper.translate().ty
+        })
+      );
     },
     addKeydownListener() {
-      window.addEventListener('keydown', this.onKeyDown);
+      window.addEventListener("keydown", this.onKeyDown);
     },
     removeKeydownListener() {
-      window.removeEventListener('keydown', this.onKeyDown);
+      window.removeEventListener("keydown", this.onKeyDown);
     },
     onKeyDown(evt: KeyboardEvent) {
       switch (evt.key) {
-        case 'ArrowLeft':
+        case "ArrowLeft":
           this.goLeft();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           this.goRight();
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           this.goUp();
           break;
-        case 'ArrowDown':
+        case "ArrowDown":
           this.goDown();
           break;
-        case '+':
+        case "+":
           this.zoomIn();
           break;
-        case '-':
+        case "-":
           this.zoomOut();
           break;
-        case 'f':
+        case "f":
           this.fitToScreen();
           break;
       }

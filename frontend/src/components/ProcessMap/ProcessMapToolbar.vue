@@ -3,13 +3,18 @@
     <v-toolbar-title>
       <div class="d-flex align-center">
         <span>{{ selectedProjectName }}</span>
-        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4"
+          >VERSION {{ selectedVersionName }}</span
+        >
       </div>
     </v-toolbar-title>
 
     <v-spacer></v-spacer>
 
-    <v-tooltip :text="$t('processMap.retrieveProcessInstances')" location="bottom">
+    <v-tooltip
+      :text="$t('processMap.retrieveProcessInstances')"
+      location="bottom"
+    >
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props" @click="handleFetchProcessInstances">
           <v-icon>mdi-play</v-icon>
@@ -24,7 +29,7 @@
         </v-btn>
       </template>
 
-      <ProcessMapLegend/>
+      <ProcessMapLegend />
     </v-menu>
 
     <v-menu location="bottom" :close-on-content-click="false">
@@ -42,17 +47,33 @@
 
       <v-list>
         <v-list-item>
-          <v-list-item-title class="font-weight-bold d-flex align-center justify-space-between">
-            <div>{{ $t('processMap.hide') }}:</div>
+          <v-list-item-title
+            class="font-weight-bold d-flex align-center justify-space-between"
+          >
+            <div>{{ $t("processMap.hide") }}:</div>
             <div>
-              <v-btn @click="clearFilters" variant="text" :text="$t('processMap.clear')" color="grey"/>
+              <v-btn
+                @click="clearFilters"
+                variant="text"
+                :text="$t('processMap.clear')"
+                color="grey"
+              />
             </div>
           </v-list-item-title>
         </v-list-item>
         <v-divider></v-divider>
-        <v-list-item class="filter-item" v-for="(label, filterOption) in filterOptions" :key="filterOption">
-          <v-checkbox v-model="filterGraphInput[filterOption]" :label="label" color="primary"
-                      @change="filterGraph" hide-details></v-checkbox>
+        <v-list-item
+          class="filter-item"
+          v-for="(label, filterOption) in filterOptions"
+          :key="filterOption"
+        >
+          <v-checkbox
+            v-model="filterGraphInput[filterOption]"
+            :label="label"
+            color="primary"
+            @change="filterGraph"
+            hide-details
+          ></v-checkbox>
         </v-list-item>
       </v-list>
     </v-menu>
@@ -74,7 +95,7 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent } from "vue";
 
 import getProject from "@/components/projectService";
 import ProcessMapLegend from "@/components/ProcessMap/ProcessMapLegend.vue";
@@ -93,7 +114,9 @@ export default defineComponent({
 
   data() {
     const store = useAppStore();
-    const persistedFilterGraphInput = store.getFiltersForProject(this.selectedProjectId!);
+    const persistedFilterGraphInput = store.getFiltersForProject(
+      this.selectedProjectId!
+    );
 
     const defaultFilterGraphInput = {
       hideAbstractDataStores: false,
@@ -103,7 +126,7 @@ export default defineComponent({
       hideProcessesWithoutConnections: false,
       hideStartEndEvents: false,
       hideMessageFlows: false
-    }
+    };
 
     let filterGraphInput = { ...defaultFilterGraphInput };
 
@@ -112,54 +135,62 @@ export default defineComponent({
     }
 
     return {
-      selectedProjectName: '' as string,
-      selectedVersionName: '' as string,
+      selectedProjectName: "" as string,
+      selectedVersionName: "" as string,
       defaultFilterGraphInput,
       filterGraphInput,
       store
-    }
+    };
   },
 
   computed: {
     filterOptions() {
       return {
-        hideAbstractDataStores: this.$t('processMap.resources'),
-        hideCallActivities: this.$t('general.callActivities'),
-        hideConnectionLabels: this.$t('processMap.connectionLabels'),
-        hideIntermediateEvents: this.$t('processMap.intermediateEvents'),
-        hideProcessesWithoutConnections: this.$t('processMap.processesWithoutConnections'),
-        hideStartEndEvents: this.$t('processMap.endToStartConnections'),
-        hideMessageFlows: this.$t('processMap.messageFlows')
-      }
+        hideAbstractDataStores: this.$t("processMap.resources"),
+        hideCallActivities: this.$t("general.callActivities"),
+        hideConnectionLabels: this.$t("processMap.connectionLabels"),
+        hideIntermediateEvents: this.$t("processMap.intermediateEvents"),
+        hideProcessesWithoutConnections: this.$t(
+          "processMap.processesWithoutConnections"
+        ),
+        hideStartEndEvents: this.$t("processMap.endToStartConnections"),
+        hideMessageFlows: this.$t("processMap.messageFlows")
+      };
     },
     filtersCount(): number {
-      return Object.values(this.filterGraphInput).filter(value => value).length
+      return Object.values(this.filterGraphInput).filter((value) => value)
+        .length;
     }
   },
 
   mounted() {
-    getProject(this.selectedProjectId!).then(result => {
+    const selectedProjectId = this.selectedProjectId!;
+    getProject(selectedProjectId).then((result) => {
       this.selectedProjectName = result.data.name;
-      this.selectedVersionName = result.data.version;
+      this.selectedVersionName =
+        this.store.getActiveVersionForProject(selectedProjectId).name;
     });
   },
 
   methods: {
     clearFilters() {
       this.filterGraphInput = { ...this.defaultFilterGraphInput };
-      this.$emit('filterGraph', this.filterGraphInput);
+      this.$emit("filterGraph", this.filterGraphInput);
     },
     fetchProcessModels() {
-      this.$emit('fetchProcessModels');
+      this.$emit("fetchProcessModels");
     },
     filterGraph() {
-      this.$emit('filterGraph', this.filterGraphInput);
+      this.$emit("filterGraph", this.filterGraphInput);
     },
     handleFetchProcessInstances() {
-      this.$emit('handleFetchProcessInstances');
+      this.$emit("handleFetchProcessInstances");
     },
     saveFilters() {
-      this.store.setFiltersForProject(this.selectedProjectId!, JSON.stringify(this.filterGraphInput));
+      this.store.setFiltersForProject(
+        this.selectedProjectId!,
+        JSON.stringify(this.filterGraphInput)
+      );
     }
   }
 });

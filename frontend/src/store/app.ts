@@ -1,12 +1,12 @@
 // Utilities
 import { defineStore } from "pinia";
 import {
-  ActiveProjectByGroup,
-  Project
+  ActiveVersionByProject,
+  ProjectVersion
 } from "@/components/Home/ProjectOverview.vue";
 import { LanguageCode } from "@/layouts/default/AppBar.vue";
 import { Role } from "@/components/ProcessMap/types";
-import { SnackbarType, SnackbarConfigs } from "@/utils/snackbar";
+import { SnackbarConfigs, SnackbarType } from "@/utils/snackbar";
 
 export enum SelectedDialog {
   NONE = -1,
@@ -29,7 +29,7 @@ export const useAppStore = defineStore("app", {
   state: () => {
     return {
       selectedProjectId: null as number | null,
-      activeProjectByGroup: {} as ActiveProjectByGroup,
+      activeVersionByProject: {} as ActiveVersionByProject,
       graphByProject: {} as { [key: number]: string }, // new Map<number, string>() // real map not working with persist plugin
       portsInformationByProject: {} as {
         [key: number]: { [key: string]: string[] };
@@ -58,17 +58,11 @@ export const useAppStore = defineStore("app", {
     };
   },
   actions: {
-    setSelectedProjectId(id: number | null) {
-      this.selectedProjectId = id;
+    setActiveVersionForProject(id: number, version: ProjectVersion) {
+      this.activeVersionByProject[id] = version;
     },
-    getSelectedProjectId(): number | null {
-      return this.selectedProjectId;
-    },
-    setActiveProjectForGroup(projectGroupName: string, project: Project) {
-      this.activeProjectByGroup[projectGroupName] = project;
-    },
-    getActiveProjectForGroup(projectGroupName: string): Project {
-      return this.activeProjectByGroup[projectGroupName];
+    getActiveVersionForProject(id: number): ProjectVersion {
+      return this.activeVersionByProject[id];
     },
     setGraphForProject(id: number, graph: string) {
       this.graphByProject[id] = graph;
@@ -179,6 +173,12 @@ export const useAppStore = defineStore("app", {
       this.snackbar.color = SnackbarConfigs[type].color;
       this.snackbar.icon = SnackbarConfigs[type].icon;
       this.snackbar.visible = true;
+    },
+    setSelectedProjectId(id: number | null) {
+      this.selectedProjectId = id;
+    },
+    getSelectedProjectId(): number | null {
+      return this.selectedProjectId;
     }
   },
   persist: {
@@ -186,6 +186,7 @@ export const useAppStore = defineStore("app", {
     paths: [
       "selectedProjectId",
       "activeProjectByGroup",
+      "activeVersionByProject",
       "graphByProject",
       "paperLayoutByProject",
       "filtersByProject",

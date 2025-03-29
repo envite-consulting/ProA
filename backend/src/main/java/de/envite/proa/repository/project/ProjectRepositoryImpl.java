@@ -1,5 +1,6 @@
 package de.envite.proa.repository.project;
 
+import de.envite.proa.entities.authentication.User;
 import de.envite.proa.entities.project.Project;
 import de.envite.proa.entities.project.ProjectVersion;
 import de.envite.proa.repository.tables.ProjectTable;
@@ -10,12 +11,15 @@ import de.envite.proa.repository.user.UserMapper;
 import de.envite.proa.usecases.project.ProjectRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -35,7 +39,10 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 
 	@Override
 	public Project createProject(String name, String version) {
-		return map(createProjectTable(name, version));
+		ProjectTable project = createProjectTable(name, version);
+		return map(project,
+				project.getVersions().stream().map(this::map).collect(Collectors.toSet()),
+				project.getContributors().stream().map(UserMapper::map).collect(Collectors.toSet()));
 	}
 
 	@Override
@@ -46,7 +53,9 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		project.setOwner(user);
 
 		projectDao.merge(project);
-		return map(project);
+		return map(project,
+				project.getVersions().stream().map(this::map).collect(Collectors.toSet()),
+				project.getContributors().stream().map(UserMapper::map).collect(Collectors.toSet()));
 	}
 
 	private ProjectTable createProjectTable(String name, String version) {
@@ -56,7 +65,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		projectVersion.setName(version);
 		projectVersion.setCreatedAt(now);
 		projectVersion.setModifiedAt(now);
-		projectDao.persist(projectVersion);
 
 		ProjectTable project = new ProjectTable();
 		project.setName(name);
@@ -69,60 +77,164 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	}
 
 	@Override
+	public ProjectVersion addVersion(Long userId, Long projectId, String versionName) {
+		ProjectTable project = projectDao.findByIdWithVersionsAndContributors(projectId);
+		if (project == null || !Objects.equals(project.getOwner().getId(), userId)) {
+			throw new ForbiddenException("Not found or Access forbidden");
+		}
+
+		return createVersionAndMergeProject(project, versionName);
+	}
+
+	@Override
+	public ProjectVersion addVersion(Long projectId, String versionName) {
+		ProjectTable project = projectDao.findByIdWithVersionsAndContributors(projectId);
+		return createVersionAndMergeProject(project, versionName);
+	}
+
+	private ProjectVersion createVersionAndMergeProject(ProjectTable project, String versionName) {
+		ProjectVersionTable projectVersion = new ProjectVersionTable();
+		projectVersion.setName(versionName);
+
+		LocalDateTime now = LocalDateTime.now();
+		projectVersion.setCreatedAt(now);
+		projectVersion.setModifiedAt(now);
+
+		projectDao.persist(projectVersion);
+
+		project.getVersions().add(projectVersion);
+		project.setModifiedAt(now);
+		projectDao.merge(project);
+		return map(projectVersion);
+	}
+
+	@Override
 	public List<Project> getProjects() {
 		return projectDao//
-				.getProjects()//
+				.getProjectsWithVersionsAndContributors()//
 				.stream()//
-				.map(this::map)//
+				.map(project -> map(//
+						project,//
+						project.getVersions().stream().map(this::map).collect(Collectors.toSet()),//
+						project.getContributors().stream().map(UserMapper::map).collect(Collectors.toSet())))//
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public List<Project> getProjects(Long userId) {
-		UserTable user = new UserTable();
-		user.setId(userId);
-		
+		UserTable user = userDao.findById(userId);
+
 		return projectDao//
-				.getProjectsForUser(user)//
+				.getAllProjectsForUserWithVersionsAndContributors(user)//
 				.stream()//
-				.map(this::map)//
+				.map(project -> map(//
+						project,//
+						project.getVersions().stream().map(this::map).collect(Collectors.toSet()),//
+						project.getContributors().stream().map(UserMapper::map).collect(Collectors.toSet())))//
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public Project getProject(Long projectId) {
-		ProjectTable project = projectDao.findById(projectId);
+		ProjectTable project = projectDao.findByIdWithVersionsAndContributors(projectId);
 		if (project == null) {
 			throw new NotFoundException("Project not found");
 		}
-		return map(project);
+		return map(project, map(project.getVersions()), UserMapper.map(project.getContributors()));
 	}
 
 	@Override
 	public Project getProject(Long userId, Long projectId) {
-		ProjectTable project = projectDao.findById(projectId);
+		ProjectTable project = projectDao.findByIdWithVersionsAndContributors(projectId);
 		List<Long> contributorIds = project.getContributors().stream().map(UserTable::getId).toList();
 		if (!Objects.equals(project.getOwner().getId(), userId) && !contributorIds.contains(userId)) {
 			throw new ForbiddenException("Not found or Access forbidden");
 		}
-		return map(project);
+		return map(project, map(project.getVersions()), UserMapper.map(project.getContributors()));
 	}
 
 	@Override
-	public void deleteProjectVersion(Long id) {
-		projectDao.deleteProjectVersion(id);
-	}
-
-	@Override
-	public void deleteProjectVersion(Long userId, Long id) {
-		ProjectVersionTable projectVersion = projectDao.findVersionById(id);
-		ProjectTable project = projectVersion.getProject();
-		Long ownerId = project.getOwner().getId();
-		List<Long> contributorIds = project.getContributors().stream().map(UserTable::getId).toList();
-		if (!(Objects.equals(ownerId, userId)) && !contributorIds.contains(userId)) {
-			throw new ForbiddenException("Not found or Access forbidden");
+	public void removeVersion(Long projectId, Long versionId) {
+		ProjectTable project = findProjectWithVersionsOrThrow(projectId);
+		if (isSingleVersion(project, versionId)) {
+			deleteEntireProject(projectId);
+		} else {
+			removeVersionFromProject(project, versionId);
 		}
-		projectDao.deleteProjectVersion(id);
+	}
+
+	@Override
+	public void removeVersion(Long userId, Long projectId, Long versionId) {
+		ProjectTable project = findProjectWithVersionsOrThrow(projectId);
+		validateProjectOwner(project, userId);
+
+		if (isSingleVersion(project, versionId)) {
+			deleteEntireProject(projectId);
+		} else {
+			removeVersionFromProject(project, versionId);
+		}
+	}
+
+	@Override
+	public void addContributor(Long userId, Long projectId, String email) {
+		ProjectTable project = findProjectWithContributorsOrThrow(projectId);
+		validateProjectOwner(project, userId);
+		UserTable user = userDao.findByEmail(email);
+		if (user == null) {
+			throw new EntityNotFoundException("User not found with email: " + email);
+		}
+		project.getContributors().add(user);
+		project.setModifiedAt(LocalDateTime.now());
+		projectDao.merge(project);
+	}
+
+	@Override
+	public void removeContributor(Long userId, Long projectId, Long contributorId) {
+		ProjectTable project = findProjectWithContributorsOrThrow(projectId);
+		validateProjectOwner(project, userId);
+		project.getContributors().removeIf(user -> Objects.equals(user.getId(), contributorId));
+		project.setModifiedAt(LocalDateTime.now());
+		projectDao.merge(project);
+	}
+
+	private ProjectTable findProjectWithContributorsOrThrow(Long projectId) {
+		return Optional.ofNullable(projectDao.findByIdWithContributors(projectId))
+				.orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + projectId));
+	}
+
+	private ProjectTable findProjectWithVersionsOrThrow(Long projectId) {
+		return Optional.ofNullable(projectDao.findByIdWithVersions(projectId))
+				.orElseThrow(() -> new EntityNotFoundException("Project not found with ID: " + projectId));
+	}
+
+	private void validateProjectOwner(ProjectTable project, Long userId) {
+		if (!Objects.equals(project.getOwner().getId(), userId)) {
+			throw new ForbiddenException("User does not have permission to modify this project.");
+		}
+	}
+
+	private boolean isSingleVersion(ProjectTable project, Long versionId) {
+		return project.getVersions().size() == 1 &&
+				Objects.equals(project.getVersions().iterator().next().getId(), versionId);
+	}
+
+	private void deleteEntireProject(Long projectId) {
+		projectDao.deleteById(projectId);
+	}
+
+	private void removeVersionFromProject(ProjectTable project, Long versionId) {
+		boolean removed = project.getVersions()
+				.removeIf(version -> Objects.equals(version.getId(), versionId));
+		if (!removed) {
+			throw new EntityNotFoundException("Version not found with ID: " + versionId);
+		}
+		project.setModifiedAt(LocalDateTime.now());
+
+		projectDao.merge(project);
+	}
+
+	private Set<ProjectVersion> map(Set<ProjectVersionTable> versions) {
+		return versions.stream().map(this::map).collect(Collectors.toSet());
 	}
 
 	private ProjectVersion map(ProjectVersionTable table) {
@@ -134,15 +246,15 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return projectVersion;
 	}
 
-	private Project map(ProjectTable table) {
+	private Project map(ProjectTable table, Set<ProjectVersion> versions, Set<User> contributors) {
 		Project project = new Project();
 		project.setId(table.getId());
 		project.setName(table.getName());
 		project.setCreatedAt(table.getCreatedAt());
 		project.setModifiedAt(table.getModifiedAt());
 
-		project.setVersions(table.getVersions().stream().map(this::map).collect(Collectors.toSet()));
-		project.setContributors(table.getContributors().stream().map(UserMapper::map).collect(Collectors.toSet()));
+		project.getVersions().addAll(versions);
+		project.getContributors().addAll(contributors);
 		project.setOwner(UserMapper.map(table.getOwner()));
 
 		return project;

@@ -5,6 +5,7 @@ import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
@@ -36,23 +37,51 @@ public class ProjectDao {
 	}
 
 	@Transactional
-	public List<ProjectTable> getProjects() {
+	public List<ProjectTable> getProjectsWithVersionsAndContributors() {
 		return em//
 				.createQuery("SELECT p FROM ProjectTable p", ProjectTable.class)//
 				.getResultList();
 	}
 
 	@Transactional
-	public List<ProjectTable> getProjectsForUser(UserTable user) {
-		return em.createQuery(
-						"SELECT DISTINCT p FROM ProjectTable p JOIN p.contributors c WHERE c = :user", ProjectTable.class)
+	public List<ProjectTable> getAllProjectsForUserWithVersionsAndContributors(UserTable user) {
+		EntityGraph<?> graph = em.getEntityGraph("Project.withVersionsAndContributors");
+
+		return em.createQuery("SELECT DISTINCT p " +
+						"FROM ProjectTable p " +
+						"LEFT JOIN p.contributors c " +
+						"WHERE c = :user " +
+						"OR p.owner = :user", ProjectTable.class)
 				.setParameter("user", user)
+				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();
 	}
 
 	@Transactional
-	public ProjectTable findById(Long id) {
-		return em.find(ProjectTable.class, id);
+	public ProjectTable findByIdWithVersions(Long id) {
+		EntityGraph<?> graph = em.getEntityGraph("Project.withVersions");
+
+		return em.find(ProjectTable.class, id,
+				java.util.Collections.singletonMap("jakarta.persistence.loadgraph", graph)
+		);
+	}
+
+	@Transactional
+	public ProjectTable findByIdWithContributors(Long id) {
+		EntityGraph<?> graph = em.getEntityGraph("Project.withContributors");
+
+		return em.find(ProjectTable.class, id,
+				java.util.Collections.singletonMap("jakarta.persistence.loadgraph", graph)
+		);
+	}
+
+	@Transactional
+	public ProjectTable findByIdWithVersionsAndContributors(Long id) {
+		EntityGraph<?> graph = em.getEntityGraph("Project.withVersionsAndContributors");
+
+		return em.find(ProjectTable.class, id,
+				java.util.Collections.singletonMap("jakarta.persistence.loadgraph", graph)
+		);
 	}
 
 	@Transactional
@@ -61,8 +90,8 @@ public class ProjectDao {
 	}
 
 	@Transactional
-	public void deleteProjectVersion(Long id) {
-		ProjectVersionTable table = em.find(ProjectVersionTable.class, id);
+	public void deleteById(Long id) {
+		ProjectTable table = em.find(ProjectTable.class, id);
 		em.remove(table);
 	}
 }

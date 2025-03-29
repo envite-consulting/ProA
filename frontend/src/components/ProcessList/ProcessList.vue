@@ -372,7 +372,9 @@ export default defineComponent({
     }
     getProject(this.selectedProjectId).then((result) => {
       this.selectedProjectName = result.data.name;
-      this.selectedVersionName = result.data.version;
+      this.selectedVersionName = this.appStore.getActiveVersionForProject(
+        this.selectedProjectId!
+      ).name;
     });
     this.fetchProcessModels();
   },
@@ -488,9 +490,9 @@ export default defineComponent({
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
       const isCollaboration =
-          xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
-          xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
-          xmlDoc.getElementsByTagName("participant")?.length > 1;
+        xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
+        xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
+        xmlDoc.getElementsByTagName("participant")?.length > 1;
 
       if (isCollaboration) {
         const collaboration =

@@ -1,6 +1,7 @@
 package de.envite.proa.usecases.project;
 
 import de.envite.proa.entities.project.Project;
+import de.envite.proa.entities.project.ProjectVersion;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -20,6 +21,14 @@ public class ProjectUsecase {
 		return repository.createProject(userId, name, version);
 	}
 
+	public ProjectVersion addVersion(Long userId, Long projectId, String versionName) {
+		return repository.addVersion(userId, projectId, versionName);
+	}
+
+	public ProjectVersion addVersion(Long projectId, String versionName) {
+		return repository.addVersion(projectId, versionName);
+	}
+
 	public List<Project> getProjects() {
 		return repository.getProjects();
 	}
@@ -36,11 +45,19 @@ public class ProjectUsecase {
 		return repository.getProject(userId, projectId);
 	}
 
-	public void deleteProjectVersion(Long projectVersionId) {
-		repository.deleteProjectVersion(projectVersionId);
+	public void removeVersion(Long projectId, Long versionId) {
+		repository.removeVersion(projectId, versionId);
 	}
 
-	public void deleteProjectVersion(Long userId, Long projectVersionId) {
-		repository.deleteProjectVersion(userId, projectVersionId);
+	public void removeVersion(Long userId, Long projectId, Long versionId) {
+		repository.removeVersion(userId, projectId, versionId);
+	}
+
+	public void addContributor(Long userId, Long projectId, String email) {
+		repository.addContributor(userId, projectId, email);
+	}
+
+	public void removeContributor(Long userId, Long projectId, Long contributorId) {
+		repository.removeContributor(userId, projectId, contributorId);
 	}
 }
