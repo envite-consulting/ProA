@@ -122,7 +122,7 @@
     "uploadingProcessModels": "Uploading Process Models..."
   },
   "processMap": {
-    "callActivity": "Call Activity",
+    "callActivity": "Activity/Task",
     "clear": "Clear",
     "connectionLabels": "Connection Labels",
     "database": "Database",

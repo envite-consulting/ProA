@@ -171,12 +171,31 @@ public class BpmnOperations implements ProcessOperations {
 		String updatedXml = Bpmn.convertToString(processModelInstance);
 		return participants //
 				.stream() //
-				.map(participant -> new ParticipantDetails( //
-						participant.getName() != null ? participant.getName() : participant.getId(), //
-						getParticipantDescription(participant), //
-						extractParticipantXml(updatedXml, participant.getAttributeValue("processRef")) //
-				)) //
+				.map(participant -> {
+					return new ParticipantDetails( //
+							getProcessNameOfParticipant(participant, processModelInstance), //
+							getParticipantDescription(participant), //
+							extractParticipantXml(updatedXml, participant.getAttributeValue("processRef")) //
+					);
+				}) //
 				.collect(Collectors.toList());
+	}
+
+	private String getProcessNameOfParticipant(Participant participant, BpmnModelInstance processModelInstance) {
+		
+		String processId = participant.getAttributeValue("processRef");
+		
+		ModelElementInstance processElement = processModelInstance.getModelElementById(processId);
+		
+		if(processElement !=null && processElement instanceof Process process) {
+			if(process.getName() !=null) {
+				return process.getName();
+			}
+		}
+		if(participant.getName()!=null) {
+			return participant.getName();
+		}
+		return participant.getId();
 	}
 
 	@Override
