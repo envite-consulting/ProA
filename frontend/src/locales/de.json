@@ -112,17 +112,15 @@
     "confirmDeletionText2": " löschen möchten? Dieser Vorgang wird alle Prozessmodelle der Kollaboration löschen.",
     "error": "Fehler",
     "fetchingProcessModels": "Prozessmodelle werden geladen...",
-    "filterByLevels": "Nach Prozessebene filtern",
+    "filterByLevels": "Nach Prozessebenen filtern",
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "invalidApiKeyError": "Kein gültiger API-Key gefunden. Bitte setzen Sie einen gültigen API-Key in den Einstellungen, um die KI-Generierung zu aktivieren.",
-    "isPerformingProcessChangeAnalysis": "Prozessänderungsanalyse wird durchgeführt. Bitte warten...",
     "navigateToC8Import": "Zu C8 Import navigieren",
     "noApiKeyError": "Kein API-Key gefunden. Bitte setzen Sie einen API-Key in den Einstellungen, um die KI-Generierung zu aktivieren.",
     "noProcessModelsFound": "Keine Prozessmodelle gefunden.",
     "noResponseErrorMsg": "Keine Antwort vom Server. Bitte Ihre Verbindung prüfen.",
     "participant": "Teilnehmer",
-    "performProcessChangeAnalysis": "Prozessänderungsanalyse durchführen",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
@@ -150,10 +148,18 @@
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Startereignis"
   },
+  "processModelChangeAnalysis": {
+    "isPerformingProcessModelChangeAnalysis": "Analyse wird durchgeführt. Bitte warten...",
+    "noChangeNecessary": "Keine Änderung notwendig",
+    "performProcessModelChangeAnalysis": "Prozessmodelländerungsanalyse durchführen",
+    "processModelChangeAnalysisException": "Während der Prozessmodelländerungsanalyse ist ein Fehler aufgetreten. Bitte kontaktieren Sie das Entwicklerteam.",
+    "processModelChangeResults": "Ergebnisse der Prozessmodelländerung",
+    "processModelUpdated": "Prozessmodell aktualisiert",
+    "sameContent": "Keine Änderung notwendig, da das ersetzte Prozessmodell den gleichen Inhalt wie das alte Prozessmodell hat"
+  },
   "processView": {
     "back": "Zurück",
     "changeLevel": "Prozessebene wechseln",
-    "level": "Ebene",
     "loadingProcessModel": "Prozessmodell wird geladen..."
   },
   "projectOverview": {

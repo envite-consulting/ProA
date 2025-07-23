@@ -1,14 +1,10 @@
 package de.envite.proa.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 public class RelatedProcessModelRequest {
-    private List<Long> relatedProcessModelIds;
+	private List<Long> relatedProcessModelIds;
 }

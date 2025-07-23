@@ -7,6 +7,7 @@ import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
+import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,9 @@ class ProcessModelUsecaseTest {
 
 	@Mock
 	private ProcessMapRespository processMapRepository;
+
+	@Mock
+	private RelatedProcessModelRepository relatedProcessModelRepository;
 
 	@InjectMocks
 	private ProcessModelUsecase processModelUsecase;
@@ -202,7 +206,8 @@ class ProcessModelUsecaseTest {
 
 		CantReplaceWithCollaborationException exception = assertThrows(CantReplaceWithCollaborationException.class,
 				() -> processModelUsecase.replaceProcessModel(TEST_PROJECT_ID, TEST_OLD_PROCESS_ID,
-						REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION, false, null));
+						REPLACED_PROCESS_NAME, TEST_PROCESS_XML, TEST_DESCRIPTION, false,
+						null, null));
 
 		assertEquals("CantReplaceWithCollaborationException", exception.getExceptionType());
 		assertTrue(exception.getMessage().contains(TEST_OLD_PROCESS_ID.toString()));
@@ -232,17 +237,17 @@ class ProcessModelUsecaseTest {
 		verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, false);
 	}
 
-    @Test
-    void testGetProcessDetails_AggregationOfEventsAndCallActivities() {
-        ProcessDetails processDetails = new ProcessDetails();
+	@Test
+	void testGetProcessDetails_AggregationOfEventsAndCallActivities() {
+		ProcessDetails processDetails = new ProcessDetails();
 
-        when(repository.getProcessDetails(TEST_PROCESS_MODEL_ID, true)).thenReturn(processDetails);
+		when(repository.getProcessDetails(TEST_PROCESS_MODEL_ID, true)).thenReturn(processDetails);
 
-        ProcessDetails result = processModelUsecase.getProcessDetails(TEST_PROCESS_MODEL_ID, true);
+		ProcessDetails result = processModelUsecase.getProcessDetails(TEST_PROCESS_MODEL_ID, true);
 
-        assertEquals(processDetails, result);
-        verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, true);
-    }
+		assertEquals(processDetails, result);
+		verify(repository, times(1)).getProcessDetails(TEST_PROCESS_MODEL_ID, true);
+	}
 
 	@Test
 	void testSaveProcessModel_Collaboration()

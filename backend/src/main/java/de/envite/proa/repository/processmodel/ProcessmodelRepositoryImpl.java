@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.envite.proa.XmlConverter;
+import de.envite.proa.dto.ProcessModelChangeResponse;
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.process.*;
 import de.envite.proa.repository.datastore.DataStoreConnectionDao;
@@ -15,6 +16,7 @@ import de.envite.proa.repository.messageflow.MessageFlowMapper;
 import de.envite.proa.repository.tables.*;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import de.envite.proa.usecases.processmodel.RelatedProcessModelRepository;
+import de.envite.proa.usecases.processmodel.exceptions.ProcessModelChangeAnalysisException;
 import de.envite.proa.usecases.settings.SettingsRepository;
 import io.vertx.ext.web.handler.sockjs.impl.StringEscapeUtils;
 import jakarta.enterprise.context.RequestScoped;
@@ -28,7 +30,6 @@ import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.logging.Logger;
 
 @RequestScoped
 public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
@@ -46,7 +47,6 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	private static final String CONTENTS = "contents";
 	private static final String PARTS = "parts";
 	private static final String TEXT = "text";
-	Logger logger = Logger.getLogger(getClass().getName());
 
 	@Inject
 	public ProcessmodelRepositoryImpl(ProcessModelDao processModelDao, //
@@ -370,67 +370,110 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	@Override
-	public void handleProcessChangeAnalysis(Long oldProcessId, String newContent, String geminiApiKey) {
+	public List<ProcessModelChangeResponse> handleProcessModelChangeAnalysis(Long oldProcessId, String newContent,
+			String geminiApiKey, String selectedLanguage) {
+		List<ProcessModelChangeResponse> responses = new ArrayList<>();
 		ProcessModelTable processModel = processModelDao.find(oldProcessId);
 		List<RelatedProcessModelTable> relatedProcessModels = relatedProcessModelDao.getRelatedProcessModels(
 				processModel);
 
-		if (getProcessModelXml(oldProcessId).equals(newContent) || relatedProcessModels.isEmpty()) {
-			return;
+		if (getProcessModelXml(oldProcessId).equals(newContent)) {
+			responses.add(new ProcessModelChangeResponse(null, null, "Same content"));
+			return responses;
+		}
+
+		if (relatedProcessModels.isEmpty()) {
+			throw new ProcessModelChangeAnalysisException("Process model has no related process models.");
 		}
 
 		if (geminiApiKey == null) {
 			if (settingsRepository.getSettings() == null || settingsRepository.getSettings()
 					.getGeminiApiKey() == null) {
-				throw new IllegalArgumentException("Gemini API key not defined. Aborting process change analysis.");
+				throw new ProcessModelChangeAnalysisException(
+						"Gemini API key not defined. Aborting process change analysis.");
 			}
 
 			geminiApiKey = settingsRepository.getSettings().getGeminiApiKey();
 		}
 
 		if (!geminiApiKey.startsWith("AIza") || geminiApiKey.length() != 39) {
-			throw new IllegalArgumentException("Invalid Gemini API key. Aborting process change analysis.");
+			throw new ProcessModelChangeAnalysisException("Invalid Gemini API key. Aborting process change analysis.");
 		}
 
 		for (RelatedProcessModelTable relatedProcessModel : relatedProcessModels) {
+			Long relatedProcessModelId = relatedProcessModel.getRelatedProcessModelId();
+			String relatedProcessModelName = relatedProcessModel.getProcessName();
+			Integer relatedProcessModelLevel = relatedProcessModel.getLevel();
+
 			try {
 				String geminiRequest = generateGeminiRequest(oldProcessId, newContent,
-						relatedProcessModel.getRelatedProcessModelId());
+						relatedProcessModel.getRelatedProcessModelId(), selectedLanguage);
 				String geminiResponse = sendGeminiRequest(geminiApiKey, geminiRequest);
-				handleGeminiResponse(geminiResponse, relatedProcessModel.getRelatedProcessModelId());
+				String message = handleGeminiResponse(geminiResponse, relatedProcessModelId);
+
+				responses.add(
+						new ProcessModelChangeResponse(relatedProcessModelName, relatedProcessModelLevel, message));
 			} catch (Exception e) {
-				throw new RuntimeException(e.getMessage());
+				throw new ProcessModelChangeAnalysisException(e.getMessage());
 			}
 		}
-
+		return responses;
 	}
 
-	private String generateGeminiRequest(Long processModelId, String newContent, Long relatedProcessModelId)
-			throws Exception {
+	private String generateGeminiRequest(Long processModelId, String newContent, Long relatedProcessModelId,
+			String selectedLanguage) throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> requestBodyMap = new HashMap<>();
 		List<Map<String, Object>> contentsList = new ArrayList<>();
 		Map<String, Object> contentMap = new HashMap<>();
 		List<Map<String, Object>> partsList = new ArrayList<>();
 
-		String prompt = "Process model with id " + processModelId + ":\n\n" + getProcessModelXml(processModelId) +
-				"\n\n" + "Related process model with id " + relatedProcessModelId + ":\n" +
-				getProcessModelXml(relatedProcessModelId) + "\n\n" +
-				"Changed process model with id " + processModelId + ":\n\n" + newContent + "\n\n" +
-				"This is the context:" + "\n" +
-				"There has been a change in process model with id " + processModelId + ". " +
-				"Please analyse this change and what the differences are. " +
-				"Process model with id " + relatedProcessModelId +
-				" is the same process, but at a different level of abstraction. " +
-				"Therefore, there should also be a change in process model with id " + relatedProcessModelId +
-				" based on the change in process model with id " +
-				processModelId + ". " + "Please give me the customised XML file of process model with id " +
-				relatedProcessModelId + ". " +
-				"The output must be a valid BPMN XML file according to OMG. " +
-				"Please make sure that only the valid XML code is returned. " +
-				"I do not need an explanation. If no change is necessary, simply return 'No'. " +
-				"If no automatic change is possible or the changed process does not reflect the original process, " +
-				"please return your analysis.";
+		String prompt;
+
+		if (selectedLanguage.equalsIgnoreCase("de")) {
+			prompt = "You are a business process modelling expert. I will provide you with 3 BPMN 2.0 process " +
+					"models in XML format. The two process models 'Process model with id " + processModelId + "' " +
+					"and 'Process model with id " + relatedProcessModelId + "' represent the same business process, " +
+					"but at different levels of abstraction. Process model with id " + processModelId + " has now " +
+					"been adapted. The changed process model can be found under 'Changed process model with id " +
+					processModelId + "'. First, analyse the change in process model " + processModelId + " and " +
+					"decide whether this change has an impact on process model " + relatedProcessModelId + ". Next, " +
+					"in case a change is necessary, use the result to generate a customised BPMN 2.0 XML file of " +
+					"process model " + relatedProcessModelId + " based on the change in process model " +
+					processModelId + ". Finally, make sure that the output must be a valid BPMN 2.0 XML file " +
+					"according to OMG and return only the valid XML code. I do not need an explanation. If no " +
+					"change is necessary, simply return 'No'. If no automatic change is possible or the changed " +
+					"process model does not reflect the original business process, please provide a short analysis " +
+					"of the content of the changed process model in German. Under no circumstances should you use " +
+					"IDs such as 'Process model with id', 'Changed process model with id' or similar formulations in " +
+					"the analysis. The analysis should relate exclusively to the changes in content and their " +
+					"effects. Ensure that the description is no longer than 500 characters." + "\n\n" + "Process " +
+					"model with id " + processModelId + ":\n" + getProcessModelXml(processModelId) + "\n\n" +
+					"Process model with id " + relatedProcessModelId + ":\n" +
+					getProcessModelXml(relatedProcessModelId) + "\n\n" + "Changed process model with id " +
+					processModelId + ":\n" + newContent;
+		} else {
+			prompt = "You are a business process modelling expert. I will provide you with 3 BPMN 2.0 process " +
+					"models in XML format. The two process models 'Process model with id " + processModelId + "' " +
+					"and 'Process model with id " + relatedProcessModelId + "' represent the same business process, " +
+					"but at different levels of abstraction. Process model with id " + processModelId + " has now " +
+					"been adapted. The changed process model can be found under 'Changed process model with id " +
+					processModelId + "'. First, analyse the change in process model " + processModelId + " and " +
+					"decide whether this change has an impact on process model " + relatedProcessModelId + ". Next, " +
+					"in case a change is necessary, use the result to generate a customised BPMN 2.0 XML file of " +
+					"process model " + relatedProcessModelId + " based on the change in process model " +
+					processModelId + ". Finally, make sure that the output must be a valid BPMN 2.0 XML file " +
+					"according to OMG and return only the valid XML code. I do not need an explanation. If no " +
+					"change is necessary, simply return 'No'. If no automatic change is possible or the changed " +
+					"process model does not reflect the original business process, please provide a short analysis " +
+					"of the content of the changed process model. Under no circumstances should you use IDs such as " +
+					"'Process model with id', 'Changed process model with id' or similar formulations in the " +
+					"analysis. The analysis should relate exclusively to the changes in content and their effects. " +
+					"Ensure that the description is no longer than 500 characters." + "\n\n" + "Process model with " +
+					"id " + processModelId + ":\n" + getProcessModelXml(processModelId) + "\n\n" + "Process model " +
+					"with id " + relatedProcessModelId + ":\n" + getProcessModelXml(relatedProcessModelId) + "\n\n" +
+					"Changed process model with id " + processModelId + ":\n" + newContent;
+		}
 
 		Map<String, Object> partMap = new HashMap<>();
 		partMap.put(TEXT, prompt);
@@ -443,7 +486,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 	}
 
 	private String sendGeminiRequest(String geminiApiKey, String requestBody) throws JsonProcessingException {
-		String geminiModel = "gemini-2.0-flash-thinking-exp-01-21";
+		String geminiModel = "gemini-2.5-pro";
 
 		ObjectMapper mapper = new ObjectMapper();
 		Client client = ClientBuilder.newClient();
@@ -464,14 +507,22 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 						"https://generativelanguage.googleapis.com/v1beta/models/" + geminiModel
 								+ ":generateContent?key=" + geminiApiKey)
 				.request(MediaType.APPLICATION_JSON).post(Entity.json(mapper.writeValueAsString(payload)))) {
-			return response.readEntity(String.class);
+			String responseBody = response.readEntity(String.class);
+
+			if (response.getStatus() == 404) {
+				throw new ProcessModelChangeAnalysisException("Gemini model '" + geminiModel + "' was not found.");
+			} else if (response.getStatus() >= 400) {
+				String errorMessage = extractErrorMessage(responseBody);
+				throw new ProcessModelChangeAnalysisException("Error when calling Gemini API: " + errorMessage);
+			}
+
+			return responseBody;
 		} finally {
 			client.close();
 		}
-
 	}
 
-	private void handleGeminiResponse(String geminiResponse, Long relatedProcessModelId) throws Exception {
+	private String handleGeminiResponse(String geminiResponse, Long relatedProcessModelId) throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		JsonNode rootNode = objectMapper.readTree(geminiResponse);
 		JsonNode textNode = rootNode
@@ -486,12 +537,19 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			relatedProcessModel.setBpmnXml(XmlConverter.stringToBytes(responseText));
 			processModelDao.merge(relatedProcessModel);
 
-			logger.info("Process model updated.");
+			return "Process model updated";
 		} else if (responseText.toLowerCase().startsWith("no")) {
-			logger.info("No change necessary.");
+			return "No change necessary";
 		} else {
-			logger.info("Manual analysis necessary.");
+			return responseText;
 		}
+	}
+
+	private String extractErrorMessage(String responseBody) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode root = mapper.readTree(responseBody);
+		JsonNode errorNode = root.path("error").path("message");
+		return errorNode.asText();
 	}
 
 	private String cleanupResponseText(String responseText) throws Exception {

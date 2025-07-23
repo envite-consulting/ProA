@@ -251,7 +251,7 @@ export default defineComponent({
     formattedProcessModels() {
       return this.relatedProcessModels.map((relatedProcessModel) => ({
         ...relatedProcessModel,
-        displayTitle: `${this.$t("processView.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`
+        displayTitle: `${this.$t("general.level")} ${relatedProcessModel.level} – ${relatedProcessModel.processName}`
       }));
     }
   },

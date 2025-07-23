@@ -6,6 +6,7 @@ import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.ProcessModelChangeAnalysisException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -71,8 +72,8 @@ public class ProcessModelResource {
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
 	public Response replaceProcessModel(@RestPath Long projectId, @RestPath Long oldProcessId,
 			@RestForm File processModel, @RestForm String fileName,
-			@RestForm String description, @RestForm boolean startProcessChangeAnalysis,
-			@RestForm String geminiApiKey) {
+			@RestForm String description, @RestForm boolean startProcessModelChangeAnalysis,
+			@RestForm String geminiApiKey, @RestForm String selectedLanguage) {
 		String content = fileService.readFileToString(processModel);
 		fileName = fileName.replace(".bpmn", "");
 
@@ -80,9 +81,9 @@ public class ProcessModelResource {
 			return Response
 					.status(Response.Status.CREATED)
 					.entity(usecase.replaceProcessModel(projectId, oldProcessId, fileName, content, description,
-							startProcessChangeAnalysis, geminiApiKey))
+							startProcessModelChangeAnalysis, geminiApiKey, selectedLanguage))
 					.build();
-		} catch (CantReplaceWithCollaborationException e) {
+		} catch (CantReplaceWithCollaborationException | ProcessModelChangeAnalysisException e) {
 			return Response.status(Response.Status.BAD_REQUEST).entity(e).build();
 		} catch (Exception e) {
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();

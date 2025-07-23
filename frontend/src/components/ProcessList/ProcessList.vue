@@ -123,18 +123,22 @@
         <v-container>
           <v-row v-if="uploadDialogMode === 'single'">
             <v-col
-              v-if="showProcessChangeAnalysisCheckbox"
+              v-if="showProcessModelChangeAnalysisCheckbox"
               cols="12"
               sm="12"
               md="12"
               class="pt-0"
             >
               <v-checkbox
-                v-model="performProcessChangeAnalysis"
+                v-model="performProcessModelChangeAnalysis"
                 color="primary"
                 hide-details
-                :disabled="isPerformingProcessChangeAnalysis"
-                :label="$t('processList.performProcessChangeAnalysis')"
+                :disabled="isPerformingProcessModelChangeAnalysis"
+                :label="
+                  $t(
+                    'processModelChangeAnalysis.performProcessModelChangeAnalysis'
+                  )
+                "
               ></v-checkbox>
             </v-col>
           </v-row>
@@ -151,7 +155,7 @@
               ></v-file-input>
               <v-file-input
                 v-if="uploadDialogMode === 'single'"
-                :disabled="isPerformingProcessChangeAnalysis"
+                :disabled="isPerformingProcessModelChangeAnalysis"
                 :label="$t('general.processModel')"
                 v-model="processModelFiles"
                 chips
@@ -175,7 +179,7 @@
             </div>
             <v-col cols="12" sm="12" md="12" class="py-1">
               <v-text-field
-                :disabled="isPerformingProcessChangeAnalysis"
+                :disabled="isPerformingProcessModelChangeAnalysis"
                 hide-details
                 label="Name"
                 v-model="file.name"
@@ -186,7 +190,7 @@
                 <v-col style="position: relative">
                   <v-textarea
                     rows="3"
-                    :disabled="isPerformingProcessChangeAnalysis"
+                    :disabled="isPerformingProcessModelChangeAnalysis"
                     :label="$t('general.description')"
                     v-model="file.description"
                     :error-messages="descriptionErrors[index]"
@@ -208,7 +212,7 @@
                 </v-col>
                 <v-col class="d-flex justify-end" cols="auto">
                   <v-tooltip
-                    :disabled="isPerformingProcessChangeAnalysis"
+                    :disabled="isPerformingProcessModelChangeAnalysis"
                     :text="$t('processList.generateDescriptionWithAI')"
                     location="bottom"
                   >
@@ -218,7 +222,7 @@
                         color="grey"
                         class="ms-2 hover-icon"
                         @click="
-                          isPerformingProcessChangeAnalysis
+                          isPerformingProcessModelChangeAnalysis
                             ? null
                             : generateDescription(file, index)
                         "
@@ -237,9 +241,9 @@
         <v-spacer></v-spacer>
         <v-container>
           <v-row>
-            <v-col cols="12" md="8" lg="6" class="mx-auto">
+            <v-col class="mx-auto">
               <v-alert
-                v-if="isPerformingProcessChangeAnalysis"
+                v-if="isPerformingProcessModelChangeAnalysis"
                 type="info"
                 variant="tonal"
               >
@@ -249,7 +253,11 @@
                   class="mr-2"
                   indeterminate
                 ></v-progress-circular>
-                {{ $t("processList.isPerformingProcessChangeAnalysis") }}
+                {{
+                  $t(
+                    "processModelChangeAnalysis.isPerformingProcessModelChangeAnalysis"
+                  )
+                }}
               </v-alert>
             </v-col>
           </v-row>
@@ -257,7 +265,7 @@
         <v-btn
           color="blue-darken-1"
           variant="text"
-          :disabled="isPerformingProcessChangeAnalysis"
+          :disabled="isPerformingProcessModelChangeAnalysis"
           @click="closeUploadDialog"
         >
           {{ $t("general.cancel") }}
@@ -274,7 +282,7 @@
           v-if="uploadDialogMode === 'single'"
           color="blue-darken-1"
           variant="text"
-          :disabled="isPerformingProcessChangeAnalysis"
+          :disabled="isPerformingProcessModelChangeAnalysis"
           @click="replaceProcessModel"
         >
           {{ $t("general.save") }}
@@ -330,6 +338,59 @@
           ></v-btn>
         </div>
       </template>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="processModelChangeResultsDialog" width="auto">
+    <v-card max-width="600">
+      <v-card-title class="d-flex align-center">
+        <v-icon class="me-2">mdi-check-circle-outline</v-icon>
+        {{ $t("processModelChangeAnalysis.processModelChangeResults") }}
+      </v-card-title>
+      <v-card-text>
+        <v-list density="compact">
+          <template
+            v-for="(result, index) in processModelChangeResults"
+            :key="index"
+          >
+            <v-list-item class="align-start">
+              <v-list-item-content>
+                <div class="d-flex" v-if="result.processModelName">
+                  <v-list-item-icon class="me-2">
+                    <v-icon color="grey">mdi-file</v-icon>
+                  </v-list-item-icon>
+                  <span>{{ result.processModelName }}</span>
+                </div>
+                <div class="d-flex mt-1" v-if="result.processModelLevel">
+                  <v-list-item-icon class="me-2">
+                    <v-icon>mdi-layers</v-icon>
+                  </v-list-item-icon>
+                  <span>{{
+                    $t("general.level") + " " + result.processModelLevel
+                  }}</span>
+                </div>
+                <div class="d-flex mt-1">
+                  <v-list-item-icon class="me-2">
+                    <v-icon color="green">mdi-file-check</v-icon>
+                  </v-list-item-icon>
+                  <span>{{ formatMessage(result.message) }}</span>
+                </div>
+              </v-list-item-content>
+            </v-list-item>
+            <v-divider
+              v-if="index < processModelChangeResults.length - 1"
+              class="my-3"
+            />
+          </template>
+        </v-list>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          :text="$t('general.close')"
+          @click="processModelChangeResultsDialog = false"
+        />
+      </v-card-actions>
     </v-card>
   </v-dialog>
 
@@ -418,6 +479,12 @@ interface ProcessModelToUpload {
   isCollaboration: boolean;
 }
 
+type ProcessResult = {
+  processModelName: string;
+  processModelLevel: number;
+  message: string;
+};
+
 export default defineComponent({
   components: {
     ProcessTreeNode,
@@ -425,6 +492,8 @@ export default defineComponent({
   },
   data: () => ({
     appStore: useAppStore(),
+    processModelChangeResults: [] as ProcessResult[],
+    processModelChangeResultsDialog: false as boolean,
     availableLevels: [] as number[],
     confirmDeleteDialog: false as boolean,
     errorDialog: false as boolean,
@@ -445,12 +514,12 @@ export default defineComponent({
     selectedVersionName: "" as string,
     fileExtensionMatcher: /.[^/.]+$/,
     isFetching: false as boolean,
-    isPerformingProcessChangeAnalysis: false as boolean,
+    isPerformingProcessModelChangeAnalysis: false as boolean,
     descriptionErrors: {} as { [key: number]: string },
     currentlyUploadingProcessModel: {} as ProcessModelToUpload,
     currentUploadStatus: "" as string,
-    performProcessChangeAnalysis: false,
-    showProcessChangeAnalysisCheckbox: false
+    performProcessModelChangeAnalysis: false,
+    showProcessModelChangeAnalysisCheckbox: false
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -594,7 +663,7 @@ export default defineComponent({
           import.meta.env.VITE_GEMINI_API_KEY.startsWith("AIza")) &&
         (settings.geminiApiKey?.length === 39 ||
           import.meta.env.VITE_GEMINI_API_KEY.length === 39);
-      this.showProcessChangeAnalysisCheckbox =
+      this.showProcessModelChangeAnalysisCheckbox =
         this.relatedProcessModels.length > 0 && validApiKey;
     },
 
@@ -715,6 +784,7 @@ export default defineComponent({
         processModel.name ||
         processModel.file.name.replace(this.fileExtensionMatcher, "");
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const selectedLanguage = this.appStore.getSelectedLanguage();
 
       formData.append("processModel", processModel.file);
       formData.append("fileName", fileName);
@@ -723,15 +793,16 @@ export default defineComponent({
         "isCollaboration",
         processModel.isCollaboration ? "true" : "false"
       );
-      if (this.performProcessChangeAnalysis) {
-        formData.append("startProcessChangeAnalysis", "true");
+      if (this.performProcessModelChangeAnalysis) {
+        formData.append("startProcessModelChangeAnalysis", "true");
       }
       if (
-        this.performProcessChangeAnalysis &&
+        this.performProcessModelChangeAnalysis &&
         apiKey.startsWith("AIza") &&
         apiKey.length === 39
       ) {
         formData.append("geminiApiKey", apiKey);
+        formData.append("selectedLanguage", selectedLanguage);
       }
 
       return formData;
@@ -776,11 +847,11 @@ export default defineComponent({
       );
 
       try {
-        if (this.performProcessChangeAnalysis) {
-          this.isPerformingProcessChangeAnalysis = true;
+        if (this.performProcessModelChangeAnalysis) {
+          this.isPerformingProcessModelChangeAnalysis = true;
         }
 
-        await axios.post(
+        const response = await axios.post(
           "/api/project/" +
             this.selectedProjectId +
             "/process-model/" +
@@ -789,9 +860,13 @@ export default defineComponent({
           { headers: authHeader() }
         );
 
-        if (this.performProcessChangeAnalysis) {
-          this.isPerformingProcessChangeAnalysis = false;
-          this.performProcessChangeAnalysis = false;
+        if (this.performProcessModelChangeAnalysis) {
+          this.processModelChangeResults =
+            response.data.processModelChangeResults;
+
+          this.isPerformingProcessModelChangeAnalysis = false;
+          this.performProcessModelChangeAnalysis = false;
+          this.processModelChangeResultsDialog = true;
         }
       } catch (error) {
         this.afterUploadActions();
@@ -803,10 +878,25 @@ export default defineComponent({
       this.afterUploadActions();
     },
 
+    formatMessage(message: string): string {
+      const translations: Record<string, string> = {
+        "Process model updated": this.$t(
+          "processModelChangeAnalysis.processModelUpdated"
+        ) as string,
+        "No change necessary": this.$t(
+          "processModelChangeAnalysis.noChangeNecessary"
+        ) as string,
+        "Same content": this.$t(
+          "processModelChangeAnalysis.sameContent"
+        ) as string
+      };
+      return translations[message] || message;
+    },
+
     afterUploadActions() {
       this.fetchProcessModels();
-      this.isPerformingProcessChangeAnalysis = false;
-      this.performProcessChangeAnalysis = false;
+      this.isPerformingProcessModelChangeAnalysis = false;
+      this.performProcessModelChangeAnalysis = false;
       this.progressDialog = false;
       this.progress = 0;
       this.closeUploadDialog();
@@ -815,7 +905,7 @@ export default defineComponent({
 
     closeUploadDialog() {
       this.uploadDialog = false;
-      this.performProcessChangeAnalysis = false;
+      this.performProcessModelChangeAnalysis = false;
       this.resetDescriptionErrors();
     },
 

@@ -1,5 +1,6 @@
 package de.envite.proa.usecases.processmodel;
 
+import de.envite.proa.dto.ProcessModelChangeResponse;
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
@@ -14,7 +15,7 @@ public interface ProcessModelRepository {
 
 	String getProcessModelXml(Long id);
 
-    void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds);
+	void addRelatedProcessModel(Long projectId, Long id, List<Long> relatedProcessModelIds);
 
 	List<ProcessInformation> getProcessInformation(Long projectId, String levelParam);
 
@@ -30,5 +31,6 @@ public interface ProcessModelRepository {
 
 	ProcessModelTable getProcessModel(Long id);
 
-	void handleProcessChangeAnalysis(Long oldProcessId, String newContent, String geminiApiKey);
+	List<ProcessModelChangeResponse> handleProcessModelChangeAnalysis(Long oldProcessId, String newContent,
+			String geminiApiKey, String selectedLanguage);
 }

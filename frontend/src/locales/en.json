@@ -117,13 +117,11 @@
     "generateDescriptionWithAI": "Generate description with AI",
     "importFromC8": "Import from C8",
     "invalidApiKeyError": "No valid API key found. Please set a valid API key in the settings to enable AI generation.",
-    "isPerformingProcessChangeAnalysis": "Process change analysis is performed. Please wait...",
     "navigateToC8Import": "Navigate to C8 Import",
     "noApiKeyError": "No API key found. Please set an API key in the settings to enable AI generation.",
     "noProcessModelsFound": "No process models found.",
     "noResponseErrorMsg": "No response from server. Please check your connection.",
     "participant": "Participant",
-    "performProcessChangeAnalysis": "Perform process change analysis",
     "processModels": "Process Models",
     "replaceProcessModel": "Replace Process Model",
     "toTheProcessMap": "To the Process Map",
@@ -151,10 +149,18 @@
     "retrieveProcessInstances": "Prozessinstanzen abrufen",
     "startEvent": "Start Event"
   },
+  "processModelChangeAnalysis": {
+    "isPerformingProcessModelChangeAnalysis": "Analysis is performed. Please wait...",
+    "noChangeNecessary": "No change necessary",
+    "performProcessModelChangeAnalysis": "Perform process model change analysis",
+    "processModelChangeAnalysisException": "An error occurred during the process model change analysis. Please contact the development team.",
+    "processModelChangeResults": "Results of the process model change",
+    "processModelUpdated": "Process model updated",
+    "sameContent": "No change necessary as the replaced process model has the same content as the old process model"
+  },
   "processView": {
     "back": "Back",
     "changeLevel": "Change process level",
-    "level": "Level",
     "loadingProcessModel": "Loading process model..."
   },
   "projectOverview": {

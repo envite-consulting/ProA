@@ -1,5 +1,7 @@
 package de.envite.proa.usecases.processmodel;
 
+import de.envite.proa.dto.ProcessModelChangeResponse;
+import de.envite.proa.dto.ReplaceProcessModelResponse;
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.collaboration.ParticipantDetails;
 import de.envite.proa.entities.process.*;
@@ -18,24 +20,29 @@ public class ProcessModelUsecase {
 	private final ProcessModelRepository repository;
 	private final ProcessOperations processOperations;
 	private final ProcessMapRespository processMapRepository;
+	private final RelatedProcessModelRepository relatedProcessModelRepository;
 
 	@Inject
 	public ProcessModelUsecase(ProcessModelRepository repository, //
-							   ProcessOperations processOperations, //
-							   ProcessMapRespository processMapRepository) {
+			ProcessOperations processOperations, //
+			ProcessMapRespository processMapRepository, //
+			RelatedProcessModelRepository relatedProcessModelRepository) {
 		this.repository = repository;
 		this.processOperations = processOperations;
 		this.processMapRepository = processMapRepository;
+		this.relatedProcessModelRepository = relatedProcessModelRepository;
 	}
 
 	public Long saveProcessModel(Long projectId, String name, String xml, String description,
-								 boolean isUploadedProcessCollaboration) throws CantReplaceWithCollaborationException {
+			boolean isUploadedProcessCollaboration)
+			throws CantReplaceWithCollaborationException {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
 				bpmnProcessId, projectId);
 
 		if (existingProcessModel != null && !isUploadedProcessCollaboration) {
-			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description, false, null);
+			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description, false,
+					null, null).getReplacedProcessModelId();
 		}
 
 		if (isUploadedProcessCollaboration) {
@@ -128,7 +135,7 @@ public class ProcessModelUsecase {
 		events.addAll(intermediateCatchEvents);
 		events.addAll(endEvents);
 
-        Set<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
+		Set<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
 		List<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
 
@@ -166,22 +173,32 @@ public class ProcessModelUsecase {
 		repository.deleteProcessModel(id);
 	}
 
-	public Long replaceProcessModel(Long projectId, Long oldProcessId, String fileName, String content,
-			String description, boolean startProcessChangeAnalysis, String geminiApiKey)
+	public ReplaceProcessModelResponse replaceProcessModel(Long projectId, Long oldProcessId, String fileName,
+			String content, String description, boolean startProcessModelChangeAnalysis, String geminiApiKey,
+			String selectedLanguage)
 			throws CantReplaceWithCollaborationException {
 		boolean isCollaboration = processOperations.getIsCollaboration(content);
+		List<ProcessModelChangeResponse> processModelChangeResults = new ArrayList<>();
+		List<Long> relatedProcessModels = relatedProcessModelRepository.getRelatedProcessModelIdsByProcessId(
+				oldProcessId);
 
 		if (isCollaboration) {
 			throw new CantReplaceWithCollaborationException(oldProcessId);
 		}
 
-		if (startProcessChangeAnalysis) {
-			repository.handleProcessChangeAnalysis(oldProcessId, content, geminiApiKey);
+		if (startProcessModelChangeAnalysis) {
+			processModelChangeResults = repository.handleProcessModelChangeAnalysis(oldProcessId, content,
+					geminiApiKey, selectedLanguage);
 		}
 
 		ProcessModel processModel = createProcessModel(fileName, description, content, false);
+		Long newId = replaceCommonActions(projectId, oldProcessId, processModel);
 
-		return replaceCommonActions(projectId, oldProcessId, processModel);
+		if (!relatedProcessModels.isEmpty()) {
+			addRelatedProcessModel(projectId, newId, relatedProcessModels);
+		}
+
+		return new ReplaceProcessModelResponse(newId, processModelChangeResults);
 	}
 
 	private Long replaceParticipant(Long projectId, Long oldProcessId, String fileName, String content,

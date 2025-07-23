@@ -3,7 +3,8 @@ import i18n from "@/i18n";
 
 enum ExceptionType {
   CantReplaceWithCollaborationException = "CantReplaceWithCollaborationException",
-  CollaborationAlreadyExistsException = "CollaborationAlreadyExistsException"
+  CollaborationAlreadyExistsException = "CollaborationAlreadyExistsException",
+  ProcessModelChangeAnalysisException = "ProcessModelChangeAnalysisException"
 }
 
 export function getErrorMessage(error: unknown): string {
@@ -26,6 +27,12 @@ export function getErrorMessage(error: unknown): string {
             {
               name: error.response.data.name
             }
+          );
+        } else if (
+          exceptionType === ExceptionType.ProcessModelChangeAnalysisException
+        ) {
+          return i18n.global.t(
+            "processModelChangeAnalysis.processModelChangeAnalysisException"
           );
         }
       }

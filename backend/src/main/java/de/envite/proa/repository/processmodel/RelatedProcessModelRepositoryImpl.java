@@ -34,17 +34,15 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 		for (ProcessModelTable model : allModels) {
 			if (!hasValidStartAndEndEvents(model)) {
 				processSingleModel(model);
-				continue;
+			} else {
+				List<ProcessModelTable> matchingModels = findMatchingModels(model, allModels);
+
+				if (matchingModels.size() <= 1) {
+					processSingleModel(model);
+				} else {
+					updateModelLevelsAndSave(model, matchingModels);
+				}
 			}
-
-			List<ProcessModelTable> matchingModels = findMatchingModels(model, allModels);
-
-			if (matchingModels.size() <= 1) {
-				processSingleModel(model);
-				return;
-			}
-
-			updateModelLevelsAndSave(model, matchingModels);
 		}
 	}
 
@@ -200,6 +198,21 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 					.toList();
 		}
 		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Long> getRelatedProcessModelIdsByProcessId(Long processId) {
+		ProcessModelTable processModel = processModelDao.find(processId);
+		List<RelatedProcessModelTable> relatedProcessModels = relatedProcessModelDao.getRelatedProcessModels(
+				processModel);
+
+		if (relatedProcessModels == null) {
+			return Collections.emptyList();
+		}
+
+		return relatedProcessModels.stream()
+				.map(RelatedProcessModelTable::getRelatedProcessModelId)
+				.toList();
 	}
 
 	@Override
