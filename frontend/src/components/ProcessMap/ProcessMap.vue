@@ -457,6 +457,13 @@ export default defineComponent({
             link.set({ connectionId: connection.id, source: target, target: source });
           }
 
+          link.attr({
+              line: {
+                strokeDasharray: '5,5'
+              }
+            }
+          );
+
           return link;
         });
 
