@@ -134,12 +134,31 @@
                 color="primary"
                 hide-details
                 :disabled="isPerformingProcessModelChangeAnalysis"
-                :label="
-                  $t(
-                    'processModelChangeAnalysis.performProcessModelChangeAnalysis'
-                  )
-                "
-              ></v-checkbox>
+              >
+                <template #label>
+                  <span style="display: inline-flex; align-items: center">
+                    {{
+                      $t(
+                        "processModelChangeAnalysis.performProcessModelChangeAnalysis"
+                      )
+                    }}
+                    <v-tooltip
+                      location="top"
+                      :disabled="isPerformingProcessModelChangeAnalysis"
+                      :text="$t('processModelChangeAnalysis.info')"
+                      max-width="600"
+                    >
+                      <template #activator="{ props }">
+                        <v-icon
+                          v-bind="props"
+                          icon="mdi-information-outline"
+                          class="ms-2"
+                        />
+                      </template>
+                    </v-tooltip>
+                  </span>
+                </template>
+              </v-checkbox>
             </v-col>
           </v-row>
           <v-row class="pb-5">
@@ -353,29 +372,23 @@
             v-for="(result, index) in processModelChangeResults"
             :key="index"
           >
-            <v-list-item class="align-start">
-              <v-list-item-content>
-                <div class="d-flex" v-if="result.processModelName">
-                  <v-list-item-icon class="me-2">
-                    <v-icon color="grey">mdi-file</v-icon>
-                  </v-list-item-icon>
-                  <span>{{ result.processModelName }}</span>
-                </div>
-                <div class="d-flex mt-1" v-if="result.processModelLevel">
-                  <v-list-item-icon class="me-2">
-                    <v-icon>mdi-layers</v-icon>
-                  </v-list-item-icon>
-                  <span>{{
-                    $t("general.level") + " " + result.processModelLevel
-                  }}</span>
-                </div>
-                <div class="d-flex mt-1">
-                  <v-list-item-icon class="me-2">
-                    <v-icon color="green">mdi-file-check</v-icon>
-                  </v-list-item-icon>
-                  <span>{{ formatMessage(result.message) }}</span>
-                </div>
-              </v-list-item-content>
+            <v-list-item class="flex-column align-start">
+              <div class="d-flex" v-if="result.processModelName">
+                <v-icon class="me-2" color="grey">mdi-file</v-icon>
+                <span>{{ result.processModelName }}</span>
+              </div>
+
+              <div class="d-flex mt-1" v-if="result.processModelLevel">
+                <v-icon class="me-2">mdi-layers</v-icon>
+                <span>{{
+                  $t("general.level") + " " + result.processModelLevel
+                }}</span>
+              </div>
+
+              <div class="d-flex mt-1">
+                <v-icon class="me-2" color="green">mdi-file-check</v-icon>
+                <span>{{ formatMessage(result.message) }}</span>
+              </div>
             </v-list-item>
             <v-divider
               v-if="index < processModelChangeResults.length - 1"

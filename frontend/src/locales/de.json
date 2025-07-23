@@ -149,6 +149,7 @@
     "startEvent": "Startereignis"
   },
   "processModelChangeAnalysis": {
+    "info": "Dieses Prozessmodell hat weitere Prozessmodelle auf anderen Prozessebenen, die denselben Prozess darstellen. Im Rahmen der Prozessmodelländerungsanalyse wird geprüft, ob das neue Prozessmodell Auswirkungen auf die anderen Prozessebenen hat. Ist eine automatisierte Anpassung der Prozessmodelle auf den anderen Prozessebenen möglich, dann entfällt die Notwendigkeit einer manuellen Anpassung.",
     "isPerformingProcessModelChangeAnalysis": "Analyse wird durchgeführt. Bitte warten...",
     "noChangeNecessary": "Keine Änderung notwendig",
     "performProcessModelChangeAnalysis": "Prozessmodelländerungsanalyse durchführen",

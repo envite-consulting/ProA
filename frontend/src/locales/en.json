@@ -150,6 +150,7 @@
     "startEvent": "Start Event"
   },
   "processModelChangeAnalysis": {
+    "info": "This process model has process models at other process levels that represent the same process. As part of the process model change analysis, it is checked whether the new process model has an impact on the other process levels. If an automated adaptation of the process models on the other process levels is possible, there is no need for manual adaptation.",
     "isPerformingProcessModelChangeAnalysis": "Analysis is performed. Please wait...",
     "noChangeNecessary": "No change necessary",
     "performProcessModelChangeAnalysis": "Perform process model change analysis",
