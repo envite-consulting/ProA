@@ -115,7 +115,7 @@
         <span class="text-h5" v-if="uploadDialogMode === 'multiple'"
           ><strong>{{ $t("processList.uploadProcessModels") }}</strong></span
         >
-        <span class="text-h5" v-if="uploadDialogMode === 'single'">
+        <span class="text-h5 text-wrap" v-if="uploadDialogMode === 'single'">
           <strong>{{ $t("processList.replaceProcessModel") }}:</strong>
           {{ processName }}
         </span>
