@@ -156,7 +156,7 @@
     "processModelChangeAnalysisException": "Während der Prozessmodelländerungsanalyse ist ein Fehler aufgetreten. Bitte kontaktieren Sie das Entwicklerteam.",
     "processModelChangeResults": "Ergebnisse der Prozessmodelländerung",
     "processModelUpdated": "Prozessmodell aktualisiert",
-    "sameContent": "Keine Änderung notwendig, da das ersetzte Prozessmodell den gleichen Inhalt wie das alte Prozessmodell hat"
+    "sameContent": "Keine Änderung notwendig, da das ersetzte Prozessmodell denselben Inhalt wie das alte Prozessmodell hat"
   },
   "processView": {
     "back": "Zurück",
