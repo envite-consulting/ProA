@@ -639,8 +639,8 @@ export default defineComponent({
         { headers: authHeader() }
       );
 
-      this.relatedProcessModels = response.data.relatedProcessModels;
       this.processName = response.data.processName;
+      this.relatedProcessModels = response.data.relatedProcessModels;
     },
 
     collectRoots(
