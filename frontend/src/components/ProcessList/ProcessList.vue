@@ -112,12 +112,13 @@
   >
     <v-card>
       <v-card-title>
-        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">{{
-          $t("processList.uploadProcessModels")
-        }}</span>
-        <span class="text-h5" v-if="uploadDialogMode === 'single'">{{
-          $t("processList.replaceProcessModel")
-        }}</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'multiple'"
+          ><strong>{{ $t("processList.uploadProcessModels") }}</strong></span
+        >
+        <span class="text-h5" v-if="uploadDialogMode === 'single'">
+          <strong>{{ $t("processList.replaceProcessModel") }}:</strong>
+          {{ processName }}
+        </span>
       </v-card-title>
       <v-card-text>
         <v-container>
@@ -519,6 +520,7 @@ export default defineComponent({
     progress: 0,
     processModelFiles: [] as File[],
     processModelsToUpload: [] as ProcessModelToUpload[],
+    processName: "" as string,
     relatedProcessModels: [] as RelatedProcessModel[],
     rootProcessModels: [] as ProcessModelNode[],
     selectedLevels: [] as number[],
@@ -638,6 +640,7 @@ export default defineComponent({
       );
 
       this.relatedProcessModels = response.data.relatedProcessModels;
+      this.processName = response.data.processName;
     },
 
     collectRoots(
