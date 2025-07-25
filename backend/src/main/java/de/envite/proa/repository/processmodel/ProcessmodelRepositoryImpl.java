@@ -326,4 +326,11 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 		project.setId(projectId);
 		return processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(name, bpmnProcessId, project);
 	}
+
+	@Override
+	public List<ProcessModelTable> getByNameOrBpmnProcessId(String name, String bpmnProcessId, Long projectId) {
+		ProjectTable project = new ProjectTable();
+		project.setId(projectId);
+		return processModelDao.getByNameOrBpmnProcessId(name, bpmnProcessId, project);
+	}
 }

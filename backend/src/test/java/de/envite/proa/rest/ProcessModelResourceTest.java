@@ -4,6 +4,7 @@ import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +48,7 @@ public class ProcessModelResourceTest {
 
 	@Test
 	public void testUploadProcessModel()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
@@ -69,7 +70,7 @@ public class ProcessModelResourceTest {
 
 	@Test
 	public void testUploadProcessModel_InternalError()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);

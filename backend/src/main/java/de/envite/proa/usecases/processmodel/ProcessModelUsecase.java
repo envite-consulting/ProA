@@ -7,6 +7,7 @@ import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -24,15 +25,30 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessMapRespository processMapRepository;
 
-	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isUploadedProcessCollaboration)
-			throws CantReplaceWithCollaborationException {
+	public Long saveProcessModel(Long projectId, String name, String xml, String description,
+			boolean isUploadedProcessCollaboration)
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
+		List<ProcessModelTable> existingProcessModels = repository.getByNameOrBpmnProcessId(name,
 				bpmnProcessId, projectId);
 
-		if (existingProcessModel != null) {
-			if (!isUploadedProcessCollaboration) {
-				return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
+		if (!existingProcessModels.isEmpty()) {
+			ProcessModelTable existingNonCollaborationProcess = null;
+			ProcessModelTable existingCollaborationProcess = null;
+
+			for (ProcessModelTable model : existingProcessModels) {
+				if (model.getProcessType() == ProcessType.COLLABORATION) {
+					existingCollaborationProcess = model;
+				} else {
+					existingNonCollaborationProcess = model;
+				}
+			}
+
+			if (existingCollaborationProcess != null && isUploadedProcessCollaboration) {
+				throw new CollaborationAlreadyExistsException(bpmnProcessId, name);
+			}
+			if (existingNonCollaborationProcess != null && !isUploadedProcessCollaboration) {
+				return replaceProcessModel(projectId, existingNonCollaborationProcess.getId(), name, xml, description);
 			}
 		}
 

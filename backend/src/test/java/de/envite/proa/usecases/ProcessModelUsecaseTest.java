@@ -8,6 +8,7 @@ import de.envite.proa.usecases.processmap.ProcessMapRespository;
 import de.envite.proa.usecases.processmodel.ProcessModelRepository;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
 import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
+import de.envite.proa.usecases.processmodel.exceptions.CollaborationAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -69,11 +70,11 @@ public class ProcessModelUsecaseTest {
 
 	@Test
 	public void testSaveProcessModel_NewProcessModel()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
-		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
+		when(repository.getByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID))
-				.thenReturn(null);
+				.thenReturn(new ArrayList<>());
 
 		// CREATE PROCESS MODEL
 		when(processOperations.getStartEvents(TEST_PROCESS_XML)).thenReturn(EMPTY_PROCESS_EVENTS);
@@ -98,7 +99,7 @@ public class ProcessModelUsecaseTest {
 		assertEquals(TEST_PROCESS_MODEL_ID, result);
 
 		verify(processOperations, times(2)).getBpmnProcessId(TEST_PROCESS_XML);
-		verify(repository, times(1)).findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME,
+		verify(repository, times(1)).getByNameOrBpmnProcessId(TEST_PROCESS_NAME,
 				TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID);
 		verify(processOperations, times(1)).getStartEvents(TEST_PROCESS_XML);
@@ -135,14 +136,14 @@ public class ProcessModelUsecaseTest {
 
 	@Test
 	public void testSaveProcessModel_Replace()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
 		ProcessModelTable existingProcessModel = new ProcessModelTable();
 		existingProcessModel.setId(TEST_OLD_PROCESS_ID);
 		existingProcessModel.setProcessType(ProcessType.PROCESS);
-		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
+		when(repository.getByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID))
-				.thenReturn(existingProcessModel);
+				.thenReturn(List.of(existingProcessModel));
 
 		when(processOperations.getIsCollaboration(TEST_PROCESS_XML)).thenReturn(false);
 
@@ -174,7 +175,7 @@ public class ProcessModelUsecaseTest {
 		assertEquals(TEST_NEW_PROCESS_ID, processId);
 
 		verify(processOperations, times(2)).getBpmnProcessId(TEST_PROCESS_XML);
-		verify(repository, times(1)).findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME,
+		verify(repository, times(1)).getByNameOrBpmnProcessId(TEST_PROCESS_NAME,
 				TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID);
 		verify(processOperations, times(1)).getIsCollaboration(TEST_PROCESS_XML);
@@ -234,11 +235,11 @@ public class ProcessModelUsecaseTest {
 
 	@Test
 	public void testSaveProcessModel_Collaboration()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
-		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
+		when(repository.getByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID)).thenReturn(
-				null);
+				new ArrayList<>());
 
 		when(processOperations.addEmptyProcessRefs(TEST_PROCESS_XML)).thenReturn(TEST_PROCESS_XML);
 
@@ -312,9 +313,7 @@ public class ProcessModelUsecaseTest {
 		verify(processOperations, times(2)).getBpmnProcessId(TEST_PROCESS_XML);
 		verify(processOperations, times(3)).getBpmnProcessId(PARTICIPANT_XML_1);
 
-		verify(repository, times(3)).findByNameOrBpmnProcessIdWithoutCollaborations(any(String.class),
-				any(String.class), any(Long.class));
-		verify(repository, times(1)).findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME,
+		verify(repository, times(1)).getByNameOrBpmnProcessId(TEST_PROCESS_NAME,
 				TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID);
 		verify(repository, times(2)).findByNameOrBpmnProcessIdWithoutCollaborations(PARTICIPANT_NAME_1,
@@ -364,11 +363,11 @@ public class ProcessModelUsecaseTest {
 
 	@Test
 	public void testSaveProcessModel_ReplaceParticipant()
-			throws CantReplaceWithCollaborationException {
+			throws CantReplaceWithCollaborationException, CollaborationAlreadyExistsException {
 		when(processOperations.getBpmnProcessId(TEST_PROCESS_XML)).thenReturn(TEST_BPMN_PROCESS_ID);
-		when(repository.findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
+		when(repository.getByNameOrBpmnProcessId(TEST_PROCESS_NAME, TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID)).thenReturn(
-				null);
+				new ArrayList<>());
 		when(processOperations.addEmptyProcessRefs(TEST_PROCESS_XML)).thenReturn(TEST_PROCESS_XML);
 
 		// CREATE PROCESS MODEL
@@ -476,11 +475,11 @@ public class ProcessModelUsecaseTest {
 		verify(processOperations, times(6)).getBpmnProcessId(PARTICIPANT_XML_1);
 		verify(processOperations, times(3)).getBpmnProcessId(PARTICIPANT_XML_2);
 
-		verify(repository, times(7)).findByNameOrBpmnProcessIdWithoutCollaborations(any(String.class),
-				any(String.class), any(Long.class));
-		verify(repository, times(1)).findByNameOrBpmnProcessIdWithoutCollaborations(TEST_PROCESS_NAME,
+		verify(repository, times(1)).getByNameOrBpmnProcessId(TEST_PROCESS_NAME,
 				TEST_BPMN_PROCESS_ID,
 				TEST_PROJECT_ID);
+		verify(repository, times(6)).findByNameOrBpmnProcessIdWithoutCollaborations(any(String.class),
+				any(String.class), any(Long.class));
 		verify(repository, times(4)).findByNameOrBpmnProcessIdWithoutCollaborations(PARTICIPANT_NAME_1,
 				PARTICIPANT_BPMN_ID,
 				TEST_PROJECT_ID);
