@@ -103,8 +103,7 @@ public class RelatedProcessModelRepositoryImpl implements RelatedProcessModelRep
 		relatedProcessModels.forEach(relatedProcessModelDao::merge);
 	}
 
-	private RelatedProcessModelTable createRelatedModel(ProcessModelTable model,
-			ProcessModelTable otherModel,
+	private RelatedProcessModelTable createRelatedModel(ProcessModelTable model, ProcessModelTable otherModel,
 			int level) {
 		RelatedProcessModelTable relatedProcessModel = new RelatedProcessModelTable();
 		relatedProcessModel.setProcessModel(model);

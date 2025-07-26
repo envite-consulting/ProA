@@ -390,14 +390,15 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			if (settingsRepository.getSettings() == null || settingsRepository.getSettings()
 					.getGeminiApiKey() == null) {
 				throw new ProcessModelChangeAnalysisException(
-						"Gemini API key not defined. Aborting process change analysis.");
+						"Gemini API key not defined. Aborting process model change analysis.");
 			}
 
 			geminiApiKey = settingsRepository.getSettings().getGeminiApiKey();
 		}
 
 		if (!geminiApiKey.startsWith("AIza") || geminiApiKey.length() != 39) {
-			throw new ProcessModelChangeAnalysisException("Invalid Gemini API key. Aborting process change analysis.");
+			throw new ProcessModelChangeAnalysisException(
+					"Invalid Gemini API key. Aborting process model change analysis.");
 		}
 
 		for (RelatedProcessModelTable relatedProcessModel : relatedProcessModels) {
@@ -538,7 +539,7 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 			processModelDao.merge(relatedProcessModel);
 
 			return "Process model updated";
-		} else if (responseText.toLowerCase().startsWith("no")) {
+		} else if (responseText.equalsIgnoreCase("no")) {
 			return "No change necessary";
 		} else {
 			return responseText;
