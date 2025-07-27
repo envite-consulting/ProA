@@ -30,10 +30,8 @@ public class ProcessModelUsecase {
 		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
 				bpmnProcessId, projectId);
 
-		if (existingProcessModel != null) {
-			if (!isUploadedProcessCollaboration) {
-				return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
-			}
+		if (existingProcessModel != null && !isUploadedProcessCollaboration) {
+			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
 		}
 
 		if (isUploadedProcessCollaboration) {
