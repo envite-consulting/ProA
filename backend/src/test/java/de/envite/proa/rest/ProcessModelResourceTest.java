@@ -3,7 +3,7 @@ package de.envite.proa.rest;
 import de.envite.proa.entities.process.ProcessDetails;
 import de.envite.proa.entities.process.ProcessInformation;
 import de.envite.proa.usecases.processmodel.ProcessModelUsecase;
-import io.quarkus.test.junit.QuarkusTest;
+import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,12 +27,7 @@ public class ProcessModelResourceTest {
 	private static final String DESCRIPTION = "description";
 	private static final Long PROJECT_ID = 1L;
 	private static final Long PROCESS_ID = 54321L;
-	private static final String IS_COLLABORATION = "false";
-	private static final String IS_COLLABORATION_TRUE = "true";
-	private static final String PARENT_BPMN_PROCESS_ID = null;
-	private static final String COLLABORATION_NAME = "collaboration123";
-	private static final String COLLABORATION_EXISTS_ERROR_MESSAGE =
-			"Collaboration already exists: " + COLLABORATION_NAME;
+	private static final boolean IS_COLLABORATION = true;
 	private static final Long NEW_PROCESS_ID = 123L;
 	private static final String TEST_DIAGRAM = "test-diagram.bpmn";
 
@@ -52,13 +46,14 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModel() {
+	public void testUploadProcessModel()
+			throws CantReplaceWithCollaborationException {
 		File processModel = new File(Objects.requireNonNull( //
 				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
 
-		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION, //
-				PARENT_BPMN_PROCESS_ID)).thenReturn(PROCESS_ID);
+		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION,
+				IS_COLLABORATION)).thenReturn(PROCESS_ID);
 
 		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, //
 				DESCRIPTION, IS_COLLABORATION);
@@ -69,8 +64,28 @@ public class ProcessModelResourceTest {
 		assertThat((Long) response.getEntity()).isEqualTo(PROCESS_ID);
 
 		verify(fileService).readFileToString(processModel);
-		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION, //
-				PARENT_BPMN_PROCESS_ID);
+		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
+	}
+
+	@Test
+	public void testUploadProcessModel_InternalError()
+			throws CantReplaceWithCollaborationException {
+		File processModel = new File(Objects.requireNonNull( //
+				getClass().getClassLoader().getResource(TEST_DIAGRAM)).getFile());
+		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
+
+		doThrow(RuntimeException.class).when(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML,
+				DESCRIPTION, IS_COLLABORATION);
+
+		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, //
+				DESCRIPTION, IS_COLLABORATION);
+
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isEqualTo(500);
+		assertThat(response.getEntity()).isNull();
+
+		verify(fileService).readFileToString(processModel);
+		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION);
 	}
 
 	@Test
@@ -113,7 +128,6 @@ public class ProcessModelResourceTest {
 	public void testGetProcessDetails() {
 		ProcessDetails expected = new ProcessDetails();
 
-
 		when(usecase.getProcessDetails(PROCESS_ID)).thenReturn(expected);
 
 		ProcessDetails result = resource.getProcessDetails(PROCESS_ID);
@@ -123,45 +137,19 @@ public class ProcessModelResourceTest {
 	}
 
 	@Test
-	public void testUploadProcessModelIllegalArgument() {
+	public void testReplaceProcessModel() throws CantReplaceWithCollaborationException {
 		File processModel = new File(
 				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
 
 		when(fileService.readFileToString(processModel)).thenReturn(PROCESS_XML);
-		when(usecase.saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION_TRUE,
-				PARENT_BPMN_PROCESS_ID))
-				.thenThrow(new IllegalArgumentException(COLLABORATION_EXISTS_ERROR_MESSAGE));
-
-		Response response = resource.uploadProcessModel(PROJECT_ID, processModel, FILE_NAME, DESCRIPTION,
-				IS_COLLABORATION_TRUE);
-
-		verify(usecase).saveProcessModel(PROJECT_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION, IS_COLLABORATION_TRUE,
-				PARENT_BPMN_PROCESS_ID);
-
-		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-		@SuppressWarnings("unchecked")
-		Map<String, String> entity = (Map<String, String>) response.getEntity();
-		assertThat(entity).containsKeys("error", "data");
-		assertThat(entity.get("error")).isEqualTo(COLLABORATION_EXISTS_ERROR_MESSAGE);
-		assertThat(entity.get("data")).isEqualTo(COLLABORATION_NAME);
-	}
-
-	@Test
-	public void testReplaceProcessModel() {
-		File processModel = new File(
-				Objects.requireNonNull(getClass().getClassLoader().getResource("test-diagram.bpmn")).getFile());
-
-		when(fileService.readFileToString(any(File.class))).thenReturn(PROCESS_XML);
-		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION,
-				PARENT_BPMN_PROCESS_ID))
+		when(usecase.replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION))
 				.thenReturn(NEW_PROCESS_ID);
 
-		Long response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION);
+		Response response = resource.replaceProcessModel(PROJECT_ID, PROCESS_ID, processModel, FILE_NAME, DESCRIPTION);
 
-		assertThat(response).isEqualTo(NEW_PROCESS_ID);
+		assertThat(response.getEntity()).isEqualTo(NEW_PROCESS_ID);
 
-		verify(fileService).readFileToString(any(File.class));
-		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION,
-				PARENT_BPMN_PROCESS_ID);
+		verify(fileService).readFileToString(processModel);
+		verify(usecase).replaceProcessModel(PROJECT_ID, PROCESS_ID, FILE_NAME_TRIMMED, PROCESS_XML, DESCRIPTION);
 	}
 }

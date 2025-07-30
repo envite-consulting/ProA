@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +24,7 @@ class ProcessModelDaoTest {
 	private static final String BPMN_PROCESS_ID_2 = "bpmn-process-id-2";
 	private static final String PROCESS_MODEL_NAME_1 = "process-model-name-1";
 	private static final String PROCESS_MODEL_NAME_2 = "process-model-name-2";
+	private static final String PROCESS_MODEL_NAME_3 = "process-model-name-3";
 
 	@Inject
 	EntityManager em;
@@ -56,14 +58,6 @@ class ProcessModelDaoTest {
 	private void flushAndClear() {
 		em.flush();
 		em.clear();
-	}
-
-	@Test
-	@Transactional
-	void testGetProcessModels() {
-		List<ProcessModelTable> processModels = processModelDao.getProcessModels(project);
-		assertNotNull(processModels);
-		assertFalse(processModels.isEmpty());
 	}
 
 	@Test
@@ -105,31 +99,18 @@ class ProcessModelDaoTest {
 
 	@Test
 	@Transactional
-	void testFindByBpmnProcessId() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByBpmnProcessId(BPMN_PROCESS_ID_1, project);
+	void testFindByNameOrBpmnProcessIdWithoutCollaborations() {
+		ProcessModelTable retrievedProcessModel = processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(
+				PROCESS_MODEL_NAME_1, BPMN_PROCESS_ID_1, project);
 		assertNotNull(retrievedProcessModel);
 		assertEquals(BPMN_PROCESS_ID_1, retrievedProcessModel.getBpmnProcessId());
 	}
 
 	@Test
 	@Transactional
-	void testFindByBpmnProcessIdNotFound() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByBpmnProcessId(BPMN_PROCESS_ID_2, project);
-		assertNull(retrievedProcessModel);
-	}
-
-	@Test
-	@Transactional
-	void testFindByName() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByName(PROCESS_MODEL_NAME_1, project);
-		assertNotNull(retrievedProcessModel);
-		assertEquals(PROCESS_MODEL_NAME_1, retrievedProcessModel.getName());
-	}
-
-	@Test
-	@Transactional
-	void testFindByNameNotFound() {
-		ProcessModelTable retrievedProcessModel = processModelDao.findByName(PROCESS_MODEL_NAME_2, project);
+	void testFindByNameOrBpmnProcessIdWithoutCollaborations_NotFound() {
+		ProcessModelTable retrievedProcessModel = processModelDao.findByNameOrBpmnProcessIdWithoutCollaborations(
+				PROCESS_MODEL_NAME_2, BPMN_PROCESS_ID_2, project);
 		assertNull(retrievedProcessModel);
 	}
 
@@ -161,5 +142,76 @@ class ProcessModelDaoTest {
 
 		assertNull(retrievedProcessModel1);
 		assertNull(retrievedProcessModel2);
+	}
+
+	@Test
+	@Transactional
+	void findByBpmnProcessIdWithChildren() {
+		ProcessModelTable processModel2 = new ProcessModelTable();
+		processModel2.setProject(project);
+		processModel2.setName(PROCESS_MODEL_NAME_2);
+		em.persist(processModel2);
+
+		processModel.getChildren().add(processModel2);
+		em.merge(processModel);
+
+		ProcessModelTable result = processModelDao.findByBpmnProcessIdWithChildren(processModel.getBpmnProcessId(),
+				project);
+
+		assertNotNull(result);
+		assertEquals(processModel.getName(), result.getName());
+		assertTrue(result.getChildren().stream().map(ProcessModelTable::getName).toList()
+				.contains(processModel2.getName()));
+	}
+
+	@Test
+	@Transactional
+	void findByBpmnProcessIdWithChildren_NotFound() {
+		ProcessModelTable result = processModelDao.findByBpmnProcessIdWithChildren(BPMN_PROCESS_ID_2,
+				project);
+
+		assertNull(result);
+	}
+
+	@Test
+	@Transactional
+	void testFind() {
+		ProcessModelTable result = processModelDao.find(processModel.getId());
+
+		assertNotNull(result);
+		assertEquals(processModel.getName(), result.getName());
+	}
+
+	@Test
+	@Transactional
+	void testGetProcessModelsWithChildren() {
+		ProcessModelTable child = new ProcessModelTable();
+		child.setProject(project);
+		child.setName(PROCESS_MODEL_NAME_3);
+		em.persist(child);
+
+		processModel.getChildren().add(child);
+		em.merge(processModel);
+
+		flushAndClear();
+
+		List<ProcessModelTable> result = processModelDao.getProcessModelsWithChildren(project);
+
+		assertNotNull(result);
+		assertEquals(2, result.size());
+		assertTrue(result.stream().map(ProcessModelTable::getName).toList()
+				.containsAll(Stream.of(processModel, child).map(ProcessModelTable::getName).toList()));
+
+		for (ProcessModelTable pm : result) {
+			if (pm.getName().equals(processModel.getName())) {
+				assertTrue(pm.getParents().isEmpty());
+				assertTrue(
+						pm.getChildren().stream().map(ProcessModelTable::getName).toList().contains(child.getName()));
+			} else if (pm.getName().equals(child.getName())) {
+				assertTrue(pm.getChildren().isEmpty());
+				assertTrue(pm.getParents().stream().map(ProcessModelTable::getName).toList()
+						.contains(processModel.getName()));
+			}
+		}
 	}
 }

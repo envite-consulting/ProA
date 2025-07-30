@@ -1,8 +1,5 @@
 package de.envite.proa.repository.processmodel;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import de.envite.proa.entities.process.EventType;
 import de.envite.proa.entities.process.ProcessActivity;
 import de.envite.proa.entities.process.ProcessDetails;
@@ -10,6 +7,9 @@ import de.envite.proa.entities.process.ProcessEvent;
 import de.envite.proa.repository.tables.CallActivityTable;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ProcessDetailsMapper {
 
@@ -27,19 +27,19 @@ public class ProcessDetailsMapper {
 		return details;
 	}
 
-	private static List<ProcessActivity> map(List<CallActivityTable> callActivites) {
+	private static Set<ProcessActivity> map(Set<CallActivityTable> callActivites) {
 		return callActivites//
 				.stream()//
 				.map(activity -> new ProcessActivity(activity.getElementId(), activity.getLabel()))//
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
-	private static List<ProcessEvent> map(List<ProcessEventTable> events, EventType eventType) {
+	private static Set<ProcessEvent> map(Set<ProcessEventTable> events, EventType eventType) {
 		return events//
 				.stream()//
 				.filter(event -> event.getEventType().equals(eventType))//
-				.map(event -> map(event))//
-				.collect(Collectors.toList());
+				.map(ProcessDetailsMapper::map)//
+				.collect(Collectors.toSet());
 	}
 
 	private static ProcessEvent map(ProcessEventTable table) {

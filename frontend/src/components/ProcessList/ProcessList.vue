@@ -3,20 +3,27 @@
     <v-toolbar-title>
       <div class="d-flex align-center">
         <span>{{ selectedProjectName }}</span>
-        <span class="text-body-2 text-grey-darken-1 ms-4">VERSION {{ selectedVersionName }}</span>
+        <span class="text-body-2 text-grey-darken-1 ms-4"
+          >VERSION {{ selectedVersionName }}</span
+        >
       </div>
     </v-toolbar-title>
   </v-toolbar>
-  <ProcessDetailDialog ref="processDetailDialog"/>
+  <ProcessDetailDialog ref="processDetailDialog" />
   <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
     <div class="d-flex flex-column align-center justify-center">
-      <span class="mb-2">{{ $t('processList.fetchingProcessModels') }}</span>
-      <v-progress-circular indeterminate/>
+      <span class="mb-2">{{ $t("processList.fetchingProcessModels") }}</span>
+      <v-progress-circular indeterminate />
     </div>
   </div>
   <v-list v-else lines="two" class="pa-6">
-    <v-list-item v-if="rootProcessModels.length == 0">{{ $t('processList.noProcessModelsFound') }}</v-list-item>
-    <template v-for="(model, index) in rootProcessModels" :key="'process-'+ model.id">
+    <v-list-item v-if="rootProcessModels.length == 0"
+      >{{ $t("processList.noProcessModelsFound") }}
+    </v-list-item>
+    <template
+      v-for="(model, index) in rootProcessModels"
+      :key="'process-' + model.id"
+    >
       <ProcessTreeNode
         :model="model"
         :index="index"
@@ -24,66 +31,122 @@
         @upload-process="openSingleUploadDialog"
         @more-info="showProcessInfoDialog"
       />
-      <v-divider v-if="index < rootProcessModels.length - 1" :key="`${index}-divider`"></v-divider>
+      <v-divider
+        v-if="index < rootProcessModels.length - 1"
+        :key="`${index}-divider`"
+      ></v-divider>
     </template>
   </v-list>
-  <div class="ma-4" style="position: fixed; bottom: 8px; right: 8px; z-index: 1;">
+  <div
+    class="ma-4"
+    style="position: fixed; bottom: 8px; right: 8px; z-index: 1"
+  >
     <v-tooltip location="top">
       <template v-slot:activator="{ props }">
         <v-fab-transition>
-          <v-btn class="mt-auto pointer-events-initial me-4" color="primary" elevation="8" icon="mdi-cloud"
-                 @click="goToC8Import" size="large" v-bind="props"></v-btn>
+          <v-btn
+            class="mt-auto pointer-events-initial me-4"
+            color="primary"
+            elevation="8"
+            icon="mdi-cloud"
+            @click="goToC8Import"
+            size="large"
+            v-bind="props"
+          ></v-btn>
         </v-fab-transition>
       </template>
-      <span>{{ $t('processList.navigateToC8Import') }}</span>
+      <span>{{ $t("processList.navigateToC8Import") }}</span>
     </v-tooltip>
 
     <v-fab-transition>
-      <v-btn class="mt-auto pointer-events-initial" color="primary" elevation="8" icon="mdi-plus"
-             @click="openMultipleUploadDialog" size="large"/>
+      <v-btn
+        class="mt-auto pointer-events-initial"
+        color="primary"
+        elevation="8"
+        icon="mdi-plus"
+        @click="openMultipleUploadDialog"
+        size="large"
+      />
     </v-fab-transition>
   </div>
-  <div v-if="rootProcessModels.length > 0" class="d-flex align-center justify-center ma-4"
-       style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px;">
-    <v-btn prepend-icon="mdi-map"
-           @click="goToProcessMap">
-      {{ $t('processList.toTheProcessMap') }}
+  <div
+    v-if="rootProcessModels.length > 0"
+    class="d-flex align-center justify-center ma-4"
+    style="position: fixed; bottom: 8px; right: 8px; left: 8px; height: 56px"
+  >
+    <v-btn prepend-icon="mdi-map" @click="goToProcessMap">
+      {{ $t("processList.toTheProcessMap") }}
     </v-btn>
   </div>
 
-  <v-dialog v-model="uploadDialog" persistent width="600" @after-leave="resetUploadDialog">
+  <v-dialog
+    v-model="uploadDialog"
+    persistent
+    width="600"
+    @after-leave="resetUploadDialog"
+  >
     <v-card>
       <v-card-title>
-        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">{{ $t('processList.uploadProcessModels') }}</span>
-        <span class="text-h5" v-if="uploadDialogMode === 'single'">{{ $t('processList.replaceProcessModel') }}</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'multiple'">{{
+          $t("processList.uploadProcessModels")
+        }}</span>
+        <span class="text-h5" v-if="uploadDialogMode === 'single'">{{
+          $t("processList.replaceProcessModel")
+        }}</span>
       </v-card-title>
       <v-card-text>
         <v-container>
           <v-row class="pb-5">
             <v-col cols="12" sm="12" md="12" class="pt-0">
-              <v-file-input v-if="uploadDialogMode === 'multiple'" :label="$t('processList.processModels')"
-                            v-model="processModelFiles"
-                            chips multiple @change="handleFileSelection" hide-details></v-file-input>
-              <v-file-input v-if="uploadDialogMode === 'single'" :label="$t('general.processModel')"
-                            v-model="processModelFiles" chips
-                            @change="handleFileSelection" hide-details></v-file-input>
+              <v-file-input
+                v-if="uploadDialogMode === 'multiple'"
+                :label="$t('processList.processModels')"
+                v-model="processModelFiles"
+                chips
+                multiple
+                @change="handleFileSelection"
+                hide-details
+              ></v-file-input>
+              <v-file-input
+                v-if="uploadDialogMode === 'single'"
+                :label="$t('general.processModel')"
+                v-model="processModelFiles"
+                chips
+                @change="handleFileSelection"
+                hide-details
+              ></v-file-input>
             </v-col>
           </v-row>
-          <v-row v-for="(file, index) in processModelsToUpload" :key="'file-' + index" class="py-5 mt-0">
+          <v-row
+            v-for="(file, index) in processModelsToUpload"
+            :key="'file-' + index"
+            class="py-5 mt-0"
+          >
             <div class="d-flex align-center">
               <p class="px-3">{{ file.file.name }}</p>
-              <span v-if="file.isCollaboration" class="text-grey-darken-1 text-body-2">{{
-                  $t('processList.collaboration')
-                }}</span>
+              <span
+                v-if="file.isCollaboration"
+                class="text-grey-darken-1 text-body-2"
+                >{{ $t("processList.collaboration") }}</span
+              >
             </div>
             <v-col cols="12" sm="12" md="12" class="py-1">
-              <v-text-field hide-details label="Name" v-model="file.name"></v-text-field>
+              <v-text-field
+                hide-details
+                label="Name"
+                v-model="file.name"
+              ></v-text-field>
             </v-col>
             <v-col cols="12" sm="12" md="12" class="py-1">
               <v-row no-gutters align="center">
-                <v-col style="position: relative;">
-                  <v-textarea hide-details rows="3" :label="$t('general.description')" v-model="file.description">
-                  </v-textarea>
+                <v-col style="position: relative">
+                  <v-textarea
+                    rows="3"
+                    :label="$t('general.description')"
+                    v-model="file.description"
+                    :error-messages="descriptionErrors[index]"
+                    @input="resetDescriptionErrors"
+                  />
                   <v-overlay
                     class="align-center justify-center"
                     :model-value="file.aiLoading"
@@ -99,10 +162,17 @@
                   </v-overlay>
                 </v-col>
                 <v-col class="d-flex justify-end" cols="auto">
-                  <v-tooltip :text="$t('processList.generateDescriptionWithAI')" location="bottom">
+                  <v-tooltip
+                    :text="$t('processList.generateDescriptionWithAI')"
+                    location="bottom"
+                  >
                     <template v-slot:activator="{ props }">
-                      <v-icon v-bind="props" color="grey" class="ms-2 hover-icon"
-                              @click="generateDescription(file)">
+                      <v-icon
+                        v-bind="props"
+                        color="grey"
+                        class="ms-2 hover-icon"
+                        @click="generateDescription(file, index)"
+                      >
                         mdi-auto-fix
                       </v-icon>
                     </template>
@@ -116,13 +186,23 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue-darken-1" variant="text" @click="closeUploadDialog">
-          {{ $t('general.cancel') }}
+          {{ $t("general.cancel") }}
         </v-btn>
-        <v-btn v-if="uploadDialogMode === 'multiple'" color="blue-darken-1" variant="text" @click="uploadProcessModels">
-          {{ $t('general.save') }}
+        <v-btn
+          v-if="uploadDialogMode === 'multiple'"
+          color="blue-darken-1"
+          variant="text"
+          @click="uploadProcessModels"
+        >
+          {{ $t("general.save") }}
         </v-btn>
-        <v-btn v-if="uploadDialogMode === 'single'" color="blue-darken-1" variant="text" @click="replaceProcessModel">
-          {{ $t('general.save') }}
+        <v-btn
+          v-if="uploadDialogMode === 'single'"
+          color="blue-darken-1"
+          variant="text"
+          @click="replaceProcessModel"
+        >
+          {{ $t("general.save") }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -131,31 +211,37 @@
   <v-dialog v-model="progressDialog" max-width="600">
     <v-card title="Upload">
       <template v-slot:text>
-        {{ $t('processList.uploadingProcessModels') }}
-        <v-progress-linear color="primary" :model-value="progress" :height="10"></v-progress-linear>
+        {{ $t("processList.uploadingProcessModel") }}:
+        {{ currentlyUploadingProcessModel.name }} ({{ currentUploadStatus }})
+        <v-progress-linear
+          color="primary"
+          :model-value="progress"
+          :height="10"
+        ></v-progress-linear>
       </template>
 
       <v-card-actions>
         <v-spacer></v-spacer>
 
-        <v-btn :text="$t('general.cancel')" variant="text" @click="progressDialog = false"></v-btn>
+        <v-btn
+          :text="$t('general.cancel')"
+          variant="text"
+          @click="progressDialog = false"
+        ></v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
-  <v-dialog
-    v-model="confirmDeleteDialog"
-    width="auto"
-  >
+  <v-dialog v-model="confirmDeleteDialog" width="auto">
     <v-card
       max-width="400"
       prepend-icon="mdi-delete"
       :title="$t('processList.confirmDeletion')"
     >
       <template v-slot:text>
-        {{ $t('processList.confirmDeletionText1') }}<strong>{{
-          processModelToBeDeleted?.processName
-        }}</strong>{{ $t('processList.confirmDeletionText2') }}
+        {{ $t("processList.confirmDeletionText1")
+        }}<strong>{{ processModelToBeDeleted?.processName }}</strong
+        >{{ $t("processList.confirmDeletionText2") }}
       </template>
       <template v-slot:actions>
         <div class="ms-auto">
@@ -172,30 +258,14 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog
-    v-model="errorDialog"
-    width="auto"
-  >
+  <v-dialog v-model="errorDialog" width="auto">
     <v-card
       max-width="400"
       prepend-icon="mdi-alert-circle-outline"
       :title="$t('processList.error')"
     >
       <template v-slot:text>
-        <span v-if="errorType = ErrorType.ALREADY_EXISTING">
-          {{
-            $t('processList.alreadyExistsErrorMsg1.'
-              + (alreadyExistingBpmnProcessIds.length > 1 ? 'plural' : 'singular'))
-          }}
-          <strong>{{ alreadyExistingBpmnProcessIds.join(", ") }}</strong>
-          {{
-            $t('processList.alreadyExistsErrorMsg2.'
-              + (alreadyExistingBpmnProcessIds.length > 1 ? 'plural' : 'singular'))
-          }}
-        </span>
-        <span v-else-if="errorType === ErrorType.CANT_REPLACE_WITH_COLLABORATION">
-          {{ $t('processList.cantReplaceWithCollaborationErrorMsg') }}
-        </span>
+        {{ errorMessage }}
       </template>
       <template v-slot:actions>
         <div class="ms-auto">
@@ -207,7 +277,6 @@
       </template>
     </v-card>
   </v-dialog>
-
 </template>
 
 <style scoped>
@@ -221,73 +290,53 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import axios from 'axios';
-import ProcessDetailDialog from '@/components/ProcessDetailDialog.vue';
+import axios from "axios";
+import ProcessDetailDialog from "@/components/ProcessDetailDialog.vue";
+import { defineComponent } from "vue";
 import { useAppStore } from "@/store/app";
 import getProject from "../projectService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { authHeader } from "@/components/Authentication/authHeader";
 import i18n from "@/i18n";
 import ProcessTreeNode from "@/components/ProcessList/ProcessTreeNode.vue";
+import { Settings } from "@/components/SettingsDrawer.vue";
+import { getErrorMessage } from "@/services/axiosErrorHandler";
 
 interface BPMNContent {
-  name: string,
-  description: string,
-  isCollaboration: boolean
+  name: string;
+  description: string;
+  isCollaboration: boolean;
 }
 
-export interface ProcessModelNode {
-  id: number,
-  bpmnProcessId: string,
-  processName: string,
-  description: string,
-  createdAt: string,
-  parentsBpmnProcessIds: string[],
-  childrenBpmnProcessIds: string[],
-  children: ProcessModelNode[]
+interface ProcessModelInformation {
+  id: number;
+  bpmnProcessId: string;
+  processName: string;
+  description: string;
+  createdAt: string;
+  childrenIds: number[];
+  processType: string;
 }
 
-interface RawProcessModel {
-  id: number,
-  bpmnProcessId: string,
-  processName: string,
-  description: string,
-  createdAt: string,
-  parentsBpmnProcessIds: string[],
-  childrenBpmnProcessIds: string[]
+export interface ProcessModelNode extends ProcessModelInformation {
+  children: ProcessModelNode[];
 }
 
 enum UploadDialogMode {
-  SINGLE = 'single',
-  MULTIPLE = 'multiple'
+  SINGLE = "single",
+  MULTIPLE = "multiple"
 }
 
 interface ProcessModelToUpload {
-  file: File,
-  name: string,
-  description: string,
-  content: string,
-  aiLoading: boolean,
-  isCollaboration: boolean
-}
-
-interface HttpError {
-  response: {
-    data: {
-      data: string;
-      message: string;
-    }
-  }
-}
-
-enum ErrorType {
-  ALREADY_EXISTING = "ALREADY_EXISTING",
-  CANT_REPLACE_WITH_COLLABORATION = "CANT_REPLACE_WITH_COLLABORATION"
+  file: File;
+  name: string;
+  description: string;
+  content: string;
+  aiLoading: boolean;
+  isCollaboration: boolean;
 }
 
 export default defineComponent({
-
   components: {
     ProcessTreeNode,
     ProcessDetailDialog
@@ -296,9 +345,7 @@ export default defineComponent({
     appStore: useAppStore(),
     confirmDeleteDialog: false as boolean,
     errorDialog: false as boolean,
-    errorType: ErrorType.ALREADY_EXISTING as ErrorType,
-    ErrorType: ErrorType,
-    alreadyExistingBpmnProcessIds: [] as string[],
+    errorMessage: "" as string,
     uploadDialog: false as boolean,
     uploadDialogMode: UploadDialogMode.MULTIPLE as UploadDialogMode,
     processModelToBeReplacedId: null as number | null,
@@ -309,10 +356,13 @@ export default defineComponent({
     processModelsToUpload: [] as ProcessModelToUpload[],
     rootProcessModels: [] as ProcessModelNode[],
     selectedProjectId: null as number | null,
-    selectedProjectName: '' as string,
-    selectedVersionName: '' as string,
+    selectedProjectName: "" as string,
+    selectedVersionName: "" as string,
     fileExtensionMatcher: /.[^/.]+$/,
-    isFetching: false as boolean
+    isFetching: false as boolean,
+    descriptionErrors: {} as { [key: number]: string },
+    currentlyUploadingProcessModel: {} as ProcessModelToUpload,
+    currentUploadStatus: "" as string
   }),
   mounted: function () {
     this.selectedProjectId = this.appStore.selectedProjectId;
@@ -320,10 +370,10 @@ export default defineComponent({
       this.$router.push("/");
       return;
     }
-    getProject(this.selectedProjectId).then(result => {
+    getProject(this.selectedProjectId).then((result) => {
       this.selectedProjectName = result.data.name;
       this.selectedVersionName = result.data.version;
-    })
+    });
     this.fetchProcessModels();
   },
   computed: {
@@ -340,55 +390,65 @@ export default defineComponent({
   },
   methods: {
     showProcessInfoDialog(processId: number) {
-      (this.$refs.processDetailDialog as InstanceType<typeof ProcessDetailDialog>).showProcessInfoDialog(processId);
+      (
+        this.$refs.processDetailDialog as InstanceType<
+          typeof ProcessDetailDialog
+        >
+      ).showProcessInfoDialog(processId);
     },
 
-    async deleteProcessModel(processModelNode: ProcessModelNode, skipConfirm: boolean = false) {
-      const isPartOfCollaboration = processModelNode.parentsBpmnProcessIds.length > 0
-        || processModelNode.childrenBpmnProcessIds.length > 0;
-      if (!skipConfirm && isPartOfCollaboration) {
+    async deleteProcessModel(
+      processModelNode: ProcessModelNode,
+      skipConfirm: boolean = false
+    ) {
+      const isParticipant = processModelNode.processType === "PARTICIPANT";
+      if (!skipConfirm && isParticipant) {
         this.processModelToBeDeleted = processModelNode;
         this.confirmDeleteDialog = true;
         return;
       }
       const processId = processModelNode.id;
-      await axios.delete("/api/process-model/" + processId, { headers: authHeader() }).then(() => {
-        this.confirmDeleteDialog = false;
-        this.processModelToBeDeleted = null;
-        this.appStore.setProcessModelsChanged();
-        this.fetchProcessModels();
-      });
+      await axios
+        .delete("/api/process-model/" + processId, { headers: authHeader() })
+        .then(() => {
+          this.confirmDeleteDialog = false;
+          this.processModelToBeDeleted = null;
+          this.appStore.setProcessModelsChanged();
+          this.fetchProcessModels();
+        });
     },
 
     fetchProcessModels() {
       this.isFetching = true;
-      axios.get("/api/project/" + this.selectedProjectId + "/process-model", { headers: authHeader() })
-        .then(result => {
+      axios
+        .get("/api/project/" + this.selectedProjectId + "/process-model", {
+          headers: authHeader()
+        })
+        .then((result) => {
           this.rootProcessModels = this.collectRoots(result.data);
           this.isFetching = false;
         });
     },
 
-    collectRoots(rawProcessModels: RawProcessModel[]): ProcessModelNode[] {
-      const modelMap = new Map<string, ProcessModelNode>();
-      rawProcessModels.forEach(model => modelMap.set(model.bpmnProcessId, { ...model, children: [] }));
-
-      const roots = [] as ProcessModelNode[];
-
-      rawProcessModels.forEach(model => {
-        if (model.parentsBpmnProcessIds.length === 0) {
-          roots.push(modelMap.get(model.bpmnProcessId)!);
-        } else {
-          model.parentsBpmnProcessIds.forEach(parentId => {
-            const parent = modelMap.get(parentId);
-            if (parent) {
-              parent.children.push(modelMap.get(model.bpmnProcessId)!);
-            }
-          });
-        }
-      });
-
-      return roots;
+    collectRoots(
+      processModelInformation: ProcessModelInformation[]
+    ): ProcessModelNode[] {
+      const modelMap = new Map<number, ProcessModelInformation>();
+      processModelInformation.forEach((model) => modelMap.set(model.id, model));
+      return processModelInformation
+        .filter((model) => model.processType !== "PARTICIPANT")
+        .map((model) => {
+          if (model.processType === "COLLABORATION") {
+            const children = model.childrenIds.map((id) => modelMap.get(id)!);
+            const childrenAsNodes = children.map((child) => ({
+              ...child,
+              children: []
+            }));
+            return { ...model, children: childrenAsNodes };
+          } else {
+            return { ...model, children: [] };
+          }
+        });
     },
 
     openSingleUploadDialog(modelId: number) {
@@ -427,22 +487,42 @@ export default defineComponent({
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
-      const semanticParticipants = xmlDoc.getElementsByTagName("participant");
-      const bpmnParticipants = xmlDoc.getElementsByTagName("bpmn:participant");
-      const isCollaboration = (semanticParticipants.length > 1) || (bpmnParticipants.length > 1);
+      const isCollaboration =
+          xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
+          xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
+          xmlDoc.getElementsByTagName("participant")?.length > 1;
 
-      const name =
-        xmlDoc.querySelector("bpmn\\:process")?.getAttribute("name")
-        || xmlDoc.querySelector("process")?.getAttribute("name");
+      if (isCollaboration) {
+        const collaboration =
+          xmlDoc.querySelector("bpmn\\:collaboration") ||
+          xmlDoc.querySelector("semantic\\:collaboration") ||
+          xmlDoc.querySelector("collaboration");
+
+        const name = collaboration?.getAttribute("name") || "";
+        const documentation =
+          collaboration?.querySelector("bpmn\\:documentation") ||
+          collaboration?.querySelector("semantic\\:documentation") ||
+          collaboration?.querySelector("documentation");
+
+        const description = documentation?.getAttribute("textContent") || "";
+        return { name, description, isCollaboration };
+      }
+
+      const process =
+        xmlDoc.querySelector("bpmn\\:process") ||
+        xmlDoc.querySelector("semantic\\:process") ||
+        xmlDoc.querySelector("process");
+
+      const name = process?.getAttribute("name") || "";
+
       const documentation =
-        xmlDoc.querySelector("bpmn\\:documentation")?.getAttribute("textContent")
-        || xmlDoc.querySelector("documentation")?.getAttribute("textContent");
+        process?.querySelector("bpmn\\:documentation") ||
+        process?.querySelector("semantic\\:documentation") ||
+        process?.querySelector("documentation");
 
-      return {
-        name: name || "",
-        description: documentation || "",
-        isCollaboration
-      };
+      const description = documentation?.getAttribute("textContent") || "";
+
+      return { name, description, isCollaboration };
     },
 
     async handleFileSelection() {
@@ -450,7 +530,9 @@ export default defineComponent({
 
       for (const file of this.processModelFiles) {
         try {
-          this.processModelsToUpload.push(await this.getProcessModelToUpload(file));
+          this.processModelsToUpload.push(
+            await this.getProcessModelToUpload(file)
+          );
         } catch (error) {
           console.error("Error reading file content: ", error);
         }
@@ -460,7 +542,8 @@ export default defineComponent({
     async getProcessModelToUpload(file: File): Promise<ProcessModelToUpload> {
       const content = await this.readFileContent(file);
 
-      const { name, description, isCollaboration } = this.parseBPMNContent(content);
+      const { name, description, isCollaboration } =
+        this.parseBPMNContent(content);
       return {
         file,
         name: name || file.name.replace(this.fileExtensionMatcher, ""),
@@ -471,7 +554,9 @@ export default defineComponent({
       };
     },
 
-    async uploadProcessModel(processModel: ProcessModelToUpload): Promise<number | string> {
+    async uploadProcessModel(
+      processModel: ProcessModelToUpload
+    ): Promise<number> {
       const formData = this.createProcessModelFormData(processModel);
       const { data } = await axios.post(
         "/api/project/" + this.selectedProjectId + "/process-model",
@@ -483,11 +568,16 @@ export default defineComponent({
 
     createProcessModelFormData(processModel: ProcessModelToUpload): FormData {
       let formData = new FormData();
-      const fileName = processModel.name || processModel.file.name.replace(this.fileExtensionMatcher, "");
+      const fileName =
+        processModel.name ||
+        processModel.file.name.replace(this.fileExtensionMatcher, "");
       formData.append("processModel", processModel.file);
       formData.append("fileName", fileName);
       formData.append("description", processModel.description);
-      formData.append("isCollaboration", processModel.isCollaboration ? "true" : "false");
+      formData.append(
+        "isCollaboration",
+        processModel.isCollaboration ? "true" : "false"
+      );
 
       return formData;
     },
@@ -497,25 +587,27 @@ export default defineComponent({
         this.progressDialog = true;
         const progressSteps = 100 / (this.processModelsToUpload.length * 2);
 
-        let error = false;
-        this.alreadyExistingBpmnProcessIds = [];
+        const numProcessModels = this.processModelsToUpload.length;
+        let i = 0;
         for (const processModel of this.processModelsToUpload) {
           this.progress += progressSteps;
+          this.currentlyUploadingProcessModel = processModel;
+          i += 1;
+          this.currentUploadStatus = `${i}/${numProcessModels}`;
 
           try {
             await this.uploadProcessModel(processModel);
-          } catch (e) {
-            error = true;
-            this.alreadyExistingBpmnProcessIds.push((e as HttpError).response.data.data);
+          } catch (error) {
+            this.afterUploadActions();
+            this.errorMessage = getErrorMessage(error);
+            this.errorDialog = true;
+            return;
           }
 
           this.progress += progressSteps;
         }
+
         this.afterUploadActions();
-        if (error) {
-          this.errorType = ErrorType.ALREADY_EXISTING;
-          this.errorDialog = true;
-        }
       }
     },
 
@@ -524,19 +616,27 @@ export default defineComponent({
         return;
       }
 
-      const formData = this.createProcessModelFormData(this.processModelsToUpload[0]);
+      const formData = this.createProcessModelFormData(
+        this.processModelsToUpload[0]
+      );
 
       try {
         await axios.post(
-          "/api/project/" + this.selectedProjectId + "/process-model/" + this.processModelToBeReplacedId,
-          formData, { headers: authHeader() }
+          "/api/project/" +
+            this.selectedProjectId +
+            "/process-model/" +
+            this.processModelToBeReplacedId,
+          formData,
+          { headers: authHeader() }
         );
+      } catch (error) {
         this.afterUploadActions();
-      } catch (e) {
-        this.afterUploadActions();
-        this.errorType = ErrorType.CANT_REPLACE_WITH_COLLABORATION;
+        this.errorMessage = getErrorMessage(error);
         this.errorDialog = true;
+        return;
       }
+
+      this.afterUploadActions();
     },
 
     afterUploadActions() {
@@ -559,30 +659,43 @@ export default defineComponent({
       this.progress = 0;
     },
 
-    async generateDescription(processModelToUpload: ProcessModelToUpload) {
+    async generateDescription(
+      processModelToUpload: ProcessModelToUpload,
+      index: number
+    ) {
       processModelToUpload.aiLoading = true;
-
       const content = processModelToUpload.content;
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+
+      const settings: Settings = (
+        await axios.get("api/settings", { headers: authHeader() })
+      ).data;
+      const apiKey =
+        settings.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
-        console.error("No API key found. Please set the GEMINI_API_KEY environment variable.");
+        this.descriptionErrors[index] = this.$t("processList.noApiKeyError");
+        processModelToUpload.aiLoading = false;
         return;
       }
       const genAi = new GoogleGenerativeAI(apiKey);
       const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const promptInstructionsDe = 'Ich möchte, dass du aus dem folgenden XML-Dokument ' +
-        'eine kurze Beschreibung für einen Geschäftsprozess generierst. ' +
-        'Die Beschreibung soll maximal 1-3 Sätze lang sein. ' +
-        'Bitte achte genaustens darauf, dass die Beschreibung nicht länger als ' +
-        '255 Zeichen lang ist. Sie darf unter keinen Umständen länger sein!\n\n'
+      const promptInstructionsDe =
+        "Ich möchte, dass du aus dem folgenden XML-Dokument " +
+        "eine kurze Beschreibung für einen Geschäftsprozess generierst. " +
+        "Die Beschreibung soll maximal 1-3 Sätze lang sein. " +
+        "Bitte achte genaustens darauf, dass die Beschreibung nicht länger als " +
+        "255 Zeichen lang ist. Sie darf unter keinen Umständen länger sein!\n\n";
 
-      const promptInstructionsEn = 'Please generate a short description for the business process from ' +
-        'the following XML document. The description should be a maximum of 1-3 sentences long. ' +
-        'Ensure that the description is no longer than 255 characters. It must not exceed this ' +
-        'length under any circumstances!\n\n'
+      const promptInstructionsEn =
+        "Please generate a short description for the business process from " +
+        "the following XML document. The description should be a maximum of 1-3 sentences long. " +
+        "Ensure that the description is no longer than 255 characters. It must not exceed this " +
+        "length under any circumstances!\n\n";
 
-      const promptInstructions = i18n.global.locale === 'de' ? promptInstructionsDe : promptInstructionsEn;
+      const promptInstructions =
+        i18n.global.locale === "de"
+          ? promptInstructionsDe
+          : promptInstructionsEn;
       const prompt = promptInstructions + content;
 
       const result = await model.generateContent(prompt);
@@ -595,12 +708,16 @@ export default defineComponent({
       this.$router.push("CamundaCloudImport");
     },
     getLocaleDate(date: string): string {
-      const locales = this.appStore.getSelectedLanguage() === 'de' ? 'de-DE' : 'en-US';
+      const locales =
+        this.appStore.getSelectedLanguage() === "de" ? "de-DE" : "en-US";
       return new Date(date).toLocaleString(locales);
     },
     goToProcessMap() {
       this.$router.push("ProcessMap");
+    },
+    resetDescriptionErrors() {
+      this.descriptionErrors = {};
     }
   }
-})
+});
 </script>

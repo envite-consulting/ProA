@@ -1,20 +1,16 @@
 package de.envite.proa.usecases.processmodel;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import de.envite.proa.entities.collaboration.MessageFlowDetails;
 import de.envite.proa.entities.collaboration.ParticipantDetails;
 import de.envite.proa.entities.process.*;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.usecases.ProcessOperations;
 import de.envite.proa.usecases.processmap.ProcessMapRespository;
+import de.envite.proa.usecases.processmodel.exceptions.CantReplaceWithCollaborationException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.*;
 
 @ApplicationScoped
 public class ProcessModelUsecase {
@@ -28,46 +24,49 @@ public class ProcessModelUsecase {
 	@Inject
 	private ProcessMapRespository processMapRepository;
 
-	public Long saveProcessModel(Long projectId, String name, String xml, String description, String isCollaboration,
-			String parentBpmnProcessId) {
-
+	public Long saveProcessModel(Long projectId, String name, String xml, String description, boolean isUploadedProcessCollaboration)
+			throws CantReplaceWithCollaborationException {
 		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessId(name, bpmnProcessId, projectId);
+		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
+				bpmnProcessId, projectId);
 
-		if (existingProcessModel != null && isCollaboration.equals("true")) {
-			throw new IllegalArgumentException("Collaboration already exists: " + bpmnProcessId);
+		if (existingProcessModel != null) {
+			if (!isUploadedProcessCollaboration) {
+				return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description);
+			}
 		}
 
-		if (existingProcessModel != null && existingProcessModel.getProcessType() != ProcessType.COLLABORATION) {
-			return replaceProcessModel(projectId, existingProcessModel.getId(), name, xml, description,
-					parentBpmnProcessId);
-		}
-
-		if (isCollaboration.equals("true")) {
+		if (isUploadedProcessCollaboration) {
 			xml = processOperations.addEmptyProcessRefs(xml);
 		}
 
-		ProcessModel processModel = createProcessModel(name, description, xml, parentBpmnProcessId, isCollaboration);
+		ProcessModel processModel = createProcessModel(name, description, xml, isUploadedProcessCollaboration);
 
-		if (isCollaboration.equals("false")) {
+		if (!isUploadedProcessCollaboration) {
 			return repository.saveProcessModel(projectId, processModel);
 		}
 
 		List<ParticipantDetails> participants = processOperations.getParticipants(xml);
 		Long collaborationId = repository.saveProcessModel(projectId, processModel);
 
-		List<Long> participantIds = new ArrayList<>();
+		Map<String, Long> bpmnIdToIdMap = new HashMap<>();
 
 		participants //
 				.forEach(participant -> { //
-					Long participantId = saveProcessModel(projectId, participant.getName(), participant.getXml(),
-							participant.getDescription(), "false", processModel.getBpmnProcessId());
-					participantIds.add(participantId); //
+					String participantBpmnProcessId = processOperations.getBpmnProcessId(participant.getXml());
+					ProcessModelTable duplicateProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(
+							participant.getName(), participantBpmnProcessId, projectId);
+					Long participantId = saveParticipant(projectId, participant.getName(), participant.getXml(),
+							participant.getDescription(), processModel.getBpmnProcessId());
+					if (duplicateProcessModel != null) {
+						bpmnIdToIdMap.forEach((key, value) -> {
+							if (value.equals(duplicateProcessModel.getId())) {
+								bpmnIdToIdMap.replace(key, participantId);
+							}
+						});
+					}
+					bpmnIdToIdMap.put(participantBpmnProcessId, participantId);
 				});
-
-		Map<String, Long> bpmnIdToIdMap = participantIds //
-				.stream() //
-				.collect(Collectors.toMap(id -> repository.getProcessDetails(id).getBpmnProcessId(), id -> id));
 
 		List<MessageFlowDetails> messageFlows = processOperations.getMessageFlows(xml, bpmnIdToIdMap);
 		repository.saveMessageFlows(messageFlows, projectId);
@@ -75,40 +74,72 @@ public class ProcessModelUsecase {
 		return collaborationId;
 	}
 
-	private ProcessModel createProcessModel(String name, String description, String xml, String parentBpmnProcessId,
-			String isCollaboration) {
-		List<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
-		List<ProcessEvent> intermediateThrowEvents = processOperations.getIntermediateThrowEvents(xml);
-		List<ProcessEvent> intermediateCatchEvents = processOperations.getIntermediateCatchEvents(xml);
-		List<ProcessEvent> endEvents = processOperations.getEndEvents(xml);
-		List<ProcessEvent> events = Stream.of(startEvents, //
-				intermediateThrowEvents, //
-				intermediateCatchEvents, //
-				endEvents //
-		).flatMap(Collection::stream).collect(Collectors.toList());
-		List<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
-		List<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
-		String newDescription = (description == null || description.isBlank()) && parentBpmnProcessId == null
+	private Long saveParticipant(Long projectId, String name, String xml, String description,
+			String parentBpmnProcessId) {
+		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
+		ProcessModelTable existingProcessModel = repository.findByNameOrBpmnProcessIdWithoutCollaborations(name,
+				bpmnProcessId, projectId);
+		if (existingProcessModel != null) {
+			return replaceParticipant(projectId, existingProcessModel.getId(), name, xml, description,
+					parentBpmnProcessId);
+		}
+
+		ProcessModel processModel = createParticipant(name, description, xml, parentBpmnProcessId);
+
+		return repository.saveProcessModel(projectId, processModel);
+	}
+
+	private ProcessModel createProcessModel(String name, String description, String xml, boolean isCollaboration) {
+		String newDescription = (description == null || description.isBlank())
 				? processOperations.getDescription(xml)
 				: description;
-		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
-		ProcessType processType = isCollaboration.equals("true")
+		ProcessType processType = isCollaboration
 				? ProcessType.COLLABORATION
-				: parentBpmnProcessId != null ? ProcessType.PARTICIPANT : ProcessType.PROCESS;
+				: ProcessType.PROCESS;
 
-		return new ProcessModel(name, //
-				xml, //
-				events, //
-				callActivities, //
-				dataStores, //
-				newDescription, //
-				bpmnProcessId, //
-				parentBpmnProcessId, //
-				processType);
+		ProcessModel processModel = getProcessModelFromXml(xml);
+		processModel.setName(name);
+		processModel.setDescription(newDescription);
+		processModel.setProcessType(processType);
+
+		return processModel;
+	}
+
+	private ProcessModel createParticipant(String name, String description, String xml, String parentBpmnProcessId) {
+		ProcessModel processModel = getProcessModelFromXml(xml);
+		processModel.setName(name);
+		processModel.setDescription(description);
+		processModel.setParentBpmnProcessId(parentBpmnProcessId);
+		processModel.setProcessType(ProcessType.PARTICIPANT);
+
+		return processModel;
+	}
+
+	private ProcessModel getProcessModelFromXml(String xml) {
+		Set<ProcessEvent> startEvents = processOperations.getStartEvents(xml);
+		Set<ProcessEvent> intermediateThrowEvents = processOperations.getIntermediateThrowEvents(xml);
+		Set<ProcessEvent> intermediateCatchEvents = processOperations.getIntermediateCatchEvents(xml);
+		Set<ProcessEvent> endEvents = processOperations.getEndEvents(xml);
+		Set<ProcessEvent> events = new HashSet<>(startEvents);
+		events.addAll(intermediateThrowEvents);
+		events.addAll(intermediateCatchEvents);
+		events.addAll(endEvents);
+		Set<ProcessActivity> callActivities = processOperations.getCallActivities(xml);
+		List<ProcessDataStore> dataStores = processOperations.getDataStores(xml);
+		String bpmnProcessId = processOperations.getBpmnProcessId(xml);
+
+		ProcessModel processModel = new ProcessModel();
+		processModel.setBpmnXml(xml);
+		processModel.setEvents(events);
+		processModel.setCallActivities(callActivities);
+		processModel.setDataStores(dataStores);
+		processModel.setBpmnProcessId(bpmnProcessId);
+
+		return processModel;
 	}
 
 	public String getProcessModel(Long id) {
-		return repository.getProcessModel(id);
+		return repository.getProcessModelXml(id);
 	}
 
 	public List<ProcessInformation> getProcessInformation(Long projectId) {
@@ -124,18 +155,30 @@ public class ProcessModelUsecase {
 	}
 
 	public Long replaceProcessModel(Long projectId, Long oldProcessId, String fileName, String content,
-			String description, String parentBpmnProcessId) {
-
+			String description) throws CantReplaceWithCollaborationException {
 		boolean isCollaboration = processOperations.getIsCollaboration(content);
 		if (isCollaboration) {
-			throw new IllegalArgumentException("Can't replace with collaboration");
+			throw new CantReplaceWithCollaborationException(oldProcessId);
 		}
 
-		ProcessModel processModel = createProcessModel(fileName, description, content, parentBpmnProcessId, "false");
+		ProcessModel processModel = createProcessModel(fileName, description, content, false);
+
+		return replaceCommonActions(projectId, oldProcessId, processModel);
+	}
+
+	private Long replaceParticipant(Long projectId, Long oldProcessId, String fileName, String content,
+			String description, String parentBpmnProcessId) {
+		ProcessModel processModel = createParticipant(fileName, description, content, parentBpmnProcessId);
+
+		return replaceCommonActions(projectId, oldProcessId, processModel);
+	}
+
+	private Long replaceCommonActions(Long projectId, Long oldProcessId, ProcessModel processModel) {
 		Long newProcessId = repository.saveProcessModel(projectId, processModel);
 		copyConnections(projectId, oldProcessId, newProcessId);
 		copyMessageFlowsAndRelations(projectId, oldProcessId, newProcessId);
 		deleteProcessModel(oldProcessId);
+
 		return newProcessId;
 	}
 

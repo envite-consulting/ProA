@@ -1,29 +1,65 @@
 package de.envite.proa.bpmn.operations;
 
-import de.envite.proa.entities.collaboration.MessageFlowDetails;
-import de.envite.proa.entities.collaboration.ParticipantDetails;
-import de.envite.proa.entities.datastore.DataAccess;
-import de.envite.proa.entities.process.*;
-import de.envite.proa.usecases.ProcessOperations;
-import jakarta.enterprise.context.ApplicationScoped;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.camunda.bpm.model.bpmn.Bpmn;
-import org.camunda.bpm.model.bpmn.BpmnModelInstance;
-import org.camunda.bpm.model.bpmn.impl.instance.SourceRef;
-import org.camunda.bpm.model.bpmn.impl.instance.TargetRef;
-import org.camunda.bpm.model.bpmn.instance.Process;
-import org.camunda.bpm.model.bpmn.instance.*;
-import org.camunda.bpm.model.xml.instance.ModelElementInstance;
-
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.impl.instance.SourceRef;
+import org.camunda.bpm.model.bpmn.impl.instance.TargetRef;
+import org.camunda.bpm.model.bpmn.instance.Activity;
+import org.camunda.bpm.model.bpmn.instance.CallActivity;
+import org.camunda.bpm.model.bpmn.instance.Collaboration;
+import org.camunda.bpm.model.bpmn.instance.DataAssociation;
+import org.camunda.bpm.model.bpmn.instance.DataStoreReference;
+import org.camunda.bpm.model.bpmn.instance.Documentation;
+import org.camunda.bpm.model.bpmn.instance.EndEvent;
+import org.camunda.bpm.model.bpmn.instance.Event;
+import org.camunda.bpm.model.bpmn.instance.IntermediateCatchEvent;
+import org.camunda.bpm.model.bpmn.instance.IntermediateThrowEvent;
+import org.camunda.bpm.model.bpmn.instance.MessageFlow;
+import org.camunda.bpm.model.bpmn.instance.Participant;
+import org.camunda.bpm.model.bpmn.instance.Process;
+import org.camunda.bpm.model.bpmn.instance.StartEvent;
+import org.camunda.bpm.model.xml.instance.ModelElementInstance;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import de.envite.proa.entities.collaboration.MessageFlowDetails;
+import de.envite.proa.entities.collaboration.ParticipantDetails;
+import de.envite.proa.entities.datastore.DataAccess;
+import de.envite.proa.entities.process.EventType;
+import de.envite.proa.entities.process.ProcessActivity;
+import de.envite.proa.entities.process.ProcessDataStore;
+import de.envite.proa.entities.process.ProcessElementType;
+import de.envite.proa.entities.process.ProcessEvent;
+import de.envite.proa.usecases.ProcessOperations;
+import jakarta.enterprise.context.ApplicationScoped;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @ApplicationScoped
 public class BpmnOperations implements ProcessOperations {
@@ -47,27 +83,27 @@ public class BpmnOperations implements ProcessOperations {
 	}
 
 	@Override
-	public List<ProcessEvent> getStartEvents(String processModel) {
+	public Set<ProcessEvent> getStartEvents(String processModel) {
 		return getEvents(processModel, EventType.START, StartEvent.class);
 	}
 
 	@Override
-	public List<ProcessEvent> getIntermediateThrowEvents(String processModel) {
+	public Set<ProcessEvent> getIntermediateThrowEvents(String processModel) {
 		return getEvents(processModel, EventType.INTERMEDIATE_THROW, IntermediateThrowEvent.class);
 	}
 
 	@Override
-	public List<ProcessEvent> getIntermediateCatchEvents(String processModel) {
+	public Set<ProcessEvent> getIntermediateCatchEvents(String processModel) {
 		return getEvents(processModel, EventType.INTERMEDIATE_CATCH, IntermediateCatchEvent.class);
 	}
 
 	@Override
-	public List<ProcessEvent> getEndEvents(String processModel) {
+	public Set<ProcessEvent> getEndEvents(String processModel) {
 		return getEvents(processModel, EventType.END, EndEvent.class);
 	}
 
 	@Override
-	public List<ProcessActivity> getCallActivities(String processModel) {
+	public Set<ProcessActivity> getCallActivities(String processModel) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
 
 		Collection<CallActivity> callActivities = processModelInstance.getModelElementsByType(CallActivity.class);
@@ -75,7 +111,7 @@ public class BpmnOperations implements ProcessOperations {
 		return callActivities//
 				.stream()//
 				.map(activity -> new ProcessActivity(activity.getId(), activity.getName()))//
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
 	@Override
@@ -135,12 +171,31 @@ public class BpmnOperations implements ProcessOperations {
 		String updatedXml = Bpmn.convertToString(processModelInstance);
 		return participants //
 				.stream() //
-				.map(participant -> new ParticipantDetails( //
-						participant.getName() != null ? participant.getName() : participant.getId(), //
-						getParticipantDescription(participant), //
-						extractParticipantXml(updatedXml, participant.getAttributeValue("processRef")) //
-				)) //
+				.map(participant -> {
+					return new ParticipantDetails( //
+							getProcessNameOfParticipant(participant, processModelInstance), //
+							getParticipantDescription(participant), //
+							extractParticipantXml(updatedXml, participant.getAttributeValue("processRef")) //
+					);
+				}) //
 				.collect(Collectors.toList());
+	}
+
+	private String getProcessNameOfParticipant(Participant participant, BpmnModelInstance processModelInstance) {
+		
+		String processId = participant.getAttributeValue("processRef");
+		
+		ModelElementInstance processElement = processModelInstance.getModelElementById(processId);
+		
+		if(processElement !=null && processElement instanceof Process process) {
+			if(process.getName() !=null) {
+				return process.getName();
+			}
+		}
+		if(participant.getName()!=null) {
+			return participant.getName();
+		}
+		return participant.getId();
 	}
 
 	@Override
@@ -155,8 +210,7 @@ public class BpmnOperations implements ProcessOperations {
 			MessageFlowDetails messageFlowDetail = new MessageFlowDetails();
 			messageFlowDetail.setBpmnId(messageFlow.getId());
 			messageFlowDetail.setName(messageFlow.getName());
-			messageFlowDetail.setDescription(messageFlow.getDocumentations().isEmpty()
-					? null
+			messageFlowDetail.setDescription(messageFlow.getDocumentations().isEmpty() ? null
 					: messageFlow.getDocumentations().iterator().next().getTextContent());
 			MessageFlowEdge messageFlowEdge = getMessageFlowEdge(messageFlow);
 			Long callingProcessId = bpmnIdToIdMap.get(messageFlowEdge.source.id);
@@ -238,30 +292,60 @@ public class BpmnOperations implements ProcessOperations {
 		return null;
 	}
 
-	private String extractParticipantXml(String collaborationXml, String participantProcessRef) {
-		BpmnModelInstance processModelInstance = getProcessModelInstance(collaborationXml);
-
-		Collection<Participant> participants = processModelInstance.getModelElementsByType(Participant.class);
-		participants.forEach(participant -> {
-			if (!participant.getAttributeValue("processRef").equals(participantProcessRef)) {
-				participant.getParentElement().removeChildElement(participant);
-			}
-		});
-
-		Collection<Process> processes = processModelInstance.getModelElementsByType(Process.class);
-		processes.forEach(process -> {
-			if (!process.getId().equals(participantProcessRef)) {
-				process.getParentElement().removeChildElement(process);
-			}
-		});
-
-		Collection<MessageFlow> messageFlows = processModelInstance.getModelElementsByType(MessageFlow.class);
-		messageFlows.forEach(messageFlow -> messageFlow.getParentElement().removeChildElement(messageFlow));
-
-		return Bpmn.convertToString(processModelInstance);
+	private String extractParticipantXml(String collaborationXml, String participantId) {
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			InputSource is = new InputSource(new StringReader(collaborationXml));
+			Document xmlDoc = builder.parse(is);
+			deleteOtherElements(xmlDoc, participantId);
+			return toString(xmlDoc);
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	private <T extends Event> List<ProcessEvent> getEvents(String processModel, EventType eventType,
+	public static String toString(Document doc) {
+		try {
+			StringWriter sw = new StringWriter();
+			TransformerFactory tf = TransformerFactory.newInstance();
+			Transformer transformer = tf.newTransformer();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
+			transformer.transform(new DOMSource(doc), new StreamResult(sw));
+			return sw.toString();
+		} catch (Exception ex) {
+			throw new RuntimeException("Error converting Process Dom to String", ex);
+		}
+	}
+
+	private void deleteOtherElements(Node processNode, String processId) {
+		NodeList children = processNode.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			Node child = children.item(i);
+			if (child.getNodeType() == Document.ELEMENT_NODE) {
+				if (child.getNodeName().toLowerCase().contains("process")
+						&& !((Element) child).getAttribute("id").equals(processId)) {
+					child.getParentNode().removeChild(child);
+					continue;
+				} else if (child.getNodeName().toLowerCase().contains("participant")
+						&& !((Element) child).getAttribute("processRef").equals(processId)) {
+					child.getParentNode().removeChild(child);
+					continue;
+				} else if (child.getNodeName().toLowerCase().contains("messageFlow")) {
+					child.getParentNode().removeChild(child);
+					continue;
+				} else {
+					deleteOtherElements(child, processId);
+				}
+			}
+		}
+	}
+
+	private <T extends Event> Set<ProcessEvent> getEvents(String processModel, EventType eventType,
 			Class<T> eventClass) {
 		BpmnModelInstance processModelInstance = getProcessModelInstance(processModel);
 
@@ -269,7 +353,7 @@ public class BpmnOperations implements ProcessOperations {
 		return startEvents//
 				.stream()//
 				.map(event -> new ProcessEvent(event.getId(), event.getName(), eventType))//
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
 	private BpmnModelInstance getProcessModelInstance(String processModel) {

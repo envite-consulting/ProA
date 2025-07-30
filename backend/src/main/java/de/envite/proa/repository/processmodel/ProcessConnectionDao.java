@@ -4,11 +4,12 @@ import java.util.List;
 
 import de.envite.proa.repository.tables.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
-@ApplicationScoped
+@RequestScoped
 public class ProcessConnectionDao {
 
 	private EntityManager em;

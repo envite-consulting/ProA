@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Change to the backend directory
+cd backend
+
+# Run the Maven clean verify command
+mvn clean verify
+
+# If the command fails, abort the commit
+if [ $? -ne 0 ]; then
+  echo "Maven tests failed."
+fi
+
+# Parse the coverage percentage using xmllint
+INSTRUCTIONS_COVERED=$(xmllint --xpath "sum(//counter[@type='INSTRUCTION' and not(ancestor::package)]/@covered)" target/jacoco-report/jacoco.xml)
+INSTRUCTIONS_MISSED=$(xmllint --xpath "sum(//counter[@type='INSTRUCTION' and not(ancestor::package)]/@missed)" target/jacoco-report/jacoco.xml)
+INSTRUCTIONS_COVERAGE=$(echo "scale=2; $INSTRUCTIONS_COVERED / ($INSTRUCTIONS_COVERED + $INSTRUCTIONS_MISSED) * 100" | bc)
+
+BRANCHES_COVERED=$(xmllint --xpath "sum(//counter[@type='BRANCH' and not(ancestor::package)]/@covered)" target/jacoco-report/jacoco.xml)
+BRANCHES_MISSED=$(xmllint --xpath "sum(//counter[@type='BRANCH' and not(ancestor::package)]/@missed)" target/jacoco-report/jacoco.xml)
+BRANCHES_COVERAGE=$(echo "scale=2; $BRANCHES_COVERED / ($BRANCHES_COVERED + $BRANCHES_MISSED) * 100" | bc)
+
+# Define the minimum coverage threshold
+THRESHOLD=99.0
+
+# Compare the coverage with the threshold
+if (( $(echo "$INSTRUCTIONS_COVERAGE < $THRESHOLD" | bc -l) )); then
+  echo -e "[\033[1;33mWARNING\033[0m] Instructions coverage is below $THRESHOLD%. Current coverage is $INSTRUCTIONS_COVERAGE%."
+else
+  echo -e "[\033[1;34mINFO\033[0m] Instructions coverage is $INSTRUCTIONS_COVERAGE%, which is above or equal to the threshold."
+fi
+
+if (( $(echo "$BRANCHES_COVERAGE < $THRESHOLD" | bc -l) )); then
+  echo -e "[\033[1;33mWARNING\033[0m] Branch coverage is below $THRESHOLD%. Current coverage is $BRANCHES_COVERAGE%."
+else
+  echo -e "[\033[1;34mINFO\033[0m] Branch coverage is $BRANCHES_COVERAGE%, which is above or equal to the threshold."
+fi
+
+# Show link to the coverage report
+RELATIVE_COVERAGE_PATH="./target/jacoco-report/index.html"
+COVERAGE_REPORT_PATH="file://$(realpath $RELATIVE_COVERAGE_PATH)"
+echo -e "[\033[1;34mINFO\033[0m] See the coverage report for more details: \033[1;34m$COVERAGE_REPORT_PATH\033[0m"
+
+# Go back to the root directory
+cd ..
+
+# Change to the frontend directory
+cd frontend
+
+# Run the ESLint command
+yarn lint
+
+# If the linting fails, abort the commit
+if [ $? -ne 0 ]; then
+  echo "Frontend linting failed."
+fi
+
+# Go back to the root directory
+cd ..

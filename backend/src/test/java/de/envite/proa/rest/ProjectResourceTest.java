@@ -68,8 +68,10 @@ public class ProjectResourceTest {
 
 		when(usecase.createProject(USER_ID, PROJECT_NAME_1, PROJECT_VERSION_1)).thenReturn(expectedProject1);
 
-		Project result = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Response response = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Project result = response.readEntity(Project.class);
 
+		assertEquals(201, response.getStatus());
 		assertEquals(expectedProject1, result);
 		verify(jwt, times(1)).getClaim("userId");
 		verify(usecase, times(1)).createProject(USER_ID, PROJECT_NAME_1, PROJECT_VERSION_1);
@@ -81,8 +83,10 @@ public class ProjectResourceTest {
 
 		when(usecase.createProject(PROJECT_NAME_1, PROJECT_VERSION_1)).thenReturn(expectedProject1);
 
-		Project result = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Response response = resource.createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
+		Project result = response.readEntity(Project.class);
 
+		assertEquals(201, response.getStatus());
 		assertEquals(expectedProject1, result);
 		verify(jwt, never()).getClaim("userId");
 		verify(usecase, times(1)).createProject(PROJECT_NAME_1, PROJECT_VERSION_1);
@@ -100,7 +104,7 @@ public class ProjectResourceTest {
 		when(usecase.getProjects(USER_ID)).thenReturn(expectedProjects);
 
 		List<Project> result = resource.getProjects();
-
+		
 		assertEquals(expectedProjects, result);
 		verify(jwt, times(1)).getClaim("userId");
 		verify(usecase, times(1)).getProjects(USER_ID);
@@ -218,5 +222,28 @@ public class ProjectResourceTest {
 		assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), result.getStatus());
 		verify(jwt, never()).getClaim("userId");
 		verify(usecase, times(1)).getProject(PROJECT_ID_1);
+	}
+
+	@Test
+	public void testDeleteProject_DesktopMode() {
+		resource.appMode = APP_MODE_DESKTOP;
+		doNothing().when(usecase).deleteProject(PROJECT_ID_1);
+
+		resource.deleteProject(PROJECT_ID_1);
+
+		verify(jwt, never()).getClaim("userId");
+		verify(usecase, times(1)).deleteProject(PROJECT_ID_1);
+	}
+
+	@Test
+	public void testDeleteProject_WebMode() {
+		resource.appMode = APP_MODE_WEB;
+		doNothing().when(usecase).deleteProject(USER_ID, PROJECT_ID_1);
+		when(jwt.getClaim("userId")).thenReturn(USER_ID);
+
+		resource.deleteProject(PROJECT_ID_1);
+
+		verify(jwt, times(1)).getClaim("userId");
+		verify(usecase, times(1)).deleteProject(USER_ID, PROJECT_ID_1);
 	}
 }

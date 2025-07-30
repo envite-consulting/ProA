@@ -97,16 +97,9 @@
     "startEvents": "Startereignisse"
   },
   "processList": {
-    "alreadyExistsErrorMsg1": {
-      "singular": "Kollaboration mit der ID ",
-      "plural": "Kollaborationen mit den IDs "
-    },
-    "alreadyExistsErrorMsg2": {
-      "singular": " existiert bereits.",
-      "plural": " existieren bereits."
-    },
     "cantReplaceWithCollaborationErrorMsg": "Es ist nicht möglich, einen Prozess mit einer Kollaboration zu ersetzen.",
     "collaboration": "Kollaboration",
+    "collaborationAlreadyExistsErrorMsg": "Eine Kollaboration mit der gleichen BPMN-ID oder Namen «{name}» existiert bereits.",
     "confirm": "Bestätigen",
     "confirmDeletion": "Löschen bestätigen",
     "confirmDeletionText1": "Sind Sie sicher, dass Sie ",
@@ -116,12 +109,16 @@
     "generateDescriptionWithAI": "Beschreibung mit AI generieren",
     "importFromC8": "Aus C8 importieren",
     "navigateToC8Import": "Zu C8 Import navigieren",
+    "noApiKeyError": "Kein API-Key gefunden. Bitte setzen Sie einen API-Key in den Einstellungen, um die KI-Generierung zu aktivieren.",
     "noProcessModelsFound": "Keine Prozessmodelle gefunden.",
+    "noResponseErrorMsg": "Keine Antwort vom Server. Bitte Ihre Verbindung prüfen.",
     "participant": "Teilnehmer",
     "processModels": "Prozessmodelle",
     "replaceProcessModel": "Prozessmodell ersetzen",
     "toTheProcessMap": "Zur Prozesskarte",
+    "unexpectedErrorMsg": "Ein unerwarteter Fehler ist aufgetreten.",
     "uploadProcessModels": "Prozessmodelle hochladen",
+    "uploadingProcessModel": "Hochladen des Prozessmodells",
     "uploadingProcessModels": "Prozessmodelle werden hochgeladen..."
   },
   "processMap": {

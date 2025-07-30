@@ -30,7 +30,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		this.userDao = userDao;
 	}
 
-	@Transactional
 	@Override
 	public Project createProject(String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
@@ -38,7 +37,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return map(table);
 	}
 
-	@Transactional
 	@Override
 	public Project createProject(Long userId, String name, String version) {
 		ProjectTable table = createProjectTable(name, version);
@@ -57,7 +55,6 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		return table;
 	}
 
-	@Transactional
 	@Override
 	public List<Project> getProjects() {
 		return projectDao//
@@ -67,10 +64,10 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 				.collect(Collectors.toList());
 	}
 
-	@Transactional
 	@Override
 	public List<Project> getProjects(Long userId) {
-		UserTable user = userDao.findById(userId);
+		UserTable user = new UserTable();
+		user.setId(userId);;
 		return projectDao//
 				.getProjectsForUser(user)//
 				.stream()//
@@ -89,15 +86,12 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 
 	@Override
 	public Project getProject(Long userId, Long projectId) {
-		UserTable user = userDao.findById(userId);
-		ProjectTable project = projectDao.findById(projectId);
-		if (project == null) {
-			throw new NotFoundException("Project not found");
-		}
+		UserTable user = new UserTable();
+		user.setId(userId);
 
 		ProjectTable projectForUser = projectDao.findByUserAndId(user, projectId);
 		if (projectForUser == null) {
-			throw new ForbiddenException("Access forbidden");
+			throw new ForbiddenException("Not found or Access forbidden");
 		}
 		return map(projectForUser);
 	}
