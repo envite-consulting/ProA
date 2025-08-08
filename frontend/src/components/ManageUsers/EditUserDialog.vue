@@ -35,7 +35,7 @@
             type="password"
             :label="$t('authentication.newPassword')"
             variant="outlined"
-            :rules="newPasswordRules"
+            :rules="updateUserPasswordRules"
           />
         </v-form>
         <div class="d-flex align-center justify-space-between">
@@ -71,7 +71,7 @@ import {
   emailRules,
   firstNameRules,
   lastNameRules,
-  newPasswordRules,
+  updateUserPasswordRules
 } from "@/components/Authentication/formValidation";
 import { VForm } from "vuetify/components";
 
@@ -81,36 +81,36 @@ export default defineComponent({
     showDialog: {
       type: Boolean,
       required: true,
-      default: false,
+      default: false
     },
     userId: {
       type: Number,
-      required: true,
+      required: true
     },
     userEmail: {
       type: String,
-      required: true,
+      required: true
     },
     userFirstName: {
       type: String,
-      required: true,
+      required: true
     },
     userLastName: {
       type: String,
-      required: true,
+      required: true
     },
     userCreatedAt: {
       type: String,
-      required: true,
+      required: true
     },
     userModifiedAt: {
       type: String,
-      required: true,
+      required: true
     },
     ownUserId: {
       type: Number,
-      required: true,
-    },
+      required: true
+    }
   },
 
   data() {
@@ -122,14 +122,14 @@ export default defineComponent({
       emailRules: emailRules,
       firstNameRules: firstNameRules,
       lastNameRules: lastNameRules,
-      newPasswordRules: newPasswordRules,
+      updateUserPasswordRules: updateUserPasswordRules
     };
   },
 
   computed: {
     dialogModel() {
       return this.showDialog;
-    },
+    }
   },
 
   methods: {
@@ -159,12 +159,12 @@ export default defineComponent({
           this.localUserLastName != this.userLastName
             ? this.localUserLastName
             : null,
-        password: this.newPassword != "" ? this.newPassword : null,
+        password: this.newPassword != "" ? this.newPassword : null
       };
       await axios.patch(`/api/user/${id}`, data, { headers: authHeader() });
       this.$emit("fetchUsers");
       this.closeDialog();
-    },
+    }
   },
 
   watch: {
@@ -175,7 +175,7 @@ export default defineComponent({
         this.localUserLastName = this.userLastName;
         this.newPassword = "";
       }
-    },
-  },
+    }
+  }
 });
 </script>
