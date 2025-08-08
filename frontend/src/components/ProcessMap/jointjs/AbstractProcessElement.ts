@@ -1,16 +1,15 @@
-import { dia, util } from '@joint/core';
+import { dia, util } from "@joint/core";
 
 import { getPortPrefix } from "@/components/ProcessMap/ProcessMap.vue";
-import { ProcessElementType} from "@/components/ProcessMap/types";
+import { ProcessElementType } from "@/components/ProcessMap/types";
 
 export class AbstractProcessShape extends dia.Element {
-
   hiddenPorts: dia.Element.Port[] = [];
 
   hidePort(portId: string): void {
     this.hiddenPorts.push({
       id: portId,
-      group: this.getPort(portId).group,
+      group: this.getPort(portId).group
     });
     this.removePort(portId);
   }
@@ -21,22 +20,22 @@ export class AbstractProcessShape extends dia.Element {
   }
 
   hideActiveInstances() {
-    this.attr('activeInstancesGroup/display', 'none');
+    this.attr("activeInstancesGroup/display", "none");
   }
 
   setActiveInstances(activeInstancesNum: number) {
-    this.attr('activeInstancesGroup/display', 'block');
-    this.attr('activeInstancesText/text', activeInstancesNum.toString());
+    this.attr("activeInstancesGroup/display", "block");
+    this.attr("activeInstancesText/text", activeInstancesNum.toString());
   }
 
   highlightPort(elementType: ProcessElementType) {
     const portId = getPortPrefix(elementType) + this.id;
-    this.portProp(portId, 'attrs/portBody/stroke', "#0074FA");
+    this.portProp(portId, "attrs/portBody/stroke", "#0074FA");
   }
 
   unhighlightPort(elementType: ProcessElementType) {
     const portId = getPortPrefix(elementType) + this.id;
-    this.portProp(portId, 'attrs/portBody/stroke', "black");
+    this.portProp(portId, "attrs/portBody/stroke", "black");
   }
 
   defaults() {
@@ -52,8 +51,7 @@ export class AbstractProcessShape extends dia.Element {
           stroke: "#333333",
           fill: "#fff",
           strokeWidth: 2,
-          d:
-            "M 0 0 h calc(w) l 10 calc(0.5 * h) l -10 calc(0.5 * h) H 0 l 10 -calc(0.5 * h) l -10 -calc(0.5 * h) Z"
+          d: "M 0 0 h calc(w) l 10 calc(0.5 * h) l -10 calc(0.5 * h) H 0 l 10 -calc(0.5 * h) l -10 -calc(0.5 * h) Z"
         },
         label: {
           x: "calc(0.5 * w)",
@@ -78,7 +76,7 @@ export class AbstractProcessShape extends dia.Element {
           cx: "calc(w - 34)",
           cy: "-0.4",
           r: "2.5",
-          fill: "white",
+          fill: "white"
         },
         activeInstancesCircleOuter: {
           cx: "calc(w - 34)",
@@ -86,7 +84,7 @@ export class AbstractProcessShape extends dia.Element {
           r: "5",
           fill: "none",
           stroke: "white",
-          strokeWidth: 1.5,
+          strokeWidth: 1.5
         },
         activeInstancesText: {
           x: "calc(w - 20)",
@@ -152,8 +150,7 @@ export class AbstractProcessShape extends dia.Element {
             size: { width: 20, height: 20 },
             attrs: {
               portBody: {
-                d:
-                  "M 10 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z",
+                d: "M 10 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z",
                 magnet: "passive"
               }
             }
@@ -163,8 +160,7 @@ export class AbstractProcessShape extends dia.Element {
             size: { width: 20, height: 20 },
             attrs: {
               portBody: {
-                d:
-                  "M 10 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z",
+                d: "M 10 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z",
                 magnet: "passive",
                 "stroke-width": 4
               }
@@ -174,10 +170,8 @@ export class AbstractProcessShape extends dia.Element {
             position: "bottom",
             size: { width: 20, height: 20 },
             attrs: {
-
               portBody: {
-                d:
-                  "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
+                d: "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
                 magnet: "passive"
               }
             }
@@ -186,10 +180,8 @@ export class AbstractProcessShape extends dia.Element {
             position: "top",
             size: { width: 20, height: 20 },
             attrs: {
-
               portBody: {
-                d:
-                  "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
+                d: "M -25 -calc(0.5 * h) a 10 10 0 1 0 0.00001 0 Z M -25 -calc(0.5 * h-3) a 7 7 0 1 0 0.00001 0 Z",
                 magnet: "passive"
               }
             }
@@ -199,12 +191,11 @@ export class AbstractProcessShape extends dia.Element {
             size: { width: 20, height: 20 },
             attrs: {
               portBody: {
-                d:
-                  "M 35 -calc(0.5 * h) a3,3 0 0 1 3,3 v15 a3,3 0 0 1 -3,3 h-25 a3,3 0 0 1 -3,-3 v-15 a3,3 0 0 1 3,-3 z",
+                d: "M 35 -calc(0.5 * h) a3,3 0 0 1 3,3 v15 a3,3 0 0 1 -3,3 h-25 a3,3 0 0 1 -3,-3 v-15 a3,3 0 0 1 3,-3 z",
                 magnet: "passive"
               }
             }
-          },
+          }
         }
       }
     };
@@ -248,20 +239,78 @@ export class AbstractProcessShape extends dia.Element {
       }
     ];
   }
+
+  adjustFontSizeAndWrap(label: string, maxWidth: number, maxHeight: number) {
+    let fontSize = this.attr("label/fontSize");
+    const padding = 10;
+    let wrapLabel = util.breakText(label, { width: maxWidth });
+    let currentHeight = this.get("size")!.height;
+
+    while (
+      (this.doesTextOverflow(wrapLabel) ||
+        this.isTextOverflowingShape(wrapLabel)) &&
+      fontSize > 10
+    ) {
+      fontSize -= 1;
+      this.attr("label/fontSize", fontSize);
+      wrapLabel = util.breakText(label, { width: maxWidth - 2 * padding });
+
+      if (this.isTextOverflowingShape(wrapLabel)) {
+        currentHeight += 10;
+        this.resize(this.get("size")!.width, currentHeight);
+      }
+    }
+
+    this.attr("label/text", wrapLabel);
+  }
+
+  doesTextOverflow(wrappedText: string): boolean {
+    const textSize = this.measureTextSize(wrappedText);
+    const shapeSize = this.get("size");
+    const overflow =
+      textSize.width > shapeSize!.width || textSize.height > shapeSize!.height;
+
+    return overflow;
+  }
+
+  isTextOverflowingShape(wrappedText: string): boolean {
+    const shapeSize = this.get("size");
+    const textSize = this.measureTextSize(wrappedText);
+    const overflow = textSize.height > shapeSize!.height;
+
+    return overflow;
+  }
+
+  measureTextSize(text: string): { width: number; height: number } {
+    const tempElem = document.createElement("div");
+    tempElem.style.fontSize = `${this.attr("label/fontSize")}px`;
+    tempElem.style.fontFamily = this.attr("label/fontFamily");
+    tempElem.style.position = "absolute";
+    tempElem.style.visibility = "hidden";
+    tempElem.style.whiteSpace = "nowrap";
+    tempElem.innerText = text;
+    document.body.appendChild(tempElem);
+    const size = { width: tempElem.offsetWidth, height: tempElem.offsetHeight };
+    document.body.removeChild(tempElem);
+
+    return size;
+  }
 }
 
-const createAbstractProcessElement = (label: string, id: number, bpmnProcessId: string) => {
+const createAbstractProcessElement = (
+  label: string,
+  id: number,
+  bpmnProcessId: string
+) => {
+  const maxWidth = 150;
+  const maxHeight = 75;
 
-  const wrapLabel = util.breakText(label, {
-    width: 120
-  });
-
-  return new AbstractProcessShape({
+  const element = new AbstractProcessShape({
     id: id,
     bpmnProcessId: bpmnProcessId,
     attrs: {
       label: {
-        text: wrapLabel
+        text: label
       },
       activeInstancesGroup: {
         display: "none"
@@ -271,27 +320,31 @@ const createAbstractProcessElement = (label: string, id: number, bpmnProcessId: 
       items: [
         {
           id: "start-" + id,
-          group: "start",
+          group: "start"
         },
         {
           id: "end-" + id,
-          group: "end",
+          group: "end"
         },
         {
           id: "i-throw-event-" + id,
-          group: "i-throw-event",
+          group: "i-throw-event"
         },
         {
           id: "i-catch-event-" + id,
-          group: "i-catch-event",
+          group: "i-catch-event"
         },
         {
           id: "call-" + id,
-          group: "callActivity",
+          group: "callActivity"
         }
       ]
     }
   });
-}
+
+  element.adjustFontSizeAndWrap(label, maxWidth, maxHeight);
+
+  return element;
+};
 
 export default createAbstractProcessElement;
