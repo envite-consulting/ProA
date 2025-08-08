@@ -72,7 +72,11 @@
       </v-list>
     </v-menu>
 
-    <v-tooltip :text="$t('general.settings')" location="bottom">
+    <v-tooltip
+      v-if="isUserLoggedIn"
+      :text="$t('general.settings')"
+      location="bottom"
+    >
       <template v-slot:activator="{ props }">
         <v-btn icon v-bind="props" @click="toggleSettings">
           <v-icon>mdi-cog</v-icon>

@@ -34,13 +34,12 @@
         <v-list-item-subtitle>
           {{ getLocaleDate(model.created) }} - {{ model.updatedBy.email }}
         </v-list-item-subtitle>
-        <template>
-          <v-list-item-action start>
-            <v-checkbox
-              v-model="selectedProcessModels"
-              :value="model"
-            ></v-checkbox>
-          </v-list-item-action>
+        <template v-slot:prepend>
+          <v-checkbox
+            v-model="selectedProcessModels"
+            :value="model"
+            hide-details
+          ></v-checkbox>
         </template>
       </v-list-item>
       <v-divider
@@ -305,7 +304,11 @@ export default defineComponent({
       this.$router.push("/");
       return;
     }
+<<<<<<< HEAD
     getProject(selectedProjectId).then((result) => {
+=======
+    getProject(this.selectedProjectId).then((result) => {
+>>>>>>> develop
       this.selectedProjectName = result.data.name;
       this.selectedVersionName =
         this.store.getActiveVersionForProject(selectedProjectId).name;
