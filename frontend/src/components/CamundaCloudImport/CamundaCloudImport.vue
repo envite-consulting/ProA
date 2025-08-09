@@ -304,11 +304,7 @@ export default defineComponent({
       this.$router.push("/");
       return;
     }
-<<<<<<< HEAD
     getProject(selectedProjectId).then((result) => {
-=======
-    getProject(this.selectedProjectId).then((result) => {
->>>>>>> develop
       this.selectedProjectName = result.data.name;
       this.selectedVersionName =
         this.store.getActiveVersionForProject(selectedProjectId).name;
