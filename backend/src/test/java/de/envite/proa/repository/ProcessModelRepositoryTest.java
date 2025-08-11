@@ -37,6 +37,7 @@ class ProcessModelRepositoryTest {
 	private static final String NEW_ACTIVITY_ID = "newActivityId";
 	private static final String EXISTING_ACTIVITY_ID = "existingActivityId";
 	private static final String DATA_STORE_LABEL = "DataStoreLabel";
+	private static final String DIFFERENT_DATA_STORE_LABEL = "OtherDifferentDataStoreLabel";
 	private static final Long PROCESS_MODEL_ID_1 = 1L;
 	private static final Long PROCESS_MODEL_ID_2 = 2L;
 	private static final Long PROCESS_MODEL_ID_3 = 3L;
@@ -49,6 +50,7 @@ class ProcessModelRepositoryTest {
 	private static final String PROCESS_MODEL_NAME = "processModelName";
 	private static final String PROCESS_EVENT_ID = "processEventId";
 	private static final String PROCESS_EVENT_LABEL = "processEventName";
+	private static final String DIFFERENT_EVENT_LABEL = "differentEventLabel";
 
 	@InjectMocks
 	private ProcessmodelRepositoryImpl repository;
@@ -76,6 +78,9 @@ class ProcessModelRepositoryTest {
 	void testEndEvent() {
 
 		// Arrange
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
+
 		ProcessEventTable processEventTable = new ProcessEventTable();
 		processEventTable.setEventType(EventType.START);
 		processEventTable.setLabel(COMMON_EVENT_LABEL);
@@ -84,8 +89,7 @@ class ProcessModelRepositoryTest {
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
 		processEventTable.setProcessModel(processModelTable);
 		List<ProcessEventTable> startEventTables = List.of(processEventTable);
-		when(processEventDao.getEventsForLabelAndType(eq(COMMON_EVENT_LABEL), eq(EventType.START), any()))
-				.thenReturn(startEventTables);
+		when(processEventDao.getEvents(project)).thenReturn(startEventTables);
 
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				processModelDao, //
@@ -112,6 +116,9 @@ class ProcessModelRepositoryTest {
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
 		verify(processConnectionDao).persist(connectionCaptor.capture());
+		verify(processEventDao).getEvents(project);
+		verifyNoMoreInteractions(processConnectionDao);
+		verifyNoMoreInteractions(processEventDao);
 		ProcessConnectionTable connection = connectionCaptor.getValue();
 
 		assertThat(connection.getCalledProcess().getName()).isEqualTo(EXISTING_PROCESS_MODEL_NAME);
@@ -131,6 +138,9 @@ class ProcessModelRepositoryTest {
 	void testStartEvent() {
 
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+
 		ProcessEventTable processEventTable = new ProcessEventTable();
 		processEventTable.setEventType(EventType.END);
 		processEventTable.setLabel(COMMON_EVENT_LABEL);
@@ -139,8 +149,7 @@ class ProcessModelRepositoryTest {
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
 		processEventTable.setProcessModel(processModelTable);
 		List<ProcessEventTable> endEventTables = List.of(processEventTable);
-		when(processEventDao.getEventsForLabelAndType(eq(COMMON_EVENT_LABEL), eq(EventType.END), any()))
-				.thenReturn(endEventTables);
+		when(processEventDao.getEvents(projectTable)).thenReturn(endEventTables);
 
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				processModelDao, //
@@ -185,10 +194,13 @@ class ProcessModelRepositoryTest {
 	void testCallActivity() {
 
 		// Arrange
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
+		List<CallActivityTable> emptyCallActivities = new ArrayList<>();
 		ProcessModelTable processModelTable = new ProcessModelTable();
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
-		when(processModelDao.getProcessModelsForName(eq(EXISTING_PROCESS_MODEL_NAME), any()))
-				.thenReturn(List.of(processModelTable));
+		when(processModelDao.getProcessModels(project)).thenReturn(List.of(processModelTable));
+		when(callActivityDao.getCallActivities(project)).thenReturn(emptyCallActivities);
 
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				processModelDao, //
@@ -213,7 +225,14 @@ class ProcessModelRepositoryTest {
 
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
+		ArgumentCaptor<ProcessModelTable> processModelCaptor = ArgumentCaptor.forClass(ProcessModelTable.class);
 		verify(processConnectionDao).persist(connectionCaptor.capture());
+		verify(processModelDao).getProcessModels(project);
+		verify(processModelDao).persist(processModelCaptor.capture());
+		verify(callActivityDao).getCallActivities(project);
+		verifyNoMoreInteractions(processConnectionDao);
+		verifyNoMoreInteractions(processModelDao);
+		verifyNoMoreInteractions(callActivityDao);
 		ProcessConnectionTable connection = connectionCaptor.getValue();
 
 		assertThat(connection.getCallingProcess().getName()).isEqualTo(NEW_PROCESS_MODEL_NAME);
@@ -233,6 +252,9 @@ class ProcessModelRepositoryTest {
 	void testProcessCalledByActivity() {
 
 		// Arrange
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
+
 		ProcessModelTable processModelTable = new ProcessModelTable();
 		processModelTable.setName(EXISTING_PROCESS_MODEL_NAME);
 
@@ -241,8 +263,7 @@ class ProcessModelRepositoryTest {
 		callActivityTable.setLabel(NEW_PROCESS_MODEL_NAME);
 		callActivityTable.setProcessModel(processModelTable);
 
-		when(callActivityDao.getCallActivitiesForName(eq(NEW_PROCESS_MODEL_NAME), any()))
-				.thenReturn(List.of(callActivityTable));
+		when(callActivityDao.getCallActivities(project)).thenReturn(List.of(callActivityTable));
 
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				processModelDao, //
@@ -262,6 +283,9 @@ class ProcessModelRepositoryTest {
 		// Assert
 		ArgumentCaptor<ProcessConnectionTable> connectionCaptor = ArgumentCaptor.forClass(ProcessConnectionTable.class);
 		verify(processConnectionDao).persist(connectionCaptor.capture());
+		verify(callActivityDao).getCallActivities(project);
+		verifyNoMoreInteractions(processConnectionDao);
+		verifyNoMoreInteractions(callActivityDao);
 		ProcessConnectionTable connection = connectionCaptor.getValue();
 
 		assertThat(connection.getCallingProcess().getName()).isEqualTo(EXISTING_PROCESS_MODEL_NAME);
@@ -280,10 +304,13 @@ class ProcessModelRepositoryTest {
 	@Test
 	void testDataStore() {
 		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+
 		DataStoreTable dataStoreTable = new DataStoreTable();
 		dataStoreTable.setLabel(DATA_STORE_LABEL);
 
-		when(dataStoreDao.getDataStoreForLabel(eq(DATA_STORE_LABEL), any())).thenReturn(dataStoreTable);
+		when(dataStoreDao.getDataStores(projectTable)).thenReturn(List.of(dataStoreTable));
 
 		ProcessmodelRepositoryImpl repository = new ProcessmodelRepositoryImpl(//
 				processModelDao, //
@@ -315,6 +342,11 @@ class ProcessModelRepositoryTest {
 		assertThat(connection.getProcess().getName()).isEqualTo(NEW_PROCESS_MODEL_NAME);
 		assertThat(connection.getDataStore().getLabel()).isEqualTo(DATA_STORE_LABEL);
 		assertThat(connection.getAccess()).isEqualTo(DataAccess.READ_WRITE);
+
+		verify(dataStoreDao, times(1)).getDataStores(projectTable);
+		verifyNoMoreInteractions(dataStoreDao);
+
+		verifyNoMoreInteractions(dataStoreConnectionDao);
 	}
 
 	@Test
@@ -427,6 +459,8 @@ class ProcessModelRepositoryTest {
 		parent.setId(PROCESS_MODEL_ID_1);
 		when(processModelDao.findByBpmnProcessIdWithChildren(PARENT_PROCESS_MODEL_ID, project)).thenReturn(parent);
 
+		when(processModelDao.getProcessModels(project)).thenReturn(new ArrayList<>());
+
 		doNothing().when(processModelDao).merge(any(ProcessModelTable.class));
 
 		repository.saveProcessModel(PROJECT_ID, processModel);
@@ -436,6 +470,7 @@ class ProcessModelRepositoryTest {
 		verify(processModelDao, times(1)).findByBpmnProcessIdWithChildren(PARENT_PROCESS_MODEL_ID,
 				project);
 		verify(processModelDao, times(1)).addChild(PROCESS_MODEL_ID_1, processModelCaptor.getValue().getId());
+		verify(processModelDao, times(1)).getProcessModels(project);
 		verifyNoMoreInteractions(processModelDao);
 	}
 
@@ -517,6 +552,9 @@ class ProcessModelRepositoryTest {
 
 	@Test
 	public void testSaveProcessModel_ConnectIntermediateCatchEvent() {
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
+
 		doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
 
 		ProcessModel processModel = new ProcessModel();
@@ -526,12 +564,15 @@ class ProcessModelRepositoryTest {
 		event.setLabel(PROCESS_EVENT_LABEL);
 		processModel.setEvents(Set.of(event));
 
-		ProcessEventTable eventToConnect = new ProcessEventTable();
+		ProcessEventTable eventToConnect1 = new ProcessEventTable();
+		eventToConnect1.setEventType(EventType.END);
+		eventToConnect1.setLabel(PROCESS_EVENT_LABEL);
 
-		when(processEventDao.getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.END), any())).thenReturn(
-				List.of(eventToConnect));
-		when(processEventDao.getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.INTERMEDIATE_THROW),
-				any())).thenReturn(List.of(eventToConnect));
+		ProcessEventTable eventToConnect2 = new ProcessEventTable();
+		eventToConnect2.setEventType(EventType.INTERMEDIATE_THROW);
+		eventToConnect2.setLabel(PROCESS_EVENT_LABEL);
+
+		when(processEventDao.getEvents(project)).thenReturn(List.of(eventToConnect1, eventToConnect2));
 
 		doNothing().when(processConnectionDao).persist(any(ProcessConnectionTable.class));
 
@@ -541,18 +582,16 @@ class ProcessModelRepositoryTest {
 
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
 
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.END),
-				projectCaptor.capture());
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL),
-				eq(EventType.INTERMEDIATE_THROW),
-				projectCaptor.capture());
-		assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
+		verify(processEventDao, times(1)).getEvents(project);
+		assertThat(projectCaptor.getAllValues()).allMatch(projectTable -> projectTable.getId().equals(PROJECT_ID));
 
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
 	}
 
 	@Test
 	public void testSaveProcessModel_ConnectIntermediateThrowEvent() {
+		ProjectTable project = new ProjectTable();
+		project.setId(PROJECT_ID);
 
 		doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
 
@@ -563,12 +602,15 @@ class ProcessModelRepositoryTest {
 		event.setLabel(PROCESS_EVENT_LABEL);
 		processModel.setEvents(Set.of(event));
 
-		ProcessEventTable eventToConnect = new ProcessEventTable();
+		ProcessEventTable eventToConnect1 = new ProcessEventTable();
+		eventToConnect1.setEventType(EventType.INTERMEDIATE_CATCH);
+		eventToConnect1.setLabel(PROCESS_EVENT_LABEL);
 
-		when(processEventDao.getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.START), any())).thenReturn(
-				List.of(eventToConnect));
-		when(processEventDao.getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.INTERMEDIATE_CATCH),
-				any())).thenReturn(List.of(eventToConnect));
+		ProcessEventTable eventToConnect2 = new ProcessEventTable();
+		eventToConnect2.setEventType(EventType.START);
+		eventToConnect2.setLabel(PROCESS_EVENT_LABEL);
+
+		when(processEventDao.getEvents(project)).thenReturn(List.of(eventToConnect1, eventToConnect2));
 
 		doNothing().when(processConnectionDao).persist(any(ProcessConnectionTable.class));
 
@@ -577,13 +619,105 @@ class ProcessModelRepositoryTest {
 		verify(processModelDao, times(1)).persist(any(ProcessModelTable.class));
 
 		ArgumentCaptor<ProjectTable> projectCaptor = ArgumentCaptor.forClass(ProjectTable.class);
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL), eq(EventType.START),
-				projectCaptor.capture());
-		verify(processEventDao, times(1)).getEventsForLabelAndType(eq(PROCESS_EVENT_LABEL),
-				eq(EventType.INTERMEDIATE_CATCH),
-				projectCaptor.capture());
-		assertThat(projectCaptor.getAllValues()).allMatch(project -> project.getId().equals(PROJECT_ID));
+		verify(processEventDao, times(1)).getEvents(project);
+		assertThat(projectCaptor.getAllValues()).allMatch(
+				capturedProject -> capturedProject.getId().equals(PROJECT_ID));
 
 		verify(processConnectionDao, times(2)).persist(any(ProcessConnectionTable.class));
+	}
+
+	@Test
+	public void testSaveProcessModel_NoConnectionIfEventLabelsAreNotSimilar() {
+		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+
+		ProcessModel processModel = new ProcessModel();
+		ProcessEvent event = new ProcessEvent();
+		event.setElementId(PROCESS_EVENT_ID);
+		event.setEventType(EventType.INTERMEDIATE_THROW);
+		event.setLabel(PROCESS_EVENT_LABEL);
+		processModel.setEvents(Set.of(event));
+
+		ProcessEventTable eventToConnect = new ProcessEventTable();
+		eventToConnect.setEventType(EventType.INTERMEDIATE_CATCH);
+		eventToConnect.setLabel(DIFFERENT_EVENT_LABEL);
+
+		doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
+		when(processEventDao.getEvents(projectTable)).thenReturn(List.of(eventToConnect));
+
+		when(processModelDao.getProcessModels(projectTable)).thenReturn(List.of());
+		when(callActivityDao.getCallActivities(projectTable)).thenReturn(List.of());
+
+		when(dataStoreDao.getDataStores(projectTable)).thenReturn(List.of());
+
+		// Act
+		repository.saveProcessModel(PROJECT_ID, processModel);
+
+		// Assert
+		verifyNoInteractions(processConnectionDao);
+
+		ArgumentCaptor<ProcessModelTable> processModelTableCaptor = ArgumentCaptor.forClass(ProcessModelTable.class);
+		verify(processModelDao, times(1)).persist(processModelTableCaptor.capture());
+
+		verify(processEventDao, times(1)).getEvents(projectTable);
+		verify(processModelDao, times(1)).getProcessModels(projectTable);
+		verify(callActivityDao, times(1)).getCallActivities(projectTable);
+		verify(dataStoreDao, times(1)).getDataStores(projectTable);
+
+		verifyNoMoreInteractions(processModelDao);
+		verifyNoMoreInteractions(processEventDao);
+		verifyNoMoreInteractions(callActivityDao);
+		verifyNoMoreInteractions(dataStoreDao);
+	}
+
+	@Test
+	public void testSaveProcessModel_CreateDataStoreIfLabelsAreNotSimilar() {
+		// Arrange
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+
+		ProcessModel processModel = new ProcessModel();
+		ProcessDataStore processDataStore = new ProcessDataStore();
+		processDataStore.setLabel(DATA_STORE_LABEL);
+		processModel.setDataStores(List.of(processDataStore));
+
+		DataStoreTable dataStoreTable = new DataStoreTable();
+		dataStoreTable.setLabel(DIFFERENT_DATA_STORE_LABEL);
+
+		doNothing().when(processModelDao).persist(any(ProcessModelTable.class));
+		when(processEventDao.getEvents(projectTable)).thenReturn(List.of());
+
+		when(processModelDao.getProcessModels(projectTable)).thenReturn(List.of());
+		when(callActivityDao.getCallActivities(projectTable)).thenReturn(List.of());
+
+		when(dataStoreDao.getDataStores(projectTable)).thenReturn(List.of(dataStoreTable));
+
+		// Act
+		repository.saveProcessModel(PROJECT_ID, processModel);
+
+		// Assert
+		verifyNoInteractions(processConnectionDao);
+
+		ArgumentCaptor<ProcessModelTable> processModelTableCaptor = ArgumentCaptor.forClass(ProcessModelTable.class);
+		verify(processModelDao, times(1)).persist(processModelTableCaptor.capture());
+
+		verify(processEventDao, times(1)).getEvents(projectTable);
+		verify(processModelDao, times(1)).getProcessModels(projectTable);
+		verify(callActivityDao, times(1)).getCallActivities(projectTable);
+		verify(dataStoreDao, times(1)).getDataStores(projectTable);
+
+		ArgumentCaptor<DataStoreTable> dataStoreTableArgumentCaptor = ArgumentCaptor.forClass(DataStoreTable.class);
+		verify(dataStoreDao, times(1)).persist(dataStoreTableArgumentCaptor.capture());
+
+		ArgumentCaptor<DataStoreConnectionTable> dataStoreConnectionTableArgumentCaptor = ArgumentCaptor.forClass(
+				DataStoreConnectionTable.class);
+		verify(dataStoreConnectionDao, times(1)).persist(dataStoreConnectionTableArgumentCaptor.capture());
+
+		verifyNoMoreInteractions(processModelDao);
+		verifyNoMoreInteractions(processEventDao);
+		verifyNoMoreInteractions(callActivityDao);
+		verifyNoMoreInteractions(dataStoreDao);
+		verifyNoMoreInteractions(dataStoreConnectionDao);
 	}
 }

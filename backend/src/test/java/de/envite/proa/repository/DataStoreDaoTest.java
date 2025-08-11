@@ -76,22 +76,6 @@ class DataStoreDaoTest {
 		assertEquals(DATA_STORE_LABEL_2, result.get(1).getLabel());
 	}
 
-	@Test
-	@Transactional
-	void testGetDataStoreForLabel() {
-		ProjectTable projectTable = new ProjectTable();
-		em.persist(projectTable);
-
-		DataStoreTable dataStore = new DataStoreTable();
-		dataStore.setLabel(DATA_STORE_LABEL_1);
-		dataStore.setProject(projectTable);
-		em.persist(dataStore);
-
-		DataStoreTable result = dataStoreDao.getDataStoreForLabel(DATA_STORE_LABEL_1, projectTable);
-		assertNotNull(result);
-		assertEquals(DATA_STORE_LABEL_1, result.getLabel());
-	}
-
 	private void flushAndClear() {
 		em.flush();
 		em.clear();
