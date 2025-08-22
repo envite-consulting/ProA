@@ -169,7 +169,8 @@ public class BpmnOperations implements ProcessOperations {
 		Collection<Participant> participants = processModelInstance.getModelElementsByType(Participant.class);
 
 		String updatedXml = Bpmn.convertToString(processModelInstance);
-		return participants //
+		
+		List<ParticipantDetails> participantsDetails = participants //
 				.stream() //
 				.map(participant -> {
 					return new ParticipantDetails( //
@@ -179,6 +180,27 @@ public class BpmnOperations implements ProcessOperations {
 					);
 				}) //
 				.collect(Collectors.toList());
+
+		// For cases when the bpmn xml is broken and not all processes are listed as participants
+		Collection<Process> processes = processModelInstance.getModelElementsByType(Process.class);
+		
+		List<String> processIdsOfParticipants = participants//
+			.stream()//
+			.map(participant -> participant.getAttributeValue("processRef"))//
+			.toList();
+			
+		for (Process process : processes) {
+			if(!processIdsOfParticipants.contains(process.getId())) {
+				String processName = process.getName() != null ? process.getName() : process.getId();
+				ParticipantDetails p = new ParticipantDetails( //
+						processName,
+						getProcessDescription(process), //
+						extractParticipantXml(updatedXml, process.getId()));
+				participantsDetails.add(p);
+			}
+		}
+		
+		return participantsDetails;
 	}
 
 	private String getProcessNameOfParticipant(Participant participant, BpmnModelInstance processModelInstance) {
@@ -280,11 +302,16 @@ public class BpmnOperations implements ProcessOperations {
 			return participantDocumentations.iterator().next().getTextContent();
 		}
 
-		if (participant.getProcess() == null) {
+		Process process = participant.getProcess();
+		return getProcessDescription(process);
+	}
+
+	private String getProcessDescription(Process process) {
+		if (process == null) {
 			return null;
 		}
 
-		Collection<Documentation> processDocumentations = participant.getProcess().getDocumentations();
+		Collection<Documentation> processDocumentations = process.getDocumentations();
 		if (!processDocumentations.isEmpty()) {
 			return processDocumentations.iterator().next().getTextContent();
 		}

@@ -490,9 +490,9 @@ export default defineComponent({
       const xmlDoc = parser.parseFromString(content, "text/xml");
 
       const isCollaboration =
-        xmlDoc.getElementsByTagName("bpmn:participant")?.length > 1 ||
-        xmlDoc.getElementsByTagName("semantic:participant")?.length > 1 ||
-        xmlDoc.getElementsByTagName("participant")?.length > 1;
+        xmlDoc.getElementsByTagName("bpmn:process")?.length > 1 ||
+        xmlDoc.getElementsByTagName("semantic:process")?.length > 1 ||
+        xmlDoc.getElementsByTagName("process")?.length > 1;
 
       if (isCollaboration) {
         const collaboration =
