@@ -1,22 +1,29 @@
 package de.envite.proa.rest;
 
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.RestPath;
+
+import de.envite.proa.entities.project.AccessDeniedException;
+import de.envite.proa.entities.project.NoResultException;
 import de.envite.proa.entities.project.Project;
 import de.envite.proa.entities.project.ProjectVersion;
 import de.envite.proa.security.RolesAllowedIfWebVersion;
 import de.envite.proa.usecases.project.ProjectUsecase;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.jboss.resteasy.reactive.RestForm;
-import org.jboss.resteasy.reactive.RestPath;
-
-import java.util.List;
-import java.util.Map;
 
 @Path("/api")
 public class ProjectResource {
@@ -36,8 +43,7 @@ public class ProjectResource {
 	/**
 	 * Creates a new project
 	 *
-	 * @param name
-	 * 		the name of the project to be created
+	 * @param name the name of the project to be created
 	 * @return the created project
 	 */
 	@POST
@@ -47,20 +53,22 @@ public class ProjectResource {
 		if (appMode.equals("web")) {
 			Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
 			Project project = usecase.createProject(userId, name, version);
-			return Response.status(Response.Status.CREATED)
-					.entity(project)
+			return Response//
+					.status(Response.Status.CREATED)//
+					.entity(project)//
 					.build();
 		}
 
 		Project project = usecase.createProject(name, version);
-		return Response.status(Response.Status.CREATED)
-				.entity(project)
+		return Response//
+				.status(Response.Status.CREATED)//
+				.entity(project)//
 				.build();
 	}
 
 	/**
-	 * This method gets the names and the corresponding ids of all projects in order to show them as tiles in the
-	 * frontend
+	 * This method gets the names and the corresponding ids of all projects in order
+	 * to show them as tiles in the frontend
 	 */
 	@GET
 	@Path("/project")
@@ -82,21 +90,32 @@ public class ProjectResource {
 		if (appMode.equals("web")) {
 			Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
 			try {
-				return Response.ok().entity(usecase.getProject(userId, projectId)).build();
-			} catch (NotFoundException e) {
+				return Response//
+						.ok()//
+						.entity(usecase.getProject(userId, projectId))//
+						.build();
+			} catch (NoResultException e) {
 				return Response.status(Response.Status.NOT_FOUND).build();
-			} catch (ForbiddenException e) {
-				return Response.status(Response.Status.FORBIDDEN).build();
+			} catch (AccessDeniedException e) {
+				return Response//
+						.status(Response.Status.FORBIDDEN)//
+						.build();
 			} catch (Exception e) {
-				return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+				return Response//
+						.status(Response.Status.INTERNAL_SERVER_ERROR)//
+						.build();
 			}
 		}
 		try {
 			return Response.ok().entity(usecase.getProject(projectId)).build();
-		} catch (NotFoundException e) {
-			return Response.status(Response.Status.NOT_FOUND).build();
+		} catch (NoResultException e) {
+			return Response//
+					.status(Response.Status.NOT_FOUND)//
+					.build();
 		} catch (Exception e) {
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+			return Response//
+					.status(Response.Status.INTERNAL_SERVER_ERROR)//
+					.build();
 		}
 	}
 
@@ -107,27 +126,52 @@ public class ProjectResource {
 		if (appMode.equals("web")) {
 			Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
 			ProjectVersion projectVersion = usecase.addVersion(userId, projectId, versionName);
-			return Response.status(Response.Status.CREATED)
-					.entity(projectVersion)
+			return Response//
+					.status(Response.Status.CREATED)//
+					.entity(projectVersion)//
 					.build();
 		}
 
 		ProjectVersion projectVersion = usecase.addVersion(projectId, versionName);
-		return Response.status(Response.Status.CREATED)
-				.entity(projectVersion)
+		return Response//
+				.status(Response.Status.CREATED)//
+				.entity(projectVersion)//
 				.build();
 	}
 
 	@DELETE
 	@Path("/project/{projectId}/{versionId}")
 	@RolesAllowedIfWebVersion({ "User", "Admin" })
-	public void removeVersion(@RestPath Long projectId, @RestPath Long versionId) {
+	public Response removeVersion(@RestPath Long projectId, @RestPath Long versionId) {
 		if (appMode.equals("web")) {
-			Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
-			usecase.removeVersion(userId, projectId, versionId);
-			return;
+			try {
+				Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
+				usecase.removeVersion(userId, projectId, versionId);
+				return Response//
+						.ok()//
+						.entity(Map.of("message", "Version removed"))//
+						.build();
+			} catch (AccessDeniedException e) {
+				return Response//
+						.status(Response.Status.FORBIDDEN)//
+						.entity(Map.of("error", "You don't have permission to remove Version"))//
+						.build();
+			} catch (NoResultException e) {
+				return Response//
+						.status(Response.Status.NOT_FOUND)//
+						.entity(Map.of("error", "Project or user not found"))//
+						.build();
+			}
 		}
-		usecase.removeVersion(projectId, versionId);
+		try {
+			usecase.removeVersion(projectId, versionId);
+		} catch (NoResultException e) {
+			return Response//
+					.status(Response.Status.NOT_FOUND)//
+					.entity(Map.of("error", "Project or user not found"))//
+					.build();
+		}
+		return Response.ok().entity(Map.of("message", "Version removed")).build();
 	}
 
 	@POST
@@ -137,22 +181,21 @@ public class ProjectResource {
 		try {
 			Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
 			usecase.addContributor(userId, projectId, email);
-			return Response.ok()
-					.entity(Map.of("message", "Contributor added successfully"))
+			return Response.ok().entity(Map.of("message", "Contributor added successfully")).build();
+		} catch (NoResultException e) {
+			return Response//
+					.status(Response.Status.NOT_FOUND)//
+					.entity(Map.of("error", "Project or user not found"))//
 					.build();
-		} catch (EntityNotFoundException e) {
-			return Response.status(Response.Status.NOT_FOUND)
-					.entity(Map.of("error", "Project or user not found"))
-					.build();
-		} catch (ForbiddenException e) {
-			return Response.status(Response.Status.FORBIDDEN)
-					.entity(Map.of("error", "You don't have permission to add contributors"))
+		} catch (AccessDeniedException e) {
+			return Response//
+					.status(Response.Status.FORBIDDEN)//
+					.entity(Map.of("error", "You don't have permission to add contributors"))//
 					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(Map.of("error", "Failed to add contributor"))
-					.build();
+					.entity(Map.of("error", "Failed to add contributor")).build();
 		}
 	}
 
@@ -164,19 +207,20 @@ public class ProjectResource {
 			Long userId = Long.parseLong(jwt.getClaim(USER_ID).toString());
 			usecase.removeContributor(userId, projectId, contributorId);
 			return Response.noContent().build();
-		} catch (EntityNotFoundException e) {
-			return Response.status(Response.Status.NOT_FOUND)
-					.entity(Map.of("error", "Project not found"))
+		} catch (NoResultException e) {
+			return Response//
+					.status(Response.Status.NOT_FOUND)//
+					.entity(Map.of("error", "Project not found"))//
 					.build();
-		} catch (ForbiddenException e) {
-			return Response.status(Response.Status.FORBIDDEN)
-					.entity(Map.of("error", "You don't have permission to remove contributors"))
+		} catch (AccessDeniedException e) {
+			return Response//
+					.status(Response.Status.FORBIDDEN)//
+					.entity(Map.of("error", "You don't have permission to remove contributors"))//
 					.build();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(Map.of("error", "Failed to remove contributor"))
-					.build();
+					.entity(Map.of("error", "Failed to remove contributor")).build();
 		}
 	}
 }

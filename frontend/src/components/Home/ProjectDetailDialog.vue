@@ -5,28 +5,16 @@
         <v-card-title>{{ project.name }}</v-card-title>
         <v-divider />
         <v-card-text>
-          <div class="card-section mt-3">
-            <span class="text-body-1 font-weight-bold">
-              {{ $t("projectOverview.owner") + ": " }}
-            </span>
-            <span class="text-body-1">
-              {{
-                project.owner?.id === userId
-                  ? `(${$t("projectOverview.you")})`
-                  : `${project.owner?.firstName} ${project.owner?.lastName}`
-              }}
-            </span>
-          </div>
-
           <div class="card-section">
             <p class="text-body-1 font-weight-bold">
               {{ $t("projectOverview.contributors") + ": " }}
             </p>
             <p
-              v-for="contributor in project.contributors"
+              v-for="member in project.projectMembers"
               class="text-body-1 deletable"
             >
-              {{ contributor.firstName + " " + contributor.lastName }}
+              {{ member.firstName + " " + member.lastName }}
+              <span class="font-weight-thin font-italic">{{ member.role }}</span>
             </p>
             <v-text-field
               class="mt-2"

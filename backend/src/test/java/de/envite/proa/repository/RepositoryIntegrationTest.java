@@ -4,6 +4,8 @@ import de.envite.proa.entities.authentication.User;
 import de.envite.proa.entities.datastore.DataAccess;
 import de.envite.proa.entities.process.*;
 import de.envite.proa.entities.processmap.ProcessMap;
+import de.envite.proa.entities.project.AccessDeniedException;
+import de.envite.proa.entities.project.NoResultException;
 import de.envite.proa.entities.project.Project;
 import de.envite.proa.repository.authentication.AuthenticationRepositoryImpl;
 import de.envite.proa.repository.processmap.ProcessMapRepositoryImpl;
@@ -14,7 +16,6 @@ import de.envite.proa.usecases.authentication.exceptions.EmailAlreadyRegisteredE
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,7 +82,8 @@ class RepositoryIntegrationTest {
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
-		Long processId = processModelRepository.saveProcessModel(project.getId(), model);
+		Long projectVersionId = project.getVersions().stream().findFirst().get().getId();
+		Long processId = processModelRepository.saveProcessModel(projectVersionId, model);
 		ProcessDetails processDetails = processModelRepository.getProcessDetails(processId);
 
 		// Assert
@@ -122,10 +124,11 @@ class RepositoryIntegrationTest {
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
-		Long processId1 = processModelRepository.saveProcessModel(project.getId(), model1);
-		Long processId2 = processModelRepository.saveProcessModel(project.getId(), model2);
+		Long projectVersionId = project.getVersions().stream().findFirst().get().getId();
+		Long processId1 = processModelRepository.saveProcessModel(projectVersionId, model1);
+		Long processId2 = processModelRepository.saveProcessModel(projectVersionId, model2);
 
-		ProcessMap processMap = processMapRepository.getProcessMap(project.getId());
+		ProcessMap processMap = processMapRepository.getProcessMap(projectVersionId);
 
 		// Assert
 		assertThat(processMap.getProcesses())//
@@ -182,12 +185,13 @@ class RepositoryIntegrationTest {
 
 		// Act
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
-		Long processId1 = processModelRepository.saveProcessModel(project.getId(), model1);
-		Long processId2 = processModelRepository.saveProcessModel(project.getId(), model2);
+		Long projectVersionId = project.getVersions().stream().findFirst().get().getId();
+		Long processId1 = processModelRepository.saveProcessModel(projectVersionId, model1);
+		Long processId2 = processModelRepository.saveProcessModel(projectVersionId, model2);
 
 		processModelRepository.deleteProcessModel(processId2);
 
-		ProcessMap processMap = processMapRepository.getProcessMap(project.getId());
+		ProcessMap processMap = processMapRepository.getProcessMap(projectVersionId);
 
 		// Assert
 		assertThat(processMap.getProcesses())//
@@ -216,9 +220,11 @@ class RepositoryIntegrationTest {
 		// Assert
 		assertThat(projects)//
 				.hasSize(2)//
-				.extracting("id", "name", "version")//
-				.contains(tuple(projectId1, PROJECT_NAME, PROJECT_VERSION),
-						tuple(projectId2, PROJECT_NAME_2, PROJECT_VERSION_2));
+				.extracting("id", "name")//
+				.contains(tuple(projectId1, PROJECT_NAME),
+						tuple(projectId2, PROJECT_NAME_2));
+		assertThat(projects.get(0).getVersions().stream().findFirst().get().getName()).isEqualTo(PROJECT_VERSION);
+		assertThat(projects.get(1).getVersions().stream().findFirst().get().getName()).isEqualTo(PROJECT_VERSION_2);
 	}
 
 	@Test
@@ -236,7 +242,7 @@ class RepositoryIntegrationTest {
 	}
 
 	@Test
-	void testDeleteProjectVersionsWithoutUser() {
+	void testDeleteProjectVersionsWithoutUser() throws NoResultException {
 
 		// Arrange
 		ProcessModel model = new ProcessModel();
@@ -248,18 +254,19 @@ class RepositoryIntegrationTest {
 		dataStore.setLabel(DATA_STORE_LABEL);
 		model.setDataStores(Collections.singletonList(dataStore));
 
-		Long projectId1 = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION).getId();
-		Long projectId2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2).getId();
-
-		processModelRepository.saveProcessModel(projectId1, model);
+		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
+		Project project2 = projectRepository.createProject(PROJECT_NAME_2, PROJECT_VERSION_2);
+		Long projectVersionId = project.getVersions().stream().findFirst().get().getId();
+		Long projectVersionId2 = project2.getVersions().stream().findFirst().get().getId();
+		processModelRepository.saveProcessModel(projectVersionId, model);
 
 		// Act
-		projectRepository.deleteProjectVersion(projectId1);
-		projectRepository.deleteProjectVersion(projectId2);
+		projectRepository.removeVersion(project.getId(), projectVersionId);
+		projectRepository.removeVersion(project2.getId(), projectVersionId2);
 
 		// Assert
-		assertThat(processMapRepository.getProcessMap(projectId1).getDataStores()).isEmpty();
-		assertThat(processMapRepository.getProcessMap(projectId1).getProcesses()).isEmpty();
+		assertThat(processMapRepository.getProcessMap(projectVersionId).getDataStores()).isEmpty();
+		assertThat(processMapRepository.getProcessMap(projectVersionId2).getProcesses()).isEmpty();
 		assertThat(projectRepository.getProjects()).isEmpty();
 	}
 
@@ -270,12 +277,12 @@ class RepositoryIntegrationTest {
 		Long nonExistentProjectId = 1L;
 
 		// Act & Assert
-		assertThatThrownBy(() -> projectRepository.deleteProjectVersion(nonExistentProjectId))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> projectRepository.removeVersion(nonExistentProjectId, nonExistentProjectId))
+				.isInstanceOf(NoResultException.class);
 	}
 
 	@Test
-	void testDeleteProjectVersionWithUser() throws EmailAlreadyRegisteredException {
+	void testDeleteProjectVersionWithUser() throws EmailAlreadyRegisteredException, AccessDeniedException, NoResultException {
 		// Arrange
 		ProcessModel model = new ProcessModel();
 		model.setName(PROCESS_MODEL_NAME);
@@ -295,16 +302,16 @@ class RepositoryIntegrationTest {
 		User fetchedUser = userRepositoryImpl.findByEmail(USER_EMAIL_1);
 		Long userId = fetchedUser.getId();
 
-		Long projectId = projectRepository.createProject(userId, PROJECT_NAME, PROJECT_VERSION).getId();
-
-		processModelRepository.saveProcessModel(projectId, model);
+		Project project = projectRepository.createProject(userId, PROJECT_NAME, PROJECT_VERSION);
+		Long projectVersionId = project.getVersions().stream().findFirst().get().getId();
+		processModelRepository.saveProcessModel(projectVersionId, model);
 
 		// Act
-		projectRepository.deleteProjectVersion(userId, projectId);
+		projectRepository.removeVersion(userId, project.getId(), projectVersionId);
 
 		// Assert
-		assertThat(processMapRepository.getProcessMap(projectId).getDataStores()).isEmpty();
-		assertThat(processMapRepository.getProcessMap(projectId).getProcesses()).isEmpty();
+		assertThat(processMapRepository.getProcessMap(project.getId()).getDataStores()).isEmpty();
+		assertThat(processMapRepository.getProcessMap(project.getId()).getProcesses()).isEmpty();
 		assertThat(projectRepository.getProjects(userId)).isEmpty();
 	}
 
@@ -314,9 +321,10 @@ class RepositoryIntegrationTest {
 		// Arrange
 		Long userId = 1L;
 		Long nonExistentProjectId = 1L;
+		Long nonexistendVersionId = 1L;
 
 		// Act & Assert
-		assertThatThrownBy(() -> projectRepository.deleteProjectVersion(userId, nonExistentProjectId))
+		assertThatThrownBy(() -> projectRepository.removeVersion(userId, nonExistentProjectId, nonexistendVersionId))
 				.isInstanceOf(NoResultException.class);
 	}
 
@@ -339,11 +347,11 @@ class RepositoryIntegrationTest {
 		Long userId1 = userRepositoryImpl.findByEmail(USER_EMAIL_1).getId();
 		Long userId2 = userRepositoryImpl.findByEmail(USER_EMAIL_2).getId();
 
-		Long projectId = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION).getId();
+		Project project = projectRepository.createProject(userId1, PROJECT_NAME, PROJECT_VERSION);
 
 		// Act & Assert
-		assertThatThrownBy(() -> projectRepository.deleteProjectVersion(userId2, projectId))
-				.isInstanceOf(NoResultException.class);
+		assertThatThrownBy(() -> projectRepository.removeVersion(userId2, project.getId(), project.getVersions().stream().findFirst().get().getId()))
+				.isInstanceOf(AccessDeniedException.class);
 		assertThat(projectRepository.getProjects(userId1)).hasSize(1);
 	}
 
@@ -363,6 +371,7 @@ class RepositoryIntegrationTest {
 		entityManager.createNativeQuery("DELETE FROM ProcessDataStoreTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM DataStoreTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProcessModelTable").executeUpdate();
+		entityManager.createNativeQuery("DELETE FROM ProjectUserRelationTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProjectVersionTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM ProjectTable").executeUpdate();
 		entityManager.createNativeQuery("DELETE FROM UserTable").executeUpdate();

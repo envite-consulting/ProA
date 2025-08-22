@@ -1,13 +1,23 @@
 package de.envite.proa.repository.tables;
 
-import de.envite.proa.entities.authentication.Role;
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-@Data
+import de.envite.proa.entities.authentication.Role;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Entity
 public class UserTable {
 
@@ -23,11 +33,11 @@ public class UserTable {
 	private LocalDateTime modifiedAt;
 	private Role role;
 
-	@OneToMany
-	private List<ProjectVersionTable> projects;
-
 	@OneToOne(fetch = FetchType.LAZY)
 	private SettingsTable settings;
 
 	private Integer failedLoginAttempts = 0;
+	
+	@OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "user")
+	private Set<ProjectUserRelationTable> userRelations = new HashSet<>();
 }

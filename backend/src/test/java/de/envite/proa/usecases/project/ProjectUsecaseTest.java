@@ -1,5 +1,7 @@
 package de.envite.proa.usecases.project;
 
+import de.envite.proa.entities.project.AccessDeniedException;
+import de.envite.proa.entities.project.NoResultException;
 import de.envite.proa.entities.project.Project;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import static org.mockito.Mockito.*;
 public class ProjectUsecaseTest {
 
 	private static final long PROJECT_ID = 1L;
+	private static final long PROJECT_VERSION_ID = 2L;
 	private static final String PROJECT_NAME = "Test Project";
 	private static final String PROJECT_VERSION = "1.0";
 	private static final long USER_ID = 1L;
@@ -99,20 +102,20 @@ public class ProjectUsecaseTest {
 	}
 
 	@Test
-	public void testDeleteProject_DesktopMode() {
-		doNothing().when(repository).deleteProjectVersion(USER_ID);
+	public void testDeleteProject_DesktopMode() throws NoResultException {
+		doNothing().when(repository).removeVersion(PROJECT_ID, PROJECT_VERSION_ID);
 
-		projectUsecase.deleteProjectVersion(USER_ID);
+		projectUsecase.removeVersion(PROJECT_ID, PROJECT_VERSION_ID);
 
-		verify(repository, times(1)).deleteProjectVersion(USER_ID);
+		verify(repository, times(1)).removeVersion(PROJECT_ID, PROJECT_VERSION_ID);;
 	}
 
 	@Test
-	public void testDeleteProject_WebMode() {
-		doNothing().when(repository).deleteProjectVersion(USER_ID, PROJECT_ID);
+	public void testDeleteProject_WebMode() throws AccessDeniedException, NoResultException {
+		doNothing().when(repository).removeVersion(USER_ID ,PROJECT_ID, PROJECT_VERSION_ID);
 
-		projectUsecase.deleteProjectVersion(USER_ID, PROJECT_ID);
+		projectUsecase.removeVersion(USER_ID ,PROJECT_ID, PROJECT_VERSION_ID);
 
-		verify(repository, times(1)).deleteProjectVersion(USER_ID, PROJECT_ID);
+		verify(repository, times(1)).removeVersion(USER_ID ,PROJECT_ID, PROJECT_VERSION_ID);
 	}
 }

@@ -1,9 +1,9 @@
 package de.envite.proa.rest;
 
+import de.envite.proa.entities.project.AccessDeniedException;
+import de.envite.proa.entities.project.NoResultException;
 import de.envite.proa.entities.project.Project;
 import de.envite.proa.usecases.project.ProjectUsecase;
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,6 +32,7 @@ public class ProjectResourceTest {
 
 	private static final Long USER_ID = 1L;
 	private static final Long PROJECT_ID_1 = 1L;
+	private static final Long PROJECT_VERSIOM_ID_1 = 3L;
 	private static final String PROJECT_NAME_1 = "Test Project 1";
 	private static final String PROJECT_VERSION_1 = "1.0";
 	private static final Long PROJECT_ID_2 = 2L;
@@ -145,7 +146,7 @@ public class ProjectResourceTest {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
-		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new NotFoundException());
+		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new NoResultException());
 
 		Response result = resource.getProject(PROJECT_ID_1);
 
@@ -159,7 +160,7 @@ public class ProjectResourceTest {
 		when(jwt.getClaim("userId")).thenReturn(USER_ID.toString());
 		resource.appMode = APP_MODE_WEB;
 
-		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new ForbiddenException());
+		when(usecase.getProject(USER_ID, PROJECT_ID_1)).thenThrow(new AccessDeniedException());
 
 		Response result = resource.getProject(PROJECT_ID_1);
 
@@ -200,7 +201,7 @@ public class ProjectResourceTest {
 	public void testGetProjectDesktopMode_NotFound() {
 		resource.appMode = APP_MODE_DESKTOP;
 
-		when(usecase.getProject(PROJECT_ID_1)).thenThrow(new NotFoundException());
+		when(usecase.getProject(PROJECT_ID_1)).thenThrow(new NoResultException());
 
 		Response result = resource.getProject(PROJECT_ID_1);
 
@@ -223,25 +224,25 @@ public class ProjectResourceTest {
 	}
 
 	@Test
-	public void testDeleteProject_DesktopMode() {
+	public void testDeleteProject_DesktopMode() throws NoResultException {
 		resource.appMode = APP_MODE_DESKTOP;
-		doNothing().when(usecase).deleteProjectVersion(PROJECT_ID_1);
+		doNothing().when(usecase).removeVersion(PROJECT_ID_1, PROJECT_VERSIOM_ID_1);
 
-		resource.deleteProjectVersion(PROJECT_ID_1);
+		resource.removeVersion(PROJECT_ID_1, PROJECT_VERSIOM_ID_1);
 
 		verify(jwt, never()).getClaim("userId");
-		verify(usecase, times(1)).deleteProjectVersion(PROJECT_ID_1);
+		verify(usecase, times(1)).removeVersion(PROJECT_ID_1, PROJECT_VERSIOM_ID_1);
 	}
 
 	@Test
-	public void testDeleteProject_WebMode() {
+	public void testDeleteProject_WebMode() throws AccessDeniedException, NoResultException {
 		resource.appMode = APP_MODE_WEB;
-		doNothing().when(usecase).deleteProjectVersion(USER_ID, PROJECT_ID_1);
+		doNothing().when(usecase).removeVersion(USER_ID, PROJECT_ID_1, PROJECT_VERSIOM_ID_1);
 		when(jwt.getClaim("userId")).thenReturn(USER_ID);
 
-		resource.deleteProjectVersion(PROJECT_ID_1);
+		resource.removeVersion(PROJECT_ID_1, PROJECT_VERSIOM_ID_1);
 
 		verify(jwt, times(1)).getClaim("userId");
-		verify(usecase, times(1)).deleteProjectVersion(USER_ID, PROJECT_ID_1);
+		verify(usecase, times(1)).removeVersion(USER_ID, PROJECT_ID_1, PROJECT_VERSIOM_ID_1);
 	}
 }

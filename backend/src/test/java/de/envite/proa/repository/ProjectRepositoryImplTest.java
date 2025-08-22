@@ -1,14 +1,16 @@
 package de.envite.proa.repository;
 
+import de.envite.proa.entities.project.AccessDeniedException;
+import de.envite.proa.entities.project.NoResultException;
 import de.envite.proa.entities.project.Project;
+import de.envite.proa.entities.project.ProjectRole;
 import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.project.ProjectRepositoryImpl;
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectUserRelationTable;
 import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import de.envite.proa.repository.user.UserDao;
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -44,14 +47,14 @@ class ProjectRepositoryImplTest {
 
 	@Test
 	void testCreateProject() {
-		doNothing().when(projectDao).persist(any(ProjectVersionTable.class));
+		doNothing().when(projectDao).persist(any(ProjectTable.class));
 
 		Project project = projectRepository.createProject(PROJECT_NAME, PROJECT_VERSION);
 
 		assertNotNull(project);
 		assertEquals(PROJECT_NAME, project.getName());
 
-		verify(projectDao).persist(any(ProjectVersionTable.class));
+		verify(projectDao).persist(any(ProjectTable.class));
 	}
 
 	@Test
@@ -67,28 +70,28 @@ class ProjectRepositoryImplTest {
 		assertNotNull(project);
 		assertEquals(PROJECT_NAME, project.getName());
 
-		ProjectTable projectArgument = new ProjectTable();
-		projectArgument.setOwner(user);
-		projectArgument.setName(PROJECT_NAME);
-		projectArgument.setCreatedAt(project.getCreatedAt());
-		projectArgument.setModifiedAt(project.getModifiedAt());
-
-		verify(userDao).findById(USER_ID);
-		verify(projectDao).persist(projectArgument);
+		ArgumentCaptor<ProjectTable> projectCatpor =  ArgumentCaptor.forClass(ProjectTable.class);
+		verify(projectDao).persist(projectCatpor.capture());
+		
+		assertThat(projectCatpor.getValue().getName()).isEqualTo(PROJECT_NAME);
+		assertThat(projectCatpor.getValue().getCreatedAt()).isEqualTo(project.getCreatedAt());
+		assertThat(projectCatpor.getValue().getModifiedAt()).isEqualTo(project.getModifiedAt());
+		assertThat(projectCatpor.getValue().getUserRelations().stream().findFirst().get().getUser().getId()).isEqualTo(USER_ID);
+		assertThat(projectCatpor.getValue().getUserRelations().stream().findFirst().get().getRole()).isEqualTo(ProjectRole.OWNER);
 	}
 
 	@Test
 	void testGetProjects() {
 		ProjectTable projectTable = new ProjectTable();
 		projectTable.setId(PROJECT_ID);
-		when(projectDao.getProjects()).thenReturn(List.of(projectTable));
+		when(projectDao.getProjectsWithVersionsAndContributors()).thenReturn(List.of(projectTable));
 
 		List<Project> projects = projectRepository.getProjects();
 
 		assertFalse(projects.isEmpty());
 		assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
 
-		verify(projectDao).getProjects();
+		verify(projectDao).getProjectsWithVersionsAndContributors();
 	}
 
 	@Test
@@ -97,36 +100,36 @@ class ProjectRepositoryImplTest {
 		ProjectTable projectTable = new ProjectTable();
 		projectTable.setId(PROJECT_ID);
 
-		when(projectDao.getProjectsForUser(any())).thenReturn(List.of(projectTable));
+		when(projectDao.getAllProjectsForUserWithVersionsAndContributors(any())).thenReturn(List.of(projectTable));
 
 		List<Project> projects = projectRepository.getProjects(USER_ID);
 		assertFalse(projects.isEmpty());
 		assertTrue(projects.stream().anyMatch(p -> p.getId().equals(projectTable.getId())));
 
 		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
-		verify(projectDao).getProjectsForUser(userCaptor.capture());
+		verify(projectDao).getAllProjectsForUserWithVersionsAndContributors(userCaptor.capture());
 		assertEquals(USER_ID, userCaptor.getValue().getId());
 	}
 
 	@Test
 	void testGetProjectById() {
 		ProjectTable projectTable = new ProjectTable();
-		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
+		when(projectDao.findByIdWithVersionsAndContributors(projectTable.getId())).thenReturn(projectTable);
 
 		Project retrievedProject = projectRepository.getProject(projectTable.getId());
 		assertNotNull(retrievedProject);
 		assertEquals(projectTable.getId(), retrievedProject.getId());
 
-		verify(projectDao).findById(projectTable.getId());
+		verify(projectDao).findByIdWithVersionsAndContributors(projectTable.getId());
 	}
 
 	@Test
 	void testGetProjectById_NotFound() {
-		when(projectDao.findById(PROJECT_ID)).thenReturn(null);
+		when(projectDao.findByIdWithVersionsAndContributors(PROJECT_ID)).thenReturn(null);
 
-		assertThrows(NotFoundException.class, () -> projectRepository.getProject(PROJECT_ID));
+		assertThrows(NoResultException.class, () -> projectRepository.getProject(PROJECT_ID));
 
-		verify(projectDao).findById(PROJECT_ID);
+		verify(projectDao).findByIdWithVersionsAndContributors(PROJECT_ID);
 	}
 
 	@Test
@@ -135,32 +138,33 @@ class ProjectRepositoryImplTest {
 		ProjectTable projectTable = new ProjectTable();
 		projectTable.setId(PROJECT_ID);
 
-		when(projectDao.findById(projectTable.getId())).thenReturn(projectTable);
+		UserTable user = new UserTable();
+		user.setId(USER_ID);
+		
+		ProjectUserRelationTable relation = new ProjectUserRelationTable();
+		relation.setUser(user);
+		
+		projectTable.getUserRelations().add(relation);
+
+		when(projectDao.findByIdWithVersionsAndContributors(projectTable.getId())).thenReturn(projectTable);
 
 		Project retrievedProject = projectRepository.getProject(USER_ID, projectTable.getId());
+		
 		assertNotNull(retrievedProject);
 		assertEquals(projectTable.getId(), retrievedProject.getId());
 
-		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
-		ArgumentCaptor<Long> projectIdCaptor = ArgumentCaptor.forClass(Long.class);
-
-		assertEquals(USER_ID, userCaptor.getValue().getId());
-		assertEquals(PROJECT_ID, projectIdCaptor.getValue());
+		verify(projectDao).findByIdWithVersionsAndContributors(projectTable.getId());
 	}
 
 	@Test
 	void testGetProjectByUserAndId_Forbidden() {
 
-		ProjectVersionTable projectVersionTable = new ProjectVersionTable();
-		projectVersionTable.setId(PROJECT_ID);
-
-		assertThrows(ForbiddenException.class,
-				() -> projectRepository.getProject(USER_ID, projectVersionTable.getId()));
-
-		ArgumentCaptor<UserTable> userCaptor = ArgumentCaptor.forClass(UserTable.class);
-		ArgumentCaptor<Long> projectIdCaptor = ArgumentCaptor.forClass(Long.class);
-
-		assertEquals(USER_ID, userCaptor.getValue().getId());
-		assertEquals(PROJECT_ID, projectIdCaptor.getValue());
+		ProjectTable projectTable = new ProjectTable();
+		projectTable.setId(PROJECT_ID);
+		
+		when(projectDao.findByIdWithVersionsAndContributors(PROJECT_ID)).thenReturn(projectTable);
+		
+		assertThrows(AccessDeniedException.class,
+				() -> projectRepository.getProject(USER_ID, projectTable.getId()));
 	}
 }

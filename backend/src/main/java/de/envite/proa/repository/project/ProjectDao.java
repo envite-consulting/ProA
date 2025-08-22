@@ -1,6 +1,7 @@
 package de.envite.proa.repository.project;
 
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectUserRelationTable;
 import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,6 +26,11 @@ public class ProjectDao {
 	public void persist(ProjectTable table) {
 		em.persist(table);
 	}
+	
+	@Transactional
+	public void persistProjectMember(ProjectUserRelationTable relation) {
+		em.persist(relation);
+	}
 
 	@Transactional
 	public void persist(ProjectVersionTable table) {
@@ -38,8 +44,11 @@ public class ProjectDao {
 
 	@Transactional
 	public List<ProjectTable> getProjectsWithVersionsAndContributors() {
+		EntityGraph<?> graph = em.getEntityGraph("Project.withVersionsAndContributors");
+		
 		return em//
 				.createQuery("SELECT p FROM ProjectTable p", ProjectTable.class)//
+				.setHint("jakarta.persistence.loadgraph", graph)//
 				.getResultList();
 	}
 
@@ -47,11 +56,11 @@ public class ProjectDao {
 	public List<ProjectTable> getAllProjectsForUserWithVersionsAndContributors(UserTable user) {
 		EntityGraph<?> graph = em.getEntityGraph("Project.withVersionsAndContributors");
 
-		return em.createQuery("SELECT DISTINCT p " +
-						"FROM ProjectTable p " +
-						"LEFT JOIN p.contributors c " +
-						"WHERE c = :user " +
-						"OR p.owner = :user", ProjectTable.class)
+		return em.createQuery("SELECT project "
+				+ "FROM ProjectTable project "
+				+ "INNER JOIN project.userRelations ur "
+				+ "INNER JOIN ur.user u "
+				+ "WHERE u = :user", ProjectTable.class)
 				.setParameter("user", user)
 				.setHint("jakarta.persistence.loadgraph", graph)
 				.getResultList();

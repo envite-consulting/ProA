@@ -1,7 +1,9 @@
 package de.envite.proa.repository;
 
+import de.envite.proa.entities.project.ProjectRole;
 import de.envite.proa.repository.project.ProjectDao;
 import de.envite.proa.repository.tables.ProjectTable;
+import de.envite.proa.repository.tables.ProjectUserRelationTable;
 import de.envite.proa.repository.tables.ProjectVersionTable;
 import de.envite.proa.repository.tables.UserTable;
 import io.quarkus.test.junit.QuarkusTest;
@@ -31,6 +33,7 @@ class ProjectDaoTest {
 
 	private UserTable user;
 	private ProjectTable project;
+	ProjectVersionTable projectVersion;
 
 	@BeforeEach
 	@Transactional
@@ -41,28 +44,37 @@ class ProjectDaoTest {
 
 		project = new ProjectTable();
 		project.setName(PROJECT_NAME);
-		project.setOwner(user);
 
-		ProjectVersionTable projectVersion = new ProjectVersionTable();
+		projectVersion = new ProjectVersionTable();
 		projectVersion.setName(VERSION_NAME);
 		em.persist(projectVersion);
 
 		project.getVersions().add(projectVersion);
 
 		em.persist(project);
+		
+		
+		ProjectUserRelationTable relation = new ProjectUserRelationTable();
+		relation.setProject(project);
+		relation.setUser(user);
+		relation.setRole(ProjectRole.OWNER);
+		
+		em.persist(relation);
 	}
 
 	@AfterEach
 	@Transactional
 	void cleanup() {
-		em.createQuery("DELETE FROM ProjectVersionTable").executeUpdate();
-		em.createQuery("DELETE FROM UserTable").executeUpdate();
+		em.createNativeQuery("DELETE FROM ProjectUserRelationTable").executeUpdate();
+		em.createNativeQuery("DELETE FROM ProjectTable").executeUpdate();
+		em.createNativeQuery("DELETE FROM ProjectVersionTable").executeUpdate();
+		em.createNativeQuery("DELETE FROM UserTable").executeUpdate();
 	}
 
 	@Test
 	@Transactional
 	void testPersistProject() {
-		ProjectVersionTable savedProject = em.find(ProjectVersionTable.class, project.getId());
+		ProjectTable savedProject = em.find(ProjectTable.class, project.getId());
 		assertNotNull(savedProject);
 		assertEquals(PROJECT_NAME, savedProject.getName());
 	}
@@ -70,7 +82,7 @@ class ProjectDaoTest {
 	@Test
 	@Transactional
 	void testGetProjects() {
-		List<ProjectTable> projects = projectDao.getProjects();
+		List<ProjectTable> projects = projectDao.getProjectsWithVersionsAndContributors();
 		assertNotNull(projects);
 		assertFalse(projects.isEmpty());
 	}
@@ -78,7 +90,7 @@ class ProjectDaoTest {
 	@Test
 	@Transactional
 	void testGetProjectsForUser() {
-		List<ProjectTable> projects = projectDao.getProjectsForUser(user);
+		List<ProjectTable> projects = projectDao.getAllProjectsForUserWithVersionsAndContributors(user);
 		assertNotNull(projects);
 		assertFalse(projects.isEmpty());
 		assertEquals(PROJECT_NAME, projects.getFirst().getName());
@@ -87,8 +99,8 @@ class ProjectDaoTest {
 	@Test
 	@Transactional
 	void testFindVersionById() {
-		ProjectVersionTable foundProjectVersion = projectDao.findVersionById(project.getId());
+		ProjectVersionTable foundProjectVersion = projectDao.findVersionById(projectVersion.getId());
 		assertNotNull(foundProjectVersion);
-		assertEquals(PROJECT_NAME, foundProjectVersion.getName());
+		assertEquals(VERSION_NAME, foundProjectVersion.getName());
 	}
 }

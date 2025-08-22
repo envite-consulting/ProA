@@ -437,8 +437,7 @@ class ProcessMapRepositoryTest {
 
 		repository.copyConnections(PROJECT_ID, PROCESS_MODEL_ID_1, PROCESS_MODEL_ID_2);
 
-		verify(projectDao, times(4)).findById(any());
-		verify(projectDao, times(4)).findById(PROJECT_ID);
+		verify(projectDao, times(4)).findVersionById(PROJECT_ID);
 
 		verify(callActivityDao, times(2)).findForProcessModel(any());
 		verify(callActivityDao, times(1)).findForProcessModel(thirdProcess);

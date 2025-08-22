@@ -1,5 +1,7 @@
 package de.envite.proa.usecases.project;
 
+import de.envite.proa.entities.project.AccessDeniedException;
+import de.envite.proa.entities.project.NoResultException;
 import de.envite.proa.entities.project.Project;
 import de.envite.proa.entities.project.ProjectVersion;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -45,19 +47,19 @@ public class ProjectUsecase {
 		return repository.getProject(userId, projectId);
 	}
 
-	public void removeVersion(Long projectId, Long versionId) {
+	public void removeVersion(Long projectId, Long versionId) throws NoResultException {
 		repository.removeVersion(projectId, versionId);
 	}
 
-	public void removeVersion(Long userId, Long projectId, Long versionId) {
+	public void removeVersion(Long userId, Long projectId, Long versionId) throws AccessDeniedException, NoResultException {
 		repository.removeVersion(userId, projectId, versionId);
 	}
 
-	public void addContributor(Long userId, Long projectId, String email) {
+	public void addContributor(Long userId, Long projectId, String email) throws AccessDeniedException, NoResultException {
 		repository.addContributor(userId, projectId, email);
 	}
 
-	public void removeContributor(Long userId, Long projectId, Long contributorId) {
+	public void removeContributor(Long userId, Long projectId, Long contributorId) throws AccessDeniedException, NoResultException {
 		repository.removeContributor(userId, projectId, contributorId);
 	}
 }

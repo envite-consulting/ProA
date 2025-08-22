@@ -55,15 +55,6 @@
         ></v-btn>
       </div>
       <div class="d-flex flex-row justify-space-between align-center">
-        <v-card-subtitle class="mb-3"
-          >{{
-            $t("projectOverview.owner") +
-            ": " +
-            (project.owner.id === user.id
-              ? `(${$t("projectOverview.you")})`
-              : `${project.owner.firstName} ${project.owner.lastName}`)
-          }}
-        </v-card-subtitle>
         <span
           v-if="project.id === store.getSelectedProjectId()"
           class="mb-3 px-4 active-text"
@@ -280,8 +271,7 @@ export interface Project {
   versions: ProjectVersion[];
   createdAt: string;
   modifiedAt: string;
-  owner: UserData;
-  contributors: UserData[];
+  projectMembers: ProjectMember[];
 }
 
 export interface ProjectVersion {
@@ -293,6 +283,13 @@ export interface ProjectVersion {
 
 export interface ActiveVersionByProject {
   [key: number]: ProjectVersion;
+}
+
+export interface ProjectMember {
+  id: number;
+  firstName: string;
+  lastName: string;
+  role: string;
 }
 
 export interface UserData {

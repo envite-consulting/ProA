@@ -55,7 +55,6 @@ public class ProcessmodelRepositoryImpl implements ProcessModelRepository {
 
 		ProcessModelTable table = ProcessmodelMapper.map(processModel, projectVersionTable);
 		table.setCreatedAt(LocalDateTime.now());
-		table.setProject(projectVersionTable);
 
 		String parentBpmnProcessId = processModel.getParentBpmnProcessId();
 		processModelDao.persist(table);
