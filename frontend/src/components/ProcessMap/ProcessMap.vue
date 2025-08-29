@@ -1,36 +1,25 @@
 <template>
-  <ProcessMapToolbar
-    ref="toolbar"
-    :selectedProjectId="selectedProjectId"
-    @fetchProcessModels="fetchProcessModels"
+  <ProcessMapToolbar 
+    ref="toolbar" 
+    :selectedProjectId="selectedProjectId" 
+    :selectedProjectName="selectedProjectName"
+    :selectedVersionName="selectedVersionName" 
+    :selectedVersionId="selectedVersionId!"
+    @fetchProcessModels="fetchProcessModels" 
     @filterGraph="filterGraph"
-    @handleFetchProcessInstances="handleFetchProcessInstances"
-  />
+    @handleFetchProcessInstances="handleFetchProcessInstances" />
   <v-card class="full-screen-below-toolbar" @mouseup="saveGraphState">
-    <ProcessDetailSidebar
-      ref="processDetailSidebar"
-      @saveGraphState="saveGraphState"
-    />
-    <div
-      v-if="isFetching"
-      class="d-flex align-center justify-center w-100 h-75"
-    >
+    <ProcessDetailSidebar ref="processDetailSidebar" @saveGraphState="saveGraphState" />
+    <div v-if="isFetching" class="d-flex align-center justify-center w-100 h-75">
       <div class="d-flex flex-column align-center justify-center">
         <span class="mb-2">{{ $t("processMap.loadingProcessMap") }}</span>
         <v-progress-circular indeterminate />
       </div>
     </div>
     <div :hidden="isFetching" id="graph-container" class="full-screen"></div>
-    <NavigationButtons
-      ref="navigationButtons"
-      :selectedProjectId="selectedProjectId"
-    />
+    <NavigationButtons ref="navigationButtons" :selectedProjectId="selectedProjectId" />
   </v-card>
-  <v-tooltip
-    id="tool-tip"
-    v-model="tooltipVisible"
-    :style="{ position: 'fixed', top: mouseY, left: mouseX }"
-  >
+  <v-tooltip id="tool-tip" v-model="tooltipVisible" :style="{ position: 'fixed', top: mouseY, left: mouseX }">
     <ul v-if="tooltipList.length > 0">
       <li v-for="item in tooltipList" v-bind:key="item">{{ item }}</li>
     </ul>
@@ -84,7 +73,7 @@ import {
 import ProcessDetailSidebar from "@/components/ProcessMap/ProcessDetailSidebar.vue";
 import ProcessMapToolbar from "@/components/ProcessMap/ProcessMapToolbar.vue";
 import NavigationButtons from "@/components/ProcessMap/NavigationButtons.vue";
-
+import getProject from "../projectService";
 import { useAppStore } from "@/store/app";
 import { Settings } from "@/components/SettingsDrawer.vue";
 import { authHeader } from "@/components/Authentication/authHeader";
@@ -145,6 +134,9 @@ export default defineComponent({
       hiddenPorts,
       portsInformation,
       selectedProjectId,
+      selectedProjectName: "" as string,
+      selectedVersionName: "" as string,
+      selectedVersionId: null as number | null,
       isFetching: false as boolean
     };
   },
@@ -177,213 +169,226 @@ export default defineComponent({
       return;
     }
 
-    const paperContainer = document.getElementById("graph-container");
-    paperContainer!.appendChild(paper.el);
-
-    const processDetailSidebar = this.$refs
-      .processDetailSidebar as InstanceType<typeof ProcessDetailSidebar>;
-
-    paper.on("cell:pointerdblclick", function (cellView) {
-      const model = cellView.model;
-      if (model instanceof AbstractProcessShape) {
-        processDetailSidebar.open(model as AbstractProcessShape);
-      }
+    getProject(this.selectedProjectId).then((result) => {
+      this.selectedProjectName = result.data.name;
+      this.selectedVersionName = this.appStore.getActiveVersionForProject(
+        this.selectedProjectId!
+      ).name;
+      this.selectedVersionId = this.appStore.getActiveVersionForProject(
+        this.selectedProjectId!
+      ).id;
+      this.initProcessMap();
     });
-
-    paper.on("element:mouseover", (view, evt) => {
-      const port = view.findAttribute("port", evt.target);
-      if (port) {
-        this.tooltipList = this.portsInformation[port];
-        this.tooltipVisible = true;
-
-        this.mouseX = evt.clientX! + "px !important";
-        this.mouseY = evt.clientY! + "px !important";
-      }
-    });
-
-    paper.on("element:mouseout", (view, evt) => {
-      const port = view.findAttribute("port", evt.target);
-      if (port) {
-        this.tooltipVisible = false;
-      }
-    });
-
-    const store = useAppStore();
-    if (store.getProcessModelsChangeFlag()) {
-      this.fetchProcessModels();
-      store.unsetProcessModelsChanged();
-      return;
-    }
-
-    const persistedGraph = this.appStore.getGraphForProject(
-      this.selectedProjectId
-    );
-    if (persistedGraph) {
-      Object.assign(
-        this.portsInformation,
-        this.appStore.getPortsInformationByProject(this.selectedProjectId)
-      );
-      graph.fromJSON(JSON.parse(persistedGraph));
-    } else {
-      this.fetchProcessModels();
-      return;
-    }
-    const persistedLayout = this.appStore.getPaperLayoutForProject(
-      this.selectedProjectId
-    );
-    if (persistedLayout) {
-      const { sx, tx, ty } = JSON.parse(persistedLayout);
-      paper.scale(sx);
-      paper.translate(tx, ty);
-    }
-
-    const clearTools = () => {
-      if (!lastView) return;
-      lastView.removeTools();
-    };
-    let timer: NodeJS.Timeout;
-    let lastView: dia.LinkView;
-    paper.on("link:mouseenter", (linkView) => {
-      if (linkView.model.get("source").id.toString().startsWith("ds")) {
-        return;
-      }
-      if (linkView.model.get("isMessageFlow")) {
-        return;
-      }
-      clearTimeout(timer);
-      clearTools();
-      lastView = linkView;
-      linkView.addTools(
-        new dia.ToolsView({
-          name: "onhover",
-          tools: [new PortTargetArrowhead(), createLinkRemoveButton(removeLink)]
-        })
-      );
-    });
-
-    paper.on("link:mouseleave", () => {
-      timer = setTimeout(() => clearTools(), 500);
-    });
-
-    paper.on("link:connect", async (linkView) => {
-      const link = linkView.model;
-      const callingProcessid = link.source().id;
-      const calledProcessid = link.target().id;
-      const callingElementType = this.getProcessElementType(
-        link.source().port || ""
-      );
-      const calledElementType = this.getProcessElementType(
-        link.target().port || ""
-      );
-
-      try {
-        await axios.post(
-          `/api/project/${this.selectedProjectId}/process-map/connection`,
-          {
-            callingProcessid,
-            calledProcessid,
-            callingElementType,
-            calledElementType,
-            userCreated: true
-          },
-          {
-            headers: {
-              ...authHeader(),
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Error while adding connection:", error);
-      }
-    });
-
-    paper.on("link:disconnect", async (linkView, _evt, prevElementView) => {
-      const link = linkView.model;
-      const connectionId = link?.attributes?.connectionId;
-      const callingProcessid = link?.source()?.id?.toString();
-      const calledProcessid = prevElementView.model.id.toString();
-      if (!callingProcessid || !calledProcessid || !connectionId) {
-        console.error("Error while removing connection");
-        return;
-      }
-      await removeLinkHelper(connectionId, callingProcessid, calledProcessid);
-    });
-
-    const removeProcessLink = async (
-      connectionId: number
-    ): Promise<boolean> => {
-      try {
-        await axios.delete(
-          `/api/project/process-map/process-connection/${connectionId}`,
-          { headers: authHeader() }
-        );
-        return true;
-      } catch (error) {
-        console.error("Error while removing process connection:", error);
-        return false;
-      }
-    };
-
-    const removeDataStoreLink = async (
-      connectionId: number
-    ): Promise<boolean> => {
-      try {
-        await axios.delete(
-          `/api/project/process-map/datastore-connection/${connectionId}`,
-          { headers: authHeader() }
-        );
-        return true;
-      } catch (error) {
-        console.error("Error while removing datastore connection:", error);
-        return false;
-      }
-    };
-
-    const removeLink = async (
-      _evt: dia.Event,
-      linkView: dia.LinkView,
-      toolView: dia.ToolView
-    ): Promise<void> => {
-      const link = linkView.model;
-      const connectionId = link?.attributes?.connectionId;
-      const callingProcessid = link?.source()?.id?.toString();
-      const calledProcessid = link?.target()?.id?.toString();
-      if (!callingProcessid || !calledProcessid || !connectionId) {
-        console.error("Error while removing connection");
-        return;
-      }
-      const wasLinkRemoved = await removeLinkHelper(
-        connectionId,
-        callingProcessid,
-        calledProcessid
-      );
-      if (!wasLinkRemoved) {
-        return;
-      }
-      linkView.model.remove({ ui: true, tool: toolView.cid });
-    };
-
-    const removeLinkHelper = async (
-      connectionId: number,
-      callingProcessid: string,
-      calledProcessid: string
-    ): Promise<boolean> => {
-      if (
-        callingProcessid.startsWith("ds") ||
-        calledProcessid.startsWith("ds")
-      ) {
-        return await removeDataStoreLink(connectionId);
-      }
-
-      return await removeProcessLink(connectionId);
-    };
   },
   methods: {
+    initProcessMap() {
+      const store = useAppStore();
+      const paperContainer = document.getElementById("graph-container");
+      paperContainer!.appendChild(paper.el);
+
+      const processDetailSidebar = this.$refs
+        .processDetailSidebar as InstanceType<typeof ProcessDetailSidebar>;
+
+      paper.on("cell:pointerdblclick", function (cellView) {
+        const model = cellView.model;
+        if (model instanceof AbstractProcessShape) {
+          processDetailSidebar.open(model as AbstractProcessShape);
+        }
+      });
+
+      paper.on("element:mouseover", (view, evt) => {
+        const port = view.findAttribute("port", evt.target);
+        if (port) {
+          this.tooltipList = this.portsInformation[port];
+          this.tooltipVisible = true;
+
+          this.mouseX = evt.clientX! + "px !important";
+          this.mouseY = evt.clientY! + "px !important";
+        }
+      });
+
+      paper.on("element:mouseout", (view, evt) => {
+        const port = view.findAttribute("port", evt.target);
+        if (port) {
+          this.tooltipVisible = false;
+        }
+      });
+
+
+      if (store.getProcessModelsChangeFlag()) {
+        this.fetchProcessModels();
+        store.unsetProcessModelsChanged();
+        return;
+      }
+
+      const persistedGraph = this.appStore.getGraphForProject(
+        this.selectedVersionId!
+      );
+      if (persistedGraph) {
+        Object.assign(
+          this.portsInformation,
+          this.appStore.getPortsInformationByProject(this.selectedVersionId!)
+        );
+        graph.fromJSON(JSON.parse(persistedGraph));
+      } else {
+        this.fetchProcessModels();
+        return;
+      }
+      const persistedLayout = this.appStore.getPaperLayoutForProject(
+        this.selectedVersionId!
+      );
+      if (persistedLayout) {
+        const { sx, tx, ty } = JSON.parse(persistedLayout);
+        paper.scale(sx);
+        paper.translate(tx, ty);
+      }
+
+      const clearTools = () => {
+        if (!lastView) return;
+        lastView.removeTools();
+      };
+      let timer: NodeJS.Timeout;
+      let lastView: dia.LinkView;
+      paper.on("link:mouseenter", (linkView) => {
+        if (linkView.model.get("source").id.toString().startsWith("ds")) {
+          return;
+        }
+        if (linkView.model.get("isMessageFlow")) {
+          return;
+        }
+        clearTimeout(timer);
+        clearTools();
+        lastView = linkView;
+        linkView.addTools(
+          new dia.ToolsView({
+            name: "onhover",
+            tools: [new PortTargetArrowhead(), createLinkRemoveButton(removeLink)]
+          })
+        );
+      });
+
+      paper.on("link:mouseleave", () => {
+        timer = setTimeout(() => clearTools(), 500);
+      });
+
+      paper.on("link:connect", async (linkView) => {
+        const link = linkView.model;
+        const callingProcessid = link.source().id;
+        const calledProcessid = link.target().id;
+        const callingElementType = this.getProcessElementType(
+          link.source().port || ""
+        );
+        const calledElementType = this.getProcessElementType(
+          link.target().port || ""
+        );
+
+        try {
+          await axios.post(
+            `/api/project/${this.selectedVersionId!}/process-map/connection`,
+            {
+              callingProcessid,
+              calledProcessid,
+              callingElementType,
+              calledElementType,
+              userCreated: true
+            },
+            {
+              headers: {
+                ...authHeader(),
+                "Content-Type": "application/json"
+              }
+            }
+          );
+        } catch (error) {
+          console.error("Error while adding connection:", error);
+        }
+      });
+
+      paper.on("link:disconnect", async (linkView, _evt, prevElementView) => {
+        const link = linkView.model;
+        const connectionId = link?.attributes?.connectionId;
+        const callingProcessid = link?.source()?.id?.toString();
+        const calledProcessid = prevElementView.model.id.toString();
+        if (!callingProcessid || !calledProcessid || !connectionId) {
+          console.error("Error while removing connection");
+          return;
+        }
+        await removeLinkHelper(connectionId, callingProcessid, calledProcessid);
+      });
+
+      const removeProcessLink = async (
+        connectionId: number
+      ): Promise<boolean> => {
+        try {
+          await axios.delete(
+            `/api/project/process-map/process-connection/${connectionId}`,
+            { headers: authHeader() }
+          );
+          return true;
+        } catch (error) {
+          console.error("Error while removing process connection:", error);
+          return false;
+        }
+      };
+
+      const removeDataStoreLink = async (
+        connectionId: number
+      ): Promise<boolean> => {
+        try {
+          await axios.delete(
+            `/api/project/process-map/datastore-connection/${connectionId}`,
+            { headers: authHeader() }
+          );
+          return true;
+        } catch (error) {
+          console.error("Error while removing datastore connection:", error);
+          return false;
+        }
+      };
+
+      const removeLink = async (
+        _evt: dia.Event,
+        linkView: dia.LinkView,
+        toolView: dia.ToolView
+      ): Promise<void> => {
+        const link = linkView.model;
+        const connectionId = link?.attributes?.connectionId;
+        const callingProcessid = link?.source()?.id?.toString();
+        const calledProcessid = link?.target()?.id?.toString();
+        if (!callingProcessid || !calledProcessid || !connectionId) {
+          console.error("Error while removing connection");
+          return;
+        }
+        const wasLinkRemoved = await removeLinkHelper(
+          connectionId,
+          callingProcessid,
+          calledProcessid
+        );
+        if (!wasLinkRemoved) {
+          return;
+        }
+        linkView.model.remove({ ui: true, tool: toolView.cid });
+      };
+
+      const removeLinkHelper = async (
+        connectionId: number,
+        callingProcessid: string,
+        calledProcessid: string
+      ): Promise<boolean> => {
+        if (
+          callingProcessid.startsWith("ds") ||
+          calledProcessid.startsWith("ds")
+        ) {
+          return await removeDataStoreLink(connectionId);
+        }
+
+        return await removeProcessLink(connectionId);
+      };
+    },
     saveGraphState() {
       setTimeout(() => {
         this.appStore.setGraphForProject(
-          this.selectedProjectId,
+          this.selectedVersionId!,
           JSON.stringify(graph)
         );
       }, 50);
@@ -393,17 +398,17 @@ export default defineComponent({
     },
     saveHiddenElements() {
       this.appStore.setHiddenCellsForProject(
-        this.selectedProjectId,
+        this.selectedVersionId!,
         JSON.stringify(this.hiddenCells)
       );
       this.appStore.setHiddenLinksForProject(
-        this.selectedProjectId,
+        this.selectedVersionId!,
         this.hiddenLinks
       );
     },
     saveHiddenPorts() {
       this.appStore.setHiddenPortsForProject(
-        this.selectedProjectId,
+        this.selectedVersionId!,
         JSON.stringify(this.hiddenPorts)
       );
     },
@@ -420,7 +425,7 @@ export default defineComponent({
       this.resetFilters();
       graph.clear();
       axios
-        .get("/api/project/" + this.selectedProjectId + "/process-map", {
+        .get("/api/project/" + this.selectedVersionId! + "/process-map", {
           headers: authHeader()
         })
         .then((result) => {
@@ -454,7 +459,7 @@ export default defineComponent({
             });
 
           this.appStore.setPortsInformationByProject(
-            this.selectedProjectId,
+            this.selectedVersionId!,
             this.portsInformation
           );
 

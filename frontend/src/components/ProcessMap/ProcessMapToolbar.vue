@@ -97,7 +97,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
-import getProject from "@/components/projectService";
 import ProcessMapLegend from "@/components/ProcessMap/ProcessMapLegend.vue";
 import { useAppStore } from "@/store/app";
 
@@ -107,6 +106,18 @@ export default defineComponent({
 
   props: {
     selectedProjectId: {
+      type: Number,
+      required: true
+    },
+    selectedProjectName: {
+      type: String,
+      required: true
+    },
+    selectedVersionName: {
+      type: String,
+      required: true
+    },
+    selectedVersionId: {
       type: Number,
       required: true
     }
@@ -135,8 +146,6 @@ export default defineComponent({
     }
 
     return {
-      selectedProjectName: "" as string,
-      selectedVersionName: "" as string,
       defaultFilterGraphInput,
       filterGraphInput,
       store
@@ -164,12 +173,6 @@ export default defineComponent({
   },
 
   mounted() {
-    const selectedProjectId = this.selectedProjectId!;
-    getProject(selectedProjectId).then((result) => {
-      this.selectedProjectName = result.data.name;
-      this.selectedVersionName =
-        this.store.getActiveVersionForProject(selectedProjectId).name;
-    });
   },
 
   methods: {
