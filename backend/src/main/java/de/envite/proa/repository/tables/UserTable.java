@@ -33,7 +33,7 @@ public class UserTable {
 	private LocalDateTime modifiedAt;
 	private Role role;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "user")
 	private SettingsTable settings;
 
 	private Integer failedLoginAttempts = 0;
