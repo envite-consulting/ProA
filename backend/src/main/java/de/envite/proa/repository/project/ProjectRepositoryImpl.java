@@ -260,14 +260,9 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 	}
 
 	private void removeVersionFromProject(ProjectTable project, Long versionId) {
-		boolean removed = project.getVersions()
-				.removeIf(version -> Objects.equals(version.getId(), versionId));
-		if (!removed) {
-			throw new NoResultException("Version not found with ID: " + versionId);
-		}
 		project.setModifiedAt(LocalDateTime.now());
-
 		projectDao.merge(project);
+		projectDao.deleteProjectVersionById(versionId);
 	}
 
 	private Set<ProjectVersion> map(Set<ProjectVersionTable> versions) {

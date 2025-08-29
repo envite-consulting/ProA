@@ -103,4 +103,10 @@ public class ProjectDao {
 		ProjectTable table = em.find(ProjectTable.class, id);
 		em.remove(table);
 	}
+	
+	@Transactional
+	public void deleteProjectVersionById(Long id) {
+		ProjectVersionTable table = em.find(ProjectVersionTable.class, id);
+		em.remove(table);
+	}
 }
