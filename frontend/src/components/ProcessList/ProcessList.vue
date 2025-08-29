@@ -358,6 +358,7 @@ export default defineComponent({
     selectedProjectId: null as number | null,
     selectedProjectName: "" as string,
     selectedVersionName: "" as string,
+    selectedVersionId: null as number | null,
     fileExtensionMatcher: /.[^/.]+$/,
     isFetching: false as boolean,
     descriptionErrors: {} as { [key: number]: string },
@@ -375,8 +376,12 @@ export default defineComponent({
       this.selectedVersionName = this.appStore.getActiveVersionForProject(
         this.selectedProjectId!
       ).name;
+      this.selectedVersionId = this.appStore.getActiveVersionForProject(
+        this.selectedProjectId!
+      ).id;
+
+      this.fetchProcessModels();
     });
-    this.fetchProcessModels();
   },
   computed: {
     isUserLoggedIn(): boolean {
@@ -423,7 +428,7 @@ export default defineComponent({
     fetchProcessModels() {
       this.isFetching = true;
       axios
-        .get("/api/project/" + this.selectedProjectId + "/process-model", {
+        .get("/api/project/" + this.selectedVersionId + "/process-model", {
           headers: authHeader()
         })
         .then((result) => {
@@ -561,7 +566,7 @@ export default defineComponent({
     ): Promise<number> {
       const formData = this.createProcessModelFormData(processModel);
       const { data } = await axios.post(
-        "/api/project/" + this.selectedProjectId + "/process-model",
+        "/api/project/" + this.selectedVersionId + "/process-model",
         formData,
         { headers: authHeader() }
       );
@@ -625,7 +630,7 @@ export default defineComponent({
       try {
         await axios.post(
           "/api/project/" +
-            this.selectedProjectId +
+            this.selectedVersionId +
             "/process-model/" +
             this.processModelToBeReplacedId,
           formData,

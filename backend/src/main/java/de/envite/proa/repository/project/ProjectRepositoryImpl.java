@@ -122,7 +122,8 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 		LocalDateTime now = LocalDateTime.now();
 		projectVersion.setCreatedAt(now);
 		projectVersion.setModifiedAt(now);
-
+		projectVersion.setProject(project);
+		
 		projectDao.persist(projectVersion);
 
 		project.getVersions().add(projectVersion);

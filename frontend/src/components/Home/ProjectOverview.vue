@@ -64,7 +64,7 @@
       <v-card-text class="pt-0">
         <v-select
           label="Version"
-          v-model="store.getActiveVersionForProject(project.id).name"
+          :value="getActiveVersionForProject(project.id).name"
           :items="project.versions"
           item-title="name"
           item-value="id"
@@ -433,7 +433,7 @@ export default defineComponent({
         );
         if (
           !currentActiveVersion ||
-          !project.versions.includes(currentActiveVersion)
+          !project.versions.map(version => version.id).includes(currentActiveVersion.id)
         ) {
           this.store.setActiveVersionForProject(
             project.id,
@@ -441,6 +441,9 @@ export default defineComponent({
           );
         }
       }
+    },
+    getActiveVersionForProject(projectId: number): ProjectVersion {
+      return this.store.getActiveVersionForProject(projectId);
     },
     async createProject() {
       const newProjectNameInput = this.$refs.newProjectNameInput as VTextField;
