@@ -33,7 +33,6 @@ public class ProcessEventDao {
                     "WHERE e.eventType = :eventType " +
                     "AND e.project = :project " +
                     "AND ( e.searchLabel = :searchLabel " +
-                    //"OR function('SOUNDEX', e.searchLabel) = function('SOUNDEX', :searchLabel) " +
                     "OR function('DIFFERENCE', e.searchLabel, :searchLabel) >= 3 )",
                 ProcessEventTable.class)
                 .setParameter("searchLabel", searchLabel)
