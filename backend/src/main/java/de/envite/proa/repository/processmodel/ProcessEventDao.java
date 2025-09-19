@@ -1,5 +1,8 @@
 package de.envite.proa.repository.processmodel;
 
+import java.util.Arrays;
+import java.util.List;
+
 import de.envite.proa.entities.process.EventType;
 import de.envite.proa.repository.tables.ProcessEventTable;
 import de.envite.proa.repository.tables.ProcessModelTable;
@@ -8,9 +11,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-
-import java.util.List;
-import java.util.Arrays;
 
 @RequestScoped
 public class ProcessEventDao {
