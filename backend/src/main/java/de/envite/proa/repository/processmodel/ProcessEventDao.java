@@ -33,7 +33,7 @@ public class ProcessEventDao {
                     "WHERE e.eventType = :eventType " +
                     "AND e.project = :project " +
                     "AND ( e.searchLabel = :searchLabel " +
-                    "OR function('DIFFERENCE', e.searchLabel, :searchLabel) >= 3 )",
+                    "OR function('levenshtein', e.searchLabel, :searchLabel) <= 4 )",
                 ProcessEventTable.class)
                 .setParameter("searchLabel", searchLabel)
                 .setParameter("eventType", eventType)
