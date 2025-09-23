@@ -13,12 +13,21 @@ To activate either mode please navigate to the frontend folder via `cd frontend`
 
 Web mode: The default user is `admin` and the default password is `admin`.
 
-### Generating JWT keys (web mode only)
+## Generating JWT keys (web mode only)
 
 To generate the keys necessary for authentication via JWT please run the following script once:
 ```
 ./backend/generate-keys.sh
 ```
+
+## Database and Fuzzy Match
+ProA uses fuzzy match so that the BPMN labels can be matched with some degree of tolerance, e.g. ignoring typos.
+To this end, postgres levenshtein function is used, which needs to be activated by ececuting the following:
+
+```CREATE EXTENSION fuzzystrmatch;```
+
+Furthermore, in Azure before executing the above statement, the extension needs to be activated via: DB >> Settings >> Server parameters >> azure.extensions >> fuzzystrmatch;
+
 
 ## The Entire Application
 
