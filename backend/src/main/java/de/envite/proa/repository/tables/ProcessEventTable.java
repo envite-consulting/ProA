@@ -1,10 +1,9 @@
 package de.envite.proa.repository.tables;
 
 import de.envite.proa.entities.process.EventType;
+import de.envite.proa.util.SearchLabelBuilder;
 import jakarta.persistence.*;
 import lombok.Data;
-
-import static de.envite.proa.repository.processmodel.ProcessEventDao.buildSearchLabel;
 
 @Entity
 @Data
@@ -32,6 +31,6 @@ public class ProcessEventTable {
     @PrePersist
     @PreUpdate
     private void generateSearchLabel() {
-        this.searchLabel = buildSearchLabel(this.label);
+        this.searchLabel = SearchLabelBuilder.buildSearchLabel(this.label);
     }
 }
