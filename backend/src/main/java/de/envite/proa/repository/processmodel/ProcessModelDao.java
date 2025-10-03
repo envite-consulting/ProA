@@ -3,6 +3,7 @@ package de.envite.proa.repository.processmodel;
 import de.envite.proa.entities.process.ProcessType;
 import de.envite.proa.repository.tables.ProcessModelTable;
 import de.envite.proa.repository.tables.ProjectVersionTable;
+import de.envite.proa.util.SearchLabelBuilder;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityGraph;
@@ -13,8 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 @RequestScoped
 public class ProcessModelDao {
+	
+    @ConfigProperty(name = "quarkus.datasource.db-kind")
+    private String dbKind;
 
 	private EntityManager em;
 
@@ -52,16 +58,35 @@ public class ProcessModelDao {
 
 	@Transactional
 	public List<ProcessModelTable> getProcessModelsForName(String name, ProjectVersionTable projectVersionTable) {
-		return em
-				.createQuery(
-						"SELECT p " +
-								"FROM ProcessModelTable p " +
-								"WHERE p.name = :name " +
-								"AND p.project = :project",
-						ProcessModelTable.class)
-				.setParameter("name", name)
-				.setParameter("project", projectVersionTable)
-				.getResultList();
+		
+		if ("postgresql".equals(dbKind)) { 
+			
+			String searchLabel = SearchLabelBuilder.buildSearchLabel(name);
+			
+			return em
+					.createQuery(
+							"SELECT p " +
+									"FROM ProcessModelTable p " +
+									"WHERE ( p.name = :name " +
+									"OR function('levenshtein', p.searchLabel, :searchLabel) <= 4 )" +
+									"AND p.project = :project",
+							ProcessModelTable.class)
+					.setParameter("name", name)
+					.setParameter("searchLabel", searchLabel)
+					.setParameter("project", projectVersionTable)
+					.getResultList();
+		}else {
+			return em
+					.createQuery(
+							"SELECT p " +
+									"FROM ProcessModelTable p " +
+									"WHERE p.name = :name " +
+									"AND p.project = :project",
+							ProcessModelTable.class)
+					.setParameter("name", name)
+					.setParameter("project", projectVersionTable)
+					.getResultList();
+		}
 	}
 
 	@Transactional
