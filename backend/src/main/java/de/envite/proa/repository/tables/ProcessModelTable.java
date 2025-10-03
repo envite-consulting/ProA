@@ -1,6 +1,7 @@
 package de.envite.proa.repository.tables;
 
 import de.envite.proa.entities.process.ProcessType;
+import de.envite.proa.util.SearchLabelBuilder;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -56,6 +57,8 @@ public class ProcessModelTable {
 
 	@EqualsAndHashCode.Include
 	private String name;
+	
+    private String searchLabel;
 
 	@EqualsAndHashCode.Include
 	private String bpmnProcessId;
@@ -77,7 +80,7 @@ public class ProcessModelTable {
 	@Column
 	@EqualsAndHashCode.Include
 	private String description;
-
+	
 	@Column
 	@EqualsAndHashCode.Include
 	private LocalDateTime createdAt;
@@ -99,4 +102,10 @@ public class ProcessModelTable {
 
 	@EqualsAndHashCode.Include
 	private ProcessType processType;
+	
+    @PrePersist
+    @PreUpdate
+    private void generateSearchLabel() {
+        this.searchLabel = SearchLabelBuilder.buildSearchLabel(this.name);
+    }
 }
